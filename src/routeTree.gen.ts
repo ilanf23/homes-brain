@@ -9,38 +9,127 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProIndexRouteImport } from './routes/pro.index'
+import { Route as RRecordIdRouteImport } from './routes/r.$recordId'
+import { Route as ProSignupRouteImport } from './routes/pro.signup'
+import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
+import { Route as ProJobsNewRouteImport } from './routes/pro.jobs.new'
 
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProIndexRoute = ProIndexRouteImport.update({
+  id: '/pro/',
+  path: '/pro/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RRecordIdRoute = RRecordIdRouteImport.update({
+  id: '/r/$recordId',
+  path: '/r/$recordId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProSignupRoute = ProSignupRouteImport.update({
+  id: '/pro/signup',
+  path: '/pro/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimRecordIdRoute = ClaimRecordIdRouteImport.update({
+  id: '/claim/$recordId',
+  path: '/claim/$recordId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProJobsNewRoute = ProJobsNewRouteImport.update({
+  id: '/pro/jobs/new',
+  path: '/pro/jobs/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/home': typeof HomeRoute
+  '/claim/$recordId': typeof ClaimRecordIdRoute
+  '/pro/signup': typeof ProSignupRoute
+  '/r/$recordId': typeof RRecordIdRoute
+  '/pro/': typeof ProIndexRoute
+  '/pro/jobs/new': typeof ProJobsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/home': typeof HomeRoute
+  '/claim/$recordId': typeof ClaimRecordIdRoute
+  '/pro/signup': typeof ProSignupRoute
+  '/r/$recordId': typeof RRecordIdRoute
+  '/pro': typeof ProIndexRoute
+  '/pro/jobs/new': typeof ProJobsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/home': typeof HomeRoute
+  '/claim/$recordId': typeof ClaimRecordIdRoute
+  '/pro/signup': typeof ProSignupRoute
+  '/r/$recordId': typeof RRecordIdRoute
+  '/pro/': typeof ProIndexRoute
+  '/pro/jobs/new': typeof ProJobsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/home'
+    | '/claim/$recordId'
+    | '/pro/signup'
+    | '/r/$recordId'
+    | '/pro/'
+    | '/pro/jobs/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/home'
+    | '/claim/$recordId'
+    | '/pro/signup'
+    | '/r/$recordId'
+    | '/pro'
+    | '/pro/jobs/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/home'
+    | '/claim/$recordId'
+    | '/pro/signup'
+    | '/r/$recordId'
+    | '/pro/'
+    | '/pro/jobs/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HomeRoute: typeof HomeRoute
+  ClaimRecordIdRoute: typeof ClaimRecordIdRoute
+  ProSignupRoute: typeof ProSignupRoute
+  RRecordIdRoute: typeof RRecordIdRoute
+  ProIndexRoute: typeof ProIndexRoute
+  ProJobsNewRoute: typeof ProJobsNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +137,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/': {
+      id: '/pro/'
+      path: '/pro'
+      fullPath: '/pro/'
+      preLoaderRoute: typeof ProIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$recordId': {
+      id: '/r/$recordId'
+      path: '/r/$recordId'
+      fullPath: '/r/$recordId'
+      preLoaderRoute: typeof RRecordIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/signup': {
+      id: '/pro/signup'
+      path: '/pro/signup'
+      fullPath: '/pro/signup'
+      preLoaderRoute: typeof ProSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claim/$recordId': {
+      id: '/claim/$recordId'
+      path: '/claim/$recordId'
+      fullPath: '/claim/$recordId'
+      preLoaderRoute: typeof ClaimRecordIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/jobs/new': {
+      id: '/pro/jobs/new'
+      path: '/pro/jobs/new'
+      fullPath: '/pro/jobs/new'
+      preLoaderRoute: typeof ProJobsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HomeRoute: HomeRoute,
+  ClaimRecordIdRoute: ClaimRecordIdRoute,
+  ProSignupRoute: ProSignupRoute,
+  RRecordIdRoute: RRecordIdRoute,
+  ProIndexRoute: ProIndexRoute,
+  ProJobsNewRoute: ProJobsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

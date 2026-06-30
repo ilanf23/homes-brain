@@ -30,7 +30,7 @@ export function checkRecall(_make?: string, _model?: string) {
 
 export async function logEvent(actor: string | null, type: string, props: Record<string, unknown> = {}) {
   console.log("[event]", type, { actor, ...props });
-  await supabase.from("events").insert({ actor: actor ?? undefined, type, props });
+  await supabase.from("events").insert({ actor: actor ?? undefined, type, props: props as never });
 }
 
 export async function mockSend(args: {
@@ -39,7 +39,12 @@ export async function mockSend(args: {
   body: string;
   kind: "record" | "review_request" | "invite" | "other";
 }) {
-  await supabase.from("messages").insert(args satisfies Record<string, unknown>);
+  await supabase.from("messages").insert({
+    channel: args.channel,
+    to_contact: args.to,
+    body: args.body,
+    kind: args.kind,
+  });
 }
 
 export function buildRecordUrl(recordId: string) {
