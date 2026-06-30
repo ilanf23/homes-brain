@@ -1,0 +1,565 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      customers: {
+        Row: {
+          consent_at: string | null
+          consent_ref: string | null
+          created_at: string
+          email: string | null
+          home_id: string
+          id: string
+          name: string
+          phone: string | null
+          pro_id: string
+        }
+        Insert: {
+          consent_at?: string | null
+          consent_ref?: string | null
+          created_at?: string
+          email?: string | null
+          home_id: string
+          id?: string
+          name: string
+          phone?: string | null
+          pro_id: string
+        }
+        Update: {
+          consent_at?: string | null
+          consent_ref?: string | null
+          created_at?: string
+          email?: string | null
+          home_id?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          pro_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment: {
+        Row: {
+          created_at: string
+          home_id: string
+          id: string
+          make: string | null
+          model: string | null
+          recall_checked_at: string | null
+          recall_status: string
+          serial: string | null
+          source: string
+          type: string | null
+          warranty_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          home_id: string
+          id?: string
+          make?: string | null
+          model?: string | null
+          recall_checked_at?: string | null
+          recall_status?: string
+          serial?: string | null
+          source?: string
+          type?: string | null
+          warranty_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          home_id?: string
+          id?: string
+          make?: string | null
+          model?: string | null
+          recall_checked_at?: string | null
+          recall_status?: string
+          serial?: string | null
+          source?: string
+          type?: string | null
+          warranty_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          actor: string | null
+          created_at: string
+          id: string
+          props: Json
+          type: string
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          id?: string
+          props?: Json
+          type: string
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          id?: string
+          props?: Json
+          type?: string
+        }
+        Relationships: []
+      }
+      homeowners: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      homes: {
+        Row: {
+          address: string
+          claimed_at: string | null
+          claimed_by_homeowner: string | null
+          created_at: string
+          created_by_pro: string | null
+          id: string
+        }
+        Insert: {
+          address: string
+          claimed_at?: string | null
+          claimed_by_homeowner?: string | null
+          created_at?: string
+          created_by_pro?: string | null
+          id?: string
+        }
+        Update: {
+          address?: string
+          claimed_at?: string | null
+          claimed_by_homeowner?: string | null
+          created_at?: string
+          created_by_pro?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homes_created_by_pro_fkey"
+            columns: ["created_by_pro"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homes_homeowner_fk"
+            columns: ["claimed_by_homeowner"]
+            isOneToOne: false
+            referencedRelation: "homeowners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          created_at: string
+          from_homeowner: string | null
+          home_id: string
+          id: string
+          status: string
+          to_pro_name: string
+          to_pro_phone: string | null
+          trade: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_homeowner?: string | null
+          home_id: string
+          id?: string
+          status?: string
+          to_pro_name: string
+          to_pro_phone?: string | null
+          trade?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_homeowner?: string | null
+          home_id?: string
+          id?: string
+          status?: string
+          to_pro_name?: string
+          to_pro_phone?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_from_homeowner_fkey"
+            columns: ["from_homeowner"]
+            isOneToOne: false
+            referencedRelation: "homeowners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          equipment_id: string | null
+          home_id: string
+          id: string
+          next_service_date: string | null
+          photo_url: string | null
+          pro_id: string
+          what_done: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          equipment_id?: string | null
+          home_id: string
+          id?: string
+          next_service_date?: string | null
+          photo_url?: string | null
+          pro_id: string
+          what_done: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          equipment_id?: string | null
+          home_id?: string
+          id?: string
+          next_service_date?: string | null
+          photo_url?: string | null
+          pro_id?: string
+          what_done?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          id: string
+          kind: string
+          to_contact: string
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          id?: string
+          kind: string
+          to_contact: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          to_contact?: string
+        }
+        Relationships: []
+      }
+      pros: {
+        Row: {
+          business: string
+          created_at: string
+          email: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          id: string
+          logo: string | null
+          phone: string | null
+          plan: string
+          service_area: string | null
+          trade: string
+        }
+        Insert: {
+          business: string
+          created_at?: string
+          email?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          id?: string
+          logo?: string | null
+          phone?: string | null
+          plan?: string
+          service_area?: string | null
+          trade: string
+        }
+        Update: {
+          business?: string
+          created_at?: string
+          email?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          id?: string
+          logo?: string | null
+          phone?: string | null
+          plan?: string
+          service_area?: string | null
+          trade?: string
+        }
+        Relationships: []
+      }
+      records: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          public_url: string
+          sent_email_at: string | null
+          sent_sms_at: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          public_url: string
+          sent_email_at?: string | null
+          sent_sms_at?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          public_url?: string
+          sent_email_at?: string | null
+          sent_sms_at?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "records_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
