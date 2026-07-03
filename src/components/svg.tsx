@@ -1,0 +1,409 @@
+import { useEffect, useRef, useState } from "react";
+
+/* HomesBrain SVG set. One visual language: 1.75 stroke, round caps, currentColor. */
+
+const stroke = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.75,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+export function LogoMark({ size = 28, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 28 28" className={className} aria-hidden="true">
+      <rect x="1" y="1" width="26" height="26" rx="8" fill="var(--indigo)" />
+      <path
+        d="M7.5 13.5 14 8l6.5 5.5V20a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-6.5Z"
+        {...stroke}
+        stroke="#fff"
+        strokeWidth={1.6}
+      />
+      <circle cx="14" cy="15" r="1.4" fill="#fff" />
+      <path
+        d="M14 16.4V21M14 13.6v-2.1M12.6 15h-2.4M17.8 15h-2.4"
+        stroke="#fff"
+        strokeWidth={1.2}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/* Hero illustration: a house with service-system nodes. `active` lights one up. */
+export function HouseScene({
+  active = null,
+  className = "",
+}: {
+  active?: "pro" | "record" | "owner" | null;
+  className?: string;
+}) {
+  const nodeCls = (k: string) =>
+    `transition-all duration-500 ${active === k ? "opacity-100" : active ? "opacity-25" : "opacity-100"}`;
+  return (
+    <svg
+      viewBox="0 0 420 340"
+      className={className}
+      role="img"
+      aria-label="A home with its service history connected to pros and homeowners"
+    >
+      {/* ground */}
+      <path d="M30 296h360" {...stroke} stroke="var(--line)" strokeWidth={2} />
+      {/* house body */}
+      <g style={{ color: "var(--ink)" }}>
+        <path d="M120 296V160l90-70 90 70v136" {...stroke} strokeWidth={2.25} />
+        <path d="M100 176l110-86 110 86" {...stroke} strokeWidth={2.25} />
+        {/* door */}
+        <path d="M192 296v-52a18 18 0 0 1 36 0v52" {...stroke} strokeWidth={2} />
+        {/* window */}
+        <rect x="146" y="196" width="30" height="30" rx="6" {...stroke} strokeWidth={2} />
+        <rect x="244" y="196" width="30" height="30" rx="6" {...stroke} strokeWidth={2} />
+      </g>
+
+      {/* dashed connections */}
+      <g strokeDasharray="4 6" {...stroke} strokeWidth={1.5}>
+        <path
+          d="M118 168C80 150 62 120 66 84"
+          className={`${nodeCls("pro")} dash-flow`}
+          style={{ color: "var(--teal)" }}
+        />
+        <path
+          d="M210 92V46"
+          className={`${nodeCls("record")} dash-flow`}
+          style={{ color: "var(--indigo)" }}
+        />
+        <path
+          d="M302 168c38-18 56-48 52-84"
+          className={`${nodeCls("owner")} dash-flow`}
+          style={{ color: "var(--coral)" }}
+        />
+      </g>
+
+      {/* pro node */}
+      <g className={nodeCls("pro")} style={{ color: "var(--teal)" }}>
+        <circle cx="66" cy="62" r="24" fill="var(--tealbg)" />
+        <path
+          d="M60 68l-4 4M70 54a7 7 0 0 0-9.5 9.5L56 68l4 4 4.5-4.5A7 7 0 0 0 74 58l-4 4-4-4 4-4"
+          {...stroke}
+        />
+      </g>
+      {/* record node */}
+      <g className={nodeCls("record")} style={{ color: "var(--indigo)" }}>
+        <circle cx="210" cy="26" r="22" fill="var(--indigobg)" />
+        <path
+          d="M203 17h10l4 4v14a1.5 1.5 0 0 1-1.5 1.5h-11a1.5 1.5 0 0 1-1.5-1.5V18.5A1.5 1.5 0 0 1 203 17Z"
+          {...stroke}
+        />
+        <path d="M206 26h8M206 30h5" {...stroke} strokeWidth={1.4} />
+      </g>
+      {/* owner node */}
+      <g className={nodeCls("owner")} style={{ color: "var(--coral)" }}>
+        <circle cx="356" cy="62" r="24" fill="var(--coralbg)" />
+        <path
+          d="M356 72c-6-4.5-10-8-10-12.4a5.6 5.6 0 0 1 10-3.4 5.6 5.6 0 0 1 10 3.4c0 4.4-4 7.9-10 12.4Z"
+          {...stroke}
+        />
+      </g>
+
+      {/* pulse in the doorway */}
+      <circle cx="210" cy="230" r="4" fill="var(--indigo)" className="pulse-dot" />
+    </svg>
+  );
+}
+
+export type TradeIconName =
+  | "water_treatment"
+  | "hvac"
+  | "plumbing"
+  | "electrical"
+  | "appliance"
+  | string;
+
+export function TradeIcon({
+  trade,
+  size = 20,
+  className = "",
+}: {
+  trade?: TradeIconName | null;
+  size?: number;
+  className?: string;
+}) {
+  const p = { ...stroke };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      {trade === "water_treatment" && (
+        <path
+          d="M12 3.5c3.4 4.2 6 7.4 6 10.5a6 6 0 0 1-12 0c0-3.1 2.6-6.3 6-10.5ZM9.5 14a2.5 2.5 0 0 0 2.5 2.5"
+          {...p}
+        />
+      )}
+      {trade === "hvac" && (
+        <>
+          <circle cx="12" cy="12" r="2" {...p} />
+          <path
+            d="M12 10c0-3 1.5-4.5 3.5-4.5S18 7.5 16 9l-4 1M14 12c3 0 4.5 1.5 4.5 3.5S16.5 18 15 16l-3-4M10 14c0 3-1.5 4.5-3.5 4.5S6 16.5 8 15l4-1M10 12c-3 0-4.5-1.5-4.5-3.5S7.5 6 9 8l3 4"
+            {...p}
+            strokeWidth={1.5}
+          />
+        </>
+      )}
+      {trade === "plumbing" && <path d="M4 10h6V4h4v6h6v4h-6v6h-4v-6H4v-4ZM10 10l4 4" {...p} />}
+      {trade === "electrical" && <path d="M13 3 5 14h6l-1 7 8-11h-6l1-7Z" {...p} />}
+      {trade === "appliance" && (
+        <>
+          <rect x="5" y="3.5" width="14" height="17" rx="2.5" {...p} />
+          <circle cx="12" cy="13" r="4" {...p} />
+          <path d="M8 7h3" {...p} strokeWidth={1.5} />
+        </>
+      )}
+      {!["water_treatment", "hvac", "plumbing", "electrical", "appliance"].includes(
+        trade ?? "",
+      ) && (
+        <path
+          d="M14.7 6.3a4.5 4.5 0 0 0-6 6L4 17a2 2 0 1 0 3 3l4.7-4.7a4.5 4.5 0 0 0 6-6l-2.9 2.9-2.3-2.3 2.9-2.9Z"
+          {...p}
+        />
+      )}
+    </svg>
+  );
+}
+
+/* Recall shield with a check that draws itself on. */
+export function ShieldCheck({
+  size = 22,
+  className = "",
+  animate = true,
+}: {
+  size?: number;
+  className?: string;
+  animate?: boolean;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path d="M12 3 5 6v5c0 5 3 8.3 7 10 4-1.7 7-5 7-10V6l-7-3Z" {...stroke} />
+      <path
+        d="m8.5 12 2.4 2.4 4.6-4.8"
+        {...stroke}
+        strokeWidth={2}
+        strokeDasharray={12}
+        strokeDashoffset={animate ? 12 : 0}
+        className={animate ? "draw-on" : ""}
+      />
+    </svg>
+  );
+}
+
+/* Success check inside a burst — for done/sent states. */
+export function CheckBurst({ size = 72, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 72 72" className={className} aria-hidden="true">
+      <circle cx="36" cy="36" r="22" fill="var(--tealbg)" className="anim-scale-in" />
+      <path
+        d="m27 36.5 6.5 6.5L46 30"
+        {...stroke}
+        stroke="var(--teal)"
+        strokeWidth={3}
+        strokeDasharray={30}
+        strokeDashoffset={30}
+        className="draw-on"
+      />
+      <g stroke="var(--teal)" strokeWidth={2} strokeLinecap="round" opacity={0.55}>
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+          <line
+            key={deg}
+            x1="36"
+            y1="6"
+            x2="36"
+            y2="11"
+            transform={`rotate(${deg} 36 36)`}
+            strokeDasharray={5}
+            strokeDashoffset={5}
+            className="draw-on"
+            style={{ animationDelay: `${350 + (deg / 45) * 40}ms` }}
+          />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+/* Tiny sparkline for stat cards. */
+export function SparkLine({
+  points,
+  width = 84,
+  height = 28,
+  color = "var(--teal)",
+  className = "",
+}: {
+  points: number[];
+  width?: number;
+  height?: number;
+  color?: string;
+  className?: string;
+}) {
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const span = max - min || 1;
+  const step = width / Math.max(points.length - 1, 1);
+  const d = points
+    .map(
+      (v, i) =>
+        `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)} ${(height - 4 - ((v - min) / span) * (height - 8)).toFixed(1)}`,
+    )
+    .join(" ");
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d={d}
+        {...stroke}
+        stroke={color}
+        strokeWidth={2}
+        strokeDasharray={200}
+        strokeDashoffset={200}
+        className="draw-on"
+      />
+      <circle
+        cx={(points.length - 1) * step}
+        cy={height - 4 - ((points[points.length - 1] - min) / span) * (height - 8)}
+        r="2.5"
+        fill={color}
+        className="anim-fade-in d-5"
+      />
+    </svg>
+  );
+}
+
+/* Animated progress ring, e.g. viewed-rate. */
+export function ProgressRing({
+  value,
+  size = 92,
+  strokeWidth = 8,
+  color = "var(--teal)",
+  label,
+  className = "",
+}: {
+  value: number; // 0..1
+  size?: number;
+  strokeWidth?: number;
+  color?: string;
+  label?: string;
+  className?: string;
+}) {
+  const r = (size - strokeWidth) / 2;
+  const c = 2 * Math.PI * r;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className={className}
+      role="img"
+      aria-label={label ?? `${Math.round(value * 100)}%`}
+    >
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="var(--line)"
+        strokeWidth={strokeWidth}
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={mounted ? c * (1 - Math.min(Math.max(value, 0), 1)) : c}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: "stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1)" }}
+      />
+      <text
+        x="50%"
+        y="50%"
+        dominantBaseline="central"
+        textAnchor="middle"
+        fontSize={size * 0.24}
+        fontWeight={700}
+        fill="var(--ink)"
+        style={{ fontVariantNumeric: "tabular-nums" }}
+      >
+        {Math.round(value * 100)}%
+      </text>
+    </svg>
+  );
+}
+
+/* Hand-drawn underline flourish for headlines. */
+export function Scribble({
+  className = "",
+  color = "var(--coral)",
+}: {
+  className?: string;
+  color?: string;
+}) {
+  return (
+    <svg viewBox="0 0 220 14" className={className} aria-hidden="true" preserveAspectRatio="none">
+      <path
+        d="M4 9c40-6 84-7 118-4 30 2.6 62 2 94-2"
+        fill="none"
+        stroke={color}
+        strokeWidth={4}
+        strokeLinecap="round"
+        strokeDasharray={230}
+        strokeDashoffset={230}
+        className="draw-on"
+        style={{ animationDelay: "450ms", animationDuration: "0.8s" }}
+      />
+    </svg>
+  );
+}
+
+/* Count-up number: animates from 0 to value on mount. */
+export function CountUp({
+  value,
+  duration = 900,
+  className = "",
+}: {
+  value: number;
+  duration?: number;
+  className?: string;
+}) {
+  const [n, setN] = useState(0);
+  const ref = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setN(value);
+      return;
+    }
+    const start = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min((t - start) / duration, 1);
+      setN(Math.round(value * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) ref.current = requestAnimationFrame(tick);
+    };
+    ref.current = requestAnimationFrame(tick);
+    return () => {
+      if (ref.current) cancelAnimationFrame(ref.current);
+    };
+  }, [value, duration]);
+  return <span className={`tnum ${className}`}>{n}</span>;
+}

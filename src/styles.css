@@ -11,7 +11,9 @@
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--ink);
-  --color-muted: var(--soft);
+  /* App code uses text-muted for secondary text, so this maps to the gray
+     token — not the soft surface color shadcn's bg-muted convention expects. */
+  --color-muted: var(--muted);
   --color-muted-foreground: var(--muted);
   --color-border: var(--line);
   --color-input: var(--line);
@@ -32,6 +34,7 @@
   --color-ink: var(--ink);
   --color-soft: var(--soft);
   --color-line: var(--line);
+  --color-paper: var(--paper);
 
   --color-indigo: var(--indigo);
   --color-indigobg: var(--indigobg);
@@ -50,15 +53,18 @@
   --radius-xl: 22px;
   --radius-2xl: 28px;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :root {
   --ink: #16160f;
-  --muted: #73706a;
-  --line: #e7e5de;
-  --bg: #ffffff;
-  --soft: #f7f6f1;
+  --muted: #6f6c63;
+  --line: #e7e4d9;
+  --bg: #fdfcf7;
+  --paper: #ffffff;
+  --soft: #f5f3ea;
 
   --indigo: #473fb0;
   --indigobg: #eeedfd;
@@ -76,19 +82,33 @@
   * {
     border-color: var(--line);
   }
+  html {
+    scroll-behavior: smooth;
+  }
   html, body {
     background-color: var(--bg);
     color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3 {
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    font-variation-settings: "opsz" 100;
   }
   body {
     font-size: 16px;
     line-height: 1.55;
+  }
+  button, [role="button"], a {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--indigo);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
@@ -97,4 +117,118 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  font-family: "Inter", sans-serif;
+}
+
+@utility font-display {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Motion system ---------- */
+
+@keyframes hb-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes hb-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes hb-slide-up {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes hb-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes hb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes hb-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+@keyframes hb-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes hb-dash-flow {
+  to { stroke-dashoffset: -20; }
+}
+
+@utility anim-fade-up {
+  animation: hb-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility anim-fade-in {
+  animation: hb-fade-in 0.45s ease-out both;
+}
+@utility anim-scale-in {
+  animation: hb-scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility anim-float {
+  animation: hb-float 5s ease-in-out infinite;
+}
+@utility d-1 { animation-delay: 60ms; }
+@utility d-2 { animation-delay: 120ms; }
+@utility d-3 { animation-delay: 180ms; }
+@utility d-4 { animation-delay: 240ms; }
+@utility d-5 { animation-delay: 300ms; }
+@utility d-6 { animation-delay: 360ms; }
+
+/* Pressable feedback: subtle sink on press */
+@utility pressable {
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Card hover lift */
+@utility liftable {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 44px -24px rgba(22, 22, 15, 0.22);
+  }
+}
+
+/* Skeleton shimmer */
+@utility skeleton {
+  background: linear-gradient(90deg, var(--soft) 25%, #edebe0 50%, var(--soft) 75%);
+  background-size: 200% 100%;
+  animation: hb-shimmer 1.6s linear infinite;
+  border-radius: 10px;
+}
+
+/* SVG draw-on: set stroke-dasharray inline, this animates it */
+@utility draw-on {
+  animation: hb-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.15s both;
+}
+
+@utility dash-flow {
+  animation: hb-dash-flow 1.4s linear infinite;
+}
+
+@utility pulse-dot {
+  animation: hb-pulse-dot 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
