@@ -10,24 +10,87 @@ const stroke = {
   strokeLinejoin: "round",
 } as const;
 
-export function LogoMark({ size = 28, className = "" }: { size?: number; className?: string }) {
+/* Official HomesBrain mark: white house in an indigo squircle (rx 23%), arched door
+   as negative space. Exact geometry from the brand artifact — do not redraw. */
+
+export type LogoVariant = "primary" | "reversed" | "onDark" | "mono";
+
+const LOGO_COLORS: Record<
+  LogoVariant,
+  { tile: string; house: string; door: string; border?: string }
+> = {
+  primary: { tile: "#473fb0", house: "#ffffff", door: "#473fb0" },
+  reversed: { tile: "#ffffff", house: "#473fb0", door: "#ffffff", border: "#e7e5de" },
+  onDark: { tile: "#16160f", house: "#ffffff", door: "#16160f" },
+  mono: { tile: "none", house: "currentColor", door: "var(--bg, #ffffff)" },
+};
+
+export function LogoMark({
+  size = 28,
+  variant = "primary",
+  className = "",
+}: {
+  size?: number;
+  variant?: LogoVariant;
+  className?: string;
+}) {
+  const c = LOGO_COLORS[variant];
   return (
-    <svg width={size} height={size} viewBox="0 0 28 28" className={className} aria-hidden="true">
-      <rect x="1" y="1" width="26" height="26" rx="8" fill="var(--indigo)" />
-      <path
-        d="M7.5 13.5 14 8l6.5 5.5V20a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-6.5Z"
-        {...stroke}
-        stroke="#fff"
-        strokeWidth={1.6}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 120 120"
+      className={className}
+      role="img"
+      aria-label="HomesBrain"
+    >
+      <rect
+        width="120"
+        height="120"
+        rx="28"
+        fill={c.tile}
+        stroke={c.border ?? "none"}
+        strokeWidth={c.border ? 3 : 0}
       />
-      <circle cx="14" cy="15" r="1.4" fill="#fff" />
-      <path
-        d="M14 16.4V21M14 13.6v-2.1M12.6 15h-2.4M17.8 15h-2.4"
-        stroke="#fff"
-        strokeWidth={1.2}
-        strokeLinecap="round"
-      />
+      <path d="M60 30 L93 57 H27 Z" fill={c.house} />
+      <rect x="36" y="54" width="48" height="38" rx="5" fill={c.house} />
+      <path d="M52 92 V79 a8 8 0 0 1 16 0 V92 Z" fill={c.door} />
     </svg>
+  );
+}
+
+/* Mark + wordmark lockup. The wordmark is always the sans stack at 800 — never Fraunces. */
+export function Logo({
+  size = 28,
+  variant = "primary",
+  showWordmark = true,
+  className = "",
+  markClassName = "",
+  wordmarkClassName = "",
+}: {
+  size?: number;
+  variant?: LogoVariant;
+  showWordmark?: boolean;
+  className?: string;
+  markClassName?: string;
+  wordmarkClassName?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center ${className}`}
+      style={{ gap: Math.round(size * 0.35) }}
+    >
+      <LogoMark size={size} variant={variant} className={markClassName} />
+      {showWordmark && (
+        <span
+          className={`font-sans font-extrabold tracking-tight ${
+            variant === "onDark" ? "text-white" : "text-ink"
+          } ${wordmarkClassName}`}
+        >
+          HomesBrain
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -349,10 +412,11 @@ export function ProgressRing({
   );
 }
 
-/* Hand-drawn underline flourish for headlines. */
+/* Hand-drawn underline flourish for headlines. Indigo is the brand accent —
+   coral is reserved for the homeowner role and must not underline brand copy. */
 export function Scribble({
   className = "",
-  color = "var(--coral)",
+  color = "var(--indigo)",
 }: {
   className?: string;
   color?: string;

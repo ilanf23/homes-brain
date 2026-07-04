@@ -4,7 +4,7 @@ import { Btn, Card, Field, Input, Pill, Avatar, StepBar } from "@/lib/ui";
 import { TRADES, logEvent } from "@/lib/hb";
 import { supabase } from "@/integrations/supabase/client";
 import { setSession } from "@/lib/session";
-import { LogoMark, TradeIcon, ShieldCheck } from "@/components/svg";
+import { Logo, TradeIcon, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/signup")({
   head: () => ({ meta: [{ title: "Start free — HomesBrain for pros" }] }),
@@ -51,7 +51,13 @@ function ProSignup() {
       return;
     }
     setSession({ role: "pro", proId: data.id });
-    await logEvent(`pro:${data.id}`, "pro_signed_up", { trade });
+    // Referral attribution: /pro/signup?ref=<proId> tags the signup for the referrer.
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    await logEvent(`pro:${data.id}`, "pro_signed_up", {
+      trade,
+      business,
+      ...(ref ? { ref } : {}),
+    });
     navigate({ to: "/pro" });
   }
 
@@ -60,8 +66,7 @@ function ProSignup() {
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-3xl px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <LogoMark className="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-            <span className="font-extrabold tracking-tight">HomesBrain</span>
+            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
           <Pill accent="teal">For pros</Pill>
         </div>

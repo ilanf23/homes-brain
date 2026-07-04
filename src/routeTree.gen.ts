@@ -10,22 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProIndexRouteImport } from './routes/pro.index'
+import { Route as HomeIndexRouteImport } from './routes/home.index'
 import { Route as RRecordIdRouteImport } from './routes/r.$recordId'
 import { Route as ProSignupRouteImport } from './routes/pro.signup'
+import { Route as ProSettingsRouteImport } from './routes/pro.settings'
+import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
+import { Route as ProReferralRouteImport } from './routes/pro.referral'
+import { Route as ProDueRouteImport } from './routes/pro.due'
+import { Route as HomeSettingsRouteImport } from './routes/home.settings'
+import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
+import { Route as HomeProsRouteImport } from './routes/home.pros'
+import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
+import { Route as ProRecordsIndexRouteImport } from './routes/pro.records.index'
+import { Route as ProCustomersIndexRouteImport } from './routes/pro.customers.index'
+import { Route as ProRecordsRecordIdRouteImport } from './routes/pro.records.$recordId'
 import { Route as ProJobsNewRouteImport } from './routes/pro.jobs.new'
+import { Route as ProCustomersCustomerIdRouteImport } from './routes/pro.customers.$customerId'
+import { Route as HomeItemsItemIdRouteImport } from './routes/home.items.$itemId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -38,6 +46,11 @@ const ProIndexRoute = ProIndexRouteImport.update({
   path: '/pro/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeIndexRoute = HomeIndexRouteImport.update({
+  id: '/home/',
+  path: '/home/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RRecordIdRoute = RRecordIdRouteImport.update({
   id: '/r/$recordId',
   path: '/r/$recordId',
@@ -48,9 +61,64 @@ const ProSignupRoute = ProSignupRouteImport.update({
   path: '/pro/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProSettingsRoute = ProSettingsRouteImport.update({
+  id: '/pro/settings',
+  path: '/pro/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProReviewsRoute = ProReviewsRouteImport.update({
+  id: '/pro/reviews',
+  path: '/pro/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProReferralRoute = ProReferralRouteImport.update({
+  id: '/pro/referral',
+  path: '/pro/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProDueRoute = ProDueRouteImport.update({
+  id: '/pro/due',
+  path: '/pro/due',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeSettingsRoute = HomeSettingsRouteImport.update({
+  id: '/home/settings',
+  path: '/home/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRemindersRoute = HomeRemindersRouteImport.update({
+  id: '/home/reminders',
+  path: '/home/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeProsRoute = HomeProsRouteImport.update({
+  id: '/home/pros',
+  path: '/home/pros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeAddRoute = HomeAddRouteImport.update({
+  id: '/home/add',
+  path: '/home/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClaimRecordIdRoute = ClaimRecordIdRouteImport.update({
   id: '/claim/$recordId',
   path: '/claim/$recordId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRecordsIndexRoute = ProRecordsIndexRouteImport.update({
+  id: '/pro/records/',
+  path: '/pro/records/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProCustomersIndexRoute = ProCustomersIndexRouteImport.update({
+  id: '/pro/customers/',
+  path: '/pro/customers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRecordsRecordIdRoute = ProRecordsRecordIdRouteImport.update({
+  id: '/pro/records/$recordId',
+  path: '/pro/records/$recordId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProJobsNewRoute = ProJobsNewRouteImport.update({
@@ -58,80 +126,181 @@ const ProJobsNewRoute = ProJobsNewRouteImport.update({
   path: '/pro/jobs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProCustomersCustomerIdRoute = ProCustomersCustomerIdRouteImport.update({
+  id: '/pro/customers/$customerId',
+  path: '/pro/customers/$customerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeItemsItemIdRoute = HomeItemsItemIdRouteImport.update({
+  id: '/home/items/$itemId',
+  path: '/home/items/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
+  '/home/add': typeof HomeAddRoute
+  '/home/pros': typeof HomeProsRoute
+  '/home/reminders': typeof HomeRemindersRoute
+  '/home/settings': typeof HomeSettingsRoute
+  '/pro/due': typeof ProDueRoute
+  '/pro/referral': typeof ProReferralRoute
+  '/pro/reviews': typeof ProReviewsRoute
+  '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
+  '/home/': typeof HomeIndexRoute
   '/pro/': typeof ProIndexRoute
+  '/home/items/$itemId': typeof HomeItemsItemIdRoute
+  '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
+  '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
+  '/pro/customers/': typeof ProCustomersIndexRoute
+  '/pro/records/': typeof ProRecordsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
+  '/home/add': typeof HomeAddRoute
+  '/home/pros': typeof HomeProsRoute
+  '/home/reminders': typeof HomeRemindersRoute
+  '/home/settings': typeof HomeSettingsRoute
+  '/pro/due': typeof ProDueRoute
+  '/pro/referral': typeof ProReferralRoute
+  '/pro/reviews': typeof ProReviewsRoute
+  '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
+  '/home': typeof HomeIndexRoute
   '/pro': typeof ProIndexRoute
+  '/home/items/$itemId': typeof HomeItemsItemIdRoute
+  '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
+  '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
+  '/pro/customers': typeof ProCustomersIndexRoute
+  '/pro/records': typeof ProRecordsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
+  '/home/add': typeof HomeAddRoute
+  '/home/pros': typeof HomeProsRoute
+  '/home/reminders': typeof HomeRemindersRoute
+  '/home/settings': typeof HomeSettingsRoute
+  '/pro/due': typeof ProDueRoute
+  '/pro/referral': typeof ProReferralRoute
+  '/pro/reviews': typeof ProReviewsRoute
+  '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
+  '/home/': typeof HomeIndexRoute
   '/pro/': typeof ProIndexRoute
+  '/home/items/$itemId': typeof HomeItemsItemIdRoute
+  '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
+  '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
+  '/pro/customers/': typeof ProCustomersIndexRoute
+  '/pro/records/': typeof ProRecordsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/home'
     | '/login'
     | '/claim/$recordId'
+    | '/home/add'
+    | '/home/pros'
+    | '/home/reminders'
+    | '/home/settings'
+    | '/pro/due'
+    | '/pro/referral'
+    | '/pro/reviews'
+    | '/pro/settings'
     | '/pro/signup'
     | '/r/$recordId'
+    | '/home/'
     | '/pro/'
+    | '/home/items/$itemId'
+    | '/pro/customers/$customerId'
     | '/pro/jobs/new'
+    | '/pro/records/$recordId'
+    | '/pro/customers/'
+    | '/pro/records/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/home'
     | '/login'
     | '/claim/$recordId'
+    | '/home/add'
+    | '/home/pros'
+    | '/home/reminders'
+    | '/home/settings'
+    | '/pro/due'
+    | '/pro/referral'
+    | '/pro/reviews'
+    | '/pro/settings'
     | '/pro/signup'
     | '/r/$recordId'
+    | '/home'
     | '/pro'
+    | '/home/items/$itemId'
+    | '/pro/customers/$customerId'
     | '/pro/jobs/new'
+    | '/pro/records/$recordId'
+    | '/pro/customers'
+    | '/pro/records'
   id:
     | '__root__'
     | '/'
-    | '/home'
     | '/login'
     | '/claim/$recordId'
+    | '/home/add'
+    | '/home/pros'
+    | '/home/reminders'
+    | '/home/settings'
+    | '/pro/due'
+    | '/pro/referral'
+    | '/pro/reviews'
+    | '/pro/settings'
     | '/pro/signup'
     | '/r/$recordId'
+    | '/home/'
     | '/pro/'
+    | '/home/items/$itemId'
+    | '/pro/customers/$customerId'
     | '/pro/jobs/new'
+    | '/pro/records/$recordId'
+    | '/pro/customers/'
+    | '/pro/records/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
+  HomeAddRoute: typeof HomeAddRoute
+  HomeProsRoute: typeof HomeProsRoute
+  HomeRemindersRoute: typeof HomeRemindersRoute
+  HomeSettingsRoute: typeof HomeSettingsRoute
+  ProDueRoute: typeof ProDueRoute
+  ProReferralRoute: typeof ProReferralRoute
+  ProReviewsRoute: typeof ProReviewsRoute
+  ProSettingsRoute: typeof ProSettingsRoute
   ProSignupRoute: typeof ProSignupRoute
   RRecordIdRoute: typeof RRecordIdRoute
+  HomeIndexRoute: typeof HomeIndexRoute
   ProIndexRoute: typeof ProIndexRoute
+  HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
+  ProCustomersCustomerIdRoute: typeof ProCustomersCustomerIdRoute
   ProJobsNewRoute: typeof ProJobsNewRoute
+  ProRecordsRecordIdRoute: typeof ProRecordsRecordIdRoute
+  ProCustomersIndexRoute: typeof ProCustomersIndexRoute
+  ProRecordsIndexRoute: typeof ProRecordsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,13 +310,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -164,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/': {
+      id: '/home/'
+      path: '/home'
+      fullPath: '/home/'
+      preLoaderRoute: typeof HomeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$recordId': {
       id: '/r/$recordId'
       path: '/r/$recordId'
@@ -178,11 +347,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/settings': {
+      id: '/pro/settings'
+      path: '/pro/settings'
+      fullPath: '/pro/settings'
+      preLoaderRoute: typeof ProSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/reviews': {
+      id: '/pro/reviews'
+      path: '/pro/reviews'
+      fullPath: '/pro/reviews'
+      preLoaderRoute: typeof ProReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/referral': {
+      id: '/pro/referral'
+      path: '/pro/referral'
+      fullPath: '/pro/referral'
+      preLoaderRoute: typeof ProReferralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/due': {
+      id: '/pro/due'
+      path: '/pro/due'
+      fullPath: '/pro/due'
+      preLoaderRoute: typeof ProDueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/settings': {
+      id: '/home/settings'
+      path: '/home/settings'
+      fullPath: '/home/settings'
+      preLoaderRoute: typeof HomeSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/reminders': {
+      id: '/home/reminders'
+      path: '/home/reminders'
+      fullPath: '/home/reminders'
+      preLoaderRoute: typeof HomeRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/pros': {
+      id: '/home/pros'
+      path: '/home/pros'
+      fullPath: '/home/pros'
+      preLoaderRoute: typeof HomeProsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/add': {
+      id: '/home/add'
+      path: '/home/add'
+      fullPath: '/home/add'
+      preLoaderRoute: typeof HomeAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/claim/$recordId': {
       id: '/claim/$recordId'
       path: '/claim/$recordId'
       fullPath: '/claim/$recordId'
       preLoaderRoute: typeof ClaimRecordIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/records/': {
+      id: '/pro/records/'
+      path: '/pro/records'
+      fullPath: '/pro/records/'
+      preLoaderRoute: typeof ProRecordsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/customers/': {
+      id: '/pro/customers/'
+      path: '/pro/customers'
+      fullPath: '/pro/customers/'
+      preLoaderRoute: typeof ProCustomersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/records/$recordId': {
+      id: '/pro/records/$recordId'
+      path: '/pro/records/$recordId'
+      fullPath: '/pro/records/$recordId'
+      preLoaderRoute: typeof ProRecordsRecordIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro/jobs/new': {
@@ -192,19 +438,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/customers/$customerId': {
+      id: '/pro/customers/$customerId'
+      path: '/pro/customers/$customerId'
+      fullPath: '/pro/customers/$customerId'
+      preLoaderRoute: typeof ProCustomersCustomerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/items/$itemId': {
+      id: '/home/items/$itemId'
+      path: '/home/items/$itemId'
+      fullPath: '/home/items/$itemId'
+      preLoaderRoute: typeof HomeItemsItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
+  HomeAddRoute: HomeAddRoute,
+  HomeProsRoute: HomeProsRoute,
+  HomeRemindersRoute: HomeRemindersRoute,
+  HomeSettingsRoute: HomeSettingsRoute,
+  ProDueRoute: ProDueRoute,
+  ProReferralRoute: ProReferralRoute,
+  ProReviewsRoute: ProReviewsRoute,
+  ProSettingsRoute: ProSettingsRoute,
   ProSignupRoute: ProSignupRoute,
   RRecordIdRoute: RRecordIdRoute,
+  HomeIndexRoute: HomeIndexRoute,
   ProIndexRoute: ProIndexRoute,
+  HomeItemsItemIdRoute: HomeItemsItemIdRoute,
+  ProCustomersCustomerIdRoute: ProCustomersCustomerIdRoute,
   ProJobsNewRoute: ProJobsNewRoute,
+  ProRecordsRecordIdRoute: ProRecordsRecordIdRoute,
+  ProCustomersIndexRoute: ProCustomersIndexRoute,
+  ProRecordsIndexRoute: ProRecordsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

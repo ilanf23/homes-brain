@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Avatar, Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
-import { LogoMark, ShieldCheck, TradeIcon } from "@/components/svg";
+import { Logo, LogoMark, ShieldCheck, TradeIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/r/$recordId")({
   head: () => ({ meta: [{ title: "Your service record — HomesBrain" }] }),
@@ -108,8 +108,7 @@ function PublicRecord() {
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-2xl px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <LogoMark className="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-            <span className="font-extrabold tracking-tight">HomesBrain</span>
+            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
           <Pill accent="coral">Your record</Pill>
         </div>

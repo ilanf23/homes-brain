@@ -201,6 +201,14 @@
   }
 }
 
+/* Hide scrollbars on horizontally scrolling nav rows */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Skeleton shimmer */
 @utility skeleton {
   background: linear-gradient(90deg, var(--soft) 25%, #edebe0 50%, var(--soft) 75%);

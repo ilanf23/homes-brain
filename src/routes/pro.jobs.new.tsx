@@ -4,7 +4,7 @@ import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast } f
 import { supabase } from "@/integrations/supabase/client";
 import { getSession } from "@/lib/session";
 import { buildRecordUrl, checkRecall, logEvent, mockSend, tradeLabel } from "@/lib/hb";
-import { CheckBurst, LogoMark, ShieldCheck } from "@/components/svg";
+import { CheckBurst, Logo, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job — HomesBrain" }] }),
@@ -233,8 +233,7 @@ function NewJob() {
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-5xl px-5 h-16 flex items-center justify-between">
           <Link to="/pro" className="flex items-center gap-2.5 group">
-            <LogoMark className="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-            <span className="font-extrabold tracking-tight">HomesBrain</span>
+            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
           <Pill accent="teal">Log a job</Pill>
         </div>

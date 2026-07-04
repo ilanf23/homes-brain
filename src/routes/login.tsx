@@ -4,7 +4,7 @@ import { Avatar, Btn, Card, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent, tradeLabel } from "@/lib/hb";
 import { setSession } from "@/lib/session";
-import { LogoMark } from "@/components/svg";
+import { Logo } from "@/components/svg";
 
 // NOTE: OTP verification is parked until real Supabase OTP auth ships.
 // The archived OtpBoxes component lives in @/lib/ui — restore a "Verify"
@@ -92,8 +92,7 @@ function Login() {
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-xl px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <LogoMark className="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-            <span className="font-extrabold tracking-tight">HomesBrain</span>
+            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
           <Pill accent="indigo">Log in</Pill>
         </div>
