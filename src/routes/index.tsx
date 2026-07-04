@@ -100,7 +100,7 @@ function Landing() {
             A Carfax for homes{" "}
             <span className="relative inline-block">
               that writes itself.
-              <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
+              <Scribble className="absolute -bottom-2 left-0 w-full h-3" color="#473fb0" />
             </span>
           </h1>
           <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-xl mx-auto lg:mx-0">
