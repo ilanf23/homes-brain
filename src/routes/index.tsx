@@ -65,9 +65,8 @@ function Landing() {
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <LogoMark className="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-            <span className="font-extrabold tracking-tight text-ink">HomesBrain</span>
+          <Link to="/" className="flex items-center group">
+            <Logo size={30} className="transition-transform duration-300 group-hover:-rotate-3" />
           </Link>
           <nav className="flex items-center gap-2">
             <a
