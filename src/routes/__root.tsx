@@ -103,7 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href:
           "data:image/svg+xml," +
           encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><rect x="1" y="1" width="26" height="26" rx="8" fill="#473fb0"/><path d="M7.5 13.5 14 8l6.5 5.5V20a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-6.5Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="15" r="1.4" fill="#fff"/></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#473fb0"/><path d="M60 30 L93 57 H27 Z" fill="#ffffff"/><rect x="36" y="54" width="48" height="38" rx="5" fill="#ffffff"/><path d="M52 92 V79 a8 8 0 0 1 16 0 V92 Z" fill="#473fb0"/></svg>',
           ),
       },
     ],

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eyebrow, Pill, Card, Btn, KV } from "@/lib/ui";
-import { HouseScene, LogoMark, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import { HouseScene, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import { Logo, LogoMark } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,9 +65,8 @@ function Landing() {
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <LogoMark className="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-            <span className="font-extrabold tracking-tight text-ink">HomesBrain</span>
+          <Link to="/" className="flex items-center group">
+            <Logo size={30} className="transition-transform duration-300 group-hover:-rotate-3" />
           </Link>
           <nav className="flex items-center gap-2">
             <a
@@ -100,7 +100,7 @@ function Landing() {
             A Carfax for homes{" "}
             <span className="relative inline-block">
               that writes itself.
-              <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
+              <Scribble className="absolute -bottom-2 left-0 w-full h-3" color="#473fb0" />
             </span>
           </h1>
           <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-xl mx-auto lg:mx-0">
