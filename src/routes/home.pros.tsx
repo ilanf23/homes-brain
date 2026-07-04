@@ -23,7 +23,7 @@ type JobRow = {
 };
 
 function MyPros() {
-  const { homeownerId, home, loading: guardLoading } = useHomeownerGuard();
+  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [pros, setPros] = useState<ProRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +81,7 @@ function MyPros() {
   if (loading) return <PageLoader label="Loading your pros" />;
 
   return (
-    <HomeShell active="pros">
+    <HomeShell active="pros" homeowner={homeowner} home={home}>
       <HomePageHead
         eyebrow="My pros"
         title="The people who know your home"

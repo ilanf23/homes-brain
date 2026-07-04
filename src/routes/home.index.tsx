@@ -31,7 +31,7 @@ type JobRow = {
 };
 
 function HomeOverview() {
-  const { homeownerId, home, loading: guardLoading } = useHomeownerGuard();
+  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [equipment, setEquipment] = useState<EquipmentRow[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
@@ -88,7 +88,7 @@ function HomeOverview() {
   if (loading) return <PageLoader label="Loading your home" />;
 
   return (
-    <HomeShell active="overview">
+    <HomeShell active="overview" homeowner={homeowner} home={home}>
       <HomePageHead
         eyebrow="My home"
         title={home.address}

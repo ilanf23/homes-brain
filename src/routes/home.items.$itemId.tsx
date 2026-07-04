@@ -30,7 +30,7 @@ type ProRow = { id: string; business: string; trade: string };
 
 function ItemDetail() {
   const { itemId } = Route.useParams();
-  const { home, loading: guardLoading } = useHomeownerGuard();
+  const { homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [item, setItem] = useState<EquipmentRow | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
@@ -78,7 +78,7 @@ function ItemDetail() {
 
   if (!item) {
     return (
-      <HomeShell active="overview">
+      <HomeShell active="overview" homeowner={homeowner} home={home}>
         <Card className="anim-fade-up text-center py-14">
           <h1 className="text-2xl tracking-tight">Item not found</h1>
           <p className="mt-2 text-sm text-muted">
@@ -97,7 +97,7 @@ function ItemDetail() {
   const recallClean = item.recall_status === "none";
 
   return (
-    <HomeShell active="overview">
+    <HomeShell active="overview" homeowner={homeowner} home={home}>
       <Link
         to="/home"
         className="anim-fade-up inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors mb-4"

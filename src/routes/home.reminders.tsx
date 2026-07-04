@@ -35,7 +35,7 @@ const BUCKETS = [
 ] as const;
 
 function Reminders() {
-  const { homeownerId, home, loading: guardLoading } = useHomeownerGuard();
+  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [jobs, setJobs] = useState<DueJob[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +97,7 @@ function Reminders() {
   };
 
   return (
-    <HomeShell active="reminders">
+    <HomeShell active="reminders" homeowner={homeowner} home={home}>
       <HomePageHead
         eyebrow="Reminders"
         title="Service that's due"

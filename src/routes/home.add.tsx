@@ -27,7 +27,7 @@ const ITEM_TYPES = [
 
 function AddToHome() {
   const navigate = useNavigate();
-  const { homeownerId, home, loading: guardLoading } = useHomeownerGuard();
+  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [knownTrades, setKnownTrades] = useState<string[]>([]);
   const [prosCount, setProsCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -101,7 +101,7 @@ function AddToHome() {
   const inboxAddr = `home-${home.id.slice(0, 8)}@in.homesbrain.com`;
 
   return (
-    <HomeShell active="add">
+    <HomeShell active="add" homeowner={homeowner} home={home}>
       <HomePageHead
         eyebrow="Add to your home"
         title="Put it on the record"

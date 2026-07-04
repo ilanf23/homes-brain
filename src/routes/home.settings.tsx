@@ -80,7 +80,7 @@ function HomeownerSettings() {
   if (!home) return <NoHomeYet />;
 
   return (
-    <HomeShell active="settings">
+    <HomeShell active="settings" homeowner={homeowner} home={home}>
       <HomePageHead
         eyebrow="Settings"
         title="Your account"
