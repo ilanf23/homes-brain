@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eyebrow, Pill, Card, Btn, KV } from "@/lib/ui";
-import { HouseScene, LogoMark, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import { HouseScene, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import { Logo, LogoMark } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
