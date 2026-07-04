@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Btn, Card, Eyebrow, PageLoader, Pill, Toast } from "@/lib/ui";
+import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/due")({
   head: () => ({ meta: [{ title: "Due for service — HomesBrain" }] }),
@@ -81,7 +81,13 @@ function DueForService() {
     setToast(`Rebook nudge sent to ${j.customers.name} (mock)`);
   }
 
-  if (!pro || loading) return <PageLoader label="Loading due list" />;
+  if (!pro || loading) {
+    return (
+      <ProShell pro={pro} active="due">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   const byBucket = {
     overdue: jobs.filter((j) => bucketOf(j.next_service_date) === "overdue"),
@@ -142,15 +148,18 @@ function DueForService() {
                           {formatDate(j.next_service_date)}
                         </Pill>
                         {nudged.has(j.id) ? (
-                          <Pill accent="teal">Nudge sent</Pill>
+                          <span className="anim-scale-in">
+                            <Pill accent="teal">Nudge sent</Pill>
+                          </span>
                         ) : (
                           <Btn
                             variant="teal"
                             size="sm"
-                            disabled={busy === j.id || !j.customers}
+                            loading={busy === j.id}
+                            disabled={!j.customers}
                             onClick={() => sendNudge(j)}
                           >
-                            {busy === j.id ? "Sending…" : "Send rebook nudge"}
+                            Send rebook nudge
                           </Btn>
                         )}
                       </div>
@@ -163,7 +172,7 @@ function DueForService() {
         </div>
       )}
 
-      {toast && <Toast>{toast}</Toast>}
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
   );
 }

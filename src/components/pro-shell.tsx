@@ -14,7 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { clearSession, getSession } from "@/lib/session";
 import { tradeLabel } from "@/lib/hb";
-import { Avatar, Btn, PageLoader } from "@/lib/ui";
+import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
 import { Logo } from "@/components/svg";
 
 export type ProRow = {
@@ -88,7 +88,6 @@ export function ProShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
-  if (!pro) return <PageLoader label="Loading" />;
 
   function signOut() {
     clearSession();
@@ -117,7 +116,7 @@ export function ProShell({
               key={key}
               to={to}
               aria-current={active === key ? "page" : undefined}
-              className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors duration-150 ${
+              className={`pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
                 active === key
                   ? "bg-tealbg text-teal font-bold"
                   : "text-muted font-semibold hover:text-ink hover:bg-soft"
@@ -130,11 +129,23 @@ export function ProShell({
         </nav>
         <div className="p-3 border-t border-line">
           <div className="flex items-center gap-2.5 px-2">
-            <Avatar name={pro.business} accent="teal" size={36} />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-ink truncate">{pro.business}</div>
-              <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
-            </div>
+            {pro ? (
+              <>
+                <Avatar name={pro.business} accent="teal" size={36} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-ink truncate">{pro.business}</div>
+                  <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <Skeleton className="h-3.5 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </>
+            )}
             <button
               onClick={signOut}
               aria-label="Sign out"
@@ -154,20 +165,13 @@ export function ProShell({
             <Link to="/" className="flex items-center gap-2">
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
-            <div className="flex items-center gap-2">
-              <Link to="/pro/jobs/new">
-                <Btn variant="teal" size="sm">
-                  <Plus size={14} /> Log a job
-                </Btn>
-              </Link>
-              <button
-                onClick={signOut}
-                aria-label="Sign out"
-                className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
+            <button
+              onClick={signOut}
+              aria-label="Sign out"
+              className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
           <nav
             className="flex gap-1 px-3 pb-2 overflow-x-auto no-scrollbar"
@@ -178,7 +182,7 @@ export function ProShell({
                 key={key}
                 to={to}
                 aria-current={active === key ? "page" : undefined}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
+                className={`pressable shrink-0 rounded-full px-3.5 py-1.5 text-[13px] ${
                   active === key
                     ? "bg-tealbg text-teal font-bold"
                     : "text-muted font-semibold hover:text-ink"
@@ -190,8 +194,66 @@ export function ProShell({
           </nav>
         </header>
 
-        <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 md:py-10">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 md:py-10 pb-28 md:pb-10">
+          {children}
+        </main>
+
+        {/* Mobile: the one primary action lives in the bottom thumb zone, always reachable. */}
+        <div
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 px-4 pt-3 bg-gradient-to-t from-[var(--soft)] via-[var(--soft)]/90 to-transparent pointer-events-none"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+        >
+          <Link to="/pro/jobs/new" className="block pointer-events-auto">
+            <Btn
+              variant="teal"
+              size="lg"
+              className="w-full shadow-[0_12px_28px_-10px_rgba(15,110,86,0.55)]"
+              tabIndex={-1}
+            >
+              <Plus size={18} /> Log a job
+            </Btn>
+          </Link>
+        </div>
       </div>
+    </div>
+  );
+}
+
+/* Content-area skeleton that mirrors the real page layout (head → stats → list),
+   shown inside the shell so navigation never blanks the screen. */
+export function ProPageSkeleton({ variant = "list" }: { variant?: "list" | "dashboard" }) {
+  return (
+    <div className="anim-fade-in" aria-hidden="true">
+      <div className="mb-6">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="mt-2.5 h-8 w-56" />
+        <Skeleton className="mt-2.5 h-3.5 w-72 max-w-full" />
+      </div>
+      {variant === "dashboard" && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {[0, 1, 2, 3].map((i) => (
+            <Card key={i} className="!p-5">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="mt-3 h-8 w-14" />
+            </Card>
+          ))}
+        </div>
+      )}
+      <Card className="!p-3">
+        <div className="divide-y divide-line">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-2 py-3.5">
+              <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-40 max-w-[60%]" />
+                <Skeleton className="h-3 w-56 max-w-[80%]" />
+              </div>
+              <Skeleton className="h-5 w-16 rounded-full shrink-0" />
+            </div>
+          ))}
+        </div>
+      </Card>
+      <span className="sr-only">Loading</span>
     </div>
   );
 }

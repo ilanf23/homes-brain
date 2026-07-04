@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Toast } from "@/lib/ui";
+import { Avatar, Btn, Card, Eyebrow, Field, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { TRADES } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/settings")({
   head: () => ({ meta: [{ title: "Settings — HomesBrain" }] }),
@@ -34,7 +34,13 @@ function ProSettings() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  if (!pro || !proId) return <PageLoader label="Loading settings" />;
+  if (!pro || !proId) {
+    return (
+      <ProShell pro={pro} active="settings">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   const dirty =
     business !== pro.business || trade !== pro.trade || area !== (pro.service_area ?? "");
@@ -136,10 +142,11 @@ function ProSettings() {
               variant="teal"
               size="lg"
               className="w-full"
-              disabled={!dirty || !business || saving}
+              loading={saving}
+              disabled={!dirty || !business}
               onClick={save}
             >
-              {saving ? "Saving…" : "Save changes"}
+              Save changes
             </Btn>
           </div>
         </Card>
@@ -177,10 +184,10 @@ function ProSettings() {
                 <Btn
                   variant="indigo"
                   className="w-full mt-3"
-                  disabled={busyGoogle}
+                  loading={busyGoogle}
                   onClick={toggleGoogle}
                 >
-                  {busyGoogle ? "Connecting…" : "Connect Google"}
+                  Connect Google
                 </Btn>
               </div>
             )}
@@ -199,7 +206,7 @@ function ProSettings() {
         </div>
       </div>
 
-      {toast && <Toast>{toast}</Toast>}
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
   );
 }

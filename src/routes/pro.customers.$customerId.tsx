@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Avatar, Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
+import { Avatar, Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
-import { ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer — HomesBrain" }] }),
@@ -77,7 +77,13 @@ function CustomerDetail() {
     })();
   }, [proId, customerId]);
 
-  if (!pro || loading) return <PageLoader label="Loading customer" />;
+  if (!pro || loading) {
+    return (
+      <ProShell pro={pro} active="customers">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   if (!customer) {
     return (

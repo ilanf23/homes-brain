@@ -113,23 +113,70 @@ const btnStyles: Record<BtnVariant, string> = {
   ghost: "bg-transparent text-ink hover:bg-soft",
 };
 
+/* Tiny inline spinner for Btn's loading state — transform-only animation. */
+function Spinner({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      className="animate-spin"
+      aria-hidden="true"
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray="30"
+        strokeDashoffset="20"
+        opacity="0.9"
+      />
+    </svg>
+  );
+}
+
 export function Btn({
   variant = "primary",
   size = "md",
+  loading = false,
   className = "",
+  children,
+  disabled,
   ...rest
-}: { variant?: BtnVariant; size?: "sm" | "md" | "lg" } & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: {
+  variant?: BtnVariant;
+  size?: "sm" | "md" | "lg";
+  loading?: boolean;
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
   const sizeC =
     size === "lg"
-      ? "px-6 py-3 text-base"
+      ? "px-6 py-3 text-base min-h-12"
       : size === "sm"
         ? "px-3 py-1.5 text-sm"
-        : "px-4 py-2.5 text-sm";
+        : "px-4 py-2.5 text-sm min-h-11";
   return (
     <button
       {...rest}
-      className={`pressable inline-flex items-center justify-center gap-2 rounded-full font-semibold hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none ${sizeC} ${btnStyles[variant]} ${className}`}
-    />
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      className={`pressable relative inline-flex items-center justify-center gap-2 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none ${sizeC} ${btnStyles[variant]} ${className}`}
+    >
+      {/* Keep the label in the layout while loading so the button never changes width. */}
+      <span
+        className={`inline-flex items-center justify-center gap-2 transition-opacity duration-150 ${loading ? "opacity-0" : ""}`}
+      >
+        {children}
+      </span>
+      {loading && (
+        <span className="absolute inset-0 flex items-center justify-center">
+          <Spinner size={size === "lg" ? 16 : 14} />
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -170,8 +217,9 @@ export function Field({
   );
 }
 
+/* 16px on touch screens (prevents iOS focus-zoom), 44px min height for field use. */
 const baseInput =
-  "w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-all duration-200 focus:border-ink focus:ring-2 focus:ring-ink/10 hover:border-ink/30";
+  "w-full min-h-11 rounded-xl border border-line bg-paper px-3.5 py-2.5 text-[16px] sm:text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:ring-2 focus:ring-ink/10 hover:border-ink/30";
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${baseInput} ${props.className ?? ""}`} />;
@@ -185,15 +233,42 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${baseInput} ${props.className ?? ""}`} />;
 }
 
-export function Toast({ children }: { children: ReactNode }) {
+export function Toast({ children, onDismiss }: { children: ReactNode; onDismiss?: () => void }) {
   return (
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 z-50 rounded-2xl bg-ink text-white px-5 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(22,22,15,0.5)] max-w-[92vw]"
-      style={{ animation: "hb-slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both" }}
+      className="fixed bottom-4 left-1/2 z-50 flex items-center gap-2.5 rounded-2xl bg-ink text-white pl-4 pr-3 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(22,22,15,0.5)] max-w-[92vw]"
+      style={{ animation: "hb-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both" }}
     >
-      {children}
+      <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" className="shrink-0">
+        <circle cx="8" cy="8" r="8" fill="var(--teal)" opacity="0.9" />
+        <path
+          d="m4.8 8.3 2.1 2.1 4.3-4.6"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span>{children}</span>
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className="pressable shrink-0 rounded-full p-1 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+            <path
+              d="M2.5 2.5l7 7M9.5 2.5l-7 7"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

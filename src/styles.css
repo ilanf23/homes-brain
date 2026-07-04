@@ -165,30 +165,34 @@
   to { stroke-dashoffset: -20; }
 }
 
+/* Entry motion stays under the 300ms ceiling — fast enough to never feel
+   like the UI is making the user wait, slow enough to explain "this just appeared". */
 @utility anim-fade-up {
-  animation: hb-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: hb-fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @utility anim-fade-in {
-  animation: hb-fade-in 0.45s ease-out both;
+  animation: hb-fade-in 0.2s ease-out both;
 }
 @utility anim-scale-in {
-  animation: hb-scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: hb-scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @utility anim-float {
   animation: hb-float 5s ease-in-out infinite;
 }
-@utility d-1 { animation-delay: 60ms; }
-@utility d-2 { animation-delay: 120ms; }
-@utility d-3 { animation-delay: 180ms; }
-@utility d-4 { animation-delay: 240ms; }
-@utility d-5 { animation-delay: 300ms; }
-@utility d-6 { animation-delay: 360ms; }
+@utility d-1 { animation-delay: 40ms; }
+@utility d-2 { animation-delay: 80ms; }
+@utility d-3 { animation-delay: 120ms; }
+@utility d-4 { animation-delay: 160ms; }
+@utility d-5 { animation-delay: 200ms; }
+@utility d-6 { animation-delay: 240ms; }
 
-/* Pressable feedback: subtle sink on press */
+/* Pressable feedback: instant snap down on press (0ms), eased release.
+   The press itself must feel caused by the finger — never eased in. */
 @utility pressable {
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, background-color 0.15s ease, opacity 0.15s ease;
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+    transition-duration: 0s;
   }
 }
 

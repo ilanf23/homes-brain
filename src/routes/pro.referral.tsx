@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, Copy } from "lucide-react";
-import { Btn, Card, Eyebrow, Input, PageLoader, Pill, Toast } from "@/lib/ui";
+import { Btn, Card, Eyebrow, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent } from "@/lib/hb";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/referral")({
   head: () => ({ meta: [{ title: "Referral — HomesBrain" }] }),
@@ -79,7 +79,13 @@ function Referral() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  if (!pro || !proId) return <PageLoader label="Loading referral" />;
+  if (!pro || !proId) {
+    return (
+      <ProShell pro={pro} active="referral">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   const link =
     typeof window === "undefined"
@@ -176,7 +182,7 @@ function Referral() {
         </Card>
       </div>
 
-      {toast && <Toast>{toast}</Toast>}
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
   );
 }

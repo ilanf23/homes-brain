@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Btn, Card, PageLoader, Pill } from "@/lib/ui";
+import { Btn, Card, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/records/")({
   head: () => ({ meta: [{ title: "Records — HomesBrain" }] }),
@@ -69,7 +69,13 @@ function RecordsList() {
 
   const filtered = filter === "all" ? records : records.filter((r) => statusOf(r) === filter);
 
-  if (!pro || loading) return <PageLoader label="Loading records" />;
+  if (!pro || loading) {
+    return (
+      <ProShell pro={pro} active="records">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   return (
     <ProShell pro={pro} active="records">
@@ -134,7 +140,7 @@ function RecordsList() {
                       key={r.id}
                       to="/pro/records/$recordId"
                       params={{ recordId: r.id }}
-                      className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft transition-colors duration-150"
+                      className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft active:bg-line/50 transition-colors duration-150"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-ink truncate">

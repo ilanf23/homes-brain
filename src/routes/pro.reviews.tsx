@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
-import { Card, Eyebrow, PageLoader, Pill } from "@/lib/ui";
+import { Card, Eyebrow, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { CountUp } from "@/components/svg";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/reviews")({
   head: () => ({ meta: [{ title: "Reviews — HomesBrain" }] }),
@@ -38,7 +38,13 @@ function Reviews() {
     })();
   }, [proId]);
 
-  if (!pro || loading) return <PageLoader label="Loading reviews" />;
+  if (!pro || loading) {
+    return (
+      <ProShell pro={pro} active="reviews">
+        <ProPageSkeleton variant="dashboard" />
+      </ProShell>
+    );
+  }
 
   const connected = !!pro.google_place_id;
 

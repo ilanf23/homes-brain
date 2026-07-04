@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { Avatar, Btn, Card, Input, PageLoader, Pill } from "@/lib/ui";
+import { Avatar, Btn, Card, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/customers/")({
   head: () => ({ meta: [{ title: "Customers — HomesBrain" }] }),
@@ -50,7 +50,13 @@ function CustomersList() {
     );
   }, [customers, q]);
 
-  if (!pro || loading) return <PageLoader label="Loading customers" />;
+  if (!pro || loading) {
+    return (
+      <ProShell pro={pro} active="customers">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   return (
     <ProShell pro={pro} active="customers">
@@ -104,7 +110,7 @@ function CustomersList() {
                       key={c.id}
                       to="/pro/customers/$customerId"
                       params={{ customerId: c.id }}
-                      className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft transition-colors duration-150"
+                      className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft active:bg-line/50 transition-colors duration-150"
                     >
                       <Avatar name={c.name} accent="teal" size={40} />
                       <div className="flex-1 min-w-0">

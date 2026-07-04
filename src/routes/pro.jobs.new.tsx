@@ -224,6 +224,34 @@ function NewJob() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  /* Reset in place for "Log another" — no page reload. Refetch customers so the
+     one just added is selectable on the next pass. */
+  async function logAnother() {
+    if (proId) {
+      const { data: c } = await supabase
+        .from("customers")
+        .select("id,name,phone,email,home_id,homes(address)")
+        .eq("pro_id", proId)
+        .order("created_at", { ascending: false });
+      setExisting((c ?? []) as unknown as CustomerOpt[]);
+    }
+    setSelectedCustomerId("");
+    setNewCustomer({ name: "", address: "", phone: "", email: "" });
+    setConsent(false);
+    setEqType("");
+    setEqMake("");
+    setEqModel("");
+    setEqSerial("");
+    setWarrantyUntil("");
+    setWhatDone("");
+    setNextService("");
+    setSendRecord(true);
+    setAskReview(true);
+    setRecordUrl(null);
+    setCopied(false);
+    setStage("customer");
+  }
+
   const canCustomer = selectedCustomerId || (newCustomer.name && newCustomer.address && consent);
   const canWork = whatDone.length > 0;
   const showPreview = stage === "work" || stage === "review";
@@ -454,10 +482,10 @@ function NewJob() {
                     variant="teal"
                     size="lg"
                     className="flex-1"
-                    disabled={submitting}
+                    loading={submitting}
                     onClick={submit}
                   >
-                    {submitting ? "Sending…" : "Send record"}
+                    Send record
                   </Btn>
                 </div>
                 <div className="text-xs text-muted">
@@ -482,12 +510,7 @@ function NewJob() {
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
-                  <Btn
-                    variant="teal"
-                    onClick={() => {
-                      window.location.reload();
-                    }}
-                  >
+                  <Btn variant="teal" onClick={logAnother}>
                     Log another
                   </Btn>
                   <Link to="/pro">
@@ -544,7 +567,7 @@ function NewJob() {
         </div>
       </div>
 
-      {toast && <Toast>{toast}</Toast>}
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </div>
   );
 }

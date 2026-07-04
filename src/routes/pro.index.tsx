@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
+import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { CountUp, HouseScene, ProgressRing, SparkLine } from "@/components/svg";
-import { ProPageHead, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/")({
   head: () => ({ meta: [{ title: "Dashboard — HomesBrain" }] }),
@@ -25,7 +25,7 @@ type JobRow = {
   created_at: string;
   customers: { name: string } | null;
   homes: { address: string } | null;
-  records: { viewed_at: string | null; sent_sms_at: string | null }[] | null;
+  records: { id: string; viewed_at: string | null; sent_sms_at: string | null }[] | null;
 };
 
 function ProDashboard() {
@@ -47,7 +47,7 @@ function ProDashboard() {
         supabase
           .from("jobs")
           .select(
-            "id,what_done,next_service_date,created_at,customers(name),homes(address),records(viewed_at,sent_sms_at)",
+            "id,what_done,next_service_date,created_at,customers(name),homes(address),records(id,viewed_at,sent_sms_at)",
           )
           .eq("pro_id", proId)
           .order("created_at", { ascending: false }),
@@ -78,7 +78,13 @@ function ProDashboard() {
     return buckets;
   }, [jobs]);
 
-  if (loading || !pro) return <PageLoader label="Loading dashboard" />;
+  if (loading || !pro) {
+    return (
+      <ProShell pro={pro} active="dashboard">
+        <ProPageSkeleton variant="dashboard" />
+      </ProShell>
+    );
+  }
 
   const empty = jobs.length === 0;
   const viewRate = sentCount ? viewedCount / sentCount : 0;
@@ -169,11 +175,8 @@ function ProDashboard() {
           <div className="mt-3 divide-y divide-line">
             {jobs.slice(0, 8).map((j) => {
               const rec = j.records?.[0];
-              return (
-                <div
-                  key={j.id}
-                  className="py-3 flex items-start justify-between gap-3 -mx-2 px-2 rounded-lg hover:bg-soft transition-colors duration-200"
-                >
+              const inner = (
+                <>
                   <div>
                     <div className="font-semibold text-ink">{j.customers?.name ?? "—"}</div>
                     <div className="text-xs text-muted">{j.homes?.address}</div>
@@ -189,6 +192,22 @@ function ProDashboard() {
                       <Pill accent="indigo">Sent</Pill>
                     ) : null}
                   </div>
+                </>
+              );
+              const rowCls =
+                "py-3 flex items-start justify-between gap-3 -mx-2 px-2 rounded-lg hover:bg-soft active:bg-line/50 transition-colors duration-150";
+              return rec ? (
+                <Link
+                  key={j.id}
+                  to="/pro/records/$recordId"
+                  params={{ recordId: rec.id }}
+                  className={rowCls}
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div key={j.id} className={rowCls}>
+                  {inner}
                 </div>
               );
             })}

@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
+import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { buildRecordUrl, formatDate } from "@/lib/hb";
-import { ProShell, useProGuard } from "@/components/pro-shell";
+import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/records/$recordId")({
   head: () => ({ meta: [{ title: "Record — HomesBrain" }] }),
@@ -56,7 +56,13 @@ function RecordDetail() {
     })();
   }, [proId, recordId]);
 
-  if (!pro || loading) return <PageLoader label="Loading record" />;
+  if (!pro || loading) {
+    return (
+      <ProShell pro={pro} active="records">
+        <ProPageSkeleton />
+      </ProShell>
+    );
+  }
 
   if (!record) {
     return (
