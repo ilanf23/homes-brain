@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Btn, Card, Field, Input, Pill, Avatar, StepBar, OtpBoxes } from "@/lib/ui";
+import { Btn, Card, Field, Input, Pill, Avatar, StepBar } from "@/lib/ui";
 import { TRADES, logEvent } from "@/lib/hb";
 import { supabase } from "@/integrations/supabase/client";
 import { setSession } from "@/lib/session";
@@ -11,8 +11,9 @@ export const Route = createFileRoute("/pro/signup")({
   component: ProSignup,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5;
-const STEP_LABELS = ["Start", "Verify", "Business", "Google", "Plan"];
+// "Verify" step parked until real OTP ships — see OtpBoxes note in @/lib/ui.
+type Step = 1 | 2 | 3 | 4;
+const STEP_LABELS = ["Start", "Business", "Google", "Plan"];
 
 function ProSignup() {
   const navigate = useNavigate();
@@ -22,7 +23,6 @@ function ProSignup() {
 
   const [business, setBusiness] = useState("");
   const [contact, setContact] = useState("");
-  const [otp, setOtp] = useState("");
   const [trade, setTrade] = useState<string>("water_treatment");
   const [area, setArea] = useState("");
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -76,17 +76,15 @@ function ProSignup() {
           <div className="text-center mb-8">
             <h1 className="text-3xl tracking-tight">
               {step === 1 && "Start free"}
-              {step === 2 && "Verify"}
-              {step === 3 && "Your business"}
-              {step === 4 && "Connect Google"}
-              {step === 5 && "Pick a plan"}
+              {step === 2 && "Your business"}
+              {step === 3 && "Connect Google"}
+              {step === 4 && "Pick a plan"}
             </h1>
             <p className="mt-2 text-sm text-muted">
               {step === 1 && "No credit card. 60 seconds."}
-              {step === 2 && `We sent a 4-digit code to ${contact || "you"}.`}
-              {step === 3 && "Just the basics."}
-              {step === 4 && "Route reviews to your profile, show your rating."}
-              {step === 5 && "Free is free, forever."}
+              {step === 2 && "Just the basics."}
+              {step === 3 && "Route reviews to your profile, show your rating."}
+              {step === 4 && "Free is free, forever."}
             </p>
           </div>
 
@@ -101,7 +99,7 @@ function ProSignup() {
                     autoFocus
                   />
                 </Field>
-                <Field label="Email or phone" hint="We'll text or email a 4-digit code.">
+                <Field label="Email or phone" hint="You'll use this to log in.">
                   <Input
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
@@ -115,36 +113,12 @@ function ProSignup() {
                   disabled={!business || !contact}
                   onClick={() => setStep(2)}
                 >
-                  Send code
+                  Continue
                 </Btn>
               </div>
             )}
 
             {step === 2 && (
-              <div className="space-y-5">
-                <Field label="4-digit code" hint="Demo mode — any 4 digits will work.">
-                  <div className="mt-2">
-                    <OtpBoxes value={otp} onChange={setOtp} accent="teal" />
-                  </div>
-                </Field>
-                <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStep(1)}>
-                    Back
-                  </Btn>
-                  <Btn
-                    variant="teal"
-                    size="lg"
-                    className="flex-1"
-                    disabled={otp.length !== 4}
-                    onClick={() => setStep(3)}
-                  >
-                    Verify
-                  </Btn>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
               <div className="space-y-4">
                 <div>
                   <div className="text-sm font-semibold text-ink mb-2">Trade</div>
@@ -188,7 +162,7 @@ function ProSignup() {
                   </div>
                 </Field>
                 <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStep(2)}>
+                  <Btn variant="secondary" onClick={() => setStep(1)}>
                     Back
                   </Btn>
                   <Btn
@@ -196,7 +170,7 @@ function ProSignup() {
                     size="lg"
                     className="flex-1"
                     disabled={!area}
-                    onClick={() => setStep(4)}
+                    onClick={() => setStep(3)}
                   >
                     Continue
                   </Btn>
@@ -204,7 +178,7 @@ function ProSignup() {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 3 && (
               <div className="space-y-4">
                 <div className="rounded-xl bg-indigobg p-4">
                   <Pill accent="indigo">Recommended</Pill>
@@ -235,14 +209,14 @@ function ProSignup() {
                   </Btn>
                 )}
                 <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStep(3)}>
+                  <Btn variant="secondary" onClick={() => setStep(2)}>
                     Back
                   </Btn>
                   <Btn
                     variant={googleConnected ? "teal" : "secondary"}
                     size="lg"
                     className="flex-1"
-                    onClick={() => setStep(5)}
+                    onClick={() => setStep(4)}
                   >
                     {googleConnected ? "Continue" : "Skip for now"}
                   </Btn>
@@ -250,7 +224,7 @@ function ProSignup() {
               </div>
             )}
 
-            {step === 5 && (
+            {step === 4 && (
               <div className="space-y-4">
                 <div className="anim-fade-up rounded-xl border-2 border-teal bg-tealbg p-4 liftable">
                   <div className="flex items-center justify-between">

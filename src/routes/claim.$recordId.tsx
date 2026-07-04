@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Btn, Card, Field, Input, OtpBoxes, Pill, StepBar } from "@/lib/ui";
+import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
 import { setSession } from "@/lib/session";
@@ -11,12 +11,11 @@ export const Route = createFileRoute("/claim/$recordId")({
   component: ClaimFlow,
 });
 
+// OTP verification parked until real Supabase OTP ships — see OtpBoxes note in @/lib/ui.
 function ClaimFlow() {
   const { recordId } = Route.useParams();
   const navigate = useNavigate();
-  const [step, setStep] = useState<1 | 2>(1);
   const [contact, setContact] = useState("");
-  const [otp, setOtp] = useState("");
   const [homeId, setHomeId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -73,73 +72,43 @@ function ClaimFlow() {
 
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="anim-fade-up">
-          <HouseScene active={step === 2 ? "owner" : null} className="w-48 mx-auto mb-2" />
-          <StepBar steps={["Claim", "Verify"]} current={step - 1} accent="coral" />
+          <HouseScene active={contact ? "owner" : null} className="w-48 mx-auto mb-2" />
         </div>
 
-        <div key={step} className="anim-fade-up mt-8">
+        <div className="anim-fade-up mt-8">
           <div className="text-center mb-6">
-            <h1 className="text-3xl tracking-tight">{step === 1 ? "Claim your home" : "Verify"}</h1>
-            <p className="mt-2 text-sm text-muted">
-              {step === 1
-                ? "Free, forever. Yours for life."
-                : `We sent a 4-digit code to ${contact}.`}
-            </p>
+            <h1 className="text-3xl tracking-tight">Claim your home</h1>
+            <p className="mt-2 text-sm text-muted">Free, forever. Yours for life.</p>
           </div>
 
           <Card>
-            {step === 1 && (
-              <div className="space-y-4">
-                <Field label="Email or phone">
-                  <Input
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="you@email.com or 555-555-1234"
-                    autoFocus
-                  />
-                </Field>
-                <Btn
-                  variant="coral"
-                  size="lg"
-                  className="w-full"
-                  disabled={!contact}
-                  onClick={() => setStep(2)}
+            <div className="space-y-4">
+              <Field label="Email or phone" hint="You'll use this to log in.">
+                <Input
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="you@email.com or 555-555-1234"
+                  autoFocus
+                />
+              </Field>
+              {err && (
+                <div
+                  role="alert"
+                  className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
                 >
-                  Send code
-                </Btn>
-              </div>
-            )}
-            {step === 2 && (
-              <div className="space-y-5">
-                <Field label="4-digit code" hint="Demo mode — any 4 digits will work.">
-                  <div className="mt-2">
-                    <OtpBoxes value={otp} onChange={setOtp} accent="coral" />
-                  </div>
-                </Field>
-                {err && (
-                  <div
-                    role="alert"
-                    className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                  >
-                    {err}
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStep(1)}>
-                    Back
-                  </Btn>
-                  <Btn
-                    variant="coral"
-                    size="lg"
-                    className="flex-1"
-                    disabled={otp.length !== 4 || busy}
-                    onClick={complete}
-                  >
-                    {busy ? "Claiming…" : "Claim my home"}
-                  </Btn>
+                  {err}
                 </div>
-              </div>
-            )}
+              )}
+              <Btn
+                variant="coral"
+                size="lg"
+                className="w-full"
+                disabled={!contact || busy}
+                onClick={complete}
+              >
+                {busy ? "Claiming…" : "Claim my home"}
+              </Btn>
+            </div>
           </Card>
         </div>
       </div>

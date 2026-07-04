@@ -52,7 +52,7 @@ function HomeownerView() {
   useEffect(() => {
     const s = getSession();
     if (!s || s.role !== "homeowner") {
-      navigate({ to: "/" });
+      navigate({ to: "/login" });
       return;
     }
     (async () => {

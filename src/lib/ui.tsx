@@ -244,7 +244,11 @@ export function StepBar({
   );
 }
 
-/* Four-box OTP input. */
+/* Four-box OTP input.
+   ARCHIVED — no flow uses this right now. The mock "any 4 digits" verify steps
+   were removed from /login, /pro/signup, and /claim because they verified
+   nothing. Re-add a Verify step using this component when real Supabase OTP
+   (email/phone) ships. */
 export function OtpBoxes({
   value,
   onChange,

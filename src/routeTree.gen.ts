@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProIndexRouteImport } from './routes/pro.index'
@@ -17,6 +18,11 @@ import { Route as ProSignupRouteImport } from './routes/pro.signup'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
 import { Route as ProJobsNewRouteImport } from './routes/pro.jobs.new'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -56,6 +62,7 @@ const ProJobsNewRoute = ProJobsNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
+  '/login': typeof LoginRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
+  '/login': typeof LoginRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
+  '/login': typeof LoginRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/home'
+    | '/login'
     | '/claim/$recordId'
     | '/pro/signup'
     | '/r/$recordId'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/home'
+    | '/login'
     | '/claim/$recordId'
     | '/pro/signup'
     | '/r/$recordId'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/home'
+    | '/login'
     | '/claim/$recordId'
     | '/pro/signup'
     | '/r/$recordId'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
+  LoginRoute: typeof LoginRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
   ProSignupRoute: typeof ProSignupRoute
   RRecordIdRoute: typeof RRecordIdRoute
@@ -123,6 +136,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home': {
       id: '/home'
       path: '/home'
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
+  LoginRoute: LoginRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
   ProSignupRoute: ProSignupRoute,
   RRecordIdRoute: RRecordIdRoute,

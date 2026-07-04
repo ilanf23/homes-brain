@@ -57,7 +57,7 @@ function NewJob() {
   useEffect(() => {
     const s = getSession();
     if (!s || s.role !== "pro") {
-      navigate({ to: "/pro/signup" });
+      navigate({ to: "/login" });
       return;
     }
     setProId(s.proId);

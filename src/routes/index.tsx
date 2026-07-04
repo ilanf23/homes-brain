@@ -75,6 +75,12 @@ function Landing() {
             >
               How it works
             </a>
+            <Link
+              to="/login"
+              className="text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2"
+            >
+              Log in
+            </Link>
             <Link to="/pro/signup">
               <Btn variant="teal" size="sm">
                 For pros
