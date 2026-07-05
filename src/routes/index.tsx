@@ -122,6 +122,68 @@ function FlowArrow({
   );
 }
 
+
+/* Ledger-style stat cell: animated count-up + indigo underline that draw on scroll-in. */
+function StatFigure({
+  tag,
+  prefix,
+  value,
+  suffix,
+  caption,
+}: {
+  tag: string;
+  prefix: string;
+  value: number;
+  suffix: string;
+  caption: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="relative px-6 py-12 text-center sm:py-14">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-indigo">
+        <span className="h-1 w-1 rounded-full bg-indigo" aria-hidden="true" />
+        {tag}
+      </span>
+      <div className="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-ink tnum leading-none">
+        {prefix}
+        {visible ? <CountUp value={value} duration={1400} /> : <span className="tnum">0</span>}
+        <span className="text-indigo">{suffix}</span>
+      </div>
+      <div className="relative mt-4 h-[3px] w-full">
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-0 h-[3px] -translate-x-1/2 rounded-full bg-indigo/70 transition-[width] duration-[900ms] ease-out"
+          style={{ width: visible ? "3.5rem" : "0rem" }}
+        />
+      </div>
+      <div className="mt-3 text-sm font-semibold text-muted">{caption}</div>
+    </div>
+  );
+}
+
 /* ---- Page data ---- */
 
 const PROBLEM_PANELS = [
