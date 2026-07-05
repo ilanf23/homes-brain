@@ -6,7 +6,10 @@
 
 /* HomesBrain design tokens.
    Color carries meaning. Never mix the roles.
-   indigo = brand, teal = pros, coral = homeowners, amber = partners, red = compliance. */
+   indigo = the brand (buttons, links, accents, chips — everywhere, all audiences),
+   coral = payoff highlights only (rebooks, revenue, wins — used sparingly, ~10%),
+   amber = functional warning/status (due soon, pending), red = errors/destructive.
+   teal is retired — do not reintroduce role-per-audience colors. */
 
 @theme inline {
   --color-background: var(--bg);
@@ -400,7 +403,7 @@
 .cls-scene[data-static="true"] .cls-chip {
   animation: none;
   opacity: 1;
-  transform: translate(86px, -36px);
+  transform: translate(100px, -48px);
 }
 
 /* Entry motion stays under the 300ms ceiling: fast enough to never feel

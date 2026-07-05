@@ -131,13 +131,13 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
         style={{ left: "0.5%", top: "46%", width: "40%" }}
       >
         <div className="rounded-2xl border border-line bg-white p-2.5 shadow-sm">
-          <span className="inline-block rounded-full bg-tealbg px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-teal">
+          <span className="inline-block rounded-full bg-indigobg px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-indigodark">
             Job logged
           </span>
           <div className="mt-1.5 space-y-1">
             <div className={effStep === "pro" ? "cls-typein" : ""} style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-1.5 text-[10px] font-semibold text-ink">
-                <TradeIcon trade="plumbing" size={11} className="shrink-0 text-teal" />
+                <TradeIcon trade="plumbing" size={11} className="shrink-0 text-indigo" />
                 Water heater — annual flush
               </div>
             </div>
@@ -145,7 +145,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
               <div className="text-[10px] text-muted">Next service · Jan 2027</div>
             </div>
           </div>
-          <div className="cls-send mt-2 rounded-full bg-teal py-1 text-center text-[10px] font-bold text-white">
+          <div className="cls-send mt-2 rounded-full bg-indigo py-1 text-center text-[10px] font-bold text-white">
             Send record →
           </div>
         </div>
@@ -245,14 +245,14 @@ function CompactScene({
       </g>
 
       {pose === "pro" && (
-        /* teal mini job card beside the house */
+        /* mini job card beside the house */
         <g transform="translate(8, 52)">
           <rect width="82" height="56" rx="10" fill="var(--bg)" stroke="var(--line)" />
-          <rect x="8" y="8" width="34" height="10" rx="5" fill="var(--tealbg)" />
-          <rect x="13" y="11.5" width="24" height="3" rx="1.5" fill="var(--teal)" />
+          <rect x="8" y="8" width="34" height="10" rx="5" fill="var(--indigobg)" />
+          <rect x="13" y="11.5" width="24" height="3" rx="1.5" fill="var(--indigo)" />
           <rect x="8" y="24" width="60" height="4" rx="2" fill="var(--ink)" opacity="0.7" />
           <rect x="8" y="32" width="44" height="4" rx="2" fill="var(--muted)" opacity="0.55" />
-          <rect x="8" y="42" width="66" height="9" rx="4.5" fill="var(--teal)" />
+          <rect x="8" y="42" width="66" height="9" rx="4.5" fill="var(--indigo)" />
         </g>
       )}
 
