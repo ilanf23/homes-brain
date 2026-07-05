@@ -36,6 +36,13 @@ type RebookEvent = {
 };
 type ReviewEvent = { id: string; created_at: string; props: { customer_id?: string } };
 type ClaimedHome = { id: string; address: string; claimed_at: string };
+type Win = {
+  key: string;
+  ts: string;
+  label: string;
+  detail?: string;
+  kind: "viewed" | "claimed" | "rebooked" | "review";
+};
 
 function ProDashboard() {
   const { proId, pro } = useProGuard();
@@ -119,6 +126,52 @@ function ProDashboard() {
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     }).length;
   }, [rebooks]);
+
+  const wins = useMemo<Win[]>(() => {
+    const jobById = new Map(jobs.map((j) => [j.id, j]));
+    const customerById = new Map(customers.map((c) => [c.id, c]));
+    const list: Win[] = [];
+    for (const j of jobs) {
+      const viewedAt = j.records?.[0]?.viewed_at;
+      if (viewedAt) {
+        list.push({
+          key: `viewed-${j.id}`,
+          ts: viewedAt,
+          label: `${j.customers?.name ?? "A homeowner"} viewed their service record`,
+          detail: j.homes?.address ?? undefined,
+          kind: "viewed",
+        });
+      }
+    }
+    for (const h of claimedHomes) {
+      list.push({
+        key: `claimed-${h.id}`,
+        ts: h.claimed_at,
+        label: `${h.address} was claimed by the homeowner`,
+        kind: "claimed",
+      });
+    }
+    for (const r of rebooks) {
+      const job = r.props.job_id ? jobById.get(r.props.job_id) : undefined;
+      list.push({
+        key: `rebooked-${r.id}`,
+        ts: r.created_at,
+        label: `${job?.customers?.name ?? "A homeowner"} rebooked from their reminder`,
+        detail: job?.what_done,
+        kind: "rebooked",
+      });
+    }
+    for (const r of reviewAsks) {
+      const cust = r.props.customer_id ? customerById.get(r.props.customer_id) : undefined;
+      list.push({
+        key: `review-${r.id}`,
+        ts: r.created_at,
+        label: `Review requested from ${cust?.name ?? "a customer"}`,
+        kind: "review",
+      });
+    }
+    return list.sort((a, b) => (a.ts < b.ts ? 1 : -1)).slice(0, 10);
+  }, [jobs, customers, claimedHomes, rebooks, reviewAsks]);
 
   if (loading || !pro) {
     return (
@@ -372,6 +425,40 @@ function ProDashboard() {
           )}
         </Card>
       </div>
+
+      <Card className="anim-fade-up d-5 mt-5">
+        <Eyebrow accent="indigo">Wins</Eyebrow>
+        {wins.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">
+            Wins from your records (views, claims, rebooks) will show up here.
+          </p>
+        ) : (
+          <div className="mt-3 divide-y divide-line">
+            {wins.map((w) => (
+              <div key={w.key} className="py-3 flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-ink">{w.label}</div>
+                  {w.detail && <div className="text-xs text-muted">{w.detail}</div>}
+                </div>
+                <div className="shrink-0 flex items-center gap-3">
+                  <div className="text-xs text-muted font-mono tnum">{formatDate(w.ts)}</div>
+                  {w.kind === "rebooked" ? (
+                    <Pill accent="coral">Rebooked</Pill>
+                  ) : (
+                    <Pill accent="indigo">
+                      {w.kind === "viewed"
+                        ? "Viewed"
+                        : w.kind === "claimed"
+                          ? "Claimed"
+                          : "Review ask"}
+                    </Pill>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </ProShell>
   );
 }
