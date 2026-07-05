@@ -7,7 +7,7 @@ import { TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
 
 export const Route = createFileRoute("/home/reminders")({
-  head: () => ({ meta: [{ title: "Reminders — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Reminders - HomesBrain" }] }),
   component: Reminders,
 });
 
@@ -29,7 +29,7 @@ function bucketOf(dateIso: string): "overdue" | "soon" | "later" {
 }
 
 const BUCKETS = [
-  { key: "overdue", title: "Overdue", sub: "Past due — worth a call." },
+  { key: "overdue", title: "Overdue", sub: "Past due, worth a call." },
   { key: "soon", title: "Due in the next 30 days", sub: "Coming up." },
   { key: "later", title: "Later", sub: "On the schedule." },
 ] as const;
@@ -108,7 +108,7 @@ function Reminders() {
         <Card className="anim-fade-up text-center py-14">
           <h2 className="text-2xl tracking-tight">Nothing due</h2>
           <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-            When a pro sets a next-service date on a job, it shows up here — no calendar to keep.
+            When a pro sets a next-service date on a job, it shows up here. No calendar to keep.
           </p>
           <div className="mt-6">
             <Link to="/home">
@@ -124,7 +124,7 @@ function Reminders() {
             return (
               <Card key={key} className={`anim-fade-up d-${bi + 1}`}>
                 <div className="flex items-center gap-2">
-                  <Eyebrow accent={key === "overdue" ? "red" : "coral"}>{title}</Eyebrow>
+                  <Eyebrow accent={key === "overdue" ? "red" : "indigo"}>{title}</Eyebrow>
                   <span className="text-xs text-muted tnum">
                     {list.length} · {sub}
                   </span>
@@ -141,7 +141,7 @@ function Reminders() {
                           <div className="font-semibold text-ink">{j.what_done}</div>
                           {p && (
                             <div className="text-xs text-muted flex items-center gap-1.5 mt-0.5">
-                              <TradeIcon trade={p.trade} size={12} className="text-teal" />
+                              <TradeIcon trade={p.trade} size={12} className="text-indigo" />
                               {p.business} · {tradeLabel(p.trade)}
                             </div>
                           )}
@@ -151,7 +151,7 @@ function Reminders() {
                             {formatDate(j.next_service_date)}
                           </Pill>
                           {booked.has(j.id) ? (
-                            <Pill accent="teal">Request sent</Pill>
+                            <Pill accent="coral">Request sent</Pill>
                           ) : (
                             <Btn
                               variant="coral"

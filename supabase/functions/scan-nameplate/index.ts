@@ -1,4 +1,4 @@
-/* Nameplate scan — extracts equipment fields from a photo via the Lovable AI gateway.
+/* Nameplate scan: extracts equipment fields from a photo via the Lovable AI gateway.
    Ships in the repo; Lovable deploys it on git sync. LOVABLE_API_KEY is auto-provisioned
    in Lovable-managed projects. */
 
@@ -15,7 +15,7 @@ const corsHeaders = {
 const PROMPT = `You are reading a photo of an equipment nameplate / data plate (water softener, water heater, furnace, AC, appliance, etc).
 Extract ONLY what is printed on the plate. Respond with strict JSON, no markdown, using exactly these keys:
 {
-  "type": short equipment type like "Water softener", "Water heater", "Furnace" — infer from the brand/model context when clear, else null,
+  "type": short equipment type like "Water softener", "Water heater", "Furnace": infer from the brand/model context when clear, else null,
   "make": brand name, else null,
   "model": model number, else null,
   "serial": serial number, else null,
@@ -59,12 +59,12 @@ Deno.serve(async (req) => {
     });
 
     if (resp.status === 429)
-      return json({ error: "Too many scans right now — try again in a moment." }, 429);
+      return json({ error: "Too many scans right now. Try again in a moment." }, 429);
     if (resp.status === 402)
-      return json({ error: "AI credits exhausted — add credits in Lovable." }, 402);
+      return json({ error: "AI credits exhausted. Add credits in Lovable." }, 402);
     if (!resp.ok) {
       console.error("gateway error", resp.status, await resp.text());
-      return json({ error: "Scan failed — try again." }, 502);
+      return json({ error: "Scan failed. Try again." }, 502);
     }
 
     const data = await resp.json();
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     try {
       fields = JSON.parse(text.replace(/```json|```/g, "").trim());
     } catch {
-      return json({ error: "Couldn't read the nameplate — try a closer, straighter shot." }, 422);
+      return json({ error: "Couldn't read the nameplate. Try a closer, straighter shot." }, 422);
     }
 
     const clean = (v: unknown) =>
@@ -88,6 +88,6 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("scan-nameplate error", e);
-    return json({ error: "Scan failed — try again." }, 500);
+    return json({ error: "Scan failed. Try again." }, 500);
   }
 });

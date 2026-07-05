@@ -18,7 +18,7 @@ export function LegalPage({
   return (
     <MarketingShell mobileCta={null}>
       <div className="mx-auto max-w-3xl px-5 py-14">
-        {/* Draft banner — compliance red role. Remove only after attorney sign-off. */}
+        {/* Draft banner - compliance red role. Remove only after attorney sign-off. */}
         <div
           role="note"
           className="rounded-2xl border border-red/25 bg-redbg px-5 py-4 flex items-start gap-3"
@@ -42,7 +42,7 @@ export function LegalPage({
           </svg>
           <div>
             <div className="text-sm font-bold text-red uppercase tracking-[0.08em]">
-              Draft — pending attorney review
+              Draft: pending attorney review
             </div>
             <p className="mt-1 text-sm text-red/90">
               This document is a structured draft and is not final legal advice. It will be reviewed

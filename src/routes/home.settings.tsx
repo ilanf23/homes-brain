@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/hb";
 import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
 
 export const Route = createFileRoute("/home/settings")({
-  head: () => ({ meta: [{ title: "Settings — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Settings - HomesBrain" }] }),
   component: HomeownerSettings,
 });
 
@@ -90,7 +90,7 @@ function HomeownerSettings() {
       <div className="space-y-6">
         {/* Contact */}
         <Card className="anim-fade-up d-1">
-          <Eyebrow accent="coral">Contact</Eyebrow>
+          <Eyebrow accent="indigo">Contact</Eyebrow>
           <div className="mt-4 grid sm:grid-cols-3 gap-3">
             <Field label="Name">
               <Input
@@ -117,7 +117,7 @@ function HomeownerSettings() {
             </Field>
           </div>
           <div className="mt-4">
-            <Btn variant="coral" disabled={saving} onClick={saveContact}>
+            <Btn variant="indigo" disabled={saving} onClick={saveContact}>
               {saving ? "Saving…" : "Save"}
             </Btn>
           </div>
@@ -125,7 +125,7 @@ function HomeownerSettings() {
 
         {/* Notifications */}
         <Card className="anim-fade-up d-2">
-          <Eyebrow accent="coral">Notifications</Eyebrow>
+          <Eyebrow accent="indigo">Notifications</Eyebrow>
           <div className="mt-3 divide-y divide-line">
             {PREF_ITEMS.map(({ key, label, sub }) => (
               <div key={key} className="py-3 flex items-center justify-between gap-4">
@@ -139,7 +139,7 @@ function HomeownerSettings() {
                   aria-label={label}
                   onClick={() => togglePref(key)}
                   className={`pressable relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 ${
-                    prefs[key] ? "bg-coral" : "bg-line"
+                    prefs[key] ? "bg-indigo" : "bg-line"
                   }`}
                 >
                   <span
@@ -158,7 +158,7 @@ function HomeownerSettings() {
 
         {/* Your home */}
         <Card className="anim-fade-up d-3">
-          <Eyebrow accent="coral">Your home</Eyebrow>
+          <Eyebrow accent="indigo">Your home</Eyebrow>
           <div className="mt-2">
             <KV k="Address" v={home.address} mono={false} />
             {home.claimed_at && <KV k="Claimed" v={formatDate(home.claimed_at)} />}

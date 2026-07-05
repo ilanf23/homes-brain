@@ -66,7 +66,7 @@ function ClaimFlow() {
           <Link to="/" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          <Pill accent="coral">Claim</Pill>
+          <Pill accent="indigo">Claim</Pill>
         </div>
       </header>
 
@@ -105,7 +105,7 @@ function ClaimFlow() {
                 </div>
               )}
               <Btn
-                variant="coral"
+                variant="indigo"
                 size="lg"
                 className="w-full"
                 disabled={!contact || busy}

@@ -8,7 +8,7 @@ import { LegalList, LegalPage, LegalSection } from "@/components/legal";
 export const Route = createFileRoute("/messaging-terms")({
   head: () =>
     marketingHead({
-      title: "Messaging & SMS Terms — HomesBrain",
+      title: "Messaging & SMS Terms - HomesBrain",
       description:
         "What texts HomesBrain sends, how consent is captured, and how to opt out (reply STOP).",
       path: "/messaging-terms",
@@ -39,7 +39,7 @@ function MessagingTerms() {
       <LegalSection title="2. Consent">
         <p>
           Consent to receive these messages is captured when your service professional adds you as a
-          customer at the time of service — the Pro confirms, on the job, that you agreed to receive
+          customer at the time of service: the Pro confirms, on the job, that you agreed to receive
           your service record and related messages by text and/or email. HomesBrain stores the time
           and reference of that consent. Consent is not a condition of purchasing any service.
         </p>
@@ -47,7 +47,7 @@ function MessagingTerms() {
 
       <LegalSection title="3. Message frequency">
         <p>
-          Message frequency varies with service activity — typically one to three messages per
+          Message frequency varies with service activity, typically one to three messages per
           service visit, plus occasional reminders when a service is due. No recurring message
           schedule applies.
         </p>
@@ -63,7 +63,7 @@ function MessagingTerms() {
             <>
               Reply <strong>HELP</strong> for help, or contact support@homesbrain.com.
             </>,
-            "Opting out of SMS does not delete your home record — you can still access it on the web, and email delivery (if consented) continues until you unsubscribe there too.",
+            "Opting out of SMS does not delete your home record. You can still access it on the web, and email delivery (if consented) continues until you unsubscribe there too.",
           ]}
         />
       </LegalSection>
@@ -90,7 +90,7 @@ function MessagingTerms() {
       </LegalSection>
 
       <LegalSection title="7. Contact">
-        <p>HomesBrain, Inc. — support@homesbrain.com.</p>
+        <p>HomesBrain, Inc.: support@homesbrain.com.</p>
       </LegalSection>
     </LegalPage>
   );

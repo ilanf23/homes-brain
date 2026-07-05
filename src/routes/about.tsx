@@ -8,7 +8,7 @@ export const Route = createFileRoute("/about")({
     marketingHead({
       title: "About HomesBrain.",
       description:
-        "Every home remembers. We're building the verified, owned, portable record of the home — written by the pros who do the work.",
+        "Every home remembers. We're building the verified, owned, portable record of the home, written by the pros who do the work.",
       path: "/about",
     }),
   component: About,
@@ -21,7 +21,7 @@ const BELIEFS = [
   },
   {
     title: "Owned",
-    body: "The record belongs to the homeowner — free, forever. Not rented from a platform, not locked to a contractor.",
+    body: "The record belongs to the homeowner: free, forever. Not rented from a platform, not locked to a contractor.",
   },
   {
     title: "Portable",
@@ -31,7 +31,7 @@ const BELIEFS = [
 
 function About() {
   return (
-    <MarketingShell mobileCta={{ label: "Start free", to: "/pro/signup", variant: "teal" }}>
+    <MarketingShell mobileCta={{ label: "Start free", to: "/pro/signup", variant: "indigo" }}>
       {/* Mission */}
       <section className="mx-auto max-w-3xl px-5 pt-16 pb-14 text-center">
         <div className="anim-fade-up flex justify-center">
@@ -41,8 +41,8 @@ function About() {
           Every home remembers.
         </h1>
         <p className="anim-fade-up d-2 mt-6 text-lg text-muted">
-          Your car has a Carfax. Your health has a chart. Your home — the biggest thing most people
-          ever own — has a junk drawer. We're fixing that.
+          Your car has a Carfax. Your health has a chart. Your home, the biggest thing most people
+          ever own, has a junk drawer. We're fixing that.
         </p>
       </section>
 
@@ -55,14 +55,14 @@ function About() {
             <p>
               HomesBrain started the way most homeowners meet the problem: a system failed, and the
               paper trail didn't exist. What model? When was it installed? Was it under warranty?
-              Who put it in? Nobody knew — not because nobody cared, but because nobody's job was to
+              Who put it in? Nobody knew, not because nobody cared, but because nobody's job was to
               remember.
             </p>
             <p>
               The insight came from the other side of the visit: the pro standing in that basement
               already knows every answer. They just have nowhere to put it that survives. So we
               built the thirty-second habit that turns a pro's workday into a home's permanent
-              memory — and gives the pro their customer back for life.
+              memory, and gives the pro their customer back for life.
             </p>
           </div>
         </div>
@@ -98,7 +98,7 @@ function About() {
             <p>
               We're deliberately unglamorous about sequencing. Step one is to own the record: make
               it effortless for pros to write and impossible for homeowners to lose. That alone
-              saves people real money — warranties honored, recalls caught, rebooks kept.
+              saves people real money: warranties honored, recalls caught, rebooks kept.
             </p>
             <p>
               Once a home has a memory, it can start being smart about itself: what needs service,
@@ -139,12 +139,12 @@ function About() {
         sub="Pros start the record. Homeowners keep it. Either way, it starts with one job."
       >
         <Link to="/pro/signup">
-          <Btn variant="teal" size="lg">
-            I'm a pro — start free
+          <Btn variant="indigo" size="lg">
+            I'm a pro, start free
           </Btn>
         </Link>
         <Link to="/for-homeowners">
-          <Btn variant="coral" size="lg">
+          <Btn variant="indigo" size="lg">
             I own a home
           </Btn>
         </Link>

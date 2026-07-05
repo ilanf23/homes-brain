@@ -17,7 +17,7 @@ import {
 export const Route = createFileRoute("/for-homeowners")({
   head: () =>
     marketingHead({
-      title: "HomesBrain for homeowners — your home, finally remembered.",
+      title: "HomesBrain for homeowners: your home, finally remembered.",
       description:
         "Every repair, appliance, and warranty in one place. It fills itself when a pro does the work, so you never start from zero again. Free for homeowners.",
       path: "/for-homeowners",
@@ -64,7 +64,7 @@ const EVERYTHING = [
 ];
 
 const MY_PROS = [
-  { initials: "ABC", name: "ABC Water", verified: true, sub: "Softener · today", bg: "bg-teal" },
+  { initials: "ABC", name: "ABC Water", verified: true, sub: "Softener · today", bg: "bg-indigo" },
   {
     initials: "LE",
     name: "Lakeside Electric",
@@ -77,7 +77,7 @@ const MY_PROS = [
     name: "Joe's Appliance",
     verified: false,
     sub: "Dishwasher · 2023",
-    bg: "bg-coral",
+    bg: "bg-indigo",
   },
 ];
 
@@ -134,169 +134,74 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-/* ---- Hero record card ----
-   The product itself, assembling in front of you: header, "new record" banner,
-   verified rows staggering in with self-drawing checks, dark trust footer. */
+/* ---- Decorative curved-line SVGs (all aria-hidden, pointer-events-none) ---- */
 
-/* Solid teal circle whose white check draws itself on after `delay` ms. */
-function RecordCheck({ delay = 0, size = 22 }: { delay?: number; size?: number }) {
+/* Ambient hero backdrop: two long curves drifting behind the headline. */
+function HeroWaves() {
   return (
-    <span
-      className="inline-flex rounded-full bg-teal items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-      aria-hidden="true"
-    >
-      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 12 12">
-        <path
-          d="m2.5 6.5 2.5 2.5 4.5-5.5"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray={14}
-          strokeDashoffset={14}
-          className="draw-on"
-          style={{ animationDelay: `${delay}ms`, animationDuration: "0.45s" }}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <svg
+        viewBox="0 0 1440 560"
+        preserveAspectRatio="none"
+        className="absolute inset-0 w-full h-full"
+        fill="none"
+      >
+        <g className="anim-sway" style={{ color: "var(--indigo)" }}>
+          <path
+            d="M-60 430 C 240 330, 520 500, 800 410 S 1280 300, 1520 380"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeDasharray="3 10"
+            opacity="0.35"
+            className="dash-flow"
+            style={{ animationDuration: "2.6s" }}
+          />
+          <path
+            d="M-60 480 C 300 400, 560 560, 860 470 S 1300 380, 1520 440"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.14"
+          />
+        </g>
+        <g className="anim-sway" style={{ color: "var(--indigo)", animationDelay: "-4s" }}>
+          <path
+            d="M-60 130 C 280 210, 620 60, 940 140 S 1340 220, 1520 150"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeDasharray="3 10"
+            opacity="0.22"
+            className="dash-flow"
+            style={{ animationDuration: "3.4s" }}
+          />
+        </g>
+        <circle cx="180" cy="180" r="4" fill="var(--indigo)" opacity="0.5" className="pulse-dot" />
+        <circle
+          cx="1240"
+          cy="420"
+          r="4"
+          fill="var(--indigo)"
+          opacity="0.4"
+          className="pulse-dot"
+          style={{ animationDelay: "-1.1s" }}
+        />
+        <circle
+          cx="1100"
+          cy="120"
+          r="3"
+          fill="var(--indigo)"
+          opacity="0.45"
+          className="pulse-dot"
+          style={{ animationDelay: "-0.6s" }}
         />
       </svg>
-    </span>
-  );
-}
-
-function WarrantyTag({ year }: { year: string }) {
-  return (
-    <span className="rounded-md border border-line bg-soft px-1.5 py-0.5 text-[9px] font-bold tracking-[0.1em] text-muted uppercase tnum whitespace-nowrap">
-      Warranty {year}
-    </span>
-  );
-}
-
-const RECORD_ROWS = [
-  {
-    icon: <TradeIcon trade="water_treatment" size={20} />,
-    title: "Water heater",
-    sub: "Flushed today · Tind Plumbing",
-    year: "'28",
-    delay: 4,
-    check: 850,
-  },
-  {
-    icon: <TradeIcon trade="hvac" size={20} />,
-    title: "HVAC system",
-    sub: "Serviced Apr 2026 · Coastal Air",
-    year: "'35",
-    delay: 5,
-    check: 1000,
-  },
-  {
-    icon: <RoofIcon size={20} />,
-    title: "Roof",
-    sub: "Replaced 2023 · Marsh Roofing",
-    year: "'31",
-    delay: 6,
-    check: 1150,
-  },
-];
-
-function HeroRecordCard() {
-  return (
-    <div className="relative w-full max-w-[420px] mx-auto">
-      {/* sheet peeking out behind the card */}
-      <div
-        className="absolute inset-x-6 -bottom-3.5 h-10 rounded-3xl bg-paper border border-line"
-        aria-hidden="true"
-      />
-      <div
-        className="anim-float relative rounded-[26px] bg-paper border border-line overflow-hidden shadow-[0_32px_64px_-30px_rgba(22,22,15,0.3)]"
-        style={{ animationDelay: "-2.5s" }}
-      >
-        <div className="h-1.5 bg-coral" aria-hidden="true" />
-        <div className="p-5 sm:p-6">
-          {/* Address header */}
-          <div className="anim-fade-up d-2 flex items-center gap-3">
-            <span className="w-11 h-11 shrink-0 rounded-xl bg-coralbg text-coraldark border border-line flex items-center justify-center">
-              <RoofIcon size={22} />
-            </span>
-            <span className="min-w-0 flex-1 text-left">
-              <span className="block text-[17px] font-extrabold text-ink leading-tight">
-                42 Marsh Lane
-              </span>
-              <span className="mt-0.5 block text-[10px] font-bold tracking-[0.16em] text-muted uppercase">
-                Your home record
-              </span>
-            </span>
-            <span className="anim-scale-in d-3 inline-flex items-center gap-1.5 rounded-full bg-tealbg text-tealdark text-xs font-bold px-2.5 py-1">
-              <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
-                <path
-                  d="m2.5 6.5 2.5 2.5 4.5-5.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Received
-            </span>
-          </div>
-
-          {/* New-record banner */}
-          <div className="anim-fade-up d-3 mt-4 rounded-xl bg-tealbg px-3.5 py-2.5 flex items-center gap-2.5">
-            <RecordCheck size={20} delay={650} />
-            <span className="text-[13px] font-bold text-tealdark text-left">
-              New record added · Water-heater flush
-            </span>
-          </div>
-
-          {/* Verified equipment rows */}
-          <div className="mt-2">
-            {RECORD_ROWS.map((r) => (
-              <div
-                key={r.title}
-                className={`anim-fade-up d-${r.delay} flex items-center gap-3 py-3.5 border-b border-line last:border-b-0`}
-              >
-                <span className="w-11 h-11 shrink-0 rounded-xl bg-soft border border-line flex items-center justify-center text-muted">
-                  {r.icon}
-                </span>
-                <span className="min-w-0 flex-1 text-left">
-                  <span className="block text-[15px] font-extrabold text-ink leading-tight">
-                    {r.title}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">{r.sub}</span>
-                </span>
-                <span className="flex flex-col items-end gap-1.5 shrink-0">
-                  <WarrantyTag year={r.year} />
-                  <RecordCheck size={20} delay={r.check} />
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Trust footer */}
-          <div className="anim-fade-up d-6 mt-3 rounded-2xl bg-ink pl-3.5 pr-3 py-3 flex items-center gap-2.5">
-            <RecordCheck size={22} delay={1350} />
-            <span className="min-w-0 flex-1 text-left">
-              <span className="block text-sm font-bold text-white leading-tight">
-                Verified home history
-              </span>
-              <span className="mt-0.5 block text-[11px] text-white/60 whitespace-nowrap">
-                Owned by you · ready when you sell
-              </span>
-            </span>
-            <span className="shrink-0 rounded-full bg-white text-ink text-xs font-bold px-3 py-1.5">
-              Share <span aria-hidden="true">↗</span>
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
 
-/* ---- Decorative curved-line SVGs (all aria-hidden, pointer-events-none) ---- */
-
-/* Hand-drawn coral underline that draws itself under the hero keyword. */
+/* Hand-drawn indigo underline that draws itself under the hero keyword. */
 function HeroUnderline() {
   return (
     <svg
@@ -308,7 +213,7 @@ function HeroUnderline() {
       <path
         d="M4 9c40-6 84-7 118-4 30 2.6 62 2 94-2"
         fill="none"
-        stroke="var(--coral)"
+        stroke="var(--indigo)"
         strokeWidth={4}
         strokeLinecap="round"
         strokeDasharray={230}
@@ -321,7 +226,7 @@ function HeroUnderline() {
 }
 
 /* The record's journey: a curve threading through the three step badges,
-   drawn on scroll, with a coral dot travelling along it. Desktop only. */
+   drawn on scroll, with an indigo dot travelling along it. Desktop only. */
 const JOURNEY_PATH = "M30 78 C 190 10, 390 6, 500 52 S 810 112, 970 30";
 
 function JourneyCurve() {
@@ -342,7 +247,7 @@ function JourneyCurve() {
       />
       <path
         d={JOURNEY_PATH}
-        stroke="var(--coral)"
+        stroke="var(--indigo)"
         strokeWidth="2"
         strokeLinecap="round"
         opacity="0.55"
@@ -352,7 +257,7 @@ function JourneyCurve() {
         style={{ transitionDuration: "1.8s" }}
       />
       {!reduced && (
-        <circle r="5" fill="var(--coral)">
+        <circle r="5" fill="var(--indigo)">
           <animateMotion dur="7s" repeatCount="indefinite" path={JOURNEY_PATH} rotate="0" />
         </circle>
       )}
@@ -372,7 +277,7 @@ function ZigzagConnector() {
     >
       <path
         d="M50 0 C 110 100, -10 200, 50 300 S 110 500, 50 600"
-        stroke="var(--coral)"
+        stroke="var(--indigo)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeDasharray="4 10"
@@ -391,7 +296,7 @@ function SelfWritingLine() {
     <svg viewBox="0 0 600 44" fill="none" className="w-full h-8 mt-6" aria-hidden="true">
       <path
         d="M8 32 C 120 10, 210 38, 310 24 S 500 6, 592 26"
-        stroke="var(--coral)"
+        stroke="var(--indigo)"
         strokeWidth="2.5"
         strokeLinecap="round"
         opacity="0.6"
@@ -400,7 +305,7 @@ function SelfWritingLine() {
         className="draw-path"
         style={{ transitionDuration: "1.6s" }}
       />
-      <circle cx="592" cy="26" r="4" fill="var(--coral)" className="pulse-dot" />
+      <circle cx="592" cy="26" r="4" fill="var(--indigo)" className="pulse-dot" />
     </svg>
   );
 }
@@ -416,7 +321,7 @@ function ClosingHouse() {
     >
       <path
         d="M4 106 C 60 84, 110 92, 140 102"
-        stroke="var(--coral)"
+        stroke="var(--indigo)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeDasharray="3 9"
@@ -426,7 +331,7 @@ function ClosingHouse() {
       />
       <path
         d="M356 106 C 300 84, 250 92, 220 102"
-        stroke="var(--coral)"
+        stroke="var(--indigo)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeDasharray="3 9"
@@ -457,7 +362,7 @@ function ClosingHouse() {
           style={{ transitionDuration: "1s", transitionDelay: "0.4s" }}
         />
       </g>
-      <circle cx="180" cy="86" r="3.5" fill="var(--coral)" className="pulse-dot" />
+      <circle cx="180" cy="86" r="3.5" fill="var(--indigo)" className="pulse-dot" />
     </svg>
   );
 }
@@ -479,7 +384,7 @@ function RoofIcon({ size = 20, className = "" }: { size?: number; className?: st
 }
 
 /* Animated check used by the sell list and the everything list. */
-function DrawnCheck({ color = "var(--coral)", delay = 0 }: { color?: string; delay?: number }) {
+function DrawnCheck({ color = "var(--indigo)", delay = 0 }: { color?: string; delay?: number }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0 mt-1">
       <path
@@ -500,7 +405,7 @@ function DrawnCheck({ color = "var(--coral)", delay = 0 }: { color?: string; del
 
 /* ---- Mockup primitives ---- */
 
-/* Chunky-bezel phone frame — the brand's signature product visual. */
+/* Chunky-bezel phone frame, the brand's signature product visual. */
 function Phone({
   title,
   children,
@@ -546,57 +451,53 @@ function PhoneRow({
 
 function ForHomeowners() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your home", to: "/how-it-works", variant: "coral" }}>
+    <MarketingShell mobileCta={{ label: "Claim your home", to: "/how-it-works", variant: "indigo" }}>
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="relative mx-auto max-w-6xl px-5 pt-16 pb-16 lg:pt-20 lg:pb-24 grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
-          <div className="text-center lg:text-left">
-            <div className="anim-fade-up">
-              <Eyebrow accent="coral">For homeowners</Eyebrow>
-            </div>
-            <h1 className="anim-fade-up d-1 mt-4 text-[2.6rem] leading-[1.04] sm:text-5xl xl:text-6xl text-ink">
-              Your home, finally{" "}
-              <span className="relative inline-block">
-                remembered.
-                <HeroUnderline />
-              </span>
-            </h1>
-            <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-xl mx-auto lg:mx-0">
-              Every repair, appliance, and warranty in one place. It fills itself when a pro does
-              the work, so you never start from zero again. Free for homeowners.
-            </p>
-            <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
-              <Link to="/how-it-works">
-                <Btn variant="coral" size="lg">
-                  Claim your home
-                </Btn>
-              </Link>
-              <a href="#how-it-works">
-                <Btn variant="secondary" size="lg">
-                  See how it works
-                </Btn>
-              </a>
-            </div>
-            <div className="anim-fade-up d-4 mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 text-[13px] font-semibold text-muted">
-              <span>Free forever</span>
-              <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
-              <span>No typing</span>
-              <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
-              <span>Yours for life</span>
-            </div>
+      <section className="relative">
+        <HeroWaves />
+        <div className="relative mx-auto max-w-4xl px-5 pt-20 pb-20 text-center">
+          <div className="anim-fade-up">
+            <Eyebrow accent="indigo">For homeowners</Eyebrow>
           </div>
-          <div className="anim-fade-up d-2">
-            <HeroRecordCard />
+          <h1 className="anim-fade-up d-1 mt-4 text-[2.6rem] leading-[1.04] sm:text-6xl text-ink">
+            Your home, finally{" "}
+            <span className="relative inline-block">
+              remembered.
+              <HeroUnderline />
+            </span>
+          </h1>
+          <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-2xl mx-auto">
+            Every repair, appliance, and warranty in one place. It fills itself when a pro does the
+            work, so you never start from zero again. Free for homeowners.
+          </p>
+          <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center gap-3">
+            <Link to="/how-it-works">
+              <Btn variant="indigo" size="lg">
+                Claim your home
+              </Btn>
+            </Link>
+            <a href="#how-it-works">
+              <Btn variant="secondary" size="lg">
+                See how it works
+              </Btn>
+            </a>
+          </div>
+          <div className="anim-fade-up d-4 mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[13px] font-semibold text-muted">
+            <span>Free forever</span>
+            <span className="w-1 h-1 rounded-full bg-indigo/60" aria-hidden="true" />
+            <span>No typing</span>
+            <span className="w-1 h-1 rounded-full bg-indigo/60" aria-hidden="true" />
+            <span>Yours for life</span>
           </div>
         </div>
       </section>
 
-      {/* What you get — zig-zag cards threaded by a wavy connector */}
+      {/* What you get - zig-zag cards threaded by a wavy connector */}
       <section className="bg-soft border-y border-line py-24">
         <InView className="mx-auto max-w-4xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="coral"
+              accent="indigo"
               eyebrow="What you get"
               title="One place for everything your home is made of."
             />
@@ -612,7 +513,7 @@ function ForHomeowners() {
                   }`}
                 >
                   <div className="liftable rounded-[22px] border border-line bg-paper p-7 sm:p-8">
-                    <span className="inline-flex w-11 h-11 rounded-2xl bg-coralbg text-coraldark items-center justify-center">
+                    <span className="inline-flex w-11 h-11 rounded-2xl bg-indigobg text-indigodark items-center justify-center">
                       {g.icon}
                     </span>
                     <h3 className="mt-4 text-lg tracking-tight">{g.title}</h3>
@@ -625,12 +526,12 @@ function ForHomeowners() {
         </InView>
       </section>
 
-      {/* How it works — the journey curve */}
+      {/* How it works - the journey curve */}
       <section id="how-it-works" className="py-24">
         <InView className="mx-auto max-w-6xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="coral"
+              accent="indigo"
               eyebrow="How it works"
               title="Three steps, and most of them happen without you."
             />
@@ -638,9 +539,9 @@ function ForHomeowners() {
           <div className="relative mt-16">
             <JourneyCurve />
             <div className="relative grid md:grid-cols-3 gap-12 md:gap-6">
-              {/* Step 1 — your record arrives */}
+              {/* Step 1 - your record arrives */}
               <div className="reveal rd-1 text-center">
-                <span className="relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-coral text-white text-sm font-extrabold ring-4 ring-background">
+                <span className="relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo text-white text-sm font-extrabold ring-4 ring-background">
                   1
                 </span>
                 <h3 className="mt-3 text-xl tracking-tight">Your record arrives</h3>
@@ -649,7 +550,7 @@ function ForHomeowners() {
                 </p>
                 <div className="mt-7">
                   <Phone>
-                    <div className="rounded-xl bg-teal text-white px-3.5 py-3 flex items-center gap-2.5 text-left">
+                    <div className="rounded-xl bg-indigo text-white px-3.5 py-3 flex items-center gap-2.5 text-left">
                       <span className="w-9 h-9 shrink-0 rounded-lg bg-white/15 flex items-center justify-center text-[10px] font-extrabold">
                         ABC
                       </span>
@@ -667,18 +568,18 @@ function ForHomeowners() {
                       left={<span className="text-sm text-muted">Bradford White</span>}
                       right={<span className="text-sm font-semibold text-ink">since 2021</span>}
                     />
-                    <div className="rounded-xl bg-tealbg text-tealdark px-3.5 py-2.5 text-sm font-semibold text-left flex items-center gap-2">
+                    <div className="rounded-xl bg-indigobg text-indigodark px-3.5 py-2.5 text-sm font-semibold text-left flex items-center gap-2">
                       <ShieldCheck size={17} animate={false} className="shrink-0" />
                       Warranty to 2031
                     </div>
-                    <Btn variant="coral" className="w-full">
+                    <Btn variant="indigo" className="w-full">
                       Claim your home
                     </Btn>
                   </Phone>
                 </div>
               </div>
 
-              {/* Step 2 — your home fills itself */}
+              {/* Step 2 - your home fills itself */}
               <div className="reveal rd-2 text-center">
                 <span className="relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo text-white text-sm font-extrabold ring-4 ring-background">
                   2
@@ -695,7 +596,7 @@ function ForHomeowners() {
                           <span className="text-sm font-bold text-ink flex items-center gap-1.5">
                             Water softener
                             <span
-                              className="w-1.5 h-1.5 rounded-full bg-teal pulse-dot"
+                              className="w-1.5 h-1.5 rounded-full bg-indigo pulse-dot"
                               aria-hidden="true"
                             />
                           </span>
@@ -735,9 +636,9 @@ function ForHomeowners() {
                 </div>
               </div>
 
-              {/* Step 3 — use it for years */}
+              {/* Step 3 - use it for years */}
               <div className="reveal rd-3 text-center">
-                <span className="relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-teal text-white text-sm font-extrabold ring-4 ring-background">
+                <span className="relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-coral text-white text-sm font-extrabold ring-4 ring-background">
                   3
                 </span>
                 <h3 className="mt-3 text-xl tracking-tight">Use it for years</h3>
@@ -762,7 +663,7 @@ function ForHomeowners() {
                       left={<span className="text-sm text-muted">Warranties</span>}
                       right={<span className="text-sm font-semibold text-ink tnum">6 active</span>}
                     />
-                    <Btn variant="coral" className="w-full">
+                    <Btn variant="indigo" className="w-full">
                       Share with buyer
                     </Btn>
                   </Phone>
@@ -778,7 +679,7 @@ function ForHomeowners() {
         <InView className="mx-auto max-w-4xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="coral"
+              accent="indigo"
               eyebrow="Your pros"
               title="Add records your way, and keep your pros in one place."
             />
@@ -820,11 +721,11 @@ function ForHomeowners() {
                     }
                     right={<span className="text-muted">›</span>}
                   />
-                  <div className="rounded-xl bg-coralbg px-3.5 py-2.5 flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2.5 text-sm font-bold text-coraldark">
+                  <div className="rounded-xl bg-indigobg px-3.5 py-2.5 flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2.5 text-sm font-bold text-indigodark">
                       <UserPlusIcon size={17} className="shrink-0" /> Invite a pro to add it
                     </span>
-                    <span className="text-coraldark">›</span>
+                    <span className="text-indigodark">›</span>
                   </div>
                 </Phone>
               </div>
@@ -880,7 +781,7 @@ function ForHomeowners() {
                       }
                     />
                   ))}
-                  <div className="rounded-xl bg-coralbg px-3.5 py-2.5 text-center text-sm font-bold text-coraldark">
+                  <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-sm font-bold text-indigodark">
                     + Add a pro
                   </div>
                 </Phone>
@@ -893,10 +794,10 @@ function ForHomeowners() {
       {/* Zero effort + when you sell */}
       <section className="py-24">
         <InView className="mx-auto max-w-4xl px-5">
-          <div className="reveal rounded-[26px] bg-coralbg p-8 sm:p-12 overflow-hidden">
-            <Eyebrow accent="coral">Zero effort</Eyebrow>
+          <div className="reveal rounded-[26px] bg-indigobg p-8 sm:p-12 overflow-hidden">
+            <Eyebrow accent="indigo">Zero effort</Eyebrow>
             <h2 className="mt-3 text-3xl sm:text-4xl tracking-tight text-ink">It fills itself.</h2>
-            <p className="mt-4 text-coraldark max-w-2xl">
+            <p className="mt-4 text-indigodark max-w-2xl">
               No spreadsheets, no scanning manuals, no chore that you quit in a week. When a pro
               does the work, your record updates on its own.
             </p>
@@ -954,7 +855,7 @@ function ForHomeowners() {
         <InView className="mx-auto max-w-5xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="coral"
+              accent="indigo"
               eyebrow="Everything homeowners get"
               title="Your whole home, remembered for you."
             />
@@ -985,7 +886,7 @@ function ForHomeowners() {
           </h2>
           <div className="reveal rd-2 mt-9">
             <Link to="/how-it-works">
-              <Btn variant="coral" size="lg">
+              <Btn variant="indigo" size="lg">
                 Claim your home
               </Btn>
             </Link>

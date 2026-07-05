@@ -13,11 +13,11 @@ export const Route = createFileRoute("/blog/$slug")({
     const post = loaderData?.post;
     if (!post)
       return {
-        meta: [{ title: "Guide not found — HomesBrain" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: "Guide not found - HomesBrain" }, { name: "robots", content: "noindex" }],
       };
     return {
       ...marketingHead({
-        title: `${post.title} — HomesBrain guides`,
+        title: `${post.title} - HomesBrain guides`,
         description: post.description,
         path: `/blog/${post.slug}`,
       }),
@@ -67,7 +67,7 @@ function BlogPost() {
             All guides
           </Link>
           <div className="mt-6 flex items-center gap-3">
-            <Pill accent="coral">{post.tag}</Pill>
+            <Pill accent="indigo">{post.tag}</Pill>
             <span className="text-xs text-muted font-mono tnum">{post.readMinutes} min read</span>
           </div>
           <h1 className="mt-4 text-3xl sm:text-5xl tracking-tight text-ink leading-[1.1]">
@@ -96,8 +96,8 @@ function BlogPost() {
         </div>
 
         {/* In-article homeowner CTA */}
-        <aside className="mt-12 rounded-[22px] bg-coralbg border border-coral/20 p-6 sm:p-8 text-center">
-          <Eyebrow accent="coral">Free for homeowners</Eyebrow>
+        <aside className="mt-12 rounded-[22px] bg-indigobg border border-indigo/20 p-6 sm:p-8 text-center">
+          <Eyebrow accent="indigo">Free for homeowners</Eyebrow>
           <p className="mt-3 text-xl font-semibold tracking-tight font-display text-ink">
             A home that keeps its own records.
           </p>
@@ -107,7 +107,7 @@ function BlogPost() {
           </p>
           <div className="mt-5">
             <Link to="/for-homeowners">
-              <Btn variant="coral" size="lg">
+              <Btn variant="indigo" size="lg">
                 Claim your home, free
               </Btn>
             </Link>
@@ -115,7 +115,7 @@ function BlogPost() {
         </aside>
       </article>
 
-      <CtaBand eyebrow="Keep reading" accent="coral" title="More guides, fewer surprises.">
+      <CtaBand eyebrow="Keep reading" accent="indigo" title="More guides, fewer surprises.">
         <Link to="/blog">
           <Btn variant="secondary" size="lg">
             Browse all guides

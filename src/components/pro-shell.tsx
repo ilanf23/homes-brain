@@ -105,7 +105,7 @@ export function ProShell({
         </div>
         <div className="p-3">
           <Link to="/pro/jobs/new">
-            <Btn variant="teal" className="w-full">
+            <Btn variant="indigo" className="w-full">
               <Plus size={16} /> Log a job
             </Btn>
           </Link>
@@ -118,7 +118,7 @@ export function ProShell({
               aria-current={active === key ? "page" : undefined}
               className={`pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
                 active === key
-                  ? "bg-tealbg text-teal font-bold"
+                  ? "bg-indigobg text-indigo font-bold"
                   : "text-muted font-semibold hover:text-ink hover:bg-soft"
               }`}
             >
@@ -131,7 +131,7 @@ export function ProShell({
           <div className="flex items-center gap-2.5 px-2">
             {pro ? (
               <>
-                <Avatar name={pro.business} accent="teal" size={36} />
+                <Avatar name={pro.business} accent="indigo" size={36} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-ink truncate">{pro.business}</div>
                   <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
@@ -184,7 +184,7 @@ export function ProShell({
                 aria-current={active === key ? "page" : undefined}
                 className={`pressable shrink-0 rounded-full px-3.5 py-1.5 text-[13px] ${
                   active === key
-                    ? "bg-tealbg text-teal font-bold"
+                    ? "bg-indigobg text-indigo font-bold"
                     : "text-muted font-semibold hover:text-ink"
                 }`}
               >
@@ -205,9 +205,9 @@ export function ProShell({
         >
           <Link to="/pro/jobs/new" className="block pointer-events-auto">
             <Btn
-              variant="teal"
+              variant="indigo"
               size="lg"
-              className="w-full shadow-[0_12px_28px_-10px_rgba(15,110,86,0.55)]"
+              className="w-full shadow-[0_12px_28px_-10px_rgba(71,63,176,0.55)]"
               tabIndex={-1}
             >
               <Plus size={18} /> Log a job
@@ -273,7 +273,7 @@ export function ProPageHead({
   return (
     <div className="anim-fade-up flex items-end justify-between flex-wrap gap-4 mb-6">
       <div>
-        <div className="eyebrow text-teal">{eyebrow}</div>
+        <div className="eyebrow text-indigo">{eyebrow}</div>
         <h1 className="mt-1 text-3xl tracking-tight">{title}</h1>
         {sub && <p className="mt-1 text-sm text-muted max-w-xl">{sub}</p>}
       </div>

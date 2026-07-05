@@ -8,7 +8,7 @@ import { scanNameplate, useDictation } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/jobs/new")({
-  head: () => ({ meta: [{ title: "Log a job — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
   component: NewJob,
 });
 
@@ -100,7 +100,7 @@ function NewJob() {
     try {
       const r = await scanNameplate(file);
       const filled: string[] = [];
-      // Fill blanks only — never clobber what the pro already typed.
+      // Fill blanks only. Never clobber what the pro already typed.
       if (r.type && !eqType) {
         setEqType(r.type);
         filled.push("type");
@@ -124,14 +124,14 @@ function NewJob() {
       const detectedNothing = !r.type && !r.make && !r.model && !r.serial && !r.warranty_until;
       if (detectedNothing) {
         setScanState("error");
-        setScanError("Couldn't read the nameplate — type the details in below.");
+        setScanError("Couldn't read the nameplate. Type the details in below.");
         return;
       }
       setScanState("done");
       await logEvent(proId ? `pro:${proId}` : null, "nameplate_scanned", { filled });
     } catch (e) {
       setScanState("error");
-      setScanError(e instanceof Error ? e.message : "Scan failed — try again.");
+      setScanError(e instanceof Error ? e.message : "Scan failed. Try again.");
     }
   }
 
@@ -279,7 +279,7 @@ function NewJob() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  /* Reset in place for "Log another" — no page reload. Refetch customers so the
+  /* Reset in place for "Log another", no page reload. Refetch customers so the
      one just added is selectable on the next pass. */
   async function logAnother() {
     if (proId) {
@@ -323,14 +323,14 @@ function NewJob() {
           <Link to="/pro" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          <Pill accent="teal">Log a job</Pill>
+          <Pill accent="indigo">Log a job</Pill>
         </div>
       </header>
 
       <div className={`mx-auto px-5 py-10 ${showPreview ? "max-w-5xl" : "max-w-xl"}`}>
         {stage !== "done" && (
           <div className="anim-fade-up max-w-xl mx-auto mb-8">
-            <StepBar steps={STAGE_LABELS} current={STAGES.indexOf(stage)} accent="teal" />
+            <StepBar steps={STAGE_LABELS} current={STAGES.indexOf(stage)} accent="indigo" />
             <h1 className="mt-6 text-2xl tracking-tight text-center">
               {stage === "customer"
                 ? "Who is this for?"
@@ -359,7 +359,7 @@ function NewJob() {
                           aria-pressed={selectedCustomerId === c.id}
                           className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
                             selectedCustomerId === c.id
-                              ? "border-teal bg-tealbg shadow-sm"
+                              ? "border-indigo bg-indigobg shadow-sm"
                               : "border-line bg-paper hover:bg-soft hover:border-ink/20"
                           }`}
                         >
@@ -368,7 +368,7 @@ function NewJob() {
                         </button>
                       ))}
                     </div>
-                    <div className="text-center text-xs text-muted my-3">— or add new —</div>
+                    <div className="text-center text-xs text-muted my-3">- or add new -</div>
                   </div>
                 )}
 
@@ -415,7 +415,7 @@ function NewJob() {
                       type="checkbox"
                       checked={consent}
                       onChange={(e) => setConsent(e.target.checked)}
-                      className="mt-0.5 accent-[var(--teal)]"
+                      className="mt-0.5 accent-[var(--indigo)]"
                     />
                     <span>
                       By adding this customer you confirm they agreed to receive a service record
@@ -425,7 +425,7 @@ function NewJob() {
                 )}
 
                 <Btn
-                  variant="teal"
+                  variant="indigo"
                   size="lg"
                   className="w-full"
                   disabled={!canCustomer}
@@ -456,10 +456,10 @@ function NewJob() {
                     <button
                       type="button"
                       onClick={() => fileRef.current?.click()}
-                      className="pressable w-full rounded-xl border-2 border-dashed border-teal/40 bg-tealbg/50 px-4 py-6 text-center hover:border-teal transition-colors"
+                      className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-indigobg/50 px-4 py-6 text-center hover:border-indigo transition-colors"
                     >
-                      <CameraIcon size={26} className="mx-auto text-teal" />
-                      <div className="mt-2 text-sm font-semibold text-teal">Snap the nameplate</div>
+                      <CameraIcon size={26} className="mx-auto text-indigo" />
+                      <div className="mt-2 text-sm font-semibold text-indigo">Snap the nameplate</div>
                       <div className="mt-0.5 text-xs text-muted">
                         Make, model, serial and warranty fill in for you.
                       </div>
@@ -476,14 +476,14 @@ function NewJob() {
                         )}
                         <div className="flex-1 min-w-0">
                           {scanState === "scanning" && (
-                            <div className="flex items-center gap-2 text-sm font-semibold text-teal">
-                              <span className="h-4 w-4 rounded-full border-2 border-teal border-t-transparent animate-spin" />
+                            <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
+                              <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
                               Reading nameplate…
                             </div>
                           )}
                           {scanState === "done" && (
-                            <div className="flex items-center gap-1.5 text-sm font-semibold text-teal">
-                              <ShieldCheck size={16} animate={false} /> Auto-detected — check the
+                            <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
+                              <ShieldCheck size={16} animate={false} /> Auto-detected. Check the
                               fields below
                             </div>
                           )}
@@ -562,8 +562,8 @@ function NewJob() {
                         aria-pressed={dictation.listening}
                         className={`pressable absolute bottom-2.5 right-2.5 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
                           dictation.listening
-                            ? "bg-teal text-white"
-                            : "bg-soft text-muted hover:bg-tealbg hover:text-teal"
+                            ? "bg-indigo text-white"
+                            : "bg-soft text-muted hover:bg-indigobg hover:text-indigo"
                         }`}
                       >
                         <MicIcon size={17} />
@@ -571,9 +571,9 @@ function NewJob() {
                     )}
                   </div>
                   {dictation.listening && (
-                    <div className="mt-1.5 flex items-center gap-2 text-xs text-teal">
-                      <span className="h-2 w-2 rounded-full bg-teal animate-pulse" />
-                      <span className="font-semibold">Listening — talk through the job.</span>
+                    <div className="mt-1.5 flex items-center gap-2 text-xs text-indigo">
+                      <span className="h-2 w-2 rounded-full bg-indigo animate-pulse" />
+                      <span className="font-semibold">Listening. Talk through the job.</span>
                       {dictation.interim && (
                         <span className="truncate italic text-muted">{dictation.interim}</span>
                       )}
@@ -581,11 +581,11 @@ function NewJob() {
                   )}
                 </Field>
 
-                <div className="rounded-xl bg-tealbg px-3 py-2 flex items-center justify-between">
-                  <span className="text-sm text-teal font-semibold flex items-center gap-2">
+                <div className="rounded-xl bg-indigobg px-3 py-2 flex items-center justify-between">
+                  <span className="text-sm text-indigo font-semibold flex items-center gap-2">
                     <ShieldCheck size={16} animate={false} /> Recall check
                   </span>
-                  <Pill accent="teal">{recall.label}</Pill>
+                  <Pill accent="indigo">{recall.label}</Pill>
                 </div>
 
                 <div className="flex gap-2">
@@ -593,7 +593,7 @@ function NewJob() {
                     Back
                   </Btn>
                   <Btn
-                    variant="teal"
+                    variant="indigo"
                     size="lg"
                     className="flex-1"
                     disabled={!canWork}
@@ -613,7 +613,7 @@ function NewJob() {
                     type="checkbox"
                     checked={sendRecord}
                     onChange={(e) => setSendRecord(e.target.checked)}
-                    className="accent-[var(--teal)] scale-125"
+                    className="accent-[var(--indigo)] scale-125"
                   />
                 </label>
                 <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
@@ -622,7 +622,7 @@ function NewJob() {
                     type="checkbox"
                     checked={askReview}
                     onChange={(e) => setAskReview(e.target.checked)}
-                    className="accent-[var(--teal)] scale-125"
+                    className="accent-[var(--indigo)] scale-125"
                   />
                 </label>
 
@@ -631,7 +631,7 @@ function NewJob() {
                     Back
                   </Btn>
                   <Btn
-                    variant="teal"
+                    variant="indigo"
                     size="lg"
                     className="flex-1"
                     loading={submitting}
@@ -662,7 +662,7 @@ function NewJob() {
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
-                  <Btn variant="teal" onClick={logAnother}>
+                  <Btn variant="indigo" onClick={logAnother}>
                     Log another
                   </Btn>
                   <Link to="/pro">
@@ -673,7 +673,7 @@ function NewJob() {
             )}
           </div>
 
-          {/* Live record preview — updates as the pro types */}
+          {/* Live record preview, updates as the pro types */}
           {showPreview && (
             <div className="anim-fade-up d-2 lg:sticky lg:top-24 hidden lg:block">
               <div className="text-xs font-bold uppercase tracking-wider text-muted mb-2 text-center">
@@ -681,7 +681,7 @@ function NewJob() {
               </div>
               <Card className="shadow-[0_24px_60px_-30px_rgba(22,22,15,0.3)]">
                 <div className="flex items-center gap-3">
-                  <Avatar name={proName || "?"} accent="teal" size={40} />
+                  <Avatar name={proName || "?"} accent="indigo" size={40} />
                   <div>
                     <div className="font-extrabold text-ink text-sm">
                       {proName || "Your business"}
@@ -694,22 +694,22 @@ function NewJob() {
                 </h3>
                 <div className="text-xs text-muted">{previewAddress || "Service address"}</div>
                 <div className="mt-2">
-                  <KV k="Customer" v={previewName || "—"} />
-                  <KV k="Equipment" v={eqType || "—"} />
-                  <KV k="Make / Model" v={[eqMake, eqModel].filter(Boolean).join(" · ") || "—"} />
-                  <KV k="Work done" v={whatDone || "—"} />
-                  <KV k="Next service" v={nextService || "—"} />
+                  <KV k="Customer" v={previewName || "-"} />
+                  <KV k="Equipment" v={eqType || "-"} />
+                  <KV k="Make / Model" v={[eqMake, eqModel].filter(Boolean).join(" · ") || "-"} />
+                  <KV k="Work done" v={whatDone || "-"} />
+                  <KV k="Next service" v={nextService || "-"} />
                   <KV
                     k="Recall status"
                     v={
-                      <span className="inline-flex items-center gap-1.5 text-teal font-semibold">
+                      <span className="inline-flex items-center gap-1.5 text-indigo font-semibold">
                         <ShieldCheck size={14} animate={false} /> None known
                       </span>
                     }
                   />
                 </div>
                 <div className="mt-4">
-                  <div className="rounded-full bg-coral text-white text-center text-sm font-semibold py-2.5 opacity-90">
+                  <div className="rounded-full bg-indigo text-white text-center text-sm font-semibold py-2.5 opacity-90">
                     Claim your home, free
                   </div>
                 </div>

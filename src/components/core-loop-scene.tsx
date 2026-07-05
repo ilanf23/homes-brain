@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { LogoMark, TradeIcon } from "@/components/svg";
 
 /* CoreLoopScene: the HomesBrain story, played out.
-   Full variant syncs to the hero's rotating step: a pro logs a job (teal),
-   the branded record travels to a phone (indigo), the homeowner claims it
-   and the home's timeline grows (coral). Compact variant is a static pose
-   for small placements. */
+   Full variant syncs to the hero's rotating step: a pro logs a job,
+   the branded record travels to a phone, the homeowner claims it
+   and the home's timeline grows — all in brand indigo. Compact variant
+   is a static pose for small placements. */
 
 export type LoopKey = "pro" | "record" | "owner";
 
@@ -93,8 +93,6 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
           <rect x="84" y="198" width="28" height="28" rx="6" {...stroke} />
           <rect x="188" y="198" width="28" height="28" rx="6" {...stroke} />
         </g>
-        {/* the home "remembering": window pulses as the record passes */}
-        <circle cx="202" cy="212" r="5" fill="var(--indigo)" className="cls-window-dot" />
         {/* dashed arc: house → phone */}
         <path
           d="M230 128C270 60 340 62 376 134"
@@ -182,10 +180,10 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
         )}
         {showClaim && (
           <div key={`claim-${logged}`} className="cls-drop relative" style={{ animationDelay: "0.15s" }}>
-            <div className="rounded-full bg-coral py-1 text-center text-[8px] font-bold text-white">
+            <div className="rounded-full bg-indigo py-1 text-center text-[8px] font-bold text-white">
               Claim your home
             </div>
-            <span className="cls-ripple pointer-events-none absolute inset-0 rounded-full border-2 border-coral" />
+            <span className="cls-ripple pointer-events-none absolute inset-0 rounded-full border-2 border-indigo" />
           </div>
         )}
       </div>
@@ -258,15 +256,15 @@ function CompactScene({
 
       {pose === "owner" && (
         <>
-          {/* coral claimed check */}
+          {/* claimed check */}
           <g>
-            <circle cx="218" cy="88" r="20" fill="var(--coralbg)" />
+            <circle cx="218" cy="88" r="20" fill="var(--indigobg)" />
             <path
               key={celebrate ? "drawn" : "static"}
               d="M209 88l6 6 13-13"
               {...stroke}
               strokeWidth={2.5}
-              stroke="var(--coral)"
+              stroke="var(--indigo)"
               className={celebrate ? "draw-on" : ""}
               strokeDasharray={celebrate ? 28 : undefined}
               strokeDashoffset={celebrate ? 28 : undefined}

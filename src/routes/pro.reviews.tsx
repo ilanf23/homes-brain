@@ -8,7 +8,7 @@ import { CountUp } from "@/components/svg";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/reviews")({
-  head: () => ({ meta: [{ title: "Reviews — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Reviews - HomesBrain" }] }),
   component: Reviews,
 });
 
@@ -53,7 +53,7 @@ function Reviews() {
       <ProPageHead
         eyebrow="Reviews"
         title="Google reviews"
-        sub="Every record we send asks for a review — same ask to everyone, routed to your Google profile."
+        sub="Every record we send asks for a review: same ask to everyone, routed to your Google profile."
       />
 
       <div className="grid grid-cols-2 gap-4 mb-5 max-w-lg">
@@ -69,14 +69,14 @@ function Reviews() {
           <div className="text-xs uppercase tracking-wider text-muted font-bold">Google rating</div>
           <div className="mt-2 flex items-center gap-2">
             <div className="text-3xl font-semibold font-display tnum">
-              {connected && pro.google_rating ? pro.google_rating : "—"}
+              {connected && pro.google_rating ? pro.google_rating : "-"}
             </div>
-            {connected && <Star size={20} className="text-amber fill-amberbg" />}
+            {connected && <Star size={20} className="text-coral fill-coralbg" />}
           </div>
           {!connected && (
             <Link
               to="/pro/settings"
-              className="text-xs font-semibold text-teal hover:underline mt-1 inline-block"
+              className="text-xs font-semibold text-indigo hover:underline mt-1 inline-block"
             >
               Connect Google →
             </Link>
@@ -86,10 +86,10 @@ function Reviews() {
 
       <div className="grid md:grid-cols-[1.4fr_1fr] gap-5 items-start">
         <Card className="anim-fade-up d-2">
-          <Eyebrow accent="teal">Review asks</Eyebrow>
+          <Eyebrow accent="indigo">Review asks</Eyebrow>
           {requests.length === 0 ? (
             <p className="mt-2 text-sm text-muted">
-              None yet — a review ask goes out automatically with every record you send.
+              None yet. A review ask goes out automatically with every record you send.
             </p>
           ) : (
             <div className="mt-2 divide-y divide-line">
@@ -115,7 +115,7 @@ function Reviews() {
           <p className="mt-2 text-sm text-ink">
             <strong>No review gating.</strong> Every homeowner gets the same Google review ask, and
             everyone also gets a private feedback path. We never filter who gets asked based on how
-            happy they seem — it's an FTC rule, and it keeps your rating trustworthy.
+            happy they seem. It's an FTC rule, and it keeps your rating trustworthy.
           </p>
           <p className="mt-2 text-xs text-muted">
             Google doesn't tell us which review came from which ask, so "asks sent" is the number we

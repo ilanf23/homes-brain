@@ -72,7 +72,7 @@ export function InviteProsCard({
 
   return (
     <Card className={className}>
-      <Eyebrow accent="coral">Add the other pros who work on your home</Eyebrow>
+      <Eyebrow accent="indigo">Add the other pros who work on your home</Eyebrow>
       <p className="mt-2 text-sm text-muted">
         One source of truth for everything that gets done here.
       </p>
@@ -87,7 +87,7 @@ export function InviteProsCard({
               <button
                 key={g}
                 onClick={() => sendInvite(`Your ${tradeLabel(g).toLowerCase()} pro`, null, g)}
-                className="pressable anim-fade-up inline-flex items-center gap-2 rounded-full bg-coralbg text-coral text-sm font-semibold px-3.5 py-2 hover:shadow-[0_8px_20px_-10px_rgba(194,70,31,0.5)] hover:-translate-y-px transition-all duration-200"
+                className="pressable anim-fade-up inline-flex items-center gap-2 rounded-full bg-indigobg text-indigo text-sm font-semibold px-3.5 py-2 hover:shadow-[0_8px_20px_-10px_rgba(71,63,176,0.5)] hover:-translate-y-px transition-all duration-200"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <TradeIcon trade={g} size={15} />
@@ -126,7 +126,7 @@ export function InviteProsCard({
       </div>
       <div className="mt-3">
         <Btn
-          variant="coral"
+          variant="indigo"
           disabled={!inviteName || !invitePhone}
           onClick={() => {
             sendInvite(inviteName, invitePhone, inviteTrade);

@@ -7,11 +7,11 @@ import { setSession } from "@/lib/session";
 import { Logo, TradeIcon, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/signup")({
-  head: () => ({ meta: [{ title: "Start free — HomesBrain for pros" }] }),
+  head: () => ({ meta: [{ title: "Start free - HomesBrain for pros" }] }),
   component: ProSignup,
 });
 
-// "Verify" step parked until real OTP ships — see OtpBoxes note in @/lib/ui.
+// "Verify" step parked until real OTP ships - see OtpBoxes note in @/lib/ui.
 type Step = 1 | 2 | 3 | 4;
 const STEP_LABELS = ["Start", "Business", "Google", "Plan"];
 
@@ -68,13 +68,13 @@ function ProSignup() {
           <Link to="/" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          <Pill accent="teal">For pros</Pill>
+          <Pill accent="indigo">For pros</Pill>
         </div>
       </header>
 
       <div className="mx-auto max-w-xl px-5 py-12">
         <div className="anim-fade-up mb-8">
-          <StepBar steps={STEP_LABELS} current={step - 1} accent="teal" />
+          <StepBar steps={STEP_LABELS} current={step - 1} accent="indigo" />
         </div>
 
         <div key={step} className="anim-fade-up">
@@ -112,7 +112,7 @@ function ProSignup() {
                   />
                 </Field>
                 <Btn
-                  variant="teal"
+                  variant="indigo"
                   size="lg"
                   className="w-full"
                   disabled={!business || !contact}
@@ -136,7 +136,7 @@ function ProSignup() {
                         aria-pressed={trade === t.id}
                         className={`pressable anim-fade-up text-left rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-200 flex items-center gap-2.5 ${
                           trade === t.id
-                            ? "border-teal bg-tealbg text-teal shadow-sm"
+                            ? "border-indigo bg-indigobg text-indigo shadow-sm"
                             : "border-line bg-paper text-ink hover:bg-soft hover:border-ink/20"
                         }`}
                         style={{ animationDelay: `${i * 50}ms` }}
@@ -144,7 +144,7 @@ function ProSignup() {
                         <TradeIcon
                           trade={t.id}
                           size={18}
-                          className={trade === t.id ? "text-teal" : "text-muted"}
+                          className={trade === t.id ? "text-indigo" : "text-muted"}
                         />
                         {t.label}
                       </button>
@@ -160,7 +160,7 @@ function ProSignup() {
                 </Field>
                 <Field label="Logo">
                   <div className="flex items-center gap-3">
-                    <Avatar name={business || "?"} accent="teal" />
+                    <Avatar name={business || "?"} accent="indigo" />
                     <div className="text-xs text-muted">
                       Using initials for now. You can upload later.
                     </div>
@@ -171,7 +171,7 @@ function ProSignup() {
                     Back
                   </Btn>
                   <Btn
-                    variant="teal"
+                    variant="indigo"
                     size="lg"
                     className="flex-1"
                     disabled={!area}
@@ -193,15 +193,15 @@ function ProSignup() {
                   </div>
                 </div>
                 {googleConnected ? (
-                  <div className="anim-scale-in rounded-xl border border-teal/30 bg-tealbg/50 p-4 flex items-center justify-between">
+                  <div className="anim-scale-in rounded-xl border border-indigo/30 bg-indigobg/50 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <ShieldCheck size={22} className="text-teal" />
+                      <ShieldCheck size={22} className="text-indigo" />
                       <div>
                         <div className="font-semibold text-ink">Google Business connected</div>
                         <div className="text-xs text-muted tnum">Rating 4.8 ★ · 42 reviews</div>
                       </div>
                     </div>
-                    <Pill accent="teal">Connected</Pill>
+                    <Pill accent="indigo">Connected</Pill>
                   </div>
                 ) : (
                   <Btn
@@ -218,7 +218,7 @@ function ProSignup() {
                     Back
                   </Btn>
                   <Btn
-                    variant={googleConnected ? "teal" : "secondary"}
+                    variant={googleConnected ? "indigo" : "secondary"}
                     size="lg"
                     className="flex-1"
                     onClick={() => setStep(4)}
@@ -231,10 +231,10 @@ function ProSignup() {
 
             {step === 4 && (
               <div className="space-y-4">
-                <div className="anim-fade-up rounded-xl border-2 border-teal bg-tealbg p-4 liftable">
+                <div className="anim-fade-up rounded-xl border-2 border-indigo bg-indigobg p-4 liftable">
                   <div className="flex items-center justify-between">
-                    <div className="font-extrabold text-teal">Free</div>
-                    <Pill accent="teal">Selected</Pill>
+                    <div className="font-extrabold text-indigo">Free</div>
+                    <Pill accent="indigo">Selected</Pill>
                   </div>
                   <div className="mt-1 text-2xl font-semibold text-ink font-display tnum">$0</div>
                   <div className="text-sm text-muted mt-1">
@@ -255,7 +255,7 @@ function ProSignup() {
                   </div>
                 )}
                 <Btn
-                  variant="teal"
+                  variant="indigo"
                   size="lg"
                   className="w-full"
                   loading={submitting}

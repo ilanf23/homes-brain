@@ -7,14 +7,14 @@ import { formatDate, logEvent } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/referral")({
-  head: () => ({ meta: [{ title: "Referral — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Referral - HomesBrain" }] }),
   component: Referral,
 });
 
 const STEPS = [
   {
     title: "Share your link",
-    body: "Send it to a pro you'd trust in someone's home — another trade, not your competition.",
+    body: "Send it to a pro you'd trust in someone's home (another trade, not your competition).",
   },
   {
     title: "They start free",
@@ -22,11 +22,11 @@ const STEPS = [
   },
   {
     title: "They log a verified first job",
-    body: "A real job, sent to a real homeowner. That's what triggers the reward — signups alone don't count.",
+    body: "A real job, sent to a real homeowner. That's what triggers the reward. Signups alone don't count.",
   },
   {
     title: "You both get paid",
-    body: "Reward on both sides once the first job verifies. They get a little more than you — it helps them say yes.",
+    body: "Reward on both sides once the first job verifies. They get a little more than you. It helps them say yes.",
   },
 ];
 
@@ -100,7 +100,7 @@ function Referral() {
       setTimeout(() => setCopied(false), 2000);
       await logEvent(`pro:${proId}`, "referral_link_copied", {});
     } catch {
-      setToast("Couldn't copy — select the link and copy it manually");
+      setToast("Couldn't copy. Select the link and copy it manually");
     }
   }
 
@@ -109,13 +109,13 @@ function Referral() {
       <ProPageHead
         eyebrow="Referral"
         title="Refer a pro, both get paid"
-        sub="The reward pays out when they log their first verified job — not on signup."
+        sub="The reward pays out when they log their first verified job, not on signup."
       />
 
       <div className="grid md:grid-cols-[1.2fr_1fr] gap-5 items-start">
         <div className="space-y-5">
           <Card className="anim-fade-up d-1">
-            <Eyebrow accent="teal">Your link</Eyebrow>
+            <Eyebrow accent="indigo">Your link</Eyebrow>
             <div className="mt-3 flex gap-2">
               <Input
                 value={link}
@@ -123,7 +123,7 @@ function Referral() {
                 aria-label="Your referral link"
                 className="font-mono text-[13px]"
               />
-              <Btn variant="teal" onClick={copy} className="shrink-0">
+              <Btn variant="indigo" onClick={copy} className="shrink-0">
                 {copied ? <Check size={15} /> : <Copy size={15} />}
                 {copied ? "Copied" : "Copy"}
               </Btn>
@@ -136,10 +136,10 @@ function Referral() {
           </Card>
 
           <Card className="anim-fade-up d-2">
-            <Eyebrow accent="teal">Your referrals</Eyebrow>
+            <Eyebrow accent="indigo">Your referrals</Eyebrow>
             {referred.length === 0 ? (
               <p className="mt-2 text-sm text-muted">
-                No referrals yet. Share your link — you'll see each signup and their first-job
+                No referrals yet. Share your link. You'll see each signup and their first-job
                 status here.
               </p>
             ) : (
@@ -153,7 +153,7 @@ function Referral() {
                       </div>
                     </div>
                     {r.hasFirstJob ? (
-                      <Pill accent="teal">First job logged</Pill>
+                      <Pill accent="indigo">First job logged</Pill>
                     ) : (
                       <Pill accent="ink">No job yet</Pill>
                     )}
@@ -165,11 +165,11 @@ function Referral() {
         </div>
 
         <Card className="anim-fade-up d-2">
-          <Eyebrow accent="teal">How it works</Eyebrow>
+          <Eyebrow accent="indigo">How it works</Eyebrow>
           <div className="mt-3 space-y-4">
             {STEPS.map((s, i) => (
               <div key={s.title} className="flex gap-3">
-                <div className="w-7 h-7 rounded-full bg-tealbg text-teal font-bold text-sm flex items-center justify-center shrink-0 tnum">
+                <div className="w-7 h-7 rounded-full bg-indigobg text-indigo font-bold text-sm flex items-center justify-center shrink-0 tnum">
                   {i + 1}
                 </div>
                 <div>

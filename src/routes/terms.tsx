@@ -5,7 +5,7 @@ import { LegalList, LegalPage, LegalSection } from "@/components/legal";
 export const Route = createFileRoute("/terms")({
   head: () =>
     marketingHead({
-      title: "Terms of Service — HomesBrain",
+      title: "Terms of Service - HomesBrain",
       description:
         "The terms that govern use of HomesBrain by home-service professionals and homeowners.",
       path: "/terms",
@@ -25,7 +25,7 @@ function Terms() {
         <LegalList
           items={[
             "You must provide accurate information and keep your contact details current.",
-            "You are responsible for activity under your account. Authentication is by one-time code to your phone or email — protect access to both.",
+            "You are responsible for activity under your account. Authentication is by one-time code to your phone or email, so protect access to both.",
             "You must be at least 18 and able to form a binding contract to use HomesBrain.",
           ]}
         />
@@ -35,7 +35,7 @@ function Terms() {
         <LegalList
           items={[
             "Log only work you actually performed, for customers who are actually yours.",
-            "Only add customer contact information when you have the customer's consent to be contacted — HomesBrain captures and stores this consent when a homeowner is added.",
+            "Only add customer contact information when you have the customer's consent to be contacted. HomesBrain captures and stores this consent when a homeowner is added.",
             "No spam, harassment, misrepresentation, or attempts to access data that isn't yours.",
             "No review gating: every customer receives the same review request. Do not use HomesBrain to selectively solicit reviews.",
           ]}
@@ -100,7 +100,7 @@ function Terms() {
       <LegalSection title="9. Termination">
         <p>
           You may close your account at any time. We may suspend or terminate accounts that violate
-          these Terms — including consent and review-gating violations — or that create risk for
+          these Terms (including consent and review-gating violations) or that create risk for
           other users. Homeowner records survive a Pro's termination.
         </p>
       </LegalSection>

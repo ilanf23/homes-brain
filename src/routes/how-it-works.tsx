@@ -6,7 +6,7 @@ import { ShieldCheck } from "@/components/svg";
 export const Route = createFileRoute("/how-it-works")({
   head: () =>
     marketingHead({
-      title: "How HomesBrain works — a home record that writes itself.",
+      title: "How HomesBrain works: a home record that writes itself.",
       description:
         "A pro logs the job in 30 seconds. The homeowner gets a branded service record, claims it free, and owns it for life. One loop, everyone wins.",
       path: "/how-it-works",
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/how-it-works")({
 const STEPS = [
   {
     n: "01",
-    accent: "teal" as const,
+    accent: "indigo" as const,
     pill: "The pro",
     title: "Log the job in 30 seconds",
     body: "Customer, equipment, what was done, next service date. Snap the nameplate, add a photo if you like. That's the whole job.",
@@ -27,7 +27,7 @@ const STEPS = [
     accent: "indigo" as const,
     pill: "Automatic",
     title: "A branded record is sent",
-    body: "The homeowner gets a clean, branded service record by text and email — with a recall check and a review link built in.",
+    body: "The homeowner gets a clean, branded service record by text and email, with a recall check and a review link built in.",
   },
   {
     n: "03",
@@ -45,7 +45,7 @@ const DIFFERENT = [
   },
   {
     title: "Owned by the homeowner",
-    body: "The record belongs to the home and the person who lives in it — free, forever, and it moves with the house when it sells.",
+    body: "The record belongs to the home and the person who lives in it: free, forever, and it moves with the house when it sells.",
   },
   {
     title: "Portable across every pro",
@@ -108,8 +108,8 @@ function HowItWorks() {
           />
           <div className="mt-10 grid md:grid-cols-2 gap-6">
             {/* Pro POV */}
-            <Card className="border-t-4 border-t-teal">
-              <Pill accent="teal">The pro's side</Pill>
+            <Card className="border-t-4 border-t-indigo">
+              <Pill accent="indigo">The pro's side</Pill>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
                 Aqua Works logs the job
               </h3>
@@ -117,16 +117,16 @@ function HowItWorks() {
                 <KV k="Time to log" v="28 seconds" />
                 <KV k="Record sent" v="Text + email, branded" />
                 <KV k="Review ask" v="Sent automatically" />
-                <KV k="Next service" v="Mar 2027 — reminder set" />
+                <KV k="Next service" v="Mar 2027 - reminder set" />
               </div>
               <p className="mt-4 text-sm text-muted">
                 The customer now carries Aqua Works in their pocket. When the resin needs checking
-                in two years, the rebook comes back to them — not to a search result.
+                in two years, the rebook comes back to them, not to a search result.
               </p>
             </Card>
             {/* Homeowner POV */}
-            <Card className="border-t-4 border-t-coral">
-              <Pill accent="coral">The homeowner's side</Pill>
+            <Card className="border-t-4 border-t-indigo">
+              <Pill accent="indigo">The homeowner's side</Pill>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
                 Dana claims the record
               </h3>
@@ -136,7 +136,7 @@ function HowItWorks() {
                 <KV
                   k="Recall status"
                   v={
-                    <span className="inline-flex items-center gap-1.5 text-teal font-semibold text-sm">
+                    <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
                       <ShieldCheck size={16} animate={false} /> No known recalls
                     </span>
                   }
@@ -144,7 +144,7 @@ function HowItWorks() {
                 <KV k="Cost" v="Free, forever" />
               </div>
               <p className="mt-4 text-sm text-muted">
-                Dana never typed a thing. The home now remembers its own equipment — and every pro
+                Dana never typed a thing. The home now remembers its own equipment, and every pro
                 she invites deepens the record.
               </p>
             </Card>
@@ -180,7 +180,7 @@ function HowItWorks() {
       <section className="py-20">
         <div className="mx-auto max-w-5xl px-5 grid md:grid-cols-2 gap-6">
           <Card className="text-center py-10">
-            <Pill accent="teal">For pros</Pill>
+            <Pill accent="indigo">For pros</Pill>
             <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
               Never lose a customer again.
             </h3>
@@ -189,14 +189,14 @@ function HowItWorks() {
             </p>
             <div className="mt-6">
               <Link to="/pro/signup">
-                <Btn variant="teal" size="lg">
-                  I'm a pro — start free
+                <Btn variant="indigo" size="lg">
+                  I'm a pro, start free
                 </Btn>
               </Link>
             </div>
           </Card>
           <Card className="text-center py-10">
-            <Pill accent="coral">For homeowners</Pill>
+            <Pill accent="indigo">For homeowners</Pill>
             <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
               Your home, finally remembered.
             </h3>
@@ -205,8 +205,8 @@ function HowItWorks() {
             </p>
             <div className="mt-6">
               <Link to="/for-homeowners">
-                <Btn variant="coral" size="lg">
-                  I own a home — see how
+                <Btn variant="indigo" size="lg">
+                  I own a home, see how
                 </Btn>
               </Link>
             </div>
@@ -221,8 +221,8 @@ function HowItWorks() {
         sub="It takes a pro 30 seconds to give a home its memory."
       >
         <Link to="/pro/signup">
-          <Btn variant="teal" size="lg">
-            Start free — no card
+          <Btn variant="indigo" size="lg">
+            Start free, no card
           </Btn>
         </Link>
         <Link to="/pricing">

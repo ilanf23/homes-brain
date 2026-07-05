@@ -31,20 +31,26 @@ The authoritative screen-by-screen map (routes, data, states, status) is the **S
 
 ## Brand — use these tokens exactly
 
-**Color carries meaning. Never mix roles:** indigo = HomesBrain/brand, teal = pros, coral = homeowners, amber = partners, red = compliance. A pro screen is never coral; a homeowner screen is never teal.
+**One brand, one payoff color.** The old role-per-audience system (teal = pros, coral = homeowners, amber = partners) is retired — never reintroduce it. Audiences are distinguished by copy and structure, not color.
+
+- **Indigo = THE brand color**, on every surface for every audience: buttons, links, eyebrows, chips, prices, nav, focus states. Pro app, homeowner app, marketing, public record — all indigo.
+- **Coral = payoff highlights only**, used sparingly (~10% of color): rebook CTAs/pills, revenue stats ("+$4,200 rebooked"), "win" moments. If in doubt, use indigo.
+- **Amber = functional warning/status only** ("due soon", "pending") — never branding.
+- **Red = errors, destructive, compliance** only.
 
 ```css
 --ink:#16160f;  --muted:#73706a;  --line:#e7e5de;  --bg:#ffffff;  --soft:#f7f6f1;
---indigo:#473fb0; --indigobg:#eeedfd;   /* HomesBrain / brand */
---teal:#0f6e56;   --tealbg:#e6f5ee;     /* pros */
---coral:#c2461f;  --coralbg:#fbeae2;    /* homeowners */
---amber:#8a5208;  --amberbg:#faf0db;    /* partners */
---red:#a32d2d;    --redbg:#fcebeb;      /* compliance */
+--indigo:#473fb0; --indigobg:#eeedfd; --indigo-dark:#2a2470;  /* brand — everywhere */
+--coral:#c2461f;  --coralbg:#fbeae2;  --coral-dark:#9c3a18;   /* payoff highlights only */
+--amber:#8a5208;  --amberbg:#faf0db;                          /* functional warning/status */
+--red:#a32d2d;    --redbg:#fcebeb;                            /* errors/compliance */
 ```
 
-- Type: system font stack. Headlines weight 800, tight tracking (~-0.02em). Eyebrows: ~12px UPPERCASE bold, +0.14em, colored to the section accent. Body 15–17px, line-height ~1.55.
+The warm paper neutrals (ink / soft / line) carry the personality — a beautifully kept ledger. On accent tint backgrounds (`*bg`), use the `*-dark` text tone where the strong tone fails AA.
+
+- Type: system font stack. Headlines weight 800, tight tracking (~-0.02em). Eyebrows: ~12px UPPERCASE bold, +0.14em, indigo (coral only on a payoff moment). Body 15–17px, line-height ~1.55.
 - Components: fully rounded pill buttons; cards 16–22px radius on soft/white; KV rows (white, line border, muted key left / bold value right); chips/pills (999px, tint bg, accent text); phone mockups where useful. Rounded everything, generous whitespace, centered section headers.
-- **Known bug to fix:** secondary/muted text is currently rendering far too light (hero subhead, captions, make/model lines, header links nearly invisible). `--muted` (#73706a) is correct — ensure it's applied and not being lightened. Fix contrast to WCAG AA.
+- Keep secondary text at `--muted` (#73706a) exactly — never lighten it with opacity; maintain WCAG AA.
 
 ## Data model (Supabase)
 

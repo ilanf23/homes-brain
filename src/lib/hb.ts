@@ -19,7 +19,7 @@ export function suggestTradeGaps(have: string[]): TradeId[] {
   return all.filter((t) => !have.includes(t)) as TradeId[];
 }
 
-// Stub recall check — always "no known recalls" for v0 per spec.
+// Stub recall check - always "no known recalls" for v0 per spec.
 export function checkRecall(_make?: string, _model?: string) {
   return {
     status: "none" as const,

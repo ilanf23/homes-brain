@@ -7,7 +7,7 @@ import { buildRecordUrl, formatDate } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/records/$recordId")({
-  head: () => ({ meta: [{ title: "Record — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Record - HomesBrain" }] }),
   component: RecordDetail,
 });
 
@@ -83,7 +83,7 @@ function RecordDetail() {
   const claimed = !!job?.homes?.claimed_at;
   const publicUrl = buildRecordUrl(record.id);
 
-  // The journey the record travels — each step lights up as it happens.
+  // The journey the record travels - each step lights up as it happens.
   const steps: { label: string; at: string | null }[] = [
     { label: "Created", at: record.created_at },
     { label: "Sent", at: record.sent_sms_at ?? record.sent_email_at },
@@ -102,14 +102,14 @@ function RecordDetail() {
 
       <div className="anim-fade-up flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
-          <div className="eyebrow text-teal">Record</div>
+          <div className="eyebrow text-indigo">Record</div>
           <h1 className="mt-1 text-3xl tracking-tight">{job?.what_done}</h1>
           <div className="text-sm text-muted mt-1">
             {job?.customers?.name} · {job?.homes?.address}
           </div>
         </div>
         <a href={publicUrl} target="_blank" rel="noreferrer">
-          <Btn variant="teal">
+          <Btn variant="indigo">
             View public record <ExternalLink size={15} />
           </Btn>
         </a>
@@ -117,17 +117,17 @@ function RecordDetail() {
 
       <div className="grid md:grid-cols-2 gap-5 items-start">
         <Card className="anim-fade-up d-1">
-          <Eyebrow accent="teal">Journey</Eyebrow>
+          <Eyebrow accent="indigo">Journey</Eyebrow>
           <div className="mt-3 space-y-0">
             {steps.map((s, i) => (
               <div key={s.label} className="flex gap-3">
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-3 h-3 rounded-full mt-1 ${s.at ? "bg-teal" : "bg-line"}`}
+                    className={`w-3 h-3 rounded-full mt-1 ${s.at ? "bg-indigo" : "bg-line"}`}
                     aria-hidden="true"
                   />
                   {i < steps.length - 1 && (
-                    <div className={`w-0.5 flex-1 my-1 ${s.at ? "bg-teal/40" : "bg-line"}`} />
+                    <div className={`w-0.5 flex-1 my-1 ${s.at ? "bg-indigo/40" : "bg-line"}`} />
                   )}
                 </div>
                 <div className="pb-5">
@@ -142,15 +142,15 @@ function RecordDetail() {
             ))}
           </div>
           {claimed && (
-            <div className="rounded-xl bg-coralbg p-3 text-sm text-coral font-semibold">
-              This homeowner claimed their home — the loop worked.
+            <div className="rounded-xl bg-coralbg p-3 text-sm text-coraldark font-semibold">
+              This homeowner claimed their home. The loop worked.
             </div>
           )}
         </Card>
 
         <div className="space-y-5">
           <Card className="anim-fade-up d-2">
-            <Eyebrow accent="teal">Job</Eyebrow>
+            <Eyebrow accent="indigo">Job</Eyebrow>
             <div className="mt-2">
               <KV k="Work done" v={job?.what_done ?? ""} mono={false} />
               <KV k="Logged" v={formatDate(job?.created_at)} />
@@ -164,33 +164,33 @@ function RecordDetail() {
                     <Link
                       to="/pro/customers/$customerId"
                       params={{ customerId: job.customers.id }}
-                      className="text-teal hover:underline"
+                      className="text-indigo hover:underline"
                     >
                       {job.customers.name}
                     </Link>
                   ) : (
-                    "—"
+                    "-"
                   )
                 }
                 mono={false}
               />
-              <KV k="Sent to" v={job?.customers?.phone ?? job?.customers?.email ?? "—"} />
+              <KV k="Sent to" v={job?.customers?.phone ?? job?.customers?.email ?? "-"} />
             </div>
           </Card>
 
           {job?.equipment && (
             <Card className="anim-fade-up d-3">
-              <Eyebrow accent="teal">Equipment</Eyebrow>
+              <Eyebrow accent="indigo">Equipment</Eyebrow>
               <div className="mt-2">
-                <KV k="Type" v={job.equipment.type ?? "—"} mono={false} />
+                <KV k="Type" v={job.equipment.type ?? "-"} mono={false} />
                 <KV
                   k="Make / model"
-                  v={[job.equipment.make, job.equipment.model].filter(Boolean).join(" · ") || "—"}
+                  v={[job.equipment.make, job.equipment.model].filter(Boolean).join(" · ") || "-"}
                 />
                 <KV
                   k="Recall"
                   v={
-                    <Pill accent={job.equipment.recall_status === "none" ? "teal" : "red"}>
+                    <Pill accent={job.equipment.recall_status === "none" ? "indigo" : "red"}>
                       {job.equipment.recall_status === "none" ? "No known recalls" : "Recall"}
                     </Pill>
                   }

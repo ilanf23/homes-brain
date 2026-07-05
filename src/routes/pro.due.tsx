@@ -6,7 +6,7 @@ import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/due")({
-  head: () => ({ meta: [{ title: "Due for service — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Due for service - HomesBrain" }] }),
   component: DueForService,
 });
 
@@ -65,7 +65,7 @@ function DueForService() {
     if (!proId || !j.customers) return;
     setBusy(j.id);
     const to = j.customers.phone ?? j.customers.email ?? "";
-    const body = `Hi ${j.customers.name.split(" ")[0]} — it's ${pro?.business}. Your ${j.what_done.toLowerCase()} is due for service around ${formatDate(j.next_service_date)}. Reply here or book a time and we'll take care of it.`;
+    const body = `Hi ${j.customers.name.split(" ")[0]}, it's ${pro?.business}. Your ${j.what_done.toLowerCase()} is due for service around ${formatDate(j.next_service_date)}. Reply here or book a time and we'll take care of it.`;
     await mockSend({
       channel: j.customers.phone ? "sms" : "email",
       to,
@@ -107,11 +107,11 @@ function DueForService() {
         <Card className="anim-fade-up text-center py-14">
           <h2 className="text-2xl tracking-tight">Nothing scheduled yet</h2>
           <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-            Set a next-service date when you log a job and it lands here — your rebook pipeline.
+            Set a next-service date when you log a job and it lands here: your rebook pipeline.
           </p>
           <div className="mt-6">
             <Link to="/pro/jobs/new">
-              <Btn variant="teal" size="lg">
+              <Btn variant="indigo" size="lg">
                 Log a job
               </Btn>
             </Link>
@@ -125,7 +125,7 @@ function DueForService() {
             return (
               <Card key={key} className={`anim-fade-up d-${bi + 1}`}>
                 <div className="flex items-center gap-2">
-                  <Eyebrow accent={key === "overdue" ? "red" : "teal"}>{title}</Eyebrow>
+                  <Eyebrow accent={key === "overdue" ? "red" : "indigo"}>{title}</Eyebrow>
                   <span className="text-xs text-muted tnum">
                     {list.length} · {sub}
                   </span>
@@ -138,7 +138,7 @@ function DueForService() {
                     >
                       <div className="min-w-0">
                         <div className="font-semibold text-ink">
-                          {j.customers?.name ?? "—"}
+                          {j.customers?.name ?? "-"}
                           <span className="text-muted font-normal"> · {j.what_done}</span>
                         </div>
                         <div className="text-xs text-muted">{j.homes?.address}</div>
@@ -149,11 +149,11 @@ function DueForService() {
                         </Pill>
                         {nudged.has(j.id) ? (
                           <span className="anim-scale-in">
-                            <Pill accent="teal">Nudge sent</Pill>
+                            <Pill accent="coral">Nudge sent</Pill>
                           </span>
                         ) : (
                           <Btn
-                            variant="teal"
+                            variant="coral"
                             size="sm"
                             loading={busy === j.id}
                             disabled={!j.customers}

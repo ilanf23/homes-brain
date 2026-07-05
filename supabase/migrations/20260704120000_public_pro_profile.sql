@@ -1,6 +1,6 @@
 -- Public verified pro profile for /pro/:city/:trade/:business.
 -- Read-only, SECURITY DEFINER function so the page never touches tables
--- directly — consistent with the coming RLS lockdown. Returns NULL for
+-- directly, consistent with the coming RLS lockdown. Returns NULL for
 -- unknown slugs AND for inactive pros (no job logged in the last 90 days),
 -- which the route turns into a noindex + graceful 404.
 

@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/customers/")({
-  head: () => ({ meta: [{ title: "Customers — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Customers - HomesBrain" }] }),
   component: CustomersList,
 });
 
@@ -70,12 +70,12 @@ function CustomersList() {
         <Card className="anim-fade-up text-center py-14">
           <h2 className="text-2xl tracking-tight">No customers yet</h2>
           <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-            Customers are added the first time you log a job for them — name, contact, and address,
+            Customers are added the first time you log a job for them: name, contact, and address,
             with consent captured.
           </p>
           <div className="mt-6">
             <Link to="/pro/jobs/new">
-              <Btn variant="teal" size="lg">
+              <Btn variant="indigo" size="lg">
                 Log a job
               </Btn>
             </Link>
@@ -112,7 +112,7 @@ function CustomersList() {
                       params={{ customerId: c.id }}
                       className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft active:bg-line/50 transition-colors duration-150"
                     >
-                      <Avatar name={c.name} accent="teal" size={40} />
+                      <Avatar name={c.name} accent="indigo" size={40} />
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-ink truncate">{c.name}</div>
                         <div className="text-xs text-muted truncate">

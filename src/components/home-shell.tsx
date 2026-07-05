@@ -99,7 +99,7 @@ export function HomeShell({
         </div>
         <div className="p-3">
           <Link to="/home/add">
-            <Btn variant="coral" className="w-full">
+            <Btn variant="indigo" className="w-full">
               <Plus size={16} /> Add to your home
             </Btn>
           </Link>
@@ -112,7 +112,7 @@ export function HomeShell({
               aria-current={active === key ? "page" : undefined}
               className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors duration-150 ${
                 active === key
-                  ? "bg-coralbg text-coral font-bold"
+                  ? "bg-indigobg text-indigo font-bold"
                   : "text-muted font-semibold hover:text-ink hover:bg-soft"
               }`}
             >
@@ -123,7 +123,7 @@ export function HomeShell({
         </nav>
         <div className="p-3 border-t border-line">
           <div className="flex items-center gap-2.5 px-2">
-            <Avatar name={homeowner?.name || "Homeowner"} accent="coral" size={36} />
+            <Avatar name={homeowner?.name || "Homeowner"} accent="indigo" size={36} />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-ink truncate">
                 {homeowner?.name || "Homeowner"}
@@ -151,11 +151,11 @@ export function HomeShell({
             </Link>
             <div className="flex items-center gap-2">
               <Link to="/home/add">
-                <Btn variant="coral" size="sm">
+                <Btn variant="indigo" size="sm">
                   <Plus size={14} /> Add
                 </Btn>
               </Link>
-              <Pill accent="coral">Homeowner</Pill>
+              <Pill accent="indigo">Homeowner</Pill>
               <button
                 onClick={signOut}
                 aria-label="Sign out"
@@ -176,7 +176,7 @@ export function HomeShell({
                 aria-current={active === key ? "page" : undefined}
                 className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
                   active === key
-                    ? "bg-coralbg text-coral font-bold"
+                    ? "bg-indigobg text-indigo font-bold"
                     : "text-muted font-semibold hover:text-ink"
                 }`}
               >
@@ -207,7 +207,7 @@ export function HomePageHead({
   return (
     <div className="anim-fade-up flex items-end justify-between flex-wrap gap-4 mb-6">
       <div>
-        <div className="eyebrow text-coral">{eyebrow}</div>
+        <div className="eyebrow text-indigo">{eyebrow}</div>
         <h1 className="mt-1 text-3xl tracking-tight">{title}</h1>
         {sub && <p className="mt-1 text-sm text-muted max-w-xl">{sub}</p>}
       </div>

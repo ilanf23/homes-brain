@@ -7,11 +7,11 @@ import { setSession } from "@/lib/session";
 import { Logo } from "@/components/svg";
 
 // NOTE: OTP verification is parked until real Supabase OTP auth ships.
-// The archived OtpBoxes component lives in @/lib/ui — restore a "Verify"
+// The archived OtpBoxes component lives in @/lib/ui. Restore a "Verify"
 // step here (and in signup/claim) when codes are actually sent.
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Log in — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Log in - HomesBrain" }] }),
   component: Login,
 });
 
@@ -144,7 +144,7 @@ function Login() {
                 </Btn>
                 <div className="text-center text-xs text-muted">
                   New here?{" "}
-                  <Link to="/pro/signup" className="font-semibold text-teal hover:underline">
+                  <Link to="/pro/signup" className="font-semibold text-indigo hover:underline">
                     Pros start free
                   </Link>
                   {" · "}
@@ -159,30 +159,30 @@ function Login() {
                   <button
                     type="button"
                     onClick={() => complete("pro")}
-                    className="pressable liftable w-full text-left rounded-xl border border-line bg-paper p-4 flex items-center gap-3 hover:border-teal transition-colors"
+                    className="pressable liftable w-full text-left rounded-xl border border-line bg-paper p-4 flex items-center gap-3 hover:border-indigo transition-colors"
                   >
-                    <Avatar name={pro.business} accent="teal" />
+                    <Avatar name={pro.business} accent="indigo" />
                     <div className="flex-1">
                       <div className="font-semibold text-ink">{pro.business}</div>
                       <div className="text-xs text-muted">{tradeLabel(pro.trade)}</div>
                     </div>
-                    <Pill accent="teal">Pro</Pill>
+                    <Pill accent="indigo">Pro</Pill>
                   </button>
                 )}
                 {homeowner && (
                   <button
                     type="button"
                     onClick={() => complete("homeowner")}
-                    className="pressable liftable w-full text-left rounded-xl border border-line bg-paper p-4 flex items-center gap-3 hover:border-coral transition-colors"
+                    className="pressable liftable w-full text-left rounded-xl border border-line bg-paper p-4 flex items-center gap-3 hover:border-indigo transition-colors"
                   >
-                    <Avatar name={homeowner.address ?? "My home"} accent="coral" />
+                    <Avatar name={homeowner.address ?? "My home"} accent="indigo" />
                     <div className="flex-1">
                       <div className="font-semibold text-ink">My home</div>
                       <div className="text-xs text-muted">
                         {homeowner.address ?? "No home claimed yet"}
                       </div>
                     </div>
-                    <Pill accent="coral">Homeowner</Pill>
+                    <Pill accent="indigo">Homeowner</Pill>
                   </button>
                 )}
                 <Btn variant="secondary" className="w-full" onClick={() => setStep(1)}>

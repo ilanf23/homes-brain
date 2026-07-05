@@ -102,14 +102,14 @@ function ProDashboard() {
         <Card className="anim-fade-up mb-5 flex items-center gap-4 flex-wrap sm:flex-nowrap">
           <CoreLoopScene variant="compact" pose="pro" className="w-28 shrink-0 opacity-90" />
           <div className="flex-1 min-w-[200px]">
-            <Eyebrow accent="teal">Get started</Eyebrow>
+            <Eyebrow accent="indigo">Get started</Eyebrow>
             <div className="mt-1 font-semibold text-ink">Log your first job (about 30 seconds)</div>
             <p className="text-sm text-muted mt-0.5">
               We'll send a branded record to your customer and ask for a Google review.
             </p>
           </div>
           <Link to="/pro/jobs/new" className="shrink-0">
-            <Btn variant="teal">Log a job</Btn>
+            <Btn variant="indigo">Log a job</Btn>
           </Link>
         </Card>
       )}
@@ -121,7 +121,7 @@ function ProDashboard() {
             <div className="text-3xl font-semibold font-display">
               <CountUp value={sentCount} />
             </div>
-            <SparkLine points={weeklyJobs} color="var(--teal)" />
+            <SparkLine points={weeklyJobs} color="var(--indigo)" />
           </div>
         </Card>
         <Card lift className="anim-fade-up d-2">
@@ -163,8 +163,8 @@ function ProDashboard() {
       <div className="mt-8 grid md:grid-cols-2 gap-5 items-start">
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="teal">Recent jobs</Eyebrow>
-            <Link to="/pro/records" className="text-xs font-semibold text-teal hover:underline">
+            <Eyebrow accent="indigo">Recent jobs</Eyebrow>
+            <Link to="/pro/records" className="text-xs font-semibold text-indigo hover:underline">
               All records →
             </Link>
           </div>
@@ -188,7 +188,7 @@ function ProDashboard() {
                       {formatDate(j.created_at)}
                     </div>
                     {rec?.viewed_at ? (
-                      <Pill accent="teal">Viewed</Pill>
+                      <Pill accent="indigo">Viewed</Pill>
                     ) : rec?.sent_sms_at ? (
                       <Pill accent="indigo">Sent</Pill>
                     ) : null}

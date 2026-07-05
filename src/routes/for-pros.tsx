@@ -6,7 +6,7 @@ import { MarketingShell, marketingHead } from "@/components/marketing";
 export const Route = createFileRoute("/for-pros")({
   head: () =>
     marketingHead({
-      title: "HomesBrain for pros — never lose a customer again.",
+      title: "HomesBrain for pros: never lose a customer again.",
       description:
         "Log a job in 30 seconds, send a branded record, and get more five star Google reviews, automatically. Free to start, no card.",
       path: "/for-pros",
@@ -41,7 +41,7 @@ function SectionHeadC({
   );
 }
 
-function Check({ className = "text-teal" }: { className?: string }) {
+function Check({ className = "text-indigo" }: { className?: string }) {
   return (
     <svg
       width="14"
@@ -69,7 +69,7 @@ function CheckRow({ dark = false, children }: { dark?: boolean; children: ReactN
         dark ? "border-white/15" : "border-line"
       }`}
     >
-      <Check className={dark ? "text-white/80" : "text-teal"} />
+      <Check className={dark ? "text-white/80" : "text-indigo"} />
       <span className={`text-[15px] ${dark ? "text-white/95" : "text-ink"}`}>{children}</span>
     </li>
   );
@@ -99,24 +99,14 @@ function PhoneKV({ k, v, accentV = false }: { k: string; v: string; accentV?: bo
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-2.5">
       <span className="text-xs text-muted">{k}</span>
-      <span className={`text-xs font-bold ${accentV ? "text-teal" : "text-ink"}`}>{v}</span>
+      <span className={`text-xs font-bold ${accentV ? "text-indigo" : "text-ink"}`}>{v}</span>
     </div>
   );
 }
 
-function PhoneBtn({
-  variant = "teal",
-  children,
-}: {
-  variant?: "teal" | "coral";
-  children: ReactNode;
-}) {
+function PhoneBtn({ children }: { children: ReactNode }) {
   return (
-    <div
-      className={`rounded-xl px-3 py-2.5 text-center text-[13px] font-bold text-white ${
-        variant === "teal" ? "bg-teal" : "bg-coral"
-      }`}
-    >
+    <div className="rounded-xl bg-indigo px-3 py-2.5 text-center text-[13px] font-bold text-white">
       {children}
     </div>
   );
@@ -132,11 +122,11 @@ function LogJobPhone({
   return (
     <PhoneFrame>
       <PhoneHead title="Log this job" right="Dana R." />
-      <div className="rounded-2xl border-2 border-dashed border-teal/40 bg-tealbg/60 px-3 py-4 text-center">
+      <div className="rounded-2xl border-2 border-dashed border-indigo/40 bg-indigobg/60 px-3 py-4 text-center">
         <div className="text-xl leading-none" aria-hidden="true">
           📷
         </div>
-        <div className="mt-2 text-xs font-bold text-teal">Snap the nameplate</div>
+        <div className="mt-2 text-xs font-bold text-indigo">Snap the nameplate</div>
       </div>
       <div className="flex items-center gap-1.5 pt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted">
         <Check /> Auto detected
@@ -149,22 +139,23 @@ function LogJobPhone({
   );
 }
 
+/* Warm accent (coral) marks the payoff moments only — everything else is indigo. */
 const HERO_STATS = [
-  { value: "30 sec", caption: "to log a job" },
-  { value: "$0", caption: "to start, no card" },
-  { value: "1 rebook", caption: "covers the year" },
+  { value: "30 sec", caption: "to log a job", warm: false },
+  { value: "$0", caption: "to start, no card", warm: false },
+  { value: "1 rebook", caption: "covers the year", warm: true },
 ];
 
 const LOG_WAYS = [
   {
     emoji: "📷",
-    chip: "bg-tealbg",
+    chip: "bg-indigobg",
     title: "Snap a photo",
     body: "Photograph the nameplate or invoice. We read the make, model, serial, and dates for you.",
   },
   {
     emoji: "🎤",
-    chip: "bg-coralbg",
+    chip: "bg-indigobg",
     title: "Speak a note",
     body: "Ten seconds of voice. We turn it into a clean, structured service record.",
   },
@@ -215,11 +206,11 @@ const INTEGRATIONS = [
 
 function ForPros() {
   return (
-    <MarketingShell mobileCta={{ label: "Start free", to: "/pro/signup", variant: "teal" }}>
+    <MarketingShell mobileCta={{ label: "Start free", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero */}
       <section className={`${CONTAINER} pt-14 pb-16`}>
         <div className="anim-fade-up">
-          <div className="eyebrow text-teal">For pros</div>
+          <div className="eyebrow text-indigo">For pros</div>
         </div>
         <h1 className={`${H_SANS} anim-fade-up d-1 mt-4 text-4xl sm:text-5xl leading-[1.08]`}>
           Never lose a customer again.
@@ -231,7 +222,7 @@ function ForPros() {
         </p>
         <div className="anim-fade-up d-3 mt-8 flex flex-wrap gap-3">
           <Link to="/pro/signup">
-            <Btn variant="teal" size="lg">
+            <Btn variant="indigo" size="lg">
               Start free
             </Btn>
           </Link>
@@ -253,7 +244,11 @@ function ForPros() {
         <div className="anim-fade-up d-5 mt-12 divide-y divide-line rounded-[22px] border border-line bg-paper">
           {HERO_STATS.map((s) => (
             <div key={s.value} className="px-6 py-9 text-center">
-              <div className="font-sans text-4xl font-extrabold tracking-tight text-teal tnum">
+              <div
+                className={`font-sans text-4xl font-extrabold tracking-tight tnum ${
+                  s.warm ? "text-coral" : "text-indigo"
+                }`}
+              >
                 {s.value}
               </div>
               <div className="mt-1.5 text-sm text-muted">{s.caption}</div>
@@ -306,7 +301,7 @@ function ForPros() {
         <div className="mt-12 grid gap-12 text-center sm:grid-cols-3 sm:gap-5">
           {/* Step 1 */}
           <div>
-            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-teal font-sans text-sm font-bold text-white">
+            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-indigo font-sans text-sm font-bold text-white">
               1
             </div>
             <h3 className={`${H_SANS} mt-4 text-lg`}>Bring your customers</h3>
@@ -317,8 +312,8 @@ function ForPros() {
               <PhoneHead title="Your customers" />
               {(
                 [
-                  ["Dana R.", "Water softener", "active", "text-teal"],
-                  ["The Patels", "Softener + filter", "active", "text-teal"],
+                  ["Dana R.", "Water softener", "active", "text-indigo"],
+                  ["The Patels", "Softener + filter", "active", "text-indigo"],
                   ["M. Alvarez", "RO system", "due soon", "text-amber"],
                 ] as const
               ).map(([name, sub, status, tone]) => (
@@ -381,8 +376,8 @@ function ForPros() {
                   </span>
                 </div>
               ))}
-              <div className="rounded-xl bg-tealbg px-3 py-3 text-center">
-                <div className="font-sans text-base font-extrabold text-teal tnum">+ $4,200</div>
+              <div className="rounded-xl bg-coralbg px-3 py-3 text-center">
+                <div className="font-sans text-base font-extrabold text-coraldark tnum">+ $4,200</div>
                 <div className="text-[11px] text-muted">rebooked this month</div>
               </div>
             </PhoneFrame>
@@ -405,8 +400,8 @@ function ForPros() {
         <div className="mt-12 space-y-6">
           {/* Free */}
           <div className="rounded-[24px] border border-line bg-paper p-7 sm:p-8">
-            <div className="eyebrow text-teal">Free</div>
-            <div className="mt-3 font-sans text-5xl font-extrabold tracking-tight text-teal tnum">
+            <div className="eyebrow text-indigo">Free</div>
+            <div className="mt-3 font-sans text-5xl font-extrabold tracking-tight text-indigo tnum">
               $0
             </div>
             <p className="mt-3 text-[15px] text-muted">
@@ -418,7 +413,7 @@ function ForPros() {
               ))}
             </ul>
             <Link to="/pro/signup" className="mt-7 block">
-              <span className="pressable flex min-h-13 w-full items-center justify-center rounded-2xl bg-tealbg px-6 py-3.5 text-base font-bold text-teal hover:bg-teal hover:text-white transition-colors">
+              <span className="pressable flex min-h-13 w-full items-center justify-center rounded-2xl bg-indigobg px-6 py-3.5 text-base font-bold text-indigo hover:bg-indigo hover:text-white transition-colors">
                 Start free
               </span>
             </Link>
@@ -486,7 +481,7 @@ function ForPros() {
         <h2 className={`${H_SANS} text-3xl sm:text-4xl`}>Snap a photo. Keep your customer.</h2>
         <div className="mt-8 flex justify-center">
           <Link to="/pro/signup">
-            <Btn variant="teal" size="lg">
+            <Btn variant="indigo" size="lg">
               Start free
             </Btn>
           </Link>

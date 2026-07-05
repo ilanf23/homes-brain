@@ -7,7 +7,7 @@ import { Logo, LogoMark } from "@/components/svg";
    full footer, and the SEO head helper. Every no-login page renders inside this. */
 
 /* Canonical origin for og:url / canonical links. Update when the production
-   domain changes — this is the only place it lives. */
+   domain changes - this is the only place it lives. */
 export const SITE_URL = "https://homesbrain.com";
 
 export function marketingHead(opts: {
@@ -77,11 +77,11 @@ const FOOTER_GROUPS: { title: string; links: { to: string; label: string }[] }[]
 
 export function MarketingShell({
   children,
-  mobileCta = { label: "Start free", to: "/pro/signup", variant: "teal" as const },
+  mobileCta = { label: "Start free", to: "/pro/signup", variant: "indigo" as const },
 }: {
   children: ReactNode;
   /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide. */
-  mobileCta?: { label: string; to: string; variant: "teal" | "coral" | "indigo" | "amber" } | null;
+  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" } | null;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -129,7 +129,7 @@ export function MarketingShell({
               Log in
             </Link>
             <Link to="/pro/signup">
-              <Btn variant="teal" size="sm">
+              <Btn variant="indigo" size="sm">
                 Start free
               </Btn>
             </Link>
@@ -208,8 +208,8 @@ export function MarketingShell({
               style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
             >
               <Link to="/pro/signup" className="w-full">
-                <Btn variant="teal" size="lg" className="w-full">
-                  Start free — no card
+                <Btn variant="indigo" size="lg" className="w-full">
+                  Start free, no card
                 </Btn>
               </Link>
               <Link to="/login" className="w-full">
@@ -245,7 +245,7 @@ export function MarketingShell({
           <div className="grid grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-10">
             <div className="col-span-2 md:col-span-1">
               <Logo size={24} />
-              <p className="mt-3 text-sm text-muted">Every home remembers.</p>
+              <p className="mt-3 text-sm text-muted">The living record for every home.</p>
             </div>
             {FOOTER_GROUPS.map((g) => (
               <div key={g.title}>
@@ -270,7 +270,7 @@ export function MarketingShell({
               <LogoMark size={18} />
               <span>© {new Date().getFullYear()} HomesBrain, Inc.</span>
             </div>
-            <span>Every home remembers.</span>
+            <span>The living record for every home.</span>
           </div>
         </div>
       </footer>
@@ -287,14 +287,13 @@ export function CtaBand({
   children,
 }: {
   eyebrow: string;
-  accent?: "indigo" | "teal" | "coral" | "amber";
+  accent?: "indigo" | "coral" | "amber";
   title: string;
   sub?: string;
   children: ReactNode;
 }) {
   const accentText: Record<string, string> = {
     indigo: "text-indigo",
-    teal: "text-teal",
     coral: "text-coral",
     amber: "text-amber",
   };

@@ -9,7 +9,7 @@ import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/compone
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/pros")({
-  head: () => ({ meta: [{ title: "My pros — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "My pros - HomesBrain" }] }),
   component: MyPros,
 });
 
@@ -67,10 +67,10 @@ function MyPros() {
   }
 
   async function share(p: ProRow) {
-    const text = `${p.business} — ${tradeLabel(p.trade)} on HomesBrain: ${window.location.origin}`;
+    const text = `${p.business} - ${tradeLabel(p.trade)} on HomesBrain: ${window.location.origin}`;
     try {
       await navigator.clipboard.writeText(text);
-      setToast("Copied — share it with a neighbor");
+      setToast("Copied. Share it with a neighbor");
     } catch {
       setToast(text);
     }
@@ -107,11 +107,11 @@ function MyPros() {
               <Card key={p.id} className={`anim-fade-up d-${Math.min(pi + 1, 4)}`}>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3">
-                    <Avatar name={p.business} accent="teal" size={40} />
+                    <Avatar name={p.business} accent="indigo" size={40} />
                     <div>
                       <div className="font-semibold text-ink">{p.business}</div>
                       <div className="text-xs text-muted flex items-center gap-1.5">
-                        <TradeIcon trade={p.trade} size={13} className="text-teal" />
+                        <TradeIcon trade={p.trade} size={13} className="text-indigo" />
                         {tradeLabel(p.trade)}
                         {p.service_area ? ` · ${p.service_area}` : ""} · {proJobs.length} visit
                         {proJobs.length === 1 ? "" : "s"}
@@ -128,7 +128,7 @@ function MyPros() {
                       <Share2 size={16} />
                     </button>
                     {rebooked.has(p.id) ? (
-                      <Pill accent="teal">Request sent</Pill>
+                      <Pill accent="coral">Request sent</Pill>
                     ) : (
                       <Btn
                         variant="coral"

@@ -2,15 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { marketingHead } from "@/components/marketing";
 import { LegalList, LegalPage, LegalSection } from "@/components/legal";
 
-/* Publicly reachable and indexable — A2P 10DLC registration requires a live,
+/* Publicly reachable and indexable: A2P 10DLC registration requires a live,
    linkable Privacy Policy. Do not add noindex here. */
 
 export const Route = createFileRoute("/privacy")({
   head: () =>
     marketingHead({
-      title: "Privacy Policy — HomesBrain",
+      title: "Privacy Policy - HomesBrain",
       description:
-        "How HomesBrain collects, uses, shares, and protects data for home-service pros and homeowners — and the rights you have over your information.",
+        "How HomesBrain collects, uses, shares, and protects data for home-service pros and homeowners, and the rights you have over your information.",
       path: "/privacy",
     }),
   component: Privacy,
@@ -34,7 +34,7 @@ function Privacy() {
             <>
               <strong>Home and service data.</strong> Property address, equipment details (make,
               model, serial, warranty), service history, photos of equipment, and scheduled service
-              dates — entered by Pros in the course of doing work, or by homeowners on their own
+              dates, entered by Pros in the course of doing work, or by homeowners on their own
               record.
             </>,
             <>
@@ -73,7 +73,7 @@ function Privacy() {
               including which Pros performed the work.
             </>,
             <>
-              <strong>Service providers.</strong> We use vendors to run the platform — hosting and
+              <strong>Service providers.</strong> We use vendors to run the platform: hosting and
               database (Supabase), payment processing (Stripe), and SMS/email delivery providers.
               They process data only to provide their service to us.
             </>,
@@ -112,7 +112,7 @@ function Privacy() {
       <LegalSection title="6. Your rights and choices">
         <LegalList
           items={[
-            "Access, correct, or export your data. Home records are portable — you can export your home's history.",
+            "Access, correct, or export your data. Home records are portable: you can export your home's history.",
             "Delete your account and personal data, subject to legal retention requirements.",
             "Opt out of SMS at any time by replying STOP, and of marketing email via the unsubscribe link.",
             "Depending on where you live, you may have additional rights (for example under CCPA or GDPR). We honor verified requests.",
@@ -136,7 +136,7 @@ function Privacy() {
 
       <LegalSection title="9. Contact">
         <p>
-          HomesBrain, Inc. — privacy@homesbrain.com. See also our{" "}
+          HomesBrain, Inc.: privacy@homesbrain.com. See also our{" "}
           <Link to="/terms" className="font-semibold text-indigo hover:underline">
             Terms of Service
           </Link>{" "}

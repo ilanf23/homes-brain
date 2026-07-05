@@ -32,7 +32,7 @@ async function decodeImage(
     const img = new Image();
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
-      img.onerror = () => reject(new Error("Couldn't read that photo — try a JPEG."));
+      img.onerror = () => reject(new Error("Couldn't read that photo. Try a JPEG."));
       img.src = url;
     });
     return {
@@ -68,7 +68,7 @@ export async function scanNameplate(file: File): Promise<NameplateScan> {
       const body = await ctx.json().catch(() => null);
       if (body?.error) throw new Error(body.error);
     }
-    throw new Error("Couldn't read the nameplate — try again.");
+    throw new Error("Couldn't read the nameplate. Try again.");
   }
   if (data?.error) throw new Error(data.error);
   return data as NameplateScan;

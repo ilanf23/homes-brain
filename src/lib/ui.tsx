@@ -6,11 +6,12 @@ import type {
 } from "react";
 import { initials } from "./hb";
 
-type Accent = "indigo" | "teal" | "coral" | "amber" | "red" | "ink";
+/* indigo = brand (default), coral = payoff moments only,
+   amber = functional warning/status, red = errors/compliance. */
+type Accent = "indigo" | "coral" | "amber" | "red" | "ink";
 
 const accentText: Record<Accent, string> = {
   indigo: "text-indigo",
-  teal: "text-teal",
   coral: "text-coral",
   amber: "text-amber",
   red: "text-red",
@@ -18,7 +19,6 @@ const accentText: Record<Accent, string> = {
 };
 const accentBg: Record<Accent, string> = {
   indigo: "bg-indigobg",
-  teal: "bg-tealbg",
   coral: "bg-coralbg",
   amber: "bg-amberbg",
   red: "bg-redbg",
@@ -26,17 +26,15 @@ const accentBg: Record<Accent, string> = {
 };
 const accentSolid: Record<Accent, string> = {
   indigo: "bg-indigo",
-  teal: "bg-teal",
   coral: "bg-coral",
   amber: "bg-amber",
   red: "bg-red",
   ink: "bg-ink",
 };
-/* Dark tones for text sitting ON a tint background — the strong tones
+/* Dark tones for text sitting ON a tint background - the strong tones
    don't reach WCAG AA there (brand guidelines' "Dark (on tint)" column). */
 const accentTextOnTint: Record<Accent, string> = {
   indigo: "text-indigodark",
-  teal: "text-tealdark",
   coral: "text-coraldark",
   amber: "text-amberdark",
   red: "text-red",
@@ -110,22 +108,20 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
   );
 }
 
-type BtnVariant = "primary" | "secondary" | "teal" | "coral" | "indigo" | "amber" | "ghost";
+/* indigo = default brand CTA; coral = payoff CTAs (rebook, revenue) only. */
+type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "ghost";
 
 const btnStyles: Record<BtnVariant, string> = {
   primary: "bg-ink text-white hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)]",
   secondary: "bg-soft text-ink hover:bg-line",
-  teal: "bg-teal text-white hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)]",
   coral:
     "bg-coral text-white hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
   indigo:
     "bg-indigo text-white hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
-  amber:
-    "bg-amber text-white hover:bg-amber/90 hover:shadow-[0_10px_24px_-12px_rgba(138,82,8,0.55)]",
   ghost: "bg-transparent text-ink hover:bg-soft",
 };
 
-/* Tiny inline spinner for Btn's loading state — transform-only animation. */
+/* Tiny inline spinner for Btn's loading state - transform-only animation. */
 function Spinner({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" className="animate-spin" aria-hidden="true">
@@ -248,7 +244,7 @@ export function Toast({ children, onDismiss }: { children: ReactNode; onDismiss?
       style={{ animation: "hb-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both" }}
     >
       <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" className="shrink-0">
-        <circle cx="8" cy="8" r="8" fill="var(--teal)" opacity="0.9" />
+        <circle cx="8" cy="8" r="8" fill="var(--indigo)" opacity="0.9" />
         <path
           d="m4.8 8.3 2.1 2.1 4.3-4.6"
           fill="none"
@@ -283,7 +279,7 @@ export function Toast({ children, onDismiss }: { children: ReactNode; onDismiss?
 export function StepBar({
   steps,
   current,
-  accent = "teal",
+  accent = "indigo",
 }: {
   steps: string[];
   current: number; // 0-indexed
@@ -326,14 +322,14 @@ export function StepBar({
 }
 
 /* Four-box OTP input.
-   ARCHIVED — no flow uses this right now. The mock "any 4 digits" verify steps
+   ARCHIVED - no flow uses this right now. The mock "any 4 digits" verify steps
    were removed from /login, /pro/signup, and /claim because they verified
    nothing. Re-add a Verify step using this component when real Supabase OTP
    (email/phone) ships. */
 export function OtpBoxes({
   value,
   onChange,
-  accent = "teal",
+  accent = "indigo",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -341,7 +337,6 @@ export function OtpBoxes({
 }) {
   const accentBorder: Record<Accent, string> = {
     indigo: "border-indigo",
-    teal: "border-teal",
     coral: "border-coral",
     amber: "border-amber",
     red: "border-red",

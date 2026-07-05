@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
-  head: () => ({ meta: [{ title: "Customer — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Customer - HomesBrain" }] }),
   component: CustomerDetail,
 });
 
@@ -111,21 +111,21 @@ function CustomerDetail() {
 
       <div className="anim-fade-up flex items-center justify-between flex-wrap gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <Avatar name={customer.name} accent="teal" size={52} />
+          <Avatar name={customer.name} accent="indigo" size={52} />
           <div>
             <h1 className="text-3xl tracking-tight">{customer.name}</h1>
             <div className="text-sm text-muted">{customer.homes?.address}</div>
           </div>
         </div>
         <Link to="/pro/jobs/new">
-          <Btn variant="teal">+ Log a job here</Btn>
+          <Btn variant="indigo">+ Log a job here</Btn>
         </Link>
       </div>
 
       <div className="grid md:grid-cols-[1fr_1.4fr] gap-5 items-start">
         <div className="space-y-5">
           <Card className="anim-fade-up d-1">
-            <Eyebrow accent="teal">Contact</Eyebrow>
+            <Eyebrow accent="indigo">Contact</Eyebrow>
             <div className="mt-2">
               {customer.phone && <KV k="Phone" v={customer.phone} />}
               {customer.email && <KV k="Email" v={customer.email} />}
@@ -134,7 +134,7 @@ function CustomerDetail() {
                 k="Consent"
                 v={
                   customer.consent_at ? (
-                    <Pill accent="teal">On file · {formatDate(customer.consent_at)}</Pill>
+                    <Pill accent="indigo">On file · {formatDate(customer.consent_at)}</Pill>
                   ) : (
                     <Pill accent="red">Missing</Pill>
                   )
@@ -156,7 +156,7 @@ function CustomerDetail() {
           </Card>
 
           <Card className="anim-fade-up d-2">
-            <Eyebrow accent="teal">Equipment on file</Eyebrow>
+            <Eyebrow accent="indigo">Equipment on file</Eyebrow>
             {equipment.length === 0 ? (
               <p className="mt-2 text-sm text-muted">Nothing on file yet.</p>
             ) : (
@@ -171,7 +171,7 @@ function CustomerDetail() {
                       {e.warranty_until && (
                         <Pill accent="indigo">Warranty to {formatDate(e.warranty_until)}</Pill>
                       )}
-                      <Pill accent={e.recall_status === "none" ? "teal" : "red"}>
+                      <Pill accent={e.recall_status === "none" ? "indigo" : "red"}>
                         {e.recall_status === "none" ? "No recalls" : "Recall"}
                       </Pill>
                     </div>
@@ -183,7 +183,7 @@ function CustomerDetail() {
         </div>
 
         <Card className="anim-fade-up d-2">
-          <Eyebrow accent="teal">Service history at this home</Eyebrow>
+          <Eyebrow accent="indigo">Service history at this home</Eyebrow>
           {jobs.length === 0 ? (
             <p className="mt-2 text-sm text-muted">No jobs logged yet.</p>
           ) : (
@@ -203,7 +203,7 @@ function CustomerDetail() {
                     </div>
                     <div className="text-right shrink-0 space-y-1">
                       {rec?.viewed_at ? (
-                        <Pill accent="teal">Viewed</Pill>
+                        <Pill accent="indigo">Viewed</Pill>
                       ) : rec?.sent_sms_at ? (
                         <Pill accent="indigo">Sent</Pill>
                       ) : null}
@@ -212,7 +212,7 @@ function CustomerDetail() {
                           <Link
                             to="/pro/records/$recordId"
                             params={{ recordId: rec.id }}
-                            className="text-xs font-semibold text-teal hover:underline"
+                            className="text-xs font-semibold text-indigo hover:underline"
                           >
                             View record →
                           </Link>

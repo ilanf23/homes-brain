@@ -6,7 +6,7 @@ import { CtaBand, MarketingShell, marketingHead } from "@/components/marketing";
 export const Route = createFileRoute("/pricing")({
   head: () =>
     marketingHead({
-      title: "HomesBrain pricing — free to start.",
+      title: "HomesBrain pricing: free to start.",
       description:
         "Free: 30-second job logging, branded records, automatic Google reviews, and getting paid. Pro ($99/mo): reminders, one-tap rebooking, and lead lists. One saved rebook covers the year.",
       path: "/pricing",
@@ -37,15 +37,15 @@ const PRO_FEATURES = [
 const FAQS = [
   {
     q: "Do I need a credit card to start?",
-    a: "No. The Free plan is genuinely free — sign up, log jobs, send records, and collect reviews without entering a card.",
+    a: "No. The Free plan is genuinely free: sign up, log jobs, send records, and collect reviews without entering a card.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. Pro is month-to-month. Downgrade whenever you like and keep everything on the Free plan — your records and customers stay yours.",
+    a: "Yes. Pro is month-to-month. Downgrade whenever you like and keep everything on the Free plan. Your records and customers stay yours.",
   },
   {
     q: "I already pay for a review tool. How do I switch?",
-    a: "There's nothing to migrate — HomesBrain sends the review ask with every record automatically. Most pros run both for a month, then cancel the old tool.",
+    a: "There's nothing to migrate: HomesBrain sends the review ask with every record automatically. Most pros run both for a month, then cancel the old tool.",
   },
   {
     q: "What does it cost my customers?",
@@ -63,11 +63,11 @@ function CheckItem({ children, muted = false }: { children: string; muted?: bool
         aria-hidden="true"
         className="mt-0.5 shrink-0"
       >
-        <circle cx="8" cy="8" r="8" fill={muted ? "var(--soft)" : "var(--tealbg)"} />
+        <circle cx="8" cy="8" r="8" fill={muted ? "var(--soft)" : "var(--indigobg)"} />
         <path
           d="m4.8 8.3 2.1 2.1 4.3-4.6"
           fill="none"
-          stroke={muted ? "var(--muted)" : "var(--teal)"}
+          stroke={muted ? "var(--muted)" : "var(--indigo)"}
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -88,7 +88,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         aria-expanded={open}
         className="pressable group w-full min-h-12 flex items-center justify-between gap-4 py-4 text-left"
       >
-        <span className="text-sm sm:text-base font-semibold text-ink group-hover:text-teal transition-colors duration-150">
+        <span className="text-sm sm:text-base font-semibold text-ink group-hover:text-indigo transition-colors duration-150">
           {q}
         </span>
         <svg
@@ -109,12 +109,12 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 function Pricing() {
   return (
     <MarketingShell
-      mobileCta={{ label: "Start free — no card", to: "/pro/signup", variant: "teal" }}
+      mobileCta={{ label: "Start free, no card", to: "/pro/signup", variant: "indigo" }}
     >
       {/* Hero */}
       <section className="mx-auto max-w-3xl px-5 pt-16 pb-12 text-center">
         <div className="anim-fade-up">
-          <Eyebrow accent="teal">Pricing</Eyebrow>
+          <Eyebrow accent="indigo">Pricing</Eyebrow>
         </div>
         <h1 className="anim-fade-up d-1 mt-4 text-4xl sm:text-6xl tracking-tight text-ink leading-[1.06]">
           Free to start. Pro when it pays for itself.
@@ -154,10 +154,10 @@ function Pricing() {
             </div>
           </Card>
 
-          <Card className="anim-fade-up d-2 border-teal/50 shadow-[0_24px_60px_-30px_rgba(15,110,86,0.35)]">
+          <Card className="anim-fade-up d-2 border-indigo/50 shadow-[0_24px_60px_-30px_rgba(71,63,176,0.35)]">
             <div className="flex items-center justify-between">
-              <Pill accent="teal">Pro</Pill>
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-teal">
+              <Pill accent="indigo">Pro</Pill>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-indigo">
                 Best for growing shops
               </span>
             </div>
@@ -177,7 +177,7 @@ function Pricing() {
             </ul>
             <div className="mt-6">
               <Link to="/pro/signup" className="block">
-                <Btn variant="teal" size="lg" className="w-full">
+                <Btn variant="indigo" size="lg" className="w-full">
                   Start free, upgrade anytime
                 </Btn>
               </Link>
@@ -194,7 +194,7 @@ function Pricing() {
       {/* FAQ */}
       <section className="bg-soft border-t border-line py-20">
         <div className="mx-auto max-w-2xl px-5">
-          <SectionHead accent="teal" eyebrow="Questions" title="The short answers" />
+          <SectionHead accent="indigo" eyebrow="Questions" title="The short answers" />
           <Card className="mt-10 px-6 py-2">
             {FAQS.map((f) => (
               <FaqItem key={f.q} q={f.q} a={f.a} />
@@ -205,13 +205,13 @@ function Pricing() {
 
       <CtaBand
         eyebrow="Pricing"
-        accent="teal"
+        accent="indigo"
         title="Start free, upgrade anytime."
         sub="No card, no contract. Your first record goes out today."
       >
         <Link to="/pro/signup">
-          <Btn variant="teal" size="lg">
-            Start free — no card
+          <Btn variant="indigo" size="lg">
+            Start free, no card
           </Btn>
         </Link>
         <Link to="/for-pros">

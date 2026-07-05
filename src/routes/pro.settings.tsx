@@ -7,7 +7,7 @@ import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/settings")({
-  head: () => ({ meta: [{ title: "Settings — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Settings - HomesBrain" }] }),
   component: ProSettings,
 });
 
@@ -65,7 +65,7 @@ function ProSettings() {
     setBusyGoogle(true);
     setErr(null);
     const connecting = !pro!.google_place_id;
-    // Stub connect, same as signup — real Google Business OAuth comes later.
+    // Stub connect, same as signup. Real Google Business OAuth comes later.
     const patch = connecting
       ? { google_place_id: "demo_place_id", google_rating: 4.8 }
       : { google_place_id: null, google_rating: null };
@@ -89,7 +89,7 @@ function ProSettings() {
 
       <div className="grid md:grid-cols-[1.3fr_1fr] gap-5 items-start max-w-4xl">
         <Card className="anim-fade-up d-1">
-          <Eyebrow accent="teal">Basics</Eyebrow>
+          <Eyebrow accent="indigo">Basics</Eyebrow>
           <div className="mt-4 space-y-4">
             <Field label="Business name">
               <Input value={business} onChange={(e) => setBusiness(e.target.value)} />
@@ -105,14 +105,14 @@ function ProSettings() {
                     aria-pressed={trade === t.id}
                     className={`pressable text-left rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2.5 ${
                       trade === t.id
-                        ? "border-teal bg-tealbg text-teal shadow-sm"
+                        ? "border-indigo bg-indigobg text-indigo shadow-sm"
                         : "border-line bg-paper text-ink hover:bg-soft hover:border-ink/20"
                     }`}
                   >
                     <TradeIcon
                       trade={t.id}
                       size={18}
-                      className={trade === t.id ? "text-teal" : "text-muted"}
+                      className={trade === t.id ? "text-indigo" : "text-muted"}
                     />
                     {t.label}
                   </button>
@@ -124,7 +124,7 @@ function ProSettings() {
             </Field>
             <Field label="Logo">
               <div className="flex items-center gap-3">
-                <Avatar name={business || "?"} accent="teal" />
+                <Avatar name={business || "?"} accent="indigo" />
                 <div className="text-xs text-muted">
                   Using initials for now. Upload comes later.
                 </div>
@@ -139,7 +139,7 @@ function ProSettings() {
               </div>
             )}
             <Btn
-              variant="teal"
+              variant="indigo"
               size="lg"
               className="w-full"
               loading={saving}
@@ -156,17 +156,17 @@ function ProSettings() {
             <Eyebrow accent="indigo">Google Business</Eyebrow>
             {pro.google_place_id ? (
               <div className="mt-3">
-                <div className="rounded-xl border border-teal/30 bg-tealbg/50 p-4 flex items-center justify-between">
+                <div className="rounded-xl border border-indigo/30 bg-indigobg/50 p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <ShieldCheck size={22} className="text-teal" />
+                    <ShieldCheck size={22} className="text-indigo" />
                     <div>
                       <div className="font-semibold text-ink">Connected</div>
                       <div className="text-xs text-muted tnum">
-                        Rating {pro.google_rating ?? "—"} ★
+                        Rating {pro.google_rating ?? "-"} ★
                       </div>
                     </div>
                   </div>
-                  <Pill accent="teal">Live</Pill>
+                  <Pill accent="indigo">Live</Pill>
                 </div>
                 <button
                   onClick={toggleGoogle}
@@ -194,13 +194,13 @@ function ProSettings() {
           </Card>
 
           <Card className="anim-fade-up d-3">
-            <Eyebrow accent="teal">Plan</Eyebrow>
+            <Eyebrow accent="indigo">Plan</Eyebrow>
             <div className="mt-3 flex items-center justify-between">
               <div>
                 <div className="font-extrabold text-ink capitalize">{pro.plan}</div>
                 <div className="text-xs text-muted">Unlimited records. No card required.</div>
               </div>
-              <Pill accent="teal">Current</Pill>
+              <Pill accent="indigo">Current</Pill>
             </div>
           </Card>
         </div>

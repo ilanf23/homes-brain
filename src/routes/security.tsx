@@ -3,14 +3,14 @@ import { Btn, Card, Eyebrow, KV, SectionHead } from "@/lib/ui";
 import { CtaBand, MarketingShell, marketingHead } from "@/components/marketing";
 import { ShieldCheck } from "@/components/svg";
 
-/* Plain-English trust explainer — NOT the legal privacy policy (that's /privacy). */
+/* Plain-English trust explainer, NOT the legal privacy policy (that's /privacy). */
 
 export const Route = createFileRoute("/security")({
   head: () =>
     marketingHead({
       title: "Security & privacy at HomesBrain.",
       description:
-        "What data HomesBrain holds, who can see what, and how it's protected — in plain English. Your record is yours; pros see only their own customers; Stripe handles payments.",
+        "What data HomesBrain holds, who can see what, and how it's protected, in plain English. Your record is yours; pros see only their own customers; Stripe handles payments.",
       path: "/security",
     }),
   component: Security,
@@ -27,7 +27,7 @@ const WHO_SEES = [
   },
   {
     who: "Anyone with a record link",
-    sees: "One service record — the one that was sent. Not your whole home, not your contact details.",
+    sees: "One service record: the one that was sent. Not your whole home, not your contact details.",
   },
   {
     who: "HomesBrain staff",
@@ -71,7 +71,7 @@ function Security() {
             <Card>
               <h3 className="text-lg font-semibold tracking-tight font-display">About people</h3>
               <p className="mt-2 text-sm text-muted">
-                The contact details used to send records and sign in — phone and email — plus a
+                The contact details used to send records and sign in (phone and email), plus a
                 pro's business profile. No passwords exist to steal: sign-in is by one-time code.
               </p>
             </Card>
@@ -86,7 +86,7 @@ function Security() {
             accent="indigo"
             eyebrow="Who sees what"
             title="Access follows ownership"
-            sub="The database enforces this row by row — it's not an honor system."
+            sub="The database enforces this row by row. It's not an honor system."
           />
           <Card className="mt-10">
             {WHO_SEES.map((w) => (
@@ -123,7 +123,7 @@ function Security() {
               </h3>
               <p className="mt-2 text-sm text-muted">
                 Cards are handled end-to-end by Stripe, the payments provider behind millions of
-                businesses. HomesBrain never stores card numbers — we never even see them.
+                businesses. HomesBrain never stores card numbers. We never even see them.
               </p>
             </Card>
             <Card>
@@ -132,7 +132,7 @@ function Security() {
               </h3>
               <p className="mt-2 text-sm text-muted">
                 Your home's history is exportable whenever you want it. Leaving should be as easy as
-                staying — that's what "owned by you" means.
+                staying. That's what "owned by you" means.
               </p>
             </Card>
           </div>

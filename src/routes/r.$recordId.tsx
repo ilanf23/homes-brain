@@ -6,7 +6,7 @@ import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { Logo, LogoMark, ShieldCheck, TradeIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/r/$recordId")({
-  head: () => ({ meta: [{ title: "Your service record — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Your service record - HomesBrain" }] }),
   component: PublicRecord,
 });
 
@@ -110,7 +110,7 @@ function PublicRecord() {
           <Link to="/" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          <Pill accent="coral">Your record</Pill>
+          <Pill accent="indigo">Your record</Pill>
         </div>
       </header>
 
@@ -118,11 +118,11 @@ function PublicRecord() {
         <Card className="anim-fade-up shadow-[0_24px_60px_-30px_rgba(22,22,15,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Avatar name={pro?.business ?? "?"} accent="teal" size={52} />
+              <Avatar name={pro?.business ?? "?"} accent="indigo" size={52} />
               <div>
                 <div className="font-extrabold text-ink text-lg">{pro?.business}</div>
                 <div className="text-xs text-muted flex items-center gap-1.5">
-                  <TradeIcon trade={pro?.trade} size={13} className="text-teal" />
+                  <TradeIcon trade={pro?.trade} size={13} className="text-indigo" />
                   {tradeLabel(pro?.trade)}
                   {pro?.google_rating ? ` · ${pro.google_rating} ★` : ""}
                 </div>
@@ -137,32 +137,32 @@ function PublicRecord() {
           </div>
 
           <div className="mt-5">
-            <Eyebrow accent="coral">Service record</Eyebrow>
+            <Eyebrow accent="indigo">Service record</Eyebrow>
             <div className="text-sm text-muted mt-1 font-mono tnum">
               {formatDate(j.created_at)} · {j.homes?.address}
             </div>
           </div>
 
           <div className="mt-4">
-            <KV k="Equipment" v={eq?.type ?? "—"} />
-            <KV k="Make / Model" v={[eq?.make, eq?.model].filter(Boolean).join(" · ") || "—"} />
-            <KV k="Warranty until" v={formatDate(eq?.warranty_until) || "—"} />
+            <KV k="Equipment" v={eq?.type ?? "-"} />
+            <KV k="Make / Model" v={[eq?.make, eq?.model].filter(Boolean).join(" · ") || "-"} />
+            <KV k="Warranty until" v={formatDate(eq?.warranty_until) || "-"} />
             <KV
               k="Recall status"
               v={
-                <span className="inline-flex items-center gap-1.5 text-teal font-semibold text-sm">
+                <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
                   <ShieldCheck size={18} /> No known recalls, checked today
                 </span>
               }
             />
             <KV k="Work done" v={j.what_done} />
-            <KV k="Next service" v={formatDate(j.next_service_date) || "—"} />
+            <KV k="Next service" v={formatDate(j.next_service_date) || "-"} />
           </div>
         </Card>
 
         {!isClaimed && (
-          <Card className="anim-fade-up d-2 bg-coralbg border-coral/20">
-            <Eyebrow accent="coral">Own your home's history</Eyebrow>
+          <Card className="anim-fade-up d-2 bg-indigobg border-indigo/20">
+            <Eyebrow accent="indigo">Own your home's history</Eyebrow>
             <h2 className="mt-2 text-2xl tracking-tight">Claim your home, free.</h2>
             <p className="mt-2 text-sm text-ink/80">
               Keep every service record in one place. Add the other pros who work on your home.
@@ -170,7 +170,7 @@ function PublicRecord() {
             </p>
             <div className="mt-4">
               <Btn
-                variant="coral"
+                variant="indigo"
                 size="lg"
                 className="w-full"
                 onClick={() => navigate({ to: "/claim/$recordId", params: { recordId } })}
@@ -183,10 +183,10 @@ function PublicRecord() {
 
         {isClaimed && (
           <Card className="anim-fade-up d-2">
-            <Pill accent="teal">Claimed</Pill>
+            <Pill accent="indigo">Claimed</Pill>
             <div className="mt-2 text-sm text-ink">This home is in your HomesBrain.</div>
             <Link to="/home" className="block mt-3">
-              <Btn variant="coral" className="w-full">
+              <Btn variant="indigo" className="w-full">
                 Go to my home
               </Btn>
             </Link>
@@ -195,7 +195,7 @@ function PublicRecord() {
 
         <div className="anim-fade-up d-3 grid grid-cols-2 gap-3">
           <Btn variant="secondary">Leave {pro?.business} a review</Btn>
-          <Btn variant="secondary">Rebook {pro?.business}</Btn>
+          <Btn variant="coral">Rebook {pro?.business}</Btn>
         </div>
 
         <div className="anim-fade-up d-4">
@@ -229,7 +229,7 @@ function PublicRecord() {
           >
             <div className="overflow-hidden">
               <p className="text-sm text-muted px-4 py-3">
-                HomesBrain keeps a permanent, verified history of the work done on your home — like
+                HomesBrain keeps a permanent, verified history of the work done on your home, like
                 a Carfax report, but for houses. Pros log the work, you own the record. Free for
                 homeowners, forever.
               </p>

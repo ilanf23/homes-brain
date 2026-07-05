@@ -8,7 +8,7 @@ import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
 
 export const Route = createFileRoute("/home/items/$itemId")({
-  head: () => ({ meta: [{ title: "Item — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Item - HomesBrain" }] }),
   component: ItemDetail,
 });
 
@@ -111,7 +111,7 @@ function ItemDetail() {
         sub={[item.make, item.model].filter(Boolean).join(" · ") || undefined}
         action={
           item.source === "pro" ? (
-            <span className="inline-flex items-center gap-1.5 text-teal font-semibold text-sm">
+            <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
               <ShieldCheck size={17} animate={false} /> Verified
             </span>
           ) : (
@@ -123,15 +123,15 @@ function ItemDetail() {
       <div className="space-y-6">
         {/* Nameplate */}
         <Card className="anim-fade-up d-1">
-          <Eyebrow accent="coral">Nameplate</Eyebrow>
+          <Eyebrow accent="indigo">Nameplate</Eyebrow>
           <div className="mt-2">
-            <KV k="Make" v={item.make ?? "—"} />
-            <KV k="Model" v={item.model ?? "—"} />
-            <KV k="Serial" v={item.serial ?? "—"} />
+            <KV k="Make" v={item.make ?? "-"} />
+            <KV k="Model" v={item.model ?? "-"} />
+            <KV k="Serial" v={item.serial ?? "-"} />
             <KV k="On record since" v={formatDate(item.created_at)} />
             <KV
               k="Warranty"
-              v={item.warranty_until ? `Until ${formatDate(item.warranty_until)}` : "—"}
+              v={item.warranty_until ? `Until ${formatDate(item.warranty_until)}` : "-"}
             />
           </div>
         </Card>
@@ -140,11 +140,11 @@ function ItemDetail() {
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <Eyebrow accent={recallClean ? "coral" : "red"}>Recall check</Eyebrow>
+              <Eyebrow accent={recallClean ? "indigo" : "red"}>Recall check</Eyebrow>
               <div className="mt-2 flex items-center gap-2 text-sm font-semibold">
                 {recallClean ? (
                   <>
-                    <ShieldCheck size={16} animate={false} className="text-teal" />
+                    <ShieldCheck size={16} animate={false} className="text-indigo" />
                     <span className="text-ink">No known recalls</span>
                   </>
                 ) : (
@@ -162,7 +162,7 @@ function ItemDetail() {
 
         {/* History */}
         <Card className="anim-fade-up d-3">
-          <Eyebrow accent="coral">History</Eyebrow>
+          <Eyebrow accent="indigo">History</Eyebrow>
           {jobs.length === 0 ? (
             <p className="mt-3 text-sm text-muted">No visits recorded for this item yet.</p>
           ) : (
@@ -178,7 +178,7 @@ function ItemDetail() {
                       style={{ animationDelay: `${i * 70}ms` }}
                     >
                       <span
-                        className="absolute -left-6 top-1 w-[15px] h-[15px] rounded-full border-2 border-teal bg-tealbg"
+                        className="absolute -left-6 top-1 w-[15px] h-[15px] rounded-full border-2 border-indigo bg-indigobg"
                         aria-hidden="true"
                       />
                       <div className="text-xs text-muted font-mono tnum">
@@ -187,7 +187,7 @@ function ItemDetail() {
                       <div className="font-semibold text-ink text-sm mt-0.5">{j.what_done}</div>
                       {p && (
                         <div className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                          <TradeIcon trade={p.trade} size={12} className="text-teal" />
+                          <TradeIcon trade={p.trade} size={12} className="text-indigo" />
                           {p.business} · {tradeLabel(p.trade)}
                         </div>
                       )}

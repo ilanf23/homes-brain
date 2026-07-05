@@ -272,17 +272,17 @@ export function MicIcon({ size = 18, className = "" }: { size?: number; classNam
 export function CheckBurst({ size = 72, className = "" }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 72 72" className={className} aria-hidden="true">
-      <circle cx="36" cy="36" r="22" fill="var(--tealbg)" className="anim-scale-in" />
+      <circle cx="36" cy="36" r="22" fill="var(--indigobg)" className="anim-scale-in" />
       <path
         d="m27 36.5 6.5 6.5L46 30"
         {...stroke}
-        stroke="var(--teal)"
+        stroke="var(--indigo)"
         strokeWidth={3}
         strokeDasharray={30}
         strokeDashoffset={30}
         className="draw-on"
       />
-      <g stroke="var(--teal)" strokeWidth={2} strokeLinecap="round" opacity={0.55}>
+      <g stroke="var(--indigo)" strokeWidth={2} strokeLinecap="round" opacity={0.55}>
         {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
           <line
             key={deg}
@@ -307,7 +307,7 @@ export function SparkLine({
   points,
   width = 84,
   height = 28,
-  color = "var(--teal)",
+  color = "var(--indigo)",
   className = "",
 }: {
   points: number[];
@@ -359,7 +359,7 @@ export function ProgressRing({
   value,
   size = 92,
   strokeWidth = 8,
-  color = "var(--teal)",
+  color = "var(--indigo)",
   label,
   className = "",
 }: {
@@ -424,7 +424,7 @@ export function ProgressRing({
 }
 
 /* Hand-drawn underline flourish for headlines. Indigo is the brand accent;
-   coral is reserved for the homeowner role and must not underline brand copy. */
+   coral is reserved for payoff moments and must not underline brand copy. */
 export function Scribble({
   className = "",
   color = "var(--indigo)",

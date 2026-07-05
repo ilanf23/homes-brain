@@ -70,20 +70,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "HomesBrain — A Carfax for homes that writes itself" },
+      { title: "HomesBrain: A Carfax for homes that writes itself" },
       {
         name: "description",
         content:
           "Home-service pros log a 30-second job and send a branded service record. Homeowners claim it free and own their home's history for life.",
       },
-      { property: "og:title", content: "HomesBrain — A Carfax for homes that writes itself" },
+      { property: "og:title", content: "HomesBrain: A Carfax for homes that writes itself" },
       {
         property: "og:description",
         content:
           "Home-service pros log a 30-second job and send a branded service record. Homeowners claim it free and own their home's history for life.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "HomesBrain — A Carfax for homes that writes itself" },
+      { name: "twitter:title", content: "HomesBrain: A Carfax for homes that writes itself" },
       {
         name: "twitter:description",
         content:
@@ -102,7 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      /* Brand guidelines: system font stack only — no web fonts. */
+      /* Brand guidelines: system font stack only, no web fonts. */
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },

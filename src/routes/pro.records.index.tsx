@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/records/")({
-  head: () => ({ meta: [{ title: "Records — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Records - HomesBrain" }] }),
   component: RecordsList,
 });
 
@@ -32,10 +32,10 @@ function statusOf(r: RecordRow): Status {
   return "created";
 }
 
-const STATUS_PILL: Record<Status, { accent: "coral" | "teal" | "indigo" | "ink"; label: string }> =
+const STATUS_PILL: Record<Status, { accent: "coral" | "indigo" | "ink"; label: string }> =
   {
     claimed: { accent: "coral", label: "Claimed" },
-    viewed: { accent: "teal", label: "Viewed" },
+    viewed: { accent: "indigo", label: "Viewed" },
     sent: { accent: "indigo", label: "Sent" },
     created: { accent: "ink", label: "Created" },
   };
@@ -93,7 +93,7 @@ function RecordsList() {
           </p>
           <div className="mt-6">
             <Link to="/pro/jobs/new">
-              <Btn variant="teal" size="lg">
+              <Btn variant="indigo" size="lg">
                 Log a job
               </Btn>
             </Link>
@@ -120,7 +120,7 @@ function RecordsList() {
                 aria-selected={filter === key}
                 onClick={() => setFilter(key)}
                 className={`pressable shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200 tnum ${
-                  filter === key ? "bg-tealbg text-teal" : "text-muted hover:text-ink"
+                  filter === key ? "bg-indigobg text-indigo" : "text-muted hover:text-ink"
                 }`}
               >
                 {label}
@@ -144,7 +144,7 @@ function RecordsList() {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-ink truncate">
-                          {r.jobs?.customers?.name ?? "—"}
+                          {r.jobs?.customers?.name ?? "-"}
                           <span className="text-muted font-normal"> · {r.jobs?.what_done}</span>
                         </div>
                         <div className="text-xs text-muted truncate">{r.jobs?.homes?.address}</div>

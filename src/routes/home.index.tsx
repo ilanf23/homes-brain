@@ -9,7 +9,7 @@ import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/compone
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/")({
-  head: () => ({ meta: [{ title: "My home — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "My home - HomesBrain" }] }),
   component: HomeOverview,
 });
 
@@ -92,11 +92,11 @@ function HomeOverview() {
       <HomePageHead
         eyebrow="My home"
         title={home.address}
-        sub="Every home remembers. Your pros write the record — you own it."
+        sub="Every home remembers. Your pros write the record, you own it."
       />
 
       {/* The free-for-life anchor (locked in Strategy) */}
-      <div className="anim-fade-up rounded-2xl bg-coralbg text-coral px-4 py-3 text-sm font-semibold mb-6">
+      <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
         This record sells as a $49 seller history report when homes change hands. Yours is free
         for life because your pros write it.
       </div>
@@ -122,8 +122,8 @@ function HomeOverview() {
         {/* On file */}
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="coral">On file</Eyebrow>
-            <Link to="/home/add" className="text-xs font-semibold text-coral hover:underline">
+            <Eyebrow accent="indigo">On file</Eyebrow>
+            <Link to="/home/add" className="text-xs font-semibold text-indigo hover:underline">
               Add something
             </Link>
           </div>
@@ -154,7 +154,7 @@ function HomeOverview() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {e.source === "pro" ? (
-                      <span className="inline-flex items-center gap-1.5 text-teal font-semibold text-xs">
+                      <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-xs">
                         <ShieldCheck size={15} animate={false} /> Verified
                       </span>
                     ) : (
@@ -173,7 +173,7 @@ function HomeOverview() {
           <Card className="anim-fade-up d-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <Eyebrow accent="coral">Next up</Eyebrow>
+                <Eyebrow accent="indigo">Next up</Eyebrow>
                 <div className="mt-2 font-semibold text-ink">{nextDue.what_done}</div>
                 <div className="text-xs text-muted mt-0.5">
                   {proById.get(nextDue.pro_id)?.business ?? ""} · due{" "}
@@ -192,8 +192,8 @@ function HomeOverview() {
         {/* My pros preview */}
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="coral">My pros</Eyebrow>
-            <Link to="/home/pros" className="text-xs font-semibold text-coral hover:underline">
+            <Eyebrow accent="indigo">My pros</Eyebrow>
+            <Link to="/home/pros" className="text-xs font-semibold text-indigo hover:underline">
               See all
             </Link>
           </div>
@@ -206,11 +206,11 @@ function HomeOverview() {
                 return (
                   <div key={p.id} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <Avatar name={p.business} accent="teal" />
+                      <Avatar name={p.business} accent="indigo" />
                       <div>
                         <div className="font-semibold text-ink">{p.business}</div>
                         <div className="text-xs text-muted flex items-center gap-1.5">
-                          <TradeIcon trade={p.trade} size={13} className="text-teal" />
+                          <TradeIcon trade={p.trade} size={13} className="text-indigo" />
                           {tradeLabel(p.trade)} · {visits} visit{visits === 1 ? "" : "s"}
                         </div>
                       </div>

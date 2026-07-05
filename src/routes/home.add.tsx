@@ -8,7 +8,7 @@ import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/compone
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/add")({
-  head: () => ({ meta: [{ title: "Add to your home — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Add to your home - HomesBrain" }] }),
   component: AddToHome,
 });
 
@@ -105,15 +105,15 @@ function AddToHome() {
       <HomePageHead
         eyebrow="Add to your home"
         title="Put it on the record"
-        sub="Anything your pros haven't logged yet — appliances, receipts, manuals, or the pros themselves."
+        sub="Anything your pros haven't logged yet: appliances, receipts, manuals, or the pros themselves."
       />
 
       <div className="space-y-6">
         {/* Snap an item */}
         <Card className="anim-fade-up d-1">
           <div className="flex items-center gap-2">
-            <Camera size={16} className="text-coral" />
-            <Eyebrow accent="coral">Snap an item</Eyebrow>
+            <Camera size={16} className="text-indigo" />
+            <Eyebrow accent="indigo">Snap an item</Eyebrow>
           </div>
           <p className="mt-2 text-sm text-muted">
             Snap the nameplate and fill in what you know. Items your pros log carry the Verified
@@ -165,7 +165,7 @@ function AddToHome() {
             </Field>
           </div>
           <div className="mt-4">
-            <Btn variant="coral" disabled={saving} onClick={saveItem}>
+            <Btn variant="indigo" disabled={saving} onClick={saveItem}>
               {saving ? "Adding…" : "Add to my home"}
             </Btn>
           </div>
@@ -174,8 +174,8 @@ function AddToHome() {
         {/* Forward an email */}
         <Card className="anim-fade-up d-2">
           <div className="flex items-center gap-2">
-            <Mail size={16} className="text-coral" />
-            <Eyebrow accent="coral">Forward an email</Eyebrow>
+            <Mail size={16} className="text-indigo" />
+            <Eyebrow accent="indigo">Forward an email</Eyebrow>
           </div>
           <p className="mt-2 text-sm text-muted">
             Forward a receipt, invoice, or order confirmation and it lands on your record.
@@ -192,11 +192,11 @@ function AddToHome() {
         {/* Attach a file */}
         <Card className="anim-fade-up d-3">
           <div className="flex items-center gap-2">
-            <FileUp size={16} className="text-coral" />
-            <Eyebrow accent="coral">Attach a file</Eyebrow>
+            <FileUp size={16} className="text-indigo" />
+            <Eyebrow accent="indigo">Attach a file</Eyebrow>
           </div>
           <p className="mt-2 text-sm text-muted">
-            Manuals, warranties, closing documents — keep them with the home, not in a drawer.
+            Manuals, warranties, closing documents: keep them with the home, not in a drawer.
           </p>
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             <input
@@ -207,7 +207,7 @@ function AddToHome() {
                 const name = e.target.files?.[0]?.name;
                 if (name) {
                   setAttached((prev) => [name, ...prev]);
-                  setToast(`${name} attached (mock — storage lands in v0.5)`);
+                  setToast(`${name} attached (mock, storage lands in v0.5)`);
                 }
               }}
             />
