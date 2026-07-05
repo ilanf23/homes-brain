@@ -82,7 +82,7 @@ function HomeownerSettings() {
   }
 
   if (guardLoading) return <PageLoader label="Loading settings" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
 
   return (
     <HomeShell active="settings" homeowner={homeowner} home={home}>
