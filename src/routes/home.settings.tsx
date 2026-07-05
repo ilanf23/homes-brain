@@ -34,6 +34,7 @@ const PREF_ITEMS: { key: keyof Prefs; label: string; sub: string }[] = [
 ];
 
 function HomeownerSettings() {
+  const navigate = useNavigate();
   const { homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,6 +42,10 @@ function HomeownerSettings() {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!homeowner) return;
