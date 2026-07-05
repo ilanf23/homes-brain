@@ -61,6 +61,12 @@ function InView({
 
 const PARTNER_TYPES = ["Builders", "Realtors", "Inspectors", "Insurers", "Home-watch firms"];
 
+const PROBLEM_STATS = [
+  { value: "~$15B", caption: "the forgetting tax, every year" },
+  { value: "~6M", caption: "homes change hands a year" },
+  { value: "0", caption: "service records survive the sale" },
+];
+
 /* ---- Hero visual: the record card outliving three owners of the same home ---- */
 
 function HandoffScene({ className = "" }: { className?: string }) {
@@ -117,6 +123,106 @@ function HandoffScene({ className = "" }: { className?: string }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* The problem visual: paper records die at every sale; the HomesBrain line
+   runs through the same closings unbroken. Draws when scrolled into view. */
+function HandoffTimeline({ className = "" }: { className?: string }) {
+  return (
+    <div className={className}>
+      <svg
+        viewBox="0 0 720 208"
+        className="w-full"
+        role="img"
+        aria-label="Timeline of a home sold twice: paper records fade out at each sale while the HomesBrain record continues unbroken."
+      >
+        {/* closing markers */}
+        {[
+          { x: 150, label: "Built 2021" },
+          { x: 380, label: "Sold 2024" },
+          { x: 610, label: "Sold 2029" },
+        ].map((m) => (
+          <g key={m.x}>
+            <line
+              x1={m.x}
+              y1={34}
+              x2={m.x}
+              y2={168}
+              stroke="var(--line)"
+              strokeWidth={2}
+              strokeDasharray="2 6"
+            />
+            <text
+              x={m.x}
+              y={22}
+              textAnchor="middle"
+              fontSize={12}
+              fontWeight={700}
+              fill="var(--muted)"
+            >
+              {m.label}
+            </text>
+          </g>
+        ))}
+        {/* lane 1: binders and PDFs, dying at each closing */}
+        <text x={24} y={66} fontSize={12} fontWeight={700} fill="var(--muted)">
+          Binders and PDFs
+        </text>
+        <path
+          d="M24 88 H136"
+          stroke="var(--muted)"
+          strokeWidth={3}
+          strokeLinecap="round"
+          opacity={0.75}
+        />
+        <path
+          d="M164 88 H366"
+          stroke="var(--muted)"
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeDasharray="8 6"
+          opacity={0.45}
+        />
+        <path
+          d="M394 88 H480"
+          stroke="var(--muted)"
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeDasharray="3 9"
+          opacity={0.25}
+        />
+        {[380, 610].map((x) => (
+          <g key={x} stroke="var(--muted)" strokeWidth={2.5} strokeLinecap="round" opacity={0.6}>
+            <path d={`M${x - 7} 81 l14 14`} />
+            <path d={`M${x + 7} 81 l-14 14`} />
+          </g>
+        ))}
+        <text x={496} y={92} fontSize={11.5} fontWeight={600} fill="var(--muted)" opacity={0.7}>
+          gone by the second sale
+        </text>
+        {/* lane 2: the HomesBrain record, unbroken */}
+        <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--indigo)">
+          The HomesBrain record
+        </text>
+        <path
+          d="M24 154 H696"
+          stroke="var(--indigo)"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+          strokeDasharray={672}
+          strokeDashoffset={672}
+          className="draw-path"
+          style={{ transitionDuration: "1.4s" }}
+        />
+        {[150, 380, 610].map((x) => (
+          <circle key={x} cx={x} cy={154} r={5.5} fill="var(--indigo)" />
+        ))}
+      </svg>
+      <p className="mt-3 text-center text-xs text-muted">
+        Two sales in, the binder is gone. The record is not.
+      </p>
     </div>
   );
 }
@@ -188,7 +294,46 @@ function Partners() {
         <HandoffScene className="anim-scale-in d-2 hidden sm:block" />
       </section>
 
-      {/* Task 2 inserts: the handoff problem */}
+      {/* 1 · The handoff problem */}
+      <section className="bg-soft border-y border-line py-24">
+        <InView className="mx-auto max-w-5xl px-5">
+          <div className="reveal">
+            <SectionHead
+              accent="indigo"
+              eyebrow="The handoff problem"
+              title="Every closing wipes the home's memory."
+              sub="The builder's binder gets lost in a garage. The inspection PDF dies in a download folder. The insurer underwrites blind. The new owner starts from zero."
+            />
+          </div>
+          <div className="reveal rd-1 mt-12 rounded-[22px] border border-line bg-paper p-5 sm:p-8">
+            <HandoffTimeline />
+          </div>
+          <div className="reveal rd-2 relative mt-10 overflow-hidden rounded-[22px]">
+            <img
+              src="/images/landing/problem-homes.jpg"
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-ink/60" aria-hidden="true" />
+            <div className="relative grid divide-y divide-white/20 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              {PROBLEM_STATS.map((s) => (
+                <div key={s.value} className="px-6 py-10 sm:py-14 text-center">
+                  <div className="text-4xl sm:text-[44px] font-extrabold tracking-tight text-white tnum [text-shadow:0_2px_16px_rgba(22,22,15,0.5)]">
+                    {s.value}
+                  </div>
+                  <div className="mt-1.5 text-sm font-semibold text-white/90 [text-shadow:0_1px_10px_rgba(22,22,15,0.6)]">
+                    {s.caption}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="reveal rd-3 mt-4 text-center text-xs text-muted">
+            Illustrative estimates of the US home-services forgetting tax.
+          </p>
+        </InView>
+      </section>
 
       {/* Task 3 inserts: who we work with */}
 
