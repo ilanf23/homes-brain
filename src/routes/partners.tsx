@@ -8,7 +8,14 @@ import {
   type ReactNode,
 } from "react";
 import { Btn, Card, Eyebrow, Field, Input, KV, Pill, SectionHead, Select } from "@/lib/ui";
-import { MarketingShell, marketingHead, Phone, PhoneKV, PhoneRow } from "@/components/marketing";
+import {
+  CtaBand,
+  MarketingShell,
+  marketingHead,
+  Phone,
+  PhoneKV,
+  PhoneRow,
+} from "@/components/marketing";
 import { CheckBurst, CountUp, LogoMark, Scribble, ShieldCheck } from "@/components/svg";
 import { logEvent } from "@/lib/hb";
 
@@ -129,9 +136,52 @@ function StepBadge({ n, accent }: { n: number; accent: "indigo" | "coral" }) {
   );
 }
 
+/* Animated check used by the become-a-partner list. */
+function DrawnCheck({ color = "var(--indigo)", delay = 0 }: { color?: string; delay?: number }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0 mt-1">
+      <path
+        d="m3 9.5 4 4 8-9"
+        fill="none"
+        stroke={color}
+        strokeWidth={2.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray={20}
+        strokeDashoffset={20}
+        className="draw-path"
+        style={{ transitionDuration: "0.5s", transitionDelay: `${delay}ms` }}
+      />
+    </svg>
+  );
+}
+
 /* ---- Page data ---- */
 
 const PARTNER_TYPES = ["Builders", "Realtors", "Inspectors", "Insurers", "Home-watch firms"];
+
+const FAQ_ITEMS = [
+  {
+    q: "Does it cost anything?",
+    a: "Free to start. We win when the record proves useful.",
+  },
+  {
+    q: "Who owns the record?",
+    a: "The homeowner, always. Partners contribute to it and stay visible on it.",
+  },
+  {
+    q: "What do we get out of it?",
+    a: "Your name on a living record, in front of the owner for years, plus a professional handover artifact.",
+  },
+  {
+    q: "Do you sell homeowner data?",
+    a: "Never. The record belongs to the homeowner.",
+  },
+  {
+    q: "Where do you operate?",
+    a: "Starting with St. Johns County, Florida. Tell us where you are anyway.",
+  },
+];
 
 const STEPS: { title: string; body: string; accent: "indigo" | "coral" }[] = [
   {
@@ -710,94 +760,150 @@ function Partners() {
         </InView>
       </section>
 
-      {/* Task 5 inserts: FAQ */}
-
-      {/* Lead form (restyled into a split layout in Task 5) */}
-      <section id="become-a-partner" className="py-20">
-        <div className="mx-auto max-w-xl px-5">
-          <SectionHead
-            accent="indigo"
-            eyebrow="Become a partner"
-            title="Tell us where you fit"
-            sub="A short note is all it takes. We'll come back within a couple of days."
-          />
-          <Card className="mt-10">
-            {done ? (
-              <div className="anim-scale-in text-center py-8">
-                <CheckBurst size={64} className="mx-auto text-indigo" />
-                <h3 className="mt-4 text-xl font-semibold tracking-tight font-display">
-                  Thanks, we'll be in touch.
-                </h3>
-                <p className="mt-2 text-sm text-muted">
-                  Your note is in. Expect a reply at {form.email || "your email"} shortly.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={submit} className="space-y-4">
-                <Field label="Your name">
-                  <Input
-                    required
-                    autoComplete="name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Jordan Rivera"
-                  />
-                </Field>
-                <Field label="Company">
-                  <Input
-                    required
-                    autoComplete="organization"
-                    value={form.company}
-                    onChange={(e) => setForm({ ...form, company: e.target.value })}
-                    placeholder="Rivera Homes"
-                  />
-                </Field>
-                <Field label="What kind of partner are you?">
-                  <Select
-                    required
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value })}
+      {/* 5 · FAQ */}
+      <section className="bg-soft border-y border-line py-24">
+        <InView className="mx-auto max-w-4xl px-5">
+          <div className="reveal">
+            <SectionHead accent="indigo" eyebrow="FAQ" title="Short answers, straight." />
+          </div>
+          <dl className="mt-12 space-y-3">
+            {FAQ_ITEMS.map((f, i) => (
+              <div
+                key={f.q}
+                className={`reveal rd-${Math.min(i + 1, 6)} liftable rounded-2xl border border-line bg-white px-6 py-5 sm:flex sm:items-center sm:justify-between sm:gap-8`}
+              >
+                <dt className="flex items-center gap-3 font-bold text-ink sm:w-2/5 sm:shrink-0">
+                  <span
+                    aria-hidden="true"
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-indigobg text-sm font-extrabold text-indigodark"
                   >
-                    <option value="" disabled>
-                      Choose one…
-                    </option>
-                    {PARTNER_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                    <option value="Other">Someone else</option>
-                  </Select>
-                </Field>
-                <Field label="Work email">
-                  <Input
-                    required
-                    type="email"
-                    autoComplete="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="jordan@riverahomes.com"
-                  />
-                </Field>
-                {error && (
-                  <p role="alert" className="text-sm font-semibold text-red">
-                    {error}
-                  </p>
-                )}
-                <Btn
-                  type="submit"
-                  variant="indigo"
-                  size="lg"
-                  loading={submitting}
-                  className="w-full"
-                >
-                  Become a partner
-                </Btn>
-              </form>
-            )}
-          </Card>
-        </div>
+                    ?
+                  </span>
+                  {f.q}
+                </dt>
+                <dd className="mt-2 pl-10 text-[15px] leading-relaxed text-muted sm:mt-0 sm:flex-1 sm:pl-0">
+                  {f.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </InView>
       </section>
+
+      {/* 6 · Become a partner */}
+      <section id="become-a-partner" className="py-24">
+        <InView className="mx-auto max-w-5xl px-5">
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-start">
+            <div className="reveal">
+              <SectionHead
+                center={false}
+                accent="indigo"
+                eyebrow="Become a partner"
+                title="Tell us where you fit"
+                sub="A short note is all it takes."
+              />
+              <ul className="mt-8 space-y-4">
+                {[
+                  "A reply within a couple of days",
+                  "No contracts to start",
+                  "You keep your workflow. We wire the record into it",
+                ].map((t, i) => (
+                  <li key={t} className="flex items-start gap-3 text-[15px] text-ink">
+                    <DrawnCheck delay={i * 200} /> {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Card className="reveal rd-2">
+              {done ? (
+                <div className="anim-scale-in text-center py-8">
+                  <CheckBurst size={64} className="mx-auto text-indigo" />
+                  <h3 className="mt-4 text-xl font-semibold tracking-tight font-display">
+                    Thanks, we'll be in touch.
+                  </h3>
+                  <p className="mt-2 text-sm text-muted">
+                    Your note is in. Expect a reply at {form.email || "your email"} shortly.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={submit} className="space-y-4">
+                  <Field label="Your name">
+                    <Input
+                      required
+                      autoComplete="name"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Jordan Rivera"
+                    />
+                  </Field>
+                  <Field label="Company">
+                    <Input
+                      required
+                      autoComplete="organization"
+                      value={form.company}
+                      onChange={(e) => setForm({ ...form, company: e.target.value })}
+                      placeholder="Rivera Homes"
+                    />
+                  </Field>
+                  <Field label="What kind of partner are you?">
+                    <Select
+                      required
+                      value={form.type}
+                      onChange={(e) => setForm({ ...form, type: e.target.value })}
+                    >
+                      <option value="" disabled>
+                        Choose one…
+                      </option>
+                      {PARTNER_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                      <option value="Other">Someone else</option>
+                    </Select>
+                  </Field>
+                  <Field label="Work email">
+                    <Input
+                      required
+                      type="email"
+                      autoComplete="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="jordan@riverahomes.com"
+                    />
+                  </Field>
+                  {error && (
+                    <p role="alert" className="text-sm font-semibold text-red">
+                      {error}
+                    </p>
+                  )}
+                  <Btn
+                    type="submit"
+                    variant="indigo"
+                    size="lg"
+                    loading={submitting}
+                    className="w-full"
+                  >
+                    Become a partner
+                  </Btn>
+                </form>
+              )}
+            </Card>
+          </div>
+        </InView>
+      </section>
+
+      <CtaBand
+        eyebrow="Partners"
+        title="Give every home a memory from day one."
+        sub="If your business touches the home, you can start its record and stay part of its story."
+      >
+        <a href="#become-a-partner">
+          <Btn variant="indigo" size="lg">
+            Become a partner
+          </Btn>
+        </a>
+      </CtaBand>
     </MarketingShell>
   );
 }
