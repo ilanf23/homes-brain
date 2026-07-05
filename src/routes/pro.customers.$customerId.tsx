@@ -57,7 +57,7 @@ function CustomerDetail() {
       const { data: c } = await supabase
         .from("customers")
         .select(
-          "id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at,claimed_by_homeowner,homeowners:claimed_by_homeowner(id,phone,email,created_at))",
+          "id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at,claimed_by_homeowner,homeowners!homes_homeowner_fk(id,phone,email,created_at))",
         )
         .eq("id", customerId)
         .eq("pro_id", proId)
