@@ -295,20 +295,37 @@ function HomeOverview() {
 
 function OnboardingNoHome({
   homeownerId,
+  homeowner,
   onCreated,
 }: {
   homeownerId: string | null;
+  homeowner: { id: string; phone: string | null; email: string | null } | null;
   onCreated: () => void;
 }) {
   const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState(homeowner?.phone ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (homeowner?.phone) setPhone(homeowner.phone);
+  }, [homeowner?.phone]);
 
   async function addHome() {
     if (!homeownerId || !address.trim()) return;
     setBusy(true);
     setErr(null);
     const addr = address.trim();
+    const trimmedPhone = phone.trim();
+
+    // If the homeowner added or changed their phone, save it back.
+    if (trimmedPhone && trimmedPhone !== (homeowner?.phone ?? "")) {
+      await supabase
+        .from("homeowners")
+        .update({ phone: trimmedPhone })
+        .eq("id", homeownerId);
+    }
+
     const { data: existing } = await supabase
       .from("homes")
       .select("id, claimed_by_homeowner")
@@ -368,6 +385,21 @@ function OnboardingNoHome({
               }}
             />
           </Field>
+          <Field
+            label="Your phone"
+            hint={
+              homeowner?.phone
+                ? "From the number you signed in with. Change it here if it's wrong."
+                : "So your pros can reach you. Optional."
+            }
+          >
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="555-555-1234"
+              type="tel"
+            />
+          </Field>
           {err && (
             <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
               {err}
@@ -395,4 +427,5 @@ function OnboardingNoHome({
     </>
   );
 }
+
 
