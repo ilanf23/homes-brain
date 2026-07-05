@@ -141,25 +141,43 @@ export type Database = {
       }
       homeowners: {
         Row: {
+          auth_user_id: string | null
           created_at: string
           email: string | null
           id: string
+          marketing_consent: boolean
           name: string | null
+          notify_email: boolean
+          notify_sms: boolean
           phone: string | null
+          respect_quiet_hrs: boolean
+          sms_opt_out: boolean
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          marketing_consent?: boolean
           name?: string | null
+          notify_email?: boolean
+          notify_sms?: boolean
           phone?: string | null
+          respect_quiet_hrs?: boolean
+          sms_opt_out?: boolean
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          marketing_consent?: boolean
           name?: string | null
+          notify_email?: boolean
+          notify_sms?: boolean
           phone?: string | null
+          respect_quiet_hrs?: boolean
+          sms_opt_out?: boolean
         }
         Relationships: []
       }
@@ -347,42 +365,69 @@ export type Database = {
       }
       pros: {
         Row: {
+          auth_user_id: string | null
           business: string
           created_at: string
           email: string | null
           google_place_id: string | null
           google_rating: number | null
           id: string
+          jobber_connected: boolean
           logo: string | null
+          notify_email: boolean
+          notify_sms: boolean
           phone: string | null
           plan: string
+          quickbooks_connected: boolean
+          referral_code: string | null
+          review_requests_on: boolean
           service_area: string | null
+          square_connected: boolean
+          stripe_account_id: string | null
           trade: string
         }
         Insert: {
+          auth_user_id?: string | null
           business: string
           created_at?: string
           email?: string | null
           google_place_id?: string | null
           google_rating?: number | null
           id?: string
+          jobber_connected?: boolean
           logo?: string | null
+          notify_email?: boolean
+          notify_sms?: boolean
           phone?: string | null
           plan?: string
+          quickbooks_connected?: boolean
+          referral_code?: string | null
+          review_requests_on?: boolean
           service_area?: string | null
+          square_connected?: boolean
+          stripe_account_id?: string | null
           trade: string
         }
         Update: {
+          auth_user_id?: string | null
           business?: string
           created_at?: string
           email?: string | null
           google_place_id?: string | null
           google_rating?: number | null
           id?: string
+          jobber_connected?: boolean
           logo?: string | null
+          notify_email?: boolean
+          notify_sms?: boolean
           phone?: string | null
           plan?: string
+          quickbooks_connected?: boolean
+          referral_code?: string | null
+          review_requests_on?: boolean
           service_area?: string | null
+          square_connected?: boolean
+          stripe_account_id?: string | null
           trade?: string
         }
         Relationships: []
@@ -430,7 +475,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      export_my_homeowner_data: { Args: never; Returns: Json }
+      export_my_pro_data: { Args: never; Returns: Json }
+      generate_referral_code: { Args: never; Returns: string }
+      my_homeowner_id: { Args: never; Returns: string }
+      my_pro_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
