@@ -89,8 +89,17 @@ function HomeOverview() {
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
 
   if (guardLoading) return <PageLoader label="Loading your home" />;
-  if (!home) return <NoHomeYet />;
+  if (!home)
+    return (
+      <HomeShell active="overview" homeowner={homeowner} home={null}>
+        <OnboardingNoHome
+          homeownerId={homeownerId}
+          onCreated={() => window.location.reload()}
+        />
+      </HomeShell>
+    );
   if (loading) return <PageLoader label="Loading your home" />;
+
 
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
