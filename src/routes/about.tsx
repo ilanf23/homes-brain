@@ -136,7 +136,7 @@ function About() {
         eyebrow="Join in"
         accent="indigo"
         title="Help a home remember."
-        sub="Pros start the record. Homeowners keep it. Either way, it starts with one job."
+        sub="Either side can start the record. Homeowners keep it for life."
       >
         <Link to="/pro/signup">
           <Btn variant="indigo" size="lg">

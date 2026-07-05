@@ -68,7 +68,7 @@ function Login() {
         (isEmail
           ? "No account found for that email."
           : "No account found for that phone. Try it exactly as you entered it when you signed up.") +
-          " New homeowner? Open the record link your pro sent you to claim your home free.",
+          " New homeowner? Sign up free to start your home's record.",
       );
       setBusy(false);
       return;
@@ -149,7 +149,9 @@ function Login() {
                     Pros start free
                   </Link>
                   {" · "}
-                  Homeowners join from a record their pro sends.
+                  <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
+                    Homeowners start free
+                  </Link>
                 </div>
               </div>
             )}
