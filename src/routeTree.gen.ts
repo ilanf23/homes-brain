@@ -34,6 +34,7 @@ import { Route as HomeSignupRouteImport } from './routes/home.signup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
 import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
+import { Route as HomeAppliancesRouteImport } from './routes/home.appliances'
 import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -172,6 +173,11 @@ const HomeProsRoute = HomeProsRouteImport.update({
   path: '/home/pros',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeAppliancesRoute = HomeAppliancesRouteImport.update({
+  id: '/home/appliances',
+  path: '/home/appliances',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeAddRoute = HomeAddRouteImport.update({
   id: '/home/add',
   path: '/home/add',
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
+  '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
+  '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
+  '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
+    | '/home/appliances'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
@@ -408,6 +418,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
+    | '/home/appliances'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
+    | '/home/appliances'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
@@ -487,6 +499,7 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
   HomeAddRoute: typeof HomeAddRoute
+  HomeAppliancesRoute: typeof HomeAppliancesRoute
   HomeProsRoute: typeof HomeProsRoute
   HomeRemindersRoute: typeof HomeRemindersRoute
   HomeSettingsRoute: typeof HomeSettingsRoute
@@ -688,6 +701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeProsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/appliances': {
+      id: '/home/appliances'
+      path: '/home/appliances'
+      fullPath: '/home/appliances'
+      preLoaderRoute: typeof HomeAppliancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home/add': {
       id: '/home/add'
       path: '/home/add'
@@ -791,6 +811,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
   HomeAddRoute: HomeAddRoute,
+  HomeAppliancesRoute: HomeAppliancesRoute,
   HomeProsRoute: HomeProsRoute,
   HomeRemindersRoute: HomeRemindersRoute,
   HomeSettingsRoute: HomeSettingsRoute,
