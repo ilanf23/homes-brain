@@ -348,18 +348,18 @@ function Landing() {
               </div>
             ))}
           </div>
-          {/* The stakes, over the real thing: a sea of homes with no memory */}
-          <div className="reveal rd-3 relative mt-10 overflow-hidden rounded-[22px] bg-ink">
-            <div className="relative grid divide-y divide-white/20 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {/* The stakes, rendered as a quiet ledger card - indigo accents, dashed rules, animated counts */}
+          <div className="reveal rd-3 mt-10 overflow-hidden rounded-[22px] border border-line bg-paper shadow-[0_18px_36px_-28px_rgba(22,22,15,0.35)]">
+            <div className="grid divide-y divide-dashed divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {PROBLEM_STATS.map((s) => (
-                <div key={s.value} className="px-6 py-10 sm:py-14 text-center">
-                  <div className="text-4xl sm:text-[44px] font-extrabold tracking-tight text-white tnum">
-                    {s.value}
-                  </div>
-                  <div className="mt-1.5 text-sm font-semibold text-white/90">
-                    {s.caption}
-                  </div>
-                </div>
+                <StatFigure
+                  key={s.tag}
+                  tag={s.tag}
+                  prefix={s.prefix}
+                  value={s.value}
+                  suffix={s.suffix}
+                  caption={s.caption}
+                />
               ))}
             </div>
           </div>
