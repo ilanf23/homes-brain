@@ -268,6 +268,18 @@ export function MicIcon({ size = 18, className = "" }: { size?: number; classNam
   );
 }
 
+export function SyncIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path d="M20.5 5v4.4h-4.4M3.5 19v-4.4h4.4" {...stroke} />
+      <path
+        d="M5.2 9.4a7.2 7.2 0 0 1 11.9-2.7l3.4 2.7M3.5 14.6l3.4 2.7a7.2 7.2 0 0 0 11.9-2.7"
+        {...stroke}
+      />
+    </svg>
+  );
+}
+
 /* Success check inside a burst - for done/sent states. */
 export function CheckBurst({ size = 72, className = "" }: { size?: number; className?: string }) {
   return (

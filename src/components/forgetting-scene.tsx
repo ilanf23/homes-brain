@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Eyebrow } from "@/lib/ui";
-import { Scribble } from "@/components/svg";
+import { LogoMark } from "@/components/svg";
 
 /* The forgetting-tax scene, acted out: homeowner questions whip across the
-   stage — never more than a few at once — over speed streaks that build with
-   the panic, then the noise clears and the answer lands like a hero moment.
-   Starts when scrolled into view and loops; reduced motion (and no-JS/SSR)
-   gets the settled resolution instead. */
+   stage - never more than a few at once - over speed streaks that build with
+   the panic, then the noise clears and the home's record settles in, answering
+   every question row by row. Starts when scrolled into view and loops; reduced
+   motion (and no-JS/SSR) gets the settled resolution instead. */
 
 type Panic = 0 | 1 | 2;
 
@@ -17,25 +17,97 @@ type Question = {
   rot: number;
   dir: 1 | -1; // 1 = flies left→right
   start: number; // ms into the chaos act
-  dur: number; // flight time — shrinks as the panic builds
+  dur: number; // flight time - shrinks as the panic builds
   panic: Panic;
 };
 
 const QUESTIONS: Question[] = [
-  { text: "When does my softener warranty run out?", top: 6, left: 30, rot: -2, dir: 1, start: 0, dur: 2600, panic: 0 },
-  { text: "Who installed the water heater?", top: 52, left: 40, rot: 2, dir: -1, start: 900, dur: 2400, panic: 0 },
-  { text: "What size filter does the furnace take?", top: 28, left: 22, rot: -3, dir: 1, start: 1700, dur: 2200, panic: 0 },
-  { text: "Was the AC serviced last year??", top: 76, left: 45, rot: 3, dir: -1, start: 2400, dur: 1900, panic: 1 },
-  { text: "Where's the receipt for the roof repair??", top: 14, left: 50, rot: -4, dir: -1, start: 3000, dur: 1700, panic: 1 },
-  { text: "What model is the dishwasher?!", top: 64, left: 18, rot: 4, dir: 1, start: 3500, dur: 1500, panic: 1 },
-  { text: "Is ANY of this still under warranty?!", top: 38, left: 42, rot: -5, dir: -1, start: 3900, dur: 1300, panic: 2 },
-  { text: "WHO do I even call?!?", top: 84, left: 28, rot: 6, dir: 1, start: 4300, dur: 1200, panic: 2 },
+  {
+    text: "When does my softener warranty run out?",
+    top: 6,
+    left: 30,
+    rot: -2,
+    dir: 1,
+    start: 0,
+    dur: 2600,
+    panic: 0,
+  },
+  {
+    text: "Who installed the water heater?",
+    top: 52,
+    left: 40,
+    rot: 2,
+    dir: -1,
+    start: 900,
+    dur: 2400,
+    panic: 0,
+  },
+  {
+    text: "What size filter does the furnace take?",
+    top: 28,
+    left: 22,
+    rot: -3,
+    dir: 1,
+    start: 1700,
+    dur: 2200,
+    panic: 0,
+  },
+  {
+    text: "Was the AC serviced last year??",
+    top: 76,
+    left: 45,
+    rot: 3,
+    dir: -1,
+    start: 2400,
+    dur: 1900,
+    panic: 1,
+  },
+  {
+    text: "Where's the receipt for the roof repair??",
+    top: 14,
+    left: 50,
+    rot: -4,
+    dir: -1,
+    start: 3000,
+    dur: 1700,
+    panic: 1,
+  },
+  {
+    text: "What model is the dishwasher?!",
+    top: 64,
+    left: 18,
+    rot: 4,
+    dir: 1,
+    start: 3500,
+    dur: 1500,
+    panic: 1,
+  },
+  {
+    text: "Is ANY of this still under warranty?!",
+    top: 38,
+    left: 42,
+    rot: -5,
+    dir: -1,
+    start: 3900,
+    dur: 1300,
+    panic: 2,
+  },
+  {
+    text: "WHO do I even call?!?",
+    top: 84,
+    left: 28,
+    rot: 6,
+    dir: 1,
+    start: 4300,
+    dur: 1200,
+    panic: 2,
+  },
 ];
 
 const CHAOS_MS = 5600;
 const PANIC_1_AT = 2400;
 const PANIC_2_AT = 3900;
-const RESOLVED_HOLD = 5000;
+const RESOLVED_HOLD = 6500;
 
 const PANIC_STYLES: Record<Panic, string> = {
   0: "bg-paper border border-line text-ink shadow-[0_8px_20px_-12px_rgba(22,22,15,0.25)]",
@@ -69,6 +141,7 @@ const ANSWERS = [
   { k: "Softener warranty", v: "to 2031" },
   { k: "Water heater", v: "ABC Water · 2021" },
   { k: "Furnace filter", v: "16×25×1" },
+  { k: "AC service", v: "Done · May 2025" },
 ];
 
 function usePrefersReducedMotion() {
@@ -98,9 +171,13 @@ function CheckMark({ className = "" }: { className?: string }) {
   );
 }
 
-/* The hero-style payoff: eyebrow, big headline with the brand scribble, and
-   the answers as calm pills — everything the panic was asking for. */
+/* The payoff is the product artifact: the home's record settles in as a calm
+   ledger card that answers, row by row, exactly what the panic was asking -
+   ending on the one that stings most, "who do I call". The big brand line
+   ("Your home remembers") stays reserved for the hero and closing sections. */
 function Resolution({ animate }: { animate: boolean }) {
+  const delay = (ms: number) =>
+    animate ? ({ animationDelay: `${ms}ms` } as React.CSSProperties) : undefined;
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center px-4">
       {/* Soft indigo glow behind the moment */}
@@ -110,33 +187,53 @@ function Resolution({ animate }: { animate: boolean }) {
           background: "radial-gradient(circle, var(--indigobg) 0%, transparent 68%)",
         }}
       />
-      <div className="relative text-center">
+      <div className="relative w-full max-w-[360px] text-center">
         <div className={animate ? "anim-fade-up" : ""}>
           <Eyebrow accent="indigo">Asked and answered</Eyebrow>
         </div>
-        <h3
-          className={`${animate ? "anim-scale-in d-1" : ""} mt-3 text-4xl sm:text-5xl font-extrabold tracking-tight text-ink leading-[1.05]`}
-        >
-          Your home{" "}
-          <span className="relative inline-block">
-            remembers.
-            {animate && <Scribble className="absolute -bottom-1.5 left-0 w-full h-3" />}
-          </span>
-        </h3>
         <div
-          className={`${animate ? "anim-fade-up d-4" : ""} mt-6 flex flex-wrap justify-center gap-2`}
+          className={`${animate ? "anim-scale-in" : ""} mt-4 rounded-[22px] border border-line bg-paper text-left shadow-[0_18px_44px_-20px_rgba(22,22,15,0.35)]`}
+          style={delay(80)}
         >
-          {ANSWERS.map((a) => (
-            <span
-              key={a.k}
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2 text-[13px] sm:text-sm shadow-[0_8px_24px_-14px_rgba(22,22,15,0.3)]"
-            >
-              <CheckMark className="text-indigo shrink-0" />
-              <span className="text-muted">{a.k}</span>
-              <span className="font-bold text-ink">{a.v}</span>
+          <div
+            className={`${animate ? "anim-fade-up" : ""} flex items-center gap-2.5 border-b border-line px-5 py-3.5`}
+            style={delay(140)}
+          >
+            <LogoMark size={22} />
+            <span className="text-sm font-bold text-ink">128 Birch Lane</span>
+            <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-indigobg px-2.5 py-1 text-[11px] font-bold text-indigodark">
+              <CheckMark className="shrink-0" /> Verified
             </span>
-          ))}
+          </div>
+          <div className="px-5 py-1">
+            {ANSWERS.map((a, i) => (
+              <div
+                key={a.k}
+                className={`${animate ? "anim-fade-up" : ""} flex items-center justify-between gap-4 border-b border-line py-2.5 last:border-b-0`}
+                style={delay(200 + i * 60)}
+              >
+                <span className="flex items-center gap-2 text-[13px] text-muted">
+                  <CheckMark className="text-indigo shrink-0" />
+                  {a.k}
+                </span>
+                <span className="text-right text-[13px] font-bold text-ink">{a.v}</span>
+              </div>
+            ))}
+          </div>
+          <div
+            className={`${animate ? "anim-fade-up" : ""} flex items-center justify-between gap-4 rounded-b-[21px] border-t border-line bg-soft px-5 py-3`}
+            style={delay(460)}
+          >
+            <span className="text-[13px] text-muted">Who do I even call?</span>
+            <span className="text-[13px] font-bold text-indigo">Mike · ABC Water →</span>
+          </div>
         </div>
+        <p
+          className={`${animate ? "anim-fade-up" : ""} mt-4 text-sm text-muted`}
+          style={delay(540)}
+        >
+          One record. Every answer. Zero typing.
+        </p>
       </div>
     </div>
   );
@@ -213,10 +310,10 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
     <div
       ref={stageRef}
       role="img"
-      aria-label="Homeowner questions flying past faster and faster — warranty dates, filter sizes, who installed what — until the home's record answers them all at once"
-      className={`relative h-[380px] sm:h-[420px] overflow-hidden ${className}`}
+      aria-label="Homeowner questions flying past faster and faster (warranty dates, filter sizes, who installed what) until the home's verified record card settles in and answers every one, down to which pro to call"
+      className={`relative h-[440px] sm:h-[470px] overflow-hidden ${className}`}
     >
-      {/* Speed streaks — the background accelerates as the panic builds. */}
+      {/* Speed streaks - the background accelerates as the panic builds. */}
       <div
         aria-hidden="true"
         className={`absolute inset-0 transition-opacity duration-500 ${chaos ? "" : "opacity-0"}`}

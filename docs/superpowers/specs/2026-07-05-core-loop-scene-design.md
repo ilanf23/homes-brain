@@ -1,4 +1,4 @@
-# CoreLoopScene — animated hero that tells the HomesBrain story
+# CoreLoopScene - animated hero that tells the HomesBrain story
 
 **Date:** 2026-07-05
 **Status:** Approved
@@ -13,8 +13,8 @@ the claim page and the pro dashboard empty state.
 
 ## Goal
 
-Replace it with an animated scene that plays out the core loop — pro logs a job → branded
-record is sent → homeowner claims it and the home's history grows — in sync with the existing
+Replace it with an animated scene that plays out the core loop - pro logs a job → branded
+record is sent → homeowner claims it and the home's history grows - in sync with the existing
 rotating hero text, plus quiet static variants for the two small call sites.
 
 ## Concept decisions (made with user)
@@ -22,7 +22,7 @@ rotating hero text, plus quiet static variants for the two small call sites.
 - **Story:** the core loop, played out as a continuous synced animation.
 - **Style:** line-art house as the SVG anchor; moving pieces are miniature real-looking HTML UI
   cards (white cards, line borders, KV rows, brand-tinted chips).
-- **Scope:** all three `HouseScene` usages — full scene on the homepage hero, compact static
+- **Scope:** all three `HouseScene` usages - full scene on the homepage hero, compact static
   poses on `/claim/:id` and the `/pro` dashboard empty state.
 - **Technique:** state-driven SVG + CSS. No new dependencies. Choreography driven by the same
   `loopStep` React state that rotates the hero text, so text and scene cannot drift.
@@ -35,16 +35,16 @@ as today, slightly simplified) and absolutely-positioned HTML overlay cards.
 ### Choreography (one phase per 3.5s text step)
 
 1. **Pro (teal).** A mini job card slides up beside the house: teal wrench chip, two KV rows
-   type in ("Water heater — annual flush", "Next service · Jan 2027"), then a teal
+   type in ("Water heater - annual flush", "Next service · Jan 2027"), then a teal
    "Send record" pill pulses once.
 2. **Record (indigo).** The job card condenses into a small branded record chip that travels
    along a self-drawing dashed arc over the roof toward a phone outline on the right. The house
    window pulses indigo as it passes.
-3. **Homeowner (coral).** The chip lands in the phone, which flips to "Claim your home — free"
+3. **Homeowner (coral).** The chip lands in the phone, which flips to "Claim your home - free"
    with a coral tap ripple; a checkmark draws itself; a new row stamps into a small history
    timeline anchored under the house.
 
-Each full cycle the timeline gains a row, capped at 3 with the oldest fading out — the idle
+Each full cycle the timeline gains a row, capped at 3 with the oldest fading out - the idle
 animation itself communicates "a Carfax that writes itself."
 
 **Reduced motion:** static tableau showing all three elements at once (job card, record chip

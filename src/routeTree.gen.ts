@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as MessagingTermsRouteImport } from './routes/messaging-terms'
 import { Route as LoginRouteImport } from './routes/login'
@@ -57,11 +56,6 @@ const SecurityRoute = SecurityRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersRoute = PartnersRouteImport.update({
@@ -224,7 +218,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/messaging-terms': typeof MessagingTermsRoute
   '/partners': typeof PartnersRoute
-  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
@@ -260,7 +253,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/messaging-terms': typeof MessagingTermsRoute
   '/partners': typeof PartnersRoute
-  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
@@ -297,7 +289,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/messaging-terms': typeof MessagingTermsRoute
   '/partners': typeof PartnersRoute
-  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
@@ -335,7 +326,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/messaging-terms'
     | '/partners'
-    | '/pricing'
     | '/privacy'
     | '/security'
     | '/terms'
@@ -371,7 +361,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/messaging-terms'
     | '/partners'
-    | '/pricing'
     | '/privacy'
     | '/security'
     | '/terms'
@@ -407,7 +396,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/messaging-terms'
     | '/partners'
-    | '/pricing'
     | '/privacy'
     | '/security'
     | '/terms'
@@ -444,7 +432,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MessagingTermsRoute: typeof MessagingTermsRoute
   PartnersRoute: typeof PartnersRoute
-  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   SecurityRoute: typeof SecurityRoute
   TermsRoute: typeof TermsRoute
@@ -493,13 +480,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partners': {
@@ -724,7 +704,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MessagingTermsRoute: MessagingTermsRoute,
   PartnersRoute: PartnersRoute,
-  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   SecurityRoute: SecurityRoute,
   TermsRoute: TermsRoute,

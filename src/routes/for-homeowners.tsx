@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Btn, Eyebrow, SectionHead } from "@/lib/ui";
-import { MarketingShell, marketingHead } from "@/components/marketing";
+import { MarketingShell, marketingHead, Phone, PhoneRow } from "@/components/marketing";
 import {
   BellIcon,
   CameraIcon,
@@ -403,55 +403,13 @@ function DrawnCheck({ color = "var(--indigo)", delay = 0 }: { color?: string; de
   );
 }
 
-/* ---- Mockup primitives ---- */
-
-/* Chunky-bezel phone frame, the brand's signature product visual. */
-function Phone({
-  title,
-  children,
-  floatDelay,
-}: {
-  title?: string;
-  children: ReactNode;
-  floatDelay?: string;
-}) {
-  return (
-    <div
-      className="anim-float w-full max-w-[270px] mx-auto rounded-[2.2rem] bg-ink p-[3px] shadow-[0_24px_48px_-24px_rgba(22,22,15,0.38)]"
-      style={floatDelay ? { animationDelay: floatDelay } : undefined}
-    >
-      <div className="rounded-[2rem] bg-[#f5f4ef] p-3">
-        {title && <div className="px-1 pt-1 pb-2 text-sm font-extrabold text-ink">{title}</div>}
-        <div className="space-y-2">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function PhoneRow({
-  left,
-  right,
-  className = "",
-}: {
-  left: ReactNode;
-  right?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`rounded-xl border border-line bg-paper px-3.5 py-2.5 flex items-center justify-between gap-3 ${className}`}
-    >
-      <div className="min-w-0">{left}</div>
-      {right}
-    </div>
-  );
-}
-
 /* ---- Page ---- */
 
 function ForHomeowners() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your home", to: "/how-it-works", variant: "indigo" }}>
+    <MarketingShell
+      mobileCta={{ label: "Claim your home", to: "/how-it-works", variant: "indigo" }}
+    >
       {/* Hero */}
       <section className="relative">
         <HeroWaves />
@@ -742,9 +700,9 @@ function ForHomeowners() {
                     <PhoneRow
                       key={p.name}
                       left={
-                        <span className="flex items-center gap-2.5 text-left">
+                        <span className="flex items-center gap-2 text-left">
                           <span
-                            className={`w-9 h-9 shrink-0 rounded-lg ${p.bg} text-white flex items-center justify-center text-[10px] font-extrabold`}
+                            className={`w-8 h-8 shrink-0 rounded-lg ${p.bg} text-white flex items-center justify-center text-[10px] font-extrabold`}
                           >
                             {p.initials}
                           </span>
@@ -775,7 +733,7 @@ function ForHomeowners() {
                         </span>
                       }
                       right={
-                        <span className="shrink-0 rounded-full bg-coral text-white text-xs font-bold px-3 py-1.5">
+                        <span className="shrink-0 rounded-full bg-coral text-white text-[11px] font-bold px-2.5 py-1">
                           Rebook
                         </span>
                       }

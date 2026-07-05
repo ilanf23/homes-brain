@@ -1,4 +1,4 @@
-# Visual craft — spacing, type, color, hierarchy
+# Visual craft - spacing, type, color, hierarchy
 
 Restraint reads as confidence. The premium look is near-monochrome, tightly scaled, and generously spaced, with every element fully finished.
 
@@ -8,7 +8,7 @@ Restraint reads as confidence. The premium look is near-monochrome, tightly scal
 - **Fixed non-linear scale, growing jumps:** `4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128 · 192 · 256`. Small steps low, doubling-ish high. Never arbitrary values.
 - **Start with too much whitespace, then remove.** Space = attention; an element with more space around it gets more of it. Whitespace reads as premium.
 - **Spacing encodes grouping (proximity):** less space between related items, more between unrelated. Avoid ambiguous spacing (equal gaps between things that belong to different groups).
-- Don't force everything into a 12-col grid or proportional sizing — give each element only the space it needs; use a `max-width` container.
+- Don't force everything into a 12-col grid or proportional sizing - give each element only the space it needs; use a `max-width` container.
 
 ## Typography
 
@@ -22,13 +22,13 @@ Restraint reads as confidence. The premium look is near-monochrome, tightly scal
 
 ## Color
 
-- **Restraint = confidence:** near-monochrome neutrals + ONE accent used for *meaning* (primary action, active state), not decoration.
-- **60/30/10 split:** 60% dominant/background, 30% secondary surface, 10% accent. The accent is the most saturated color and appears rarely — "contrast through scarcity."
+- **Restraint = confidence:** near-monochrome neutrals + ONE accent used for _meaning_ (primary action, active state), not decoration.
+- **60/30/10 split:** 60% dominant/background, 30% secondary surface, 10% accent. The accent is the most saturated color and appears rarely - "contrast through scarcity."
 - **Build shade scales, not single colors:** ~8–9 greys + 5–10 shades per semantic color (success/warning/danger/info). Build in HSL (pick mid → derive dark/light).
 - **WCAG AA contrast: 4.5:1 body text · 3:1 large text (≥18pt or ≥14pt bold) · 3:1 for UI components/borders.** (AAA body = 7:1.)
-- **Never use plain grey text on a colored background** — lower the text's opacity or pick a color in the background's hue family instead.
-- Perceived brightness varies by hue (yellow/green look lighter than blue/purple at equal HSL lightness) — adjust by eye. Flip the lightness scale for dark mode.
-- **Contested (don't state as law):** "never pure #000/#FFF, always tint neutrals with the brand hue" is a real *tendency* in Stripe/Linear/Vercel but not a stated rule. The actual principle is *deliberate choice of neutral over defaults*, matched to brand temperature.
+- **Never use plain grey text on a colored background** - lower the text's opacity or pick a color in the background's hue family instead.
+- Perceived brightness varies by hue (yellow/green look lighter than blue/purple at equal HSL lightness) - adjust by eye. Flip the lightness scale for dark mode.
+- **Contested (don't state as law):** "never pure #000/#FFF, always tint neutrals with the brand hue" is a real _tendency_ in Stripe/Linear/Vercel but not a stated rule. The actual principle is _deliberate choice of neutral over defaults_, matched to brand temperature.
 
 ## Hierarchy
 
@@ -36,7 +36,7 @@ Restraint reads as confidence. The premium look is near-monochrome, tightly scal
 - **Emphasize by de-emphasizing** the surroundings rather than shouting louder.
 - **Max 3 text sizes per screen.** Make the single most important element biggest and give it the most space.
 - **Contrast (value/saturation difference), not absolute color, creates hierarchy.**
-- **Labels are secondary to values** — de-emphasize the label ("Warranty"), emphasize the data ("to 2031"). This is the KV-row pattern.
+- **Labels are secondary to values** - de-emphasize the label ("Warranty"), emphasize the data ("to 2031"). This is the KV-row pattern.
 - Style for role, not tag (an `h2` needn't be large).
 - Concrete card example: name 24px/700/dark → price 20px/600/dark → description 15px/400/#6b7280 → label 12px/500/uppercase/light.
 

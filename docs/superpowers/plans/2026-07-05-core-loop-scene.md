@@ -6,7 +6,7 @@
 
 **Architecture:** One new component (`src/components/core-loop-scene.tsx`) rendering a hybrid scene: an SVG line-art layer (house, phone, dashed arc, traveling record chip) plus absolutely-positioned HTML overlays styled like real product UI (job card, phone screen, timeline chips). All choreography is CSS keyframes/transitions driven by a `data-step` attribute + keyed remounts; the `step` prop comes from the hero's existing `loopStep` state, so text and scene stay in sync. A `variant="compact"` renders a pure-SVG static pose.
 
-**Tech Stack:** React 18, TypeScript, Tailwind v4 (`@theme` tokens: `bg-teal`, `text-coral`, `border-line`, etc.), plain CSS keyframes in `src/styles.css` following the existing `hb-*` naming. No new dependencies. No unit-test runner exists in this repo — each task's gate is `npm run build` (must exit 0) plus visual verification in the browser.
+**Tech Stack:** React 18, TypeScript, Tailwind v4 (`@theme` tokens: `bg-teal`, `text-coral`, `border-line`, etc.), plain CSS keyframes in `src/styles.css` following the existing `hb-*` naming. No new dependencies. No unit-test runner exists in this repo - each task's gate is `npm run build` (must exit 0) plus visual verification in the browser.
 
 ## Global Constraints
 
@@ -23,9 +23,11 @@
 ### Task 1: Choreography CSS
 
 **Files:**
+
 - Modify: `src/styles.css` (insert after the `@keyframes hb-sway` block that ends at line 239, i.e. before the `/* Entry motion... */` comment at line 241; plus one addition inside the `@media (prefers-reduced-motion: reduce)` block at line 378)
 
 **Interfaces:**
+
 - Produces: CSS classes `cls-scene`, `cls-arc`, `cls-window-dot`, `cls-chip`, `cls-job`, `cls-typein`, `cls-send`, `cls-drop`, `cls-stamp`, `cls-ripple` and the `data-step` / `data-static` attribute contract consumed by Task 2's component.
 
 - [ ] **Step 1: Add the keyframes and scene classes to `src/styles.css`**
@@ -200,9 +202,11 @@ git commit -m "feat(hero): add CoreLoopScene choreography keyframes"
 ### Task 2: CoreLoopScene component
 
 **Files:**
+
 - Create: `src/components/core-loop-scene.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1's `cls-*` classes; `LogoMark` and `TradeIcon` from `@/components/svg`.
 - Produces: `CoreLoopScene` component with props `{ step?: "pro" | "record" | "owner" | null; variant?: "full" | "compact"; pose?: "pro" | "owner"; celebrate?: boolean; className?: string }`. Exported type `LoopKey = "pro" | "record" | "owner"`.
 
@@ -279,10 +283,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
 
   const effStep: LoopKey | null = reduced ? null : step;
   const count = Math.min(3, logged);
-  const rows = Array.from(
-    { length: count },
-    (_, i) => JOBS[(logged - count + i) % JOBS.length],
-  );
+  const rows = Array.from({ length: count }, (_, i) => JOBS[(logged - count + i) % JOBS.length]);
   const showChip = reduced || effStep === "record";
   const showRecordCard = reduced || effStep === "record" || effStep === "owner";
   const showClaim = reduced || effStep === "owner";
@@ -331,14 +332,30 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
               <rect x="7" y="7" width="16" height="16" rx="5" fill="var(--indigo)" />
               <path d="M15 10.5l6 5h-12Z" fill="#fff" />
               <rect x="10.5" y="15.5" width="9" height="6" rx="1.5" fill="#fff" />
-              <rect x="29" y="9" width="36" height="4.5" rx="2.25" fill="var(--ink)" opacity="0.75" />
-              <rect x="29" y="17" width="26" height="4.5" rx="2.25" fill="var(--muted)" opacity="0.6" />
+              <rect
+                x="29"
+                y="9"
+                width="36"
+                height="4.5"
+                rx="2.25"
+                fill="var(--ink)"
+                opacity="0.75"
+              />
+              <rect
+                x="29"
+                y="17"
+                width="26"
+                height="4.5"
+                rx="2.25"
+                fill="var(--muted)"
+                opacity="0.6"
+              />
             </g>
           </g>
         )}
       </svg>
 
-      {/* Job card — the pro phase */}
+      {/* Job card - the pro phase */}
       <div
         key={`job-${effStep === "pro" ? logged : "idle"}`}
         className={`cls-job absolute ${effStep === "pro" ? "cls-job-enter" : ""}`}
@@ -355,7 +372,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
             >
               <div className="flex items-center gap-1.5 text-[10px] font-semibold text-ink">
                 <TradeIcon trade="plumbing" size={11} className="shrink-0 text-teal" />
-                Water heater — annual flush
+                Water heater - annual flush
               </div>
             </div>
             <div
@@ -371,7 +388,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
         </div>
       </div>
 
-      {/* Phone screen — record arrives, homeowner claims */}
+      {/* Phone screen - record arrives, homeowner claims */}
       <div
         className="absolute flex flex-col gap-1.5"
         style={{ left: "74.5%", top: "45.5%", width: "17.6%" }}
@@ -401,7 +418,11 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
           </div>
         )}
         {showClaim && (
-          <div key={`claim-${logged}`} className="cls-drop relative" style={{ animationDelay: "0.15s" }}>
+          <div
+            key={`claim-${logged}`}
+            className="cls-drop relative"
+            style={{ animationDelay: "0.15s" }}
+          >
             <div className="rounded-full bg-coral py-1 text-center text-[8px] font-bold text-white">
               Claim your home
             </div>
@@ -410,7 +431,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
         )}
       </div>
 
-      {/* Timeline — the history writing itself */}
+      {/* Timeline - the history writing itself */}
       <div
         className="absolute flex items-center gap-1"
         style={{ left: "3%", top: "86.5%", width: "64%" }}
@@ -494,10 +515,26 @@ function CompactScene({
           </g>
           {/* two timeline rows under the ground line */}
           <g>
-            <rect x="70" y="220" width="160" height="13" rx="6.5" fill="var(--bg)" stroke="var(--line)" />
+            <rect
+              x="70"
+              y="220"
+              width="160"
+              height="13"
+              rx="6.5"
+              fill="var(--bg)"
+              stroke="var(--line)"
+            />
             <circle cx="80" cy="226.5" r="3" fill="var(--indigo)" />
             <rect x="88" y="224.5" width="90" height="4" rx="2" fill="var(--ink)" opacity="0.65" />
-            <rect x="70" y="237" width="128" height="13" rx="6.5" fill="var(--bg)" stroke="var(--line)" />
+            <rect
+              x="70"
+              y="237"
+              width="128"
+              height="13"
+              rx="6.5"
+              fill="var(--bg)"
+              stroke="var(--line)"
+            />
             <circle cx="80" cy="243.5" r="3" fill="var(--indigo)" />
             <rect x="88" y="241.5" width="66" height="4" rx="2" fill="var(--ink)" opacity="0.65" />
           </g>
@@ -525,9 +562,11 @@ git commit -m "feat(hero): add CoreLoopScene animated core-loop component"
 ### Task 3: Wire the homepage hero
 
 **Files:**
+
 - Modify: `src/routes/index.tsx:4` (import) and `src/routes/index.tsx:106-108` (hero slot)
 
 **Interfaces:**
+
 - Consumes: `CoreLoopScene` from Task 2; `active.key` is already `"pro" | "record" | "owner"` from `LOOP_STEPS`.
 
 - [ ] **Step 1: Swap the import**
@@ -573,6 +612,7 @@ Expected: exit 0.
 - [ ] **Step 4: Visual verification**
 
 Run `npm run dev`, open the homepage in the browser, and watch at least two full loop cycles (~21s). Verify:
+
 - Pro phase: job card rises, rows type in, "Send record" pill pulses.
 - Record phase: dashed arc lights up, chip arcs from house to phone, window dot pulses, record card drops into the phone as the chip lands.
 - Owner phase: claim button drops in with ripple; a new timeline chip stamps in; timeline caps at 3.
@@ -591,11 +631,13 @@ git commit -m "feat(hero): play the core loop in the homepage hero scene"
 ### Task 4: Compact call sites + delete HouseScene
 
 **Files:**
+
 - Modify: `src/routes/claim.$recordId.tsx:7` (import) and `:74` (element)
 - Modify: `src/routes/pro.index.tsx:6` (import) and `:102` (element)
 - Modify: `src/components/svg.tsx:97-176` (delete `HouseScene`)
 
 **Interfaces:**
+
 - Consumes: `CoreLoopScene` compact variant from Task 2.
 
 - [ ] **Step 1: Migrate the claim page**
@@ -643,6 +685,7 @@ Expected: exit 0.
 - [ ] **Step 5: Visual verification**
 
 With the dev server running:
+
 - `/claim/<any-record-id>` route: compact owner pose renders at `w-48`; after entering contact info the coral check draws itself once.
 - `/pro` dashboard with an empty account: compact pro pose renders at `w-28`, legible, quiet.
 
@@ -657,14 +700,16 @@ git commit -m "feat(hero): migrate claim + pro dashboard to CoreLoopScene, drop 
 
 ### Task 5: Visual polish pass
 
-Animation geometry written blind never lands pixel-perfect. This task is an explicitly sanctioned tuning loop — adjust coordinates, overlay percentages, font sizes, and animation timing in `core-loop-scene.tsx` / `styles.css` until the scene reads cleanly. Do not change the component API or the phase structure.
+Animation geometry written blind never lands pixel-perfect. This task is an explicitly sanctioned tuning loop - adjust coordinates, overlay percentages, font sizes, and animation timing in `core-loop-scene.tsx` / `styles.css` until the scene reads cleanly. Do not change the component API or the phase structure.
 
 **Files:**
+
 - Modify (as needed): `src/components/core-loop-scene.tsx`, `src/styles.css`
 
 - [ ] **Step 1: Screenshot each phase**
 
 With the dev server running, screenshot the hero during each of the three phases (the loop advances every 3.5s). Check against the spec's choreography section:
+
 - Overlays don't collide with the SVG line art or each other.
 - The chip's travel path visually follows the dashed arc (tune `hb-cls-travel` waypoints if it drifts).
 - The chip lands where the record card drops in (tune the 88%/100% waypoints and the `cls-drop` 2.7s delay together).
@@ -672,11 +717,11 @@ With the dev server running, screenshot the hero during each of the three phases
 
 - [ ] **Step 2: Reduced-motion check**
 
-Emulate `prefers-reduced-motion: reduce` (DevTools → Rendering). Verify the full variant renders the static tableau: job card, chip frozen mid-arc, record card + claim button, 3-row timeline — no movement.
+Emulate `prefers-reduced-motion: reduce` (DevTools → Rendering). Verify the full variant renders the static tableau: job card, chip frozen mid-arc, record card + claim button, 3-row timeline - no movement.
 
 - [ ] **Step 3: Compact-size check**
 
-Verify the claim page pose at `w-48` and the dashboard pose at `w-28` — every drawn element still legible, nothing clipped.
+Verify the claim page pose at `w-48` and the dashboard pose at `w-28` - every drawn element still legible, nothing clipped.
 
 - [ ] **Step 4: Commit the polish**
 

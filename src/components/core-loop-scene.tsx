@@ -4,7 +4,7 @@ import { LogoMark, TradeIcon } from "@/components/svg";
 /* CoreLoopScene: the HomesBrain story, played out.
    Full variant syncs to the hero's rotating step: a pro logs a job,
    the branded record travels to a phone, the homeowner claims it
-   and the home's timeline grows — all in brand indigo. Compact variant
+   and the home's timeline grows - all in brand indigo. Compact variant
    is a static pose for small placements. */
 
 export type LoopKey = "pro" | "record" | "owner";
@@ -85,27 +85,84 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
       <svg viewBox="0 0 460 360" className="absolute inset-0 h-full w-full" aria-hidden="true">
         {/* ground */}
         <path d="M20 300h420" {...stroke} stroke="var(--line)" />
-        {/* house */}
+        {/* house — warm cottage; solid ink roof + arched indigo door echo the logo mark */}
         <g style={{ color: "var(--ink)" }}>
-          <path d="M60 300V164l90-70 90 70v136" {...stroke} strokeWidth={2.25} />
-          <path d="M40 180l110-86 110 86" {...stroke} strokeWidth={2.25} />
-          <path d="M132 300v-46a18 18 0 0 1 36 0v46" {...stroke} />
-          <rect x="84" y="198" width="28" height="28" rx="6" {...stroke} />
-          <rect x="188" y="198" width="28" height="28" rx="6" {...stroke} />
+          {/* chimney + smoke */}
+          <path
+            d="M108 92c-5-6 5-11 0-18"
+            {...stroke}
+            strokeWidth={1.75}
+            stroke="var(--muted)"
+            opacity="0.75"
+          />
+          <path d="M98 136V104h20v15Z" {...stroke} strokeWidth={2.25} fill="var(--bg)" />
+          <path d="M94 104h28" {...stroke} strokeWidth={2.25} />
+          {/* body */}
+          <path
+            d="M64 300V172L150 100l86 72v128"
+            {...stroke}
+            strokeWidth={2.25}
+            fill="var(--soft)"
+          />
+          {/* roof band */}
+          <path
+            d="M42 184L150 94l108 90"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={9}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* round gable window */}
+          <circle cx="150" cy="140" r="11" {...stroke} strokeWidth={2.25} fill="var(--bg)" />
+          <path d="M150 129v22M139 140h22" {...stroke} strokeWidth={1.5} />
+          {/* paned windows + sills */}
+          <rect
+            x="82"
+            y="204"
+            width="32"
+            height="34"
+            rx="7"
+            {...stroke}
+            strokeWidth={2.25}
+            fill="var(--bg)"
+          />
+          <path d="M98 204v34M82 221h32" {...stroke} strokeWidth={1.5} />
+          <path d="M77 241h42" {...stroke} strokeWidth={2.25} />
+          <rect
+            x="186"
+            y="204"
+            width="32"
+            height="34"
+            rx="7"
+            {...stroke}
+            strokeWidth={2.25}
+            fill="var(--bg)"
+          />
+          <path d="M202 204v34M186 221h32" {...stroke} strokeWidth={1.5} />
+          <path d="M181 241h42" {...stroke} strokeWidth={2.25} />
+          {/* arched indigo door */}
+          <path d="M131 300v-40a19 19 0 0 1 38 0v40Z" fill="var(--indigo)" />
+          <circle cx="161" cy="272" r="2" fill="#fff" opacity="0.9" />
+          {/* shrubs */}
+          <path d="M30 300a12 12 0 0 1 24 0" {...stroke} strokeWidth={2.25} fill="var(--bg)" />
+          <path d="M48 300a8 8 0 0 1 16 0" {...stroke} strokeWidth={2.25} fill="var(--bg)" />
+          <path d="M244 300a9 9 0 0 1 18 0" {...stroke} strokeWidth={2.25} fill="var(--bg)" />
         </g>
         {/* dashed arc: house → phone */}
         <path
-          d="M230 128C270 60 340 62 376 134"
+          d="M230 128C270 54 342 56 378 116"
           {...stroke}
           strokeWidth={1.5}
           strokeDasharray="4 7"
           className="cls-arc dash-flow"
           style={{ color: "var(--indigo)" }}
         />
-        {/* phone */}
+        {/* phone - real-handset proportions, island + home indicator */}
         <g style={{ color: "var(--ink)" }}>
-          <rect x="332" y="140" width="102" height="158" rx="18" {...stroke} strokeWidth={2.25} />
-          <path d="M370 154h26" {...stroke} stroke="var(--line)" />
+          <rect x="341" y="122" width="84" height="176" rx="19" {...stroke} strokeWidth={2.25} />
+          <rect x="372" y="131" width="22" height="7" rx="3.5" fill="var(--line)" />
+          <path d="M371 289h24" {...stroke} stroke="var(--line)" />
         </g>
         {/* traveling record chip */}
         {showChip && (
@@ -115,44 +172,71 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
               <rect x="7" y="7" width="16" height="16" rx="5" fill="var(--indigo)" />
               <path d="M15 10.5l6 5h-12Z" fill="#fff" />
               <rect x="10.5" y="15.5" width="9" height="6" rx="1.5" fill="#fff" />
-              <rect x="29" y="9" width="36" height="4.5" rx="2.25" fill="var(--ink)" opacity="0.75" />
-              <rect x="29" y="17" width="26" height="4.5" rx="2.25" fill="var(--muted)" opacity="0.6" />
+              <rect
+                x="29"
+                y="9"
+                width="36"
+                height="4.5"
+                rx="2.25"
+                fill="var(--ink)"
+                opacity="0.75"
+              />
+              <rect
+                x="29"
+                y="17"
+                width="26"
+                height="4.5"
+                rx="2.25"
+                fill="var(--muted)"
+                opacity="0.6"
+              />
             </g>
           </g>
         )}
       </svg>
 
-      {/* Job card — the pro phase */}
+      {/* Job card - the pro phase */}
       <div
         key={`job-${effStep === "pro" ? logged : "idle"}`}
         className={`cls-job absolute ${effStep === "pro" ? "cls-job-enter" : ""}`}
         style={{ left: "0.5%", top: "46%", width: "40%" }}
       >
-        <div className="rounded-2xl border border-line bg-white p-2.5 shadow-sm">
-          <span className="inline-block rounded-full bg-indigobg px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-indigodark">
-            Job logged
-          </span>
-          <div className="mt-1.5 space-y-1">
-            <div className={effStep === "pro" ? "cls-typein" : ""} style={{ animationDelay: "0.5s" }}>
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-ink">
-                <TradeIcon trade="plumbing" size={11} className="shrink-0 text-indigo" />
-                Water heater — annual flush
+        <div className="rounded-2xl border border-line bg-white p-3 shadow-[0_18px_38px_-22px_rgba(22,22,15,0.35)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-block rounded-full bg-indigobg px-2 py-0.5 text-[8.5px] font-extrabold uppercase tracking-[0.12em] text-indigodark">
+              ✓ Job logged
+            </span>
+            <span className="text-[8.5px] font-semibold text-muted">30 sec</span>
+          </div>
+          <div
+            className={`mt-2.5 flex items-center gap-2 ${effStep === "pro" ? "cls-typein" : ""}`}
+            style={{ animationDelay: "0.5s" }}
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-indigobg">
+              <TradeIcon trade="plumbing" size={14} className="text-indigo" />
+            </span>
+            <div className="min-w-0">
+              <div className="truncate text-[10.5px] font-bold leading-snug text-ink">
+                Water heater flush
+              </div>
+              <div
+                className={`text-[9px] leading-snug text-muted ${effStep === "pro" ? "cls-typein" : ""}`}
+                style={{ animationDelay: "0.9s" }}
+              >
+                Next service · Jan 2027
               </div>
             </div>
-            <div className={effStep === "pro" ? "cls-typein" : ""} style={{ animationDelay: "0.9s" }}>
-              <div className="text-[10px] text-muted">Next service · Jan 2027</div>
-            </div>
           </div>
-          <div className="cls-send mt-2 rounded-full bg-indigo py-1 text-center text-[10px] font-bold text-white">
+          <div className="cls-send mt-2.5 rounded-full bg-indigo py-1.5 text-center text-[10px] font-bold text-white shadow-[0_10px_18px_-10px_rgba(71,63,176,0.65)]">
             Send record →
           </div>
         </div>
       </div>
 
-      {/* Phone screen — record arrives, homeowner claims */}
+      {/* Phone screen - record arrives, homeowner claims */}
       <div
         className="absolute flex flex-col gap-1.5"
-        style={{ left: "74.5%", top: "45.5%", width: "17.6%" }}
+        style={{ left: "75.4%", top: "45.5%", width: "15.7%" }}
       >
         {showRecordCard ? (
           <div
@@ -179,7 +263,11 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
           </div>
         )}
         {showClaim && (
-          <div key={`claim-${logged}`} className="cls-drop relative" style={{ animationDelay: "0.15s" }}>
+          <div
+            key={`claim-${logged}`}
+            className="cls-drop relative"
+            style={{ animationDelay: "0.15s" }}
+          >
             <div className="rounded-full bg-indigo py-1 text-center text-[8px] font-bold text-white">
               Claim your home
             </div>
@@ -188,7 +276,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
         )}
       </div>
 
-      {/* Timeline — the history writing itself */}
+      {/* Timeline - the history writing itself */}
       <div
         className="absolute flex items-center gap-1"
         style={{ left: "3%", top: "86.5%", width: "64%" }}
@@ -233,13 +321,57 @@ function CompactScene({
     >
       {/* ground */}
       <path d="M20 210h260" {...stroke} stroke="var(--line)" />
-      {/* house */}
+      {/* house — same cottage as the full scene, scaled for small placements */}
       <g style={{ color: "var(--ink)" }}>
-        <path d="M85 210v-92l65-50 65 50v92" {...stroke} strokeWidth={2.25} />
-        <path d="M70 130l80-62 80 62" {...stroke} strokeWidth={2.25} />
-        <path d="M132 210v-32a13 13 0 0 1 26 0v32" {...stroke} />
-        <rect x="103" y="146" width="22" height="22" rx="5" {...stroke} />
-        <rect x="165" y="146" width="22" height="22" rx="5" {...stroke} />
+        {/* chimney */}
+        <path d="M108 100V78h16v8.5Z" {...stroke} strokeWidth={2} fill="var(--bg)" />
+        <path d="M104 78h24" {...stroke} strokeWidth={2} />
+        {/* body */}
+        <path d="M88 210V118L150 66l62 52v92" {...stroke} strokeWidth={2.25} fill="var(--soft)" />
+        {/* roof band */}
+        <path
+          d="M72 127L150 62l78 65"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* round gable window */}
+        <circle cx="150" cy="96" r="8" {...stroke} strokeWidth={2} fill="var(--bg)" />
+        <path d="M150 88v16M142 96h16" {...stroke} strokeWidth={1.25} />
+        {/* paned windows + sills */}
+        <rect
+          x="100"
+          y="142"
+          width="24"
+          height="25"
+          rx="5"
+          {...stroke}
+          strokeWidth={2}
+          fill="var(--bg)"
+        />
+        <path d="M112 142v25M100 154.5h24" {...stroke} strokeWidth={1.25} />
+        <path d="M96 169.5h32" {...stroke} strokeWidth={2} />
+        <rect
+          x="176"
+          y="142"
+          width="24"
+          height="25"
+          rx="5"
+          {...stroke}
+          strokeWidth={2}
+          fill="var(--bg)"
+        />
+        <path d="M188 142v25M176 154.5h24" {...stroke} strokeWidth={1.25} />
+        <path d="M172 169.5h32" {...stroke} strokeWidth={2} />
+        {/* arched indigo door */}
+        <path d="M136 210v-28a14 14 0 0 1 28 0v28Z" fill="var(--indigo)" />
+        <circle cx="158" cy="190" r="1.6" fill="#fff" opacity="0.9" />
+        {/* shrubs */}
+        <path d="M62 210a9 9 0 0 1 18 0" {...stroke} strokeWidth={2} fill="var(--bg)" />
+        <path d="M75 210a6 6 0 0 1 12 0" {...stroke} strokeWidth={2} fill="var(--bg)" />
+        <path d="M218 210a7 7 0 0 1 14 0" {...stroke} strokeWidth={2} fill="var(--bg)" />
       </g>
 
       {pose === "pro" && (
@@ -272,10 +404,26 @@ function CompactScene({
           </g>
           {/* two timeline rows under the ground line */}
           <g>
-            <rect x="70" y="220" width="160" height="13" rx="6.5" fill="var(--bg)" stroke="var(--line)" />
+            <rect
+              x="70"
+              y="220"
+              width="160"
+              height="13"
+              rx="6.5"
+              fill="var(--bg)"
+              stroke="var(--line)"
+            />
             <circle cx="80" cy="226.5" r="3" fill="var(--indigo)" />
             <rect x="88" y="224.5" width="90" height="4" rx="2" fill="var(--ink)" opacity="0.65" />
-            <rect x="70" y="237" width="128" height="13" rx="6.5" fill="var(--bg)" stroke="var(--line)" />
+            <rect
+              x="70"
+              y="237"
+              width="128"
+              height="13"
+              rx="6.5"
+              fill="var(--bg)"
+              stroke="var(--line)"
+            />
             <circle cx="80" cy="243.5" r="3" fill="var(--indigo)" />
             <rect x="88" y="241.5" width="66" height="4" rx="2" fill="var(--ink)" opacity="0.65" />
           </g>

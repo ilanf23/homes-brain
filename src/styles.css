@@ -6,10 +6,10 @@
 
 /* HomesBrain design tokens.
    Color carries meaning. Never mix the roles.
-   indigo = the brand (buttons, links, accents, chips — everywhere, all audiences),
-   coral = payoff highlights only (rebooks, revenue, wins — used sparingly, ~10%),
+   indigo = the brand (buttons, links, accents, chips - everywhere, all audiences),
+   coral = payoff highlights only (rebooks, revenue, wins - used sparingly, ~10%),
    amber = functional warning/status (due soon, pending), red = errors/destructive.
-   teal is retired — do not reintroduce role-per-audience colors. */
+   teal is retired - do not reintroduce role-per-audience colors. */
 
 @theme inline {
   --color-background: var(--bg);
@@ -283,11 +283,11 @@
   }
   88% {
     opacity: 1;
-    transform: translate(166px, 52px) scale(0.92);
+    transform: translate(178px, 52px) scale(0.92);
   }
   100% {
     opacity: 0;
-    transform: translate(172px, 66px) scale(0.75);
+    transform: translate(188px, 66px) scale(0.75);
   }
 }
 @keyframes hb-cls-drop {
@@ -591,6 +591,92 @@
   stroke-dashoffset: 0 !important;
 }
 
+/* Sequenced reveal: like .reveal, but elements enter one at a time, ordered
+   by an inline --d (animation-delay). Used for step-by-step choreography,
+   e.g. the how-it-works phones filling in row by row. */
+.seq {
+  opacity: 0;
+}
+.in-view .seq {
+  animation: hb-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* ---------- 3D reveal system (how-it-works) ----------
+   A .persp parent supplies the camera; .tilt-l / .tilt-r children start
+   swung toward the reader like a card being turned over, and settle flat
+   when the section gets .in-view. Pair with an inner .tilt-live layer for
+   pointer-tracked tilt so the two transforms never fight. */
+
+@utility persp {
+  perspective: 1100px;
+}
+@utility tilt-l {
+  opacity: 0;
+  transform: rotateY(-16deg) rotateX(5deg) translateY(26px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+@utility tilt-r {
+  opacity: 0;
+  transform: rotateY(16deg) rotateX(5deg) translateY(26px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.in-view .tilt-l,
+.in-view .tilt-r {
+  opacity: 1;
+  transform: none;
+}
+/* Pointer-tracked layer: JS sets --rx / --ry (deg) on pointermove. */
+.tilt-live {
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+}
+
+/* Nameplate scan: a thin indigo beam sweeps the card while the pro "scans". */
+@keyframes hb-scan {
+  0%,
+  12% {
+    top: 4%;
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.85;
+  }
+  78% {
+    opacity: 0.85;
+  }
+  88%,
+  100% {
+    top: 92%;
+    opacity: 0;
+  }
+}
+@utility scan-beam {
+  animation: hb-scan 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* Flywheel: the dashed momentum ring creeps around forever; the chips hold still. */
+@keyframes hb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@utility spin-slow {
+  animation: hb-spin 32s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Loop-diagram nodes dim/relight via SMIL, which loses to any CSS opacity
+   rule - so the class exists only for the reduced-motion override below. */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -609,5 +695,21 @@
   }
   .draw-path {
     stroke-dashoffset: 0 !important;
+  }
+  .seq {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  .tilt-l,
+  .tilt-r,
+  .tilt-live {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .scan-beam {
+    display: none !important;
+  }
+  .loop-node {
+    opacity: 1 !important;
   }
 }

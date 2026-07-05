@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Btn } from "@/lib/ui";
-import { MarketingShell, marketingHead } from "@/components/marketing";
+import { MarketingShell, marketingHead, Phone, PhoneBtn, PhoneKV } from "@/components/marketing";
+import { CameraIcon, MicIcon, SyncIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/for-pros")({
   head: () =>
@@ -75,53 +76,17 @@ function CheckRow({ dark = false, children }: { dark?: boolean; children: ReactN
   );
 }
 
-/* Dark-bezel phone mockup used in the hero and the how-it-works steps. */
-function PhoneFrame({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <div
-      className={`rounded-[34px] bg-ink p-2.5 shadow-[0_24px_48px_-26px_rgba(22,22,15,0.45)] ${className}`}
-    >
-      <div className="rounded-[26px] bg-soft p-4 space-y-2.5">{children}</div>
-    </div>
-  );
-}
-
-function PhoneHead({ title, right }: { title: string; right?: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <div className="font-sans text-sm font-extrabold text-ink">{title}</div>
-      {right && <div className="text-[11px] text-muted">{right}</div>}
-    </div>
-  );
-}
-
-function PhoneKV({ k, v, accentV = false }: { k: string; v: string; accentV?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-2.5">
-      <span className="text-xs text-muted">{k}</span>
-      <span className={`text-xs font-bold ${accentV ? "text-indigo" : "text-ink"}`}>{v}</span>
-    </div>
-  );
-}
-
-function PhoneBtn({ children }: { children: ReactNode }) {
-  return (
-    <div className="rounded-xl bg-indigo px-3 py-2.5 text-center text-[13px] font-bold text-white">
-      {children}
-    </div>
-  );
-}
-
 function LogJobPhone({
   doneLabel,
   showReviewRow = false,
+  floatDelay,
 }: {
   doneLabel: string;
   showReviewRow?: boolean;
+  floatDelay?: string;
 }) {
   return (
-    <PhoneFrame>
-      <PhoneHead title="Log this job" right="Dana R." />
+    <Phone title="Log this job" titleRight="Dana R." floatDelay={floatDelay}>
       <div className="rounded-2xl border-2 border-dashed border-indigo/40 bg-indigobg/60 px-3 py-4 text-center">
         <div className="text-xl leading-none" aria-hidden="true">
           📷
@@ -135,35 +100,114 @@ function LogJobPhone({
       <PhoneKV k="Warranty" v="to 2031" />
       {showReviewRow && <PhoneKV k="Review request" v="on" accentV />}
       <PhoneBtn>{doneLabel}</PhoneBtn>
-    </PhoneFrame>
+    </Phone>
   );
 }
 
-/* Warm accent (coral) marks the payoff moments only — everything else is indigo. */
+/* Warm accent (coral) marks the payoff moments only - everything else is indigo. */
 const HERO_STATS = [
   { value: "30 sec", caption: "to log a job", warm: false },
   { value: "$0", caption: "to start, no card", warm: false },
   { value: "1 rebook", caption: "covers the year", warm: true },
 ];
 
+/* Demo-strip primitives for the capture cards: raw input (dashed) becomes a
+   clean record row (solid + check), the ledger doing the typing. */
+function DemoArrow() {
+  return (
+    <svg
+      width="18"
+      height="12"
+      viewBox="0 0 18 12"
+      aria-hidden="true"
+      className="shrink-0 text-ink/30"
+    >
+      <path
+        d="M1 6h14m0 0-4-4m4 4-4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function InToken({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1.5 rounded-lg border border-dashed border-ink/25 bg-paper px-2.5 py-1.5 text-[11px] font-semibold text-muted">
+      {children}
+    </span>
+  );
+}
+
+function OutToken({ k, v }: { k: string; v: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[11px]">
+      <Check />
+      <span className="text-muted">{k}</span>
+      <span className="font-bold text-ink">{v}</span>
+    </span>
+  );
+}
+
+function Waveform() {
+  return (
+    <span className="flex shrink-0 items-center gap-[2.5px]" aria-hidden="true">
+      {[5, 9, 6, 11, 7, 4].map((h, i) => (
+        <span key={i} className="w-[2.5px] rounded-full bg-indigo/70" style={{ height: h }} />
+      ))}
+    </span>
+  );
+}
+
 const LOG_WAYS = [
   {
-    emoji: "📷",
-    chip: "bg-indigobg",
+    icon: CameraIcon,
     title: "Snap a photo",
     body: "Photograph the nameplate or invoice. We read the make, model, serial, and dates for you.",
+    demo: (
+      <>
+        <InToken>
+          <CameraIcon size={13} className="shrink-0" /> nameplate.jpg
+        </InToken>
+        <DemoArrow />
+        <OutToken k="Make" v="Bradford White" />
+        <OutToken k="Model" v="RE350S6" />
+        <OutToken k="Warranty" v="to 2031" />
+      </>
+    ),
   },
   {
-    emoji: "🎤",
-    chip: "bg-indigobg",
+    icon: MicIcon,
     title: "Speak a note",
     body: "Ten seconds of voice. We turn it into a clean, structured service record.",
+    demo: (
+      <>
+        <InToken>
+          <MicIcon size={13} className="shrink-0" />
+          <Waveform />
+          <span className="min-w-0 italic">"Swapped the filter, due next June"</span>
+        </InToken>
+        <DemoArrow />
+        <OutToken k="Done" v="Filter replaced" />
+        <OutToken k="Next service" v="Jun 2027" />
+      </>
+    ),
   },
   {
-    emoji: "🔄",
-    chip: "bg-indigobg",
+    icon: SyncIcon,
     title: "Sync your tools",
     body: "Already on Jobber or QuickBooks. Jobs flow in automatically, zero new entry.",
+    demo: (
+      <>
+        <InToken>Jobber</InToken>
+        <InToken>QuickBooks</InToken>
+        <DemoArrow />
+        <OutToken k="Job #1042" v="Record sent" />
+      </>
+    ),
   },
 ];
 
@@ -235,7 +279,7 @@ function ForPros() {
         </div>
 
         <div className="anim-fade-up d-4 mt-14 flex justify-center">
-          <div className="w-full max-w-[250px]">
+          <div className="w-full max-w-[270px]">
             <LogJobPhone doneLabel="Done in 30 sec" showReviewRow />
           </div>
         </div>
@@ -271,15 +315,22 @@ function ForPros() {
         />
         <div className="mt-10 space-y-5">
           {LOG_WAYS.map((w) => (
-            <div key={w.title} className="rounded-[20px] bg-soft p-7">
-              <span
-                className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${w.chip}`}
-                aria-hidden="true"
-              >
-                {w.emoji}
-              </span>
-              <h3 className={`${H_SANS} mt-5 text-lg`}>{w.title}</h3>
-              <p className="mt-2 text-[15px] text-muted">{w.body}</p>
+            <div
+              key={w.title}
+              className="overflow-hidden rounded-[20px] border border-line bg-paper"
+            >
+              <div className="flex items-start gap-4 p-6 sm:p-7">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigobg text-indigo">
+                  <w.icon size={20} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className={`${H_SANS} text-lg`}>{w.title}</h3>
+                  <p className="mt-1.5 text-[15px] text-muted">{w.body}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 border-t border-line bg-soft px-6 py-4 sm:px-7">
+                {w.demo}
+              </div>
             </div>
           ))}
         </div>
@@ -308,8 +359,7 @@ function ForPros() {
             <p className="mx-auto mt-2 max-w-[240px] text-sm text-muted">
               Import your list or add as you go. Every home gets a profile.
             </p>
-            <PhoneFrame className="mx-auto mt-6 max-w-[250px] text-left">
-              <PhoneHead title="Your customers" />
+            <Phone title="Your customers" className="mt-6">
               {(
                 [
                   ["Dana R.", "Water softener", "active", "text-indigo"],
@@ -329,7 +379,7 @@ function ForPros() {
                 </div>
               ))}
               <PhoneBtn>Import from QuickBooks</PhoneBtn>
-            </PhoneFrame>
+            </Phone>
           </div>
 
           {/* Step 2 */}
@@ -341,8 +391,8 @@ function ForPros() {
             <p className="mx-auto mt-2 max-w-[240px] text-sm text-muted">
               Snap the nameplate. We read make, model, and warranty for you.
             </p>
-            <div className="mx-auto mt-6 max-w-[250px] text-left">
-              <LogJobPhone doneLabel="Done" />
+            <div className="mx-auto mt-6 max-w-[270px] text-left">
+              <LogJobPhone doneLabel="Done" floatDelay="-1.6s" />
             </div>
           </div>
 
@@ -355,8 +405,7 @@ function ForPros() {
             <p className="mx-auto mt-2 max-w-[240px] text-sm text-muted">
               We remind the customer when service is due. They book you back.
             </p>
-            <PhoneFrame className="mx-auto mt-6 max-w-[250px] text-left">
-              <PhoneHead title="Due for service" />
+            <Phone title="Due for service" className="mt-6" floatDelay="-3.2s">
               {(
                 [
                   ["M. Alvarez", "RO filter due"],
@@ -377,10 +426,12 @@ function ForPros() {
                 </div>
               ))}
               <div className="rounded-xl bg-coralbg px-3 py-3 text-center">
-                <div className="font-sans text-base font-extrabold text-coraldark tnum">+ $4,200</div>
+                <div className="font-sans text-base font-extrabold text-coraldark tnum">
+                  + $4,200
+                </div>
                 <div className="text-[11px] text-muted">rebooked this month</div>
               </div>
-            </PhoneFrame>
+            </Phone>
           </div>
         </div>
       </section>

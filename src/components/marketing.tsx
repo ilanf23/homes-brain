@@ -37,7 +37,6 @@ const NAV_LINKS = [
   { to: "/how-it-works", label: "How it works" },
   { to: "/for-pros", label: "For pros" },
   { to: "/for-homeowners", label: "For homeowners" },
-  { to: "/pricing", label: "Pricing" },
   { to: "/partners", label: "Partners" },
 ] as const;
 
@@ -46,7 +45,6 @@ const FOOTER_GROUPS: { title: string; links: { to: string; label: string }[] }[]
     title: "Product",
     links: [
       { to: "/how-it-works", label: "How it works" },
-      { to: "/pricing", label: "Pricing" },
       { to: "/security", label: "Security" },
     ],
   },
@@ -274,6 +272,118 @@ export function MarketingShell({
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/* ---- Phone mockup - the brand's one product visual, shared by every
+   marketing page. Real-handset proportions (screen ≈ 9:19.5), a thin uniform
+   bezel, status bar, and home indicator so it reads as a phone rather than a
+   rounded card. Content is top-anchored; the quiet screen below it is
+   intentional. ---- */
+
+export function Phone({
+  title,
+  titleRight,
+  children,
+  floatDelay,
+  className = "",
+}: {
+  title?: string;
+  titleRight?: string;
+  children: ReactNode;
+  floatDelay?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`anim-float w-full max-w-[270px] mx-auto rounded-[38px] bg-ink p-[7px] shadow-[0_24px_48px_-24px_rgba(22,22,15,0.38)] ${className}`}
+      style={floatDelay ? { animationDelay: floatDelay } : undefined}
+    >
+      <div className="flex aspect-[9/18.5] flex-col overflow-hidden rounded-[31px] bg-[#f5f4ef] text-left">
+        {/* status bar */}
+        <div
+          className="flex shrink-0 items-center justify-between px-5 pt-2.5 text-ink"
+          aria-hidden="true"
+        >
+          <span className="text-[10px] font-bold tracking-tight tnum">9:41</span>
+          <span className="flex items-center gap-1.5">
+            <svg width="13" height="9" viewBox="0 0 13 9" fill="currentColor">
+              <rect y="6" width="2" height="3" rx="0.5" />
+              <rect x="3.5" y="4" width="2" height="5" rx="0.5" />
+              <rect x="7" y="2" width="2" height="7" rx="0.5" />
+              <rect x="10.5" width="2" height="9" rx="0.5" opacity="0.3" />
+            </svg>
+            <svg width="17" height="9" viewBox="0 0 17 9">
+              <rect
+                x="0.5"
+                y="0.5"
+                width="14"
+                height="8"
+                rx="2.5"
+                fill="none"
+                stroke="currentColor"
+                opacity="0.4"
+              />
+              <rect x="2" y="2" width="9" height="5" rx="1.5" fill="currentColor" />
+              <path d="M16 3v3a1.6 1.6 0 0 0 0-3Z" fill="currentColor" opacity="0.4" />
+            </svg>
+          </span>
+        </div>
+        {(title || titleRight) && (
+          <div className="flex shrink-0 items-baseline justify-between gap-3 px-4 pt-3.5 pb-1.5">
+            <div className="text-sm font-extrabold text-ink">{title}</div>
+            {titleRight && <div className="text-[11px] text-muted">{titleRight}</div>}
+          </div>
+        )}
+        <div className={`min-h-0 flex-1 space-y-2 px-2.5 ${title || titleRight ? "" : "pt-3.5"}`}>
+          {children}
+        </div>
+        {/* home indicator */}
+        <div
+          className="mx-auto mt-2 mb-2 h-1 w-[34%] shrink-0 rounded-full bg-ink/15"
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
+}
+
+/* Generic key/value or list row on the phone screen. */
+export function PhoneRow({
+  left,
+  right,
+  className = "",
+}: {
+  left: ReactNode;
+  right?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-line bg-paper px-3.5 py-2.5 flex items-center justify-between gap-3 ${className}`}
+    >
+      <div className="min-w-0">{left}</div>
+      {right}
+    </div>
+  );
+}
+
+/* Compact label/value row used on the pros page. */
+export function PhoneKV({ k, v, accentV = false }: { k: string; v: string; accentV?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-2.5">
+      <span className="text-xs text-muted">{k}</span>
+      <span className={`text-xs font-bold ${accentV ? "text-indigo" : "text-ink"}`}>{v}</span>
+    </div>
+  );
+}
+
+/* Primary in-screen action button. */
+export function PhoneBtn({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-xl bg-indigo px-3 py-2.5 text-center text-[13px] font-bold text-white">
+      {children}
     </div>
   );
 }
