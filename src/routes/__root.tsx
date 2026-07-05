@@ -84,18 +84,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "HomesBrain — A Carfax for homes that writes itself" },
-      { name: "twitter:description", content: "Home-service pros log a 30-second job and send a branded service record. Homeowners claim it free and own their home's history for life." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/278656fc-01ae-495d-a5ae-0fbc73cf53ef/id-preview-0fb51eec--1c763d3d-217f-4cd0-82d6-c92c352b39c9.lovable.app-1782857254260.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/278656fc-01ae-495d-a5ae-0fbc73cf53ef/id-preview-0fb51eec--1c763d3d-217f-4cd0-82d6-c92c352b39c9.lovable.app-1782857254260.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Home-service pros log a 30-second job and send a branded service record. Homeowners claim it free and own their home's history for life.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/278656fc-01ae-495d-a5ae-0fbc73cf53ef/id-preview-0fb51eec--1c763d3d-217f-4cd0-82d6-c92c352b39c9.lovable.app-1782857254260.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/278656fc-01ae-495d-a5ae-0fbc73cf53ef/id-preview-0fb51eec--1c763d3d-217f-4cd0-82d6-c92c352b39c9.lovable.app-1782857254260.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
-      },
+      /* Brand guidelines: system font stack only — no web fonts. */
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },

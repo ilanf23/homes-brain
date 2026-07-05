@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eyebrow, Pill, Card, Btn, KV } from "@/lib/ui";
-import { HouseScene, Logo, LogoMark, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import { HouseScene, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import { MarketingShell } from "@/components/marketing";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,35 +61,9 @@ function Landing() {
   const active = LOOP_STEPS[loopStep];
 
   return (
-    <div className="min-h-dvh bg-background">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-          </Link>
-          <nav className="flex items-center gap-2">
-            <a
-              href="#how"
-              className="hidden sm:inline-block text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2"
-            >
-              How it works
-            </a>
-            <Link
-              to="/login"
-              className="text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2"
-            >
-              Log in
-            </Link>
-            <Link to="/pro/signup">
-              <Btn variant="teal" size="sm">
-                For pros
-              </Btn>
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <MarketingShell
+      mobileCta={{ label: "Start free — for pros", to: "/pro/signup", variant: "teal" }}
+    >
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
         <div className="text-center lg:text-left">
@@ -255,24 +230,6 @@ function Landing() {
           </Card>
         </div>
       </section>
-
-      <footer className="border-t border-line bg-soft">
-        <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
-          <div className="flex items-center gap-2">
-            <LogoMark size={20} />
-            <span>© {new Date().getFullYear()} HomesBrain</span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link to="/pro/signup" className="hover:text-ink transition-colors">
-              For pros
-            </Link>
-            <a href="#how" className="hover:text-ink transition-colors">
-              How it works
-            </a>
-            <span className="text-xs">v0 demo</span>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingShell>
   );
 }

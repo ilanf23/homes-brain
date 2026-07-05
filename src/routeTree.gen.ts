@@ -9,10 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as MessagingTermsRouteImport } from './routes/messaging-terms'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as ForProsRouteImport } from './routes/for-pros'
+import { Route as ForHomeownersRouteImport } from './routes/for-homeowners'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProIndexRouteImport } from './routes/pro.index'
 import { Route as HomeIndexRouteImport } from './routes/home.index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as RRecordIdRouteImport } from './routes/r.$recordId'
 import { Route as ProSignupRouteImport } from './routes/pro.signup'
 import { Route as ProSettingsRouteImport } from './routes/pro.settings'
@@ -24,16 +35,68 @@ import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
 import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ProRecordsIndexRouteImport } from './routes/pro.records.index'
 import { Route as ProCustomersIndexRouteImport } from './routes/pro.customers.index'
 import { Route as ProRecordsRecordIdRouteImport } from './routes/pro.records.$recordId'
 import { Route as ProJobsNewRouteImport } from './routes/pro.jobs.new'
 import { Route as ProCustomersCustomerIdRouteImport } from './routes/pro.customers.$customerId'
 import { Route as HomeItemsItemIdRouteImport } from './routes/home.items.$itemId'
+import { Route as ProCityTradeBusinessRouteImport } from './routes/pro.$city.$trade.$business'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagingTermsRoute = MessagingTermsRouteImport.update({
+  id: '/messaging-terms',
+  path: '/messaging-terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForProsRoute = ForProsRouteImport.update({
+  id: '/for-pros',
+  path: '/for-pros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForHomeownersRoute = ForHomeownersRouteImport.update({
+  id: '/for-homeowners',
+  path: '/for-homeowners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +112,11 @@ const ProIndexRoute = ProIndexRouteImport.update({
 const HomeIndexRoute = HomeIndexRouteImport.update({
   id: '/home/',
   path: '/home/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RRecordIdRoute = RRecordIdRouteImport.update({
@@ -106,6 +174,11 @@ const ClaimRecordIdRoute = ClaimRecordIdRouteImport.update({
   path: '/claim/$recordId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProRecordsIndexRoute = ProRecordsIndexRouteImport.update({
   id: '/pro/records/',
   path: '/pro/records/',
@@ -136,10 +209,26 @@ const HomeItemsItemIdRoute = HomeItemsItemIdRouteImport.update({
   path: '/home/items/$itemId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProCityTradeBusinessRoute = ProCityTradeBusinessRouteImport.update({
+  id: '/pro/$city/$trade/$business',
+  path: '/pro/$city/$trade/$business',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/for-homeowners': typeof ForHomeownersRoute
+  '/for-pros': typeof ForProsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
+  '/messaging-terms': typeof MessagingTermsRoute
+  '/partners': typeof PartnersRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
   '/home/pros': typeof HomeProsRoute
@@ -151,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
+  '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
@@ -159,10 +249,22 @@ export interface FileRoutesByFullPath {
   '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
   '/pro/customers/': typeof ProCustomersIndexRoute
   '/pro/records/': typeof ProRecordsIndexRoute
+  '/pro/$city/$trade/$business': typeof ProCityTradeBusinessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/for-homeowners': typeof ForHomeownersRoute
+  '/for-pros': typeof ForProsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
+  '/messaging-terms': typeof MessagingTermsRoute
+  '/partners': typeof PartnersRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
   '/home/pros': typeof HomeProsRoute
@@ -174,6 +276,7 @@ export interface FileRoutesByTo {
   '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
+  '/blog': typeof BlogIndexRoute
   '/home': typeof HomeIndexRoute
   '/pro': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
@@ -182,11 +285,23 @@ export interface FileRoutesByTo {
   '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
   '/pro/customers': typeof ProCustomersIndexRoute
   '/pro/records': typeof ProRecordsIndexRoute
+  '/pro/$city/$trade/$business': typeof ProCityTradeBusinessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/for-homeowners': typeof ForHomeownersRoute
+  '/for-pros': typeof ForProsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
+  '/messaging-terms': typeof MessagingTermsRoute
+  '/partners': typeof PartnersRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
   '/home/pros': typeof HomeProsRoute
@@ -198,6 +313,7 @@ export interface FileRoutesById {
   '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
   '/r/$recordId': typeof RRecordIdRoute
+  '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
@@ -206,12 +322,24 @@ export interface FileRoutesById {
   '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
   '/pro/customers/': typeof ProCustomersIndexRoute
   '/pro/records/': typeof ProRecordsIndexRoute
+  '/pro/$city/$trade/$business': typeof ProCityTradeBusinessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
+    | '/for-homeowners'
+    | '/for-pros'
+    | '/how-it-works'
     | '/login'
+    | '/messaging-terms'
+    | '/partners'
+    | '/pricing'
+    | '/privacy'
+    | '/security'
+    | '/terms'
+    | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
     | '/home/pros'
@@ -223,6 +351,7 @@ export interface FileRouteTypes {
     | '/pro/settings'
     | '/pro/signup'
     | '/r/$recordId'
+    | '/blog/'
     | '/home/'
     | '/pro/'
     | '/home/items/$itemId'
@@ -231,10 +360,22 @@ export interface FileRouteTypes {
     | '/pro/records/$recordId'
     | '/pro/customers/'
     | '/pro/records/'
+    | '/pro/$city/$trade/$business'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/for-homeowners'
+    | '/for-pros'
+    | '/how-it-works'
     | '/login'
+    | '/messaging-terms'
+    | '/partners'
+    | '/pricing'
+    | '/privacy'
+    | '/security'
+    | '/terms'
+    | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
     | '/home/pros'
@@ -246,6 +387,7 @@ export interface FileRouteTypes {
     | '/pro/settings'
     | '/pro/signup'
     | '/r/$recordId'
+    | '/blog'
     | '/home'
     | '/pro'
     | '/home/items/$itemId'
@@ -254,10 +396,22 @@ export interface FileRouteTypes {
     | '/pro/records/$recordId'
     | '/pro/customers'
     | '/pro/records'
+    | '/pro/$city/$trade/$business'
   id:
     | '__root__'
     | '/'
+    | '/about'
+    | '/for-homeowners'
+    | '/for-pros'
+    | '/how-it-works'
     | '/login'
+    | '/messaging-terms'
+    | '/partners'
+    | '/pricing'
+    | '/privacy'
+    | '/security'
+    | '/terms'
+    | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
     | '/home/pros'
@@ -269,6 +423,7 @@ export interface FileRouteTypes {
     | '/pro/settings'
     | '/pro/signup'
     | '/r/$recordId'
+    | '/blog/'
     | '/home/'
     | '/pro/'
     | '/home/items/$itemId'
@@ -277,11 +432,23 @@ export interface FileRouteTypes {
     | '/pro/records/$recordId'
     | '/pro/customers/'
     | '/pro/records/'
+    | '/pro/$city/$trade/$business'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  ForHomeownersRoute: typeof ForHomeownersRoute
+  ForProsRoute: typeof ForProsRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
+  MessagingTermsRoute: typeof MessagingTermsRoute
+  PartnersRoute: typeof PartnersRoute
+  PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  SecurityRoute: typeof SecurityRoute
+  TermsRoute: typeof TermsRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
   HomeAddRoute: typeof HomeAddRoute
   HomeProsRoute: typeof HomeProsRoute
@@ -293,6 +460,7 @@ export interface RootRouteChildren {
   ProSettingsRoute: typeof ProSettingsRoute
   ProSignupRoute: typeof ProSignupRoute
   RRecordIdRoute: typeof RRecordIdRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
   ProIndexRoute: typeof ProIndexRoute
   HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
@@ -301,15 +469,86 @@ export interface RootRouteChildren {
   ProRecordsRecordIdRoute: typeof ProRecordsRecordIdRoute
   ProCustomersIndexRoute: typeof ProCustomersIndexRoute
   ProRecordsIndexRoute: typeof ProRecordsIndexRoute
+  ProCityTradeBusinessRoute: typeof ProCityTradeBusinessRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messaging-terms': {
+      id: '/messaging-terms'
+      path: '/messaging-terms'
+      fullPath: '/messaging-terms'
+      preLoaderRoute: typeof MessagingTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-pros': {
+      id: '/for-pros'
+      path: '/for-pros'
+      fullPath: '/for-pros'
+      preLoaderRoute: typeof ForProsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-homeowners': {
+      id: '/for-homeowners'
+      path: '/for-homeowners'
+      fullPath: '/for-homeowners'
+      preLoaderRoute: typeof ForHomeownersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -331,6 +570,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home/'
       preLoaderRoute: typeof HomeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$recordId': {
@@ -410,6 +656,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClaimRecordIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/records/': {
       id: '/pro/records/'
       path: '/pro/records'
@@ -452,12 +705,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeItemsItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/$city/$trade/$business': {
+      id: '/pro/$city/$trade/$business'
+      path: '/pro/$city/$trade/$business'
+      fullPath: '/pro/$city/$trade/$business'
+      preLoaderRoute: typeof ProCityTradeBusinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  ForHomeownersRoute: ForHomeownersRoute,
+  ForProsRoute: ForProsRoute,
+  HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
+  MessagingTermsRoute: MessagingTermsRoute,
+  PartnersRoute: PartnersRoute,
+  PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  SecurityRoute: SecurityRoute,
+  TermsRoute: TermsRoute,
+  BlogSlugRoute: BlogSlugRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
   HomeAddRoute: HomeAddRoute,
   HomeProsRoute: HomeProsRoute,
@@ -469,6 +740,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProSettingsRoute: ProSettingsRoute,
   ProSignupRoute: ProSignupRoute,
   RRecordIdRoute: RRecordIdRoute,
+  BlogIndexRoute: BlogIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
   ProIndexRoute: ProIndexRoute,
   HomeItemsItemIdRoute: HomeItemsItemIdRoute,
@@ -477,6 +749,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProRecordsRecordIdRoute: ProRecordsRecordIdRoute,
   ProCustomersIndexRoute: ProCustomersIndexRoute,
   ProRecordsIndexRoute: ProRecordsIndexRoute,
+  ProCityTradeBusinessRoute: ProCityTradeBusinessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

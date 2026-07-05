@@ -257,6 +257,98 @@ export function ShieldCheck({
   );
 }
 
+/* Simple stroke icons sharing the set's language (1.75 stroke, round caps). */
+
+export function DocumentIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5a1.5 1.5 0 0 1 1-1.5Z"
+        {...stroke}
+      />
+      <path d="M14 3.5V8h4.5M9.5 12.5h5M9.5 16h3.5" {...stroke} strokeWidth={1.5} />
+    </svg>
+  );
+}
+
+export function BellIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M12 4a5.5 5.5 0 0 0-5.5 5.5c0 4.2-1.5 5.6-2 6.5h15c-.5-.9-2-2.3-2-6.5A5.5 5.5 0 0 0 12 4Z"
+        {...stroke}
+      />
+      <path d="M10 19.5a2 2 0 0 0 4 0" {...stroke} />
+    </svg>
+  );
+}
+
+export function MailIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" {...stroke} />
+      <path d="m4.5 7.5 7.5 6 7.5-6" {...stroke} />
+    </svg>
+  );
+}
+
+export function PaperclipIcon({
+  size = 22,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M17.5 11.5 11 18a4.2 4.2 0 0 1-6-6l7.5-7.5a2.8 2.8 0 0 1 4 4L9 16a1.4 1.4 0 0 1-2-2l6.5-6.5"
+        {...stroke}
+      />
+    </svg>
+  );
+}
+
+export function UserPlusIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <circle cx="10" cy="8" r="3.5" {...stroke} />
+      <path d="M4 20c.6-3.5 3-5.5 6-5.5s5.4 2 6 5.5M18.5 7.5v5M16 10h5" {...stroke} />
+    </svg>
+  );
+}
+
+export function LinkIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path d="M10.5 13.5a4 4 0 0 0 6 .4l2.5-2.5a4 4 0 1 0-5.7-5.7l-1.4 1.4" {...stroke} />
+      <path d="M13.5 10.5a4 4 0 0 0-6-.4L5 12.6a4 4 0 1 0 5.7 5.7l1.4-1.4" {...stroke} />
+    </svg>
+  );
+}
+
+/* Camera + mic — the magic-capture controls on log-a-job. */
+export function CameraIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M3.5 8.6a1.2 1.2 0 0 1 1.2-1.2h2.5l1.6-2.2h6.4l1.6 2.2h2.5a1.2 1.2 0 0 1 1.2 1.2v9.2a1.2 1.2 0 0 1-1.2 1.2H4.7a1.2 1.2 0 0 1-1.2-1.2V8.6Z"
+        {...stroke}
+      />
+      <circle cx="12" cy="13" r="3.2" {...stroke} />
+    </svg>
+  );
+}
+
+export function MicIcon({ size = 18, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="9.2" y="3" width="5.6" height="10.2" rx="2.8" {...stroke} />
+      <path d="M6.2 11.4a5.8 5.8 0 0 0 11.6 0M12 17.2V21" {...stroke} />
+    </svg>
+  );
+}
+
 /* Success check inside a burst — for done/sent states. */
 export function CheckBurst({ size = 72, className = "" }: { size?: number; className?: string }) {
   return (

@@ -38,12 +38,16 @@
 
   --color-indigo: var(--indigo);
   --color-indigobg: var(--indigobg);
+  --color-indigodark: var(--indigo-dark);
   --color-teal: var(--teal);
   --color-tealbg: var(--tealbg);
+  --color-tealdark: var(--teal-dark);
   --color-coral: var(--coral);
   --color-coralbg: var(--coralbg);
+  --color-coraldark: var(--coral-dark);
   --color-amber: var(--amber);
   --color-amberbg: var(--amberbg);
+  --color-amberdark: var(--amber-dark);
   --color-red: var(--red);
   --color-redbg: var(--redbg);
 
@@ -53,27 +57,36 @@
   --radius-xl: 22px;
   --radius-2xl: 28px;
 
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Brand guidelines: system UI stack, no web fonts. Headlines are the same
+     family at weight 800 — the serif display face was a drift, now reverted. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace;
 }
 
 :root {
+  /* Neutrals — exact values from the Notion brand guidelines. */
   --ink: #16160f;
-  --muted: #6f6c63;
-  --line: #e7e4d9;
-  --bg: #fdfcf7;
+  --muted: #73706a;
+  --line: #e7e5de;
+  --bg: #ffffff;
   --paper: #ffffff;
-  --soft: #f5f3ea;
+  --soft: #f7f6f1;
 
+  /* Accents ship in three tones: strong (fills, text on white/soft),
+     tint (backgrounds), dark (text ON the tint — strong fails AA there). */
   --indigo: #473fb0;
   --indigobg: #eeedfd;
+  --indigo-dark: #2a2470;
   --teal: #0f6e56;
   --tealbg: #e6f5ee;
+  --teal-dark: #0d5d49;
   --coral: #c2461f;
   --coralbg: #fbeae2;
+  --coral-dark: #9c3a18;
   --amber: #8a5208;
   --amberbg: #faf0db;
+  --amber-dark: #6f4206;
   --red: #a32d2d;
   --redbg: #fcebeb;
 }
@@ -85,24 +98,32 @@
   html {
     scroll-behavior: smooth;
   }
-  html, body {
+  html,
+  body {
     background-color: var(--bg);
     color: var(--ink);
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    letter-spacing: -0.015em;
+  /* Headlines: heavy (800) and tight — sans, never serif (brand guidelines). */
+  h1,
+  h2,
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
     text-wrap: balance;
-    font-variation-settings: "opsz" 100;
+  }
+  h1 {
+    letter-spacing: -0.03em;
   }
   body {
     font-size: 16px;
     line-height: 1.55;
   }
-  button, [role="button"], a {
+  button,
+  [role="button"],
+  a {
     cursor: pointer;
   }
   :focus-visible {
@@ -117,11 +138,12 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-family: "Inter", sans-serif;
 }
 
+/* Kept for compatibility: "display" type is the same sans stack at 800. */
 @utility font-display {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-weight: 800;
 }
 
 @utility tnum {
@@ -131,38 +153,89 @@
 /* ---------- Motion system ---------- */
 
 @keyframes hb-fade-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes hb-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes hb-scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes hb-slide-up {
-  from { opacity: 0; transform: translate(-50%, 16px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 @keyframes hb-draw {
-  to { stroke-dashoffset: 0; }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 @keyframes hb-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 @keyframes hb-pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.8); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
 }
 @keyframes hb-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 @keyframes hb-dash-flow {
-  to { stroke-dashoffset: -20; }
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+@keyframes hb-sway {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(12px) translateY(-4px);
+  }
 }
 
 /* Entry motion stays under the 300ms ceiling — fast enough to never feel
@@ -179,17 +252,33 @@
 @utility anim-float {
   animation: hb-float 5s ease-in-out infinite;
 }
-@utility d-1 { animation-delay: 40ms; }
-@utility d-2 { animation-delay: 80ms; }
-@utility d-3 { animation-delay: 120ms; }
-@utility d-4 { animation-delay: 160ms; }
-@utility d-5 { animation-delay: 200ms; }
-@utility d-6 { animation-delay: 240ms; }
+@utility d-1 {
+  animation-delay: 40ms;
+}
+@utility d-2 {
+  animation-delay: 80ms;
+}
+@utility d-3 {
+  animation-delay: 120ms;
+}
+@utility d-4 {
+  animation-delay: 160ms;
+}
+@utility d-5 {
+  animation-delay: 200ms;
+}
+@utility d-6 {
+  animation-delay: 240ms;
+}
 
 /* Pressable feedback: instant snap down on press (0ms), eased release.
    The press itself must feel caused by the finger — never eased in. */
 @utility pressable {
-  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, background-color 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
   &:active {
     transform: scale(0.97);
     transition-duration: 0s;
@@ -198,7 +287,9 @@
 
 /* Card hover lift */
 @utility liftable {
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 44px -24px rgba(22, 22, 15, 0.22);
@@ -234,13 +325,73 @@
   animation: hb-pulse-dot 2.2s ease-in-out infinite;
 }
 
+@utility anim-sway {
+  animation: hb-sway 9s ease-in-out infinite;
+}
+
+/* ---------- Scroll-reveal system ----------
+   A container gets .in-view (via IntersectionObserver); descendants marked
+   .reveal rise in, and SVG paths marked .draw-path draw their stroke on.
+   Stagger with .rd-1 … .rd-6 (transition-delay). */
+
+@utility reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@utility rd-1 {
+  transition-delay: 60ms;
+}
+@utility rd-2 {
+  transition-delay: 140ms;
+}
+@utility rd-3 {
+  transition-delay: 220ms;
+}
+@utility rd-4 {
+  transition-delay: 300ms;
+}
+@utility rd-5 {
+  transition-delay: 380ms;
+}
+@utility rd-6 {
+  transition-delay: 460ms;
+}
+
+.in-view .reveal,
+.reveal.in-view {
+  opacity: 1;
+  transform: none;
+}
+
+/* Draw a path when its section scrolls into view. Set stroke-dasharray and
+   stroke-dashoffset inline to the path length; !important beats the inline offset. */
+.draw-path {
+  transition: stroke-dashoffset 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.2s;
+}
+.in-view .draw-path {
+  stroke-dashoffset: 0 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
   html {
     scroll-behavior: auto;
+  }
+  /* Reveal/draw content must simply be visible, never hidden or mid-draw. */
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .draw-path {
+    stroke-dashoffset: 0 !important;
   }
 }

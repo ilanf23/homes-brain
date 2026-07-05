@@ -254,7 +254,13 @@ function ProSignup() {
                     {err}
                   </div>
                 )}
-                <Btn variant="teal" size="lg" className="w-full" loading={submitting} onClick={finish}>
+                <Btn
+                  variant="teal"
+                  size="lg"
+                  className="w-full"
+                  loading={submitting}
+                  onClick={finish}
+                >
                   Create account
                 </Btn>
               </div>

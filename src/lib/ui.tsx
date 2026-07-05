@@ -32,6 +32,16 @@ const accentSolid: Record<Accent, string> = {
   red: "bg-red",
   ink: "bg-ink",
 };
+/* Dark tones for text sitting ON a tint background — the strong tones
+   don't reach WCAG AA there (brand guidelines' "Dark (on tint)" column). */
+const accentTextOnTint: Record<Accent, string> = {
+  indigo: "text-indigodark",
+  teal: "text-tealdark",
+  coral: "text-coraldark",
+  amber: "text-amberdark",
+  red: "text-red",
+  ink: "text-ink",
+};
 
 export function Eyebrow({ accent = "indigo", children }: { accent?: Accent; children: ReactNode }) {
   return <div className={`eyebrow ${accentText[accent]}`}>{children}</div>;
@@ -62,7 +72,7 @@ export function SectionHead({
 export function Pill({ accent = "ink", children }: { accent?: Accent; children: ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold tracking-[0.12em] uppercase ${accentBg[accent]} ${accentText[accent]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold tracking-[0.12em] uppercase ${accentBg[accent]} ${accentTextOnTint[accent]}`}
     >
       {children}
     </span>
@@ -100,7 +110,7 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
   );
 }
 
-type BtnVariant = "primary" | "secondary" | "teal" | "coral" | "indigo" | "ghost";
+type BtnVariant = "primary" | "secondary" | "teal" | "coral" | "indigo" | "amber" | "ghost";
 
 const btnStyles: Record<BtnVariant, string> = {
   primary: "bg-ink text-white hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)]",
@@ -110,19 +120,15 @@ const btnStyles: Record<BtnVariant, string> = {
     "bg-coral text-white hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
   indigo:
     "bg-indigo text-white hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
+  amber:
+    "bg-amber text-white hover:bg-amber/90 hover:shadow-[0_10px_24px_-12px_rgba(138,82,8,0.55)]",
   ghost: "bg-transparent text-ink hover:bg-soft",
 };
 
 /* Tiny inline spinner for Btn's loading state — transform-only animation. */
 function Spinner({ size = 14 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      className="animate-spin"
-      aria-hidden="true"
-    >
+    <svg width={size} height={size} viewBox="0 0 16 16" className="animate-spin" aria-hidden="true">
       <circle
         cx="8"
         cy="8"
