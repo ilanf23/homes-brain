@@ -24,6 +24,7 @@ type JobRow = {
 };
 
 function MyPros() {
+  const navigate = useNavigate();
   const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [pros, setPros] = useState<ProRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
@@ -31,6 +32,10 @@ function MyPros() {
   const [toast, setToast] = useState<string | null>(null);
   const [rebooked, setRebooked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!home) return;
