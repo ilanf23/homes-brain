@@ -187,7 +187,7 @@ function Appliances() {
   }
 
   if (guardLoading) return <PageLoader label="Loading appliances" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
   if (loading) return <PageLoader label="Loading appliances" />;
 
   const verifiedCount = items.filter((i) => i.source === "pro").length;
