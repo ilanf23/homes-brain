@@ -4,7 +4,7 @@ import { Bell, Home, LogOut, Plus, Settings, Users, Wrench } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { clearSession, getSession } from "@/lib/session";
 import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
-import { Logo, LogoMark } from "@/components/svg";
+import { Logo } from "@/components/svg";
 
 export type HomeownerRow = {
   id: string;
