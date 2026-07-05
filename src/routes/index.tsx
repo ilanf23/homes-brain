@@ -148,9 +148,9 @@ const PROBLEM_PANELS = [
 ];
 
 const PROBLEM_STATS = [
-  { value: "~$15B", caption: "lost every year" },
-  { value: "85M", caption: "homes" },
-  { value: "700K", caption: "small pros" },
+  { tag: "Cost", prefix: "~$", value: 15, suffix: "B", caption: "lost every year" },
+  { tag: "Reach", prefix: "", value: 85, suffix: "M", caption: "US homes" },
+  { tag: "Force", prefix: "", value: 700, suffix: "K", caption: "small pros" },
 ];
 
 /* The three pillars, shown as verified rows inside the record card. */
