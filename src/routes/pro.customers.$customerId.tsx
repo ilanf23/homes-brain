@@ -56,7 +56,9 @@ function CustomerDetail() {
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at)")
+        .select(
+          "id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at,claimed_by_homeowner,homeowners:claimed_by_homeowner(id,phone,email,created_at))",
+        )
         .eq("id", customerId)
         .eq("pro_id", proId)
         .maybeSingle();
