@@ -15,6 +15,7 @@ function HomeownerSignup() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
+  const [address, setAddress] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -22,6 +23,7 @@ function HomeownerSignup() {
     setBusy(true);
     setErr(null);
     const c = contact.trim();
+    const addr = address.trim();
     const isEmail = c.includes("@");
     const col = isEmail ? "email" : "phone";
 
@@ -54,8 +56,32 @@ function HomeownerSignup() {
       setBusy(false);
       return;
     }
+
+    // Attach a home to this homeowner. Try to claim an existing unclaimed
+    // record for the same address first; otherwise create a new one.
+    if (addr) {
+      const { data: existingHome } = await supabase
+        .from("homes")
+        .select("id, claimed_by_homeowner")
+        .eq("address", addr)
+        .maybeSingle();
+
+      if (existingHome && !existingHome.claimed_by_homeowner) {
+        await supabase
+          .from("homes")
+          .update({ claimed_by_homeowner: data.id, claimed_at: new Date().toISOString() })
+          .eq("id", existingHome.id);
+      } else if (!existingHome) {
+        await supabase.from("homes").insert({
+          address: addr,
+          claimed_by_homeowner: data.id,
+          claimed_at: new Date().toISOString(),
+        });
+      }
+    }
+
     setSession({ role: "homeowner", homeownerId: data.id });
-    await logEvent(`homeowner:${data.id}`, "homeowner_signed_up", {});
+    await logEvent(`homeowner:${data.id}`, "homeowner_signed_up", { has_address: !!addr });
     navigate({ to: "/home" });
   }
 
@@ -74,7 +100,7 @@ function HomeownerSignup() {
         <div className="anim-fade-up text-center mb-6">
           <h1 className="text-3xl tracking-tight">Create your home account</h1>
           <p className="mt-2 text-sm text-muted">
-            Free for life. Your home's records stay with you, even if you change pros.
+            Free for life. Start your home's record, invite pros later.
           </p>
         </div>
 
@@ -93,6 +119,13 @@ function HomeownerSignup() {
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="you@email.com or 555-555-1234"
+              />
+            </Field>
+            <Field label="Home address" hint="Optional. You can add it later from your dashboard.">
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="123 Main St, Austin, TX"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && contact.trim() && !busy) createAccount();
                 }}
