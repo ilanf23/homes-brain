@@ -35,12 +35,15 @@ const PREF_ITEMS: { key: keyof Prefs; label: string; sub: string }[] = [
 
 function HomeownerSettings() {
   const navigate = useNavigate();
-  const { homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
+  const { homeownerId, homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
+  const [savingAddr, setSavingAddr] = useState(false);
+  const [addrErr, setAddrErr] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,6 +57,10 @@ function HomeownerSettings() {
     setEmail(homeowner.email ?? "");
     setPrefs(loadPrefs());
   }, [homeowner]);
+
+  useEffect(() => {
+    if (home) setAddress(home.address);
+  }, [home]);
 
   useEffect(() => {
     if (!toast) return;
@@ -75,6 +82,45 @@ function HomeownerSettings() {
     setToast("Contact info saved");
   }
 
+  async function saveAddress() {
+    if (!home || !homeownerId) return;
+    const addr = address.trim();
+    if (!addr) {
+      setAddrErr("Address cannot be empty.");
+      return;
+    }
+    if (addr === home.address) return;
+    setSavingAddr(true);
+    setAddrErr(null);
+
+    const { data: existing } = await supabase
+      .from("homes")
+      .select("id, claimed_by_homeowner")
+      .eq("address", addr)
+      .maybeSingle();
+
+    if (existing && existing.id !== home.id) {
+      setAddrErr("That address is already on file. Contact support to merge homes.");
+      setSavingAddr(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("homes")
+      .update({ address: addr })
+      .eq("id", home.id);
+
+    if (error) {
+      setAddrErr(error.message);
+      setSavingAddr(false);
+      return;
+    }
+    setSavingAddr(false);
+    setToast("Home address saved");
+    // Refresh so the shell/header reflects the new address.
+    window.location.reload();
+  }
+
   function togglePref(key: keyof Prefs) {
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
@@ -83,6 +129,7 @@ function HomeownerSettings() {
 
   if (guardLoading) return <PageLoader label="Loading settings" />;
   if (!home) return <PageLoader label="Setting up your home" />;
+
 
   return (
     <HomeShell active="settings" homeowner={homeowner} home={home}>
@@ -164,8 +211,30 @@ function HomeownerSettings() {
         {/* Your home */}
         <Card className="anim-fade-up d-3">
           <Eyebrow accent="indigo">Your home</Eyebrow>
-          <div className="mt-2">
-            <KV k="Address" v={home.address} mono={false} />
+          <div className="mt-4 space-y-3">
+            <Field label="Home address" hint="Update this if you moved or fix a typo.">
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="123 Main St, Austin, TX"
+              />
+            </Field>
+            {addrErr && (
+              <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
+                {addrErr}
+              </div>
+            )}
+            <div>
+              <Btn
+                variant="indigo"
+                disabled={savingAddr || !address.trim() || address.trim() === home.address}
+                onClick={saveAddress}
+              >
+                {savingAddr ? "Saving…" : "Save address"}
+              </Btn>
+            </div>
+          </div>
+          <div className="mt-4">
             {home.claimed_at && <KV k="Claimed" v={formatDate(home.claimed_at)} />}
             <KV k="Your plan" v="Free for life" mono={false} />
           </div>
@@ -174,6 +243,7 @@ function HomeownerSettings() {
             for life because your pros write it.
           </p>
         </Card>
+
       </div>
 
       {toast && <Toast>{toast}</Toast>}
