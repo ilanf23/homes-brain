@@ -81,11 +81,11 @@ function BlogPost() {
 
         {/* Body */}
         <div className="mt-8 space-y-8">
-          {post.sections.map((s, i) => (
+          {post.sections.map((s: { heading?: string; paragraphs: string[] }, i: number) => (
             <section key={i}>
               {s.heading && <h2 className="text-2xl tracking-tight text-ink">{s.heading}</h2>}
               <div className={`${s.heading ? "mt-3" : ""} space-y-4`}>
-                {s.paragraphs.map((p, j) => (
+                {s.paragraphs.map((p: string, j: number) => (
                   <p key={j} className="text-[17px] leading-relaxed text-ink/85">
                     {p}
                   </p>

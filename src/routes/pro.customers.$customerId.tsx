@@ -26,7 +26,13 @@ type Customer = {
   consent_at: string | null;
   created_at: string;
   home_id: string;
-  homes: { id: string; address: string; claimed_at: string | null } | null;
+  homes: {
+    id: string;
+    address: string;
+    claimed_at: string | null;
+    claimed_by_homeowner: string | null;
+    homeowners: { id: string; phone: string | null; email: string | null; created_at: string } | null;
+  } | null;
 };
 type JobRow = {
   id: string;
@@ -58,7 +64,9 @@ function CustomerDetail() {
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at)")
+        .select(
+          "id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at,claimed_by_homeowner,homeowners!homes_homeowner_fk(id,phone,email,created_at))",
+        )
         .eq("id", customerId)
         .eq("pro_id", proId)
         .maybeSingle();
@@ -173,6 +181,30 @@ function CustomerDetail() {
                 mono={false}
               />
             </div>
+          </Card>
+
+          <Card className="anim-fade-up d-2">
+            <div className="flex items-center justify-between">
+              <Eyebrow accent="coral">Linked homeowner</Eyebrow>
+              {customer.homes?.homeowners ? (
+                <Pill accent="coral">Claimed</Pill>
+              ) : (
+                <Pill accent="ink">Unclaimed</Pill>
+              )}
+            </div>
+            {customer.homes?.homeowners ? (
+              <div className="mt-2">
+                <KV k="Phone" v={customer.homes.homeowners.phone ?? "-"} />
+                <KV k="Email" v={customer.homes.homeowners.email ?? "-"} />
+                <KV k="Joined" v={formatDate(customer.homes.homeowners.created_at)} />
+                <KV k="Appliances on file" v={String(equipment.length)} />
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted">
+                This home hasn't been claimed by a homeowner yet. The record link they open becomes
+                the claim.
+              </p>
+            )}
           </Card>
 
           <Card className="anim-fade-up d-2">
