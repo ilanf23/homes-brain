@@ -1,7 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Btn, Eyebrow, SectionHead } from "@/lib/ui";
-import { DocumentIcon, LinkIcon, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import {
+  CountUp,
+  DocumentIcon,
+  LinkIcon,
+  Scribble,
+  ShieldCheck,
+  TradeIcon,
+} from "@/components/svg";
 import { CoreLoopScene } from "@/components/core-loop-scene";
 import { ForgettingScene } from "@/components/forgetting-scene";
 import { MarketingShell, marketingHead, Phone, PhoneRow } from "@/components/marketing";
@@ -115,6 +122,68 @@ function FlowArrow({
   );
 }
 
+
+/* Ledger-style stat cell: animated count-up + indigo underline that draw on scroll-in. */
+function StatFigure({
+  tag,
+  prefix,
+  value,
+  suffix,
+  caption,
+}: {
+  tag: string;
+  prefix: string;
+  value: number;
+  suffix: string;
+  caption: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="relative px-6 py-12 text-center sm:py-14">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-indigo">
+        <span className="h-1 w-1 rounded-full bg-indigo" aria-hidden="true" />
+        {tag}
+      </span>
+      <div className="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-ink tnum leading-none">
+        {prefix}
+        {visible ? <CountUp value={value} duration={1400} /> : <span className="tnum">0</span>}
+        <span className="text-indigo">{suffix}</span>
+      </div>
+      <div className="relative mt-4 h-[3px] w-full">
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-0 h-[3px] -translate-x-1/2 rounded-full bg-indigo/70 transition-[width] duration-[900ms] ease-out"
+          style={{ width: visible ? "3.5rem" : "0rem" }}
+        />
+      </div>
+      <div className="mt-3 text-sm font-semibold text-muted">{caption}</div>
+    </div>
+  );
+}
+
 /* ---- Page data ---- */
 
 const PROBLEM_PANELS = [
@@ -141,9 +210,9 @@ const PROBLEM_PANELS = [
 ];
 
 const PROBLEM_STATS = [
-  { value: "~$15B", caption: "lost every year" },
-  { value: "85M", caption: "homes" },
-  { value: "700K", caption: "small pros" },
+  { tag: "Cost", prefix: "~$", value: 15, suffix: "B", caption: "lost every year" },
+  { tag: "Reach", prefix: "", value: 85, suffix: "M", caption: "US homes" },
+  { tag: "Force", prefix: "", value: 700, suffix: "K", caption: "small pros" },
 ];
 
 /* The three pillars, shown as verified rows inside the record card. */
@@ -326,25 +395,14 @@ function Landing() {
             {PROBLEM_PANELS.map((p, i) => (
               <div key={p.title} className={`reveal rd-${i + 1} h-full`}>
                 <div className="flex h-full flex-col overflow-hidden rounded-[22px] border border-line bg-paper shadow-[0_18px_36px_-28px_rgba(22,22,15,0.4)]">
-                  <div className="relative">
-                    <img
-                      src={p.img}
-                      alt={p.imgAlt}
-                      loading="lazy"
-                      className={`h-52 sm:h-60 w-full object-cover ${p.imgPos}`}
-                    />
-                    {/* Ink fade so the status chip stays legible on any photo */}
-                    <div
-                      className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/50 to-transparent"
-                      aria-hidden="true"
-                    />
-                    <span className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-paper/95 px-3.5 py-1.5 text-xs font-bold text-ink shadow-[0_8px_20px_-10px_rgba(22,22,15,0.5)]">
+                  <div className="flex-1 p-7 sm:p-8">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-soft px-3.5 py-1.5 text-xs font-bold text-ink">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber" aria-hidden="true" />
                       {p.chip}
                     </span>
-                  </div>
-                  <div className="flex-1 p-7 sm:p-8">
-                    <Eyebrow accent={p.accent}>{p.eyebrow}</Eyebrow>
+                    <div className="mt-5">
+                      <Eyebrow accent={p.accent}>{p.eyebrow}</Eyebrow>
+                    </div>
                     <h3 className="mt-3 text-2xl tracking-tight text-ink">{p.title}</h3>
                     <p className="mt-3 text-[15px] text-muted">{p.body}</p>
                   </div>
@@ -352,25 +410,18 @@ function Landing() {
               </div>
             ))}
           </div>
-          {/* The stakes, over the real thing: a sea of homes with no memory */}
-          <div className="reveal rd-3 relative mt-10 overflow-hidden rounded-[22px]">
-            <img
-              src="/images/landing/problem-homes.jpg"
-              alt=""
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-ink/60" aria-hidden="true" />
-            <div className="relative grid divide-y divide-white/20 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {/* The stakes, rendered as a quiet ledger card - indigo accents, dashed rules, animated counts */}
+          <div className="reveal rd-3 mt-10 overflow-hidden rounded-[22px] border border-line bg-paper shadow-[0_18px_36px_-28px_rgba(22,22,15,0.35)]">
+            <div className="grid divide-y divide-dashed divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {PROBLEM_STATS.map((s) => (
-                <div key={s.value} className="px-6 py-10 sm:py-14 text-center">
-                  <div className="text-4xl sm:text-[44px] font-extrabold tracking-tight text-white tnum [text-shadow:0_2px_16px_rgba(22,22,15,0.5)]">
-                    {s.value}
-                  </div>
-                  <div className="mt-1.5 text-sm font-semibold text-white/90 [text-shadow:0_1px_10px_rgba(22,22,15,0.6)]">
-                    {s.caption}
-                  </div>
-                </div>
+                <StatFigure
+                  key={s.tag}
+                  tag={s.tag}
+                  prefix={s.prefix}
+                  value={s.value}
+                  suffix={s.suffix}
+                  caption={s.caption}
+                />
               ))}
             </div>
           </div>
