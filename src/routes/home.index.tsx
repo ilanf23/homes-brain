@@ -1,18 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { Avatar, Btn, Card, Eyebrow, PageLoader, Pill, Toast } from "@/lib/ui";
+import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, tradeLabel } from "@/lib/hb";
+import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/")({
   head: () => ({ meta: [{ title: "My home - HomesBrain" }] }),
   component: HomeOverview,
 });
+
 
 type EquipmentRow = {
   id: string;
@@ -88,8 +89,17 @@ function HomeOverview() {
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
 
   if (guardLoading) return <PageLoader label="Loading your home" />;
-  if (!home) return <NoHomeYet />;
+  if (!home)
+    return (
+      <HomeShell active="overview" homeowner={homeowner} home={null}>
+        <OnboardingNoHome
+          homeownerId={homeownerId}
+          onCreated={() => window.location.reload()}
+        />
+      </HomeShell>
+    );
   if (loading) return <PageLoader label="Loading your home" />;
+
 
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
@@ -280,3 +290,107 @@ function HomeOverview() {
     </HomeShell>
   );
 }
+
+function OnboardingNoHome({
+  homeownerId,
+  onCreated,
+}: {
+  homeownerId: string | null;
+  onCreated: () => void;
+}) {
+  const [address, setAddress] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function addHome() {
+    if (!homeownerId || !address.trim()) return;
+    setBusy(true);
+    setErr(null);
+    const addr = address.trim();
+    const { data: existing } = await supabase
+      .from("homes")
+      .select("id, claimed_by_homeowner")
+      .eq("address", addr)
+      .maybeSingle();
+
+    if (existing && existing.claimed_by_homeowner && existing.claimed_by_homeowner !== homeownerId) {
+      setErr("That address is already claimed by another homeowner.");
+      setBusy(false);
+      return;
+    }
+
+    if (existing) {
+      const { error } = await supabase
+        .from("homes")
+        .update({ claimed_by_homeowner: homeownerId, claimed_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (error) {
+        setErr(error.message);
+        setBusy(false);
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("homes").insert({
+        address: addr,
+        claimed_by_homeowner: homeownerId,
+        claimed_at: new Date().toISOString(),
+      });
+      if (error) {
+        setErr(error.message);
+        setBusy(false);
+        return;
+      }
+    }
+    await logEvent(`homeowner:${homeownerId}`, "home_added_self", {});
+    onCreated();
+  }
+
+  return (
+    <>
+      <HomePageHead
+        eyebrow="Welcome"
+        title="Let's set up your home"
+        sub="Add your address to start your home's living record. You can invite your pros anytime."
+      />
+      <Card className="anim-fade-up">
+        <Eyebrow accent="indigo">Add your home</Eyebrow>
+        <div className="mt-3 space-y-3">
+          <Field label="Home address">
+            <Input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="123 Main St, Austin, TX"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && address.trim() && !busy) addHome();
+              }}
+            />
+          </Field>
+          {err && (
+            <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
+              {err}
+            </div>
+          )}
+          <Btn
+            variant="indigo"
+            size="lg"
+            className="w-full"
+            disabled={!address.trim() || busy}
+            onClick={addHome}
+          >
+            {busy ? "Saving…" : "Add my home"}
+          </Btn>
+        </div>
+      </Card>
+
+      <Card className="anim-fade-up d-1 mt-4">
+        <Eyebrow accent="indigo">Or claim from a pro</Eyebrow>
+        <p className="mt-2 text-sm text-muted">
+          If your pro sent you a service record link, open it to claim your home in one tap. The
+          record and any equipment they logged come with it.
+        </p>
+      </Card>
+    </>
+  );
+}
+
