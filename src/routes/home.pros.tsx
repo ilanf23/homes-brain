@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Share2 } from "lucide-react";
-import { Avatar, Btn, Card, PageLoader, Pill, Toast } from "@/lib/ui";
+import { useEffect, useMemo, useState } from "react";
+import { Search, Share2, UserPlus, X } from "lucide-react";
+import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Select, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
+import { formatDate, logEvent, TRADES, tradeLabel } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/home/pros")({
   head: () => ({ meta: [{ title: "My pros - HomesBrain" }] }),
   component: MyPros,
 });
+
 
 type ProRow = { id: string; business: string; trade: string; service_area: string | null };
 type JobRow = {
