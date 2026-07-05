@@ -283,14 +283,25 @@ function LoopDiagram({ className = "" }: { className?: string }) {
       </g>
       <text
         x={cx}
-        y="292"
+        y="286"
         textAnchor="middle"
-        fontSize="11.5"
+        fontSize="10.5"
         fontWeight="700"
         fill="var(--muted)"
-        letterSpacing="0.1em"
+        letterSpacing="0.08em"
       >
-        EVERY PASS DEEPENS THE RECORD
+        EVERY PASS
+      </text>
+      <text
+        x={cx}
+        y="301"
+        textAnchor="middle"
+        fontSize="10.5"
+        fontWeight="700"
+        fill="var(--muted)"
+        letterSpacing="0.08em"
+      >
+        DEEPENS THE RECORD
       </text>
 
       {/* the traveling record chip */}
@@ -446,8 +457,8 @@ function JourneyScene() {
         </g>
         <g className="reveal rd-5">
           <rect x="798" y="164" width="58" height="15" rx="7.5" fill="var(--indigo)" />
-          <text x="827" y="174.5" textAnchor="middle" fontSize="8" fontWeight="700" fill="#fff">
-            Claim your home
+          <text x="827" y="174" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#fff">
+            Claim home
           </text>
         </g>
       </g>
@@ -923,9 +934,9 @@ function HowItWorks() {
             {FLYWHEEL_CHIPS.map((c, i) => {
               const pos: Record<string, string> = {
                 top: "left-1/2 top-0 -translate-x-1/2 -translate-y-1/3",
-                right: "right-0 top-1/2 translate-x-[10%] -translate-y-1/2",
+                right: "right-0 top-1/2 translate-x-[38%] -translate-y-1/2",
                 bottom: "left-1/2 bottom-0 -translate-x-1/2 translate-y-1/3",
-                left: "left-0 top-1/2 -translate-x-[10%] -translate-y-1/2",
+                left: "left-0 top-1/2 -translate-x-[38%] -translate-y-1/2",
               };
               return (
                 <div
