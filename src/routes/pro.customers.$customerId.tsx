@@ -164,6 +164,30 @@ function CustomerDetail() {
           </Card>
 
           <Card className="anim-fade-up d-2">
+            <div className="flex items-center justify-between">
+              <Eyebrow accent="coral">Linked homeowner</Eyebrow>
+              {customer.homes?.homeowners ? (
+                <Pill accent="coral">Claimed</Pill>
+              ) : (
+                <Pill accent="ink">Unclaimed</Pill>
+              )}
+            </div>
+            {customer.homes?.homeowners ? (
+              <div className="mt-2">
+                <KV k="Phone" v={customer.homes.homeowners.phone ?? "-"} />
+                <KV k="Email" v={customer.homes.homeowners.email ?? "-"} />
+                <KV k="Joined" v={formatDate(customer.homes.homeowners.created_at)} />
+                <KV k="Appliances on file" v={String(equipment.length)} />
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted">
+                This home hasn't been claimed by a homeowner yet. The record link they open becomes
+                the claim.
+              </p>
+            )}
+          </Card>
+
+          <Card className="anim-fade-up d-2">
             <Eyebrow accent="indigo">Equipment on file</Eyebrow>
             {equipment.length === 0 ? (
               <p className="mt-2 text-sm text-muted">Nothing on file yet.</p>
