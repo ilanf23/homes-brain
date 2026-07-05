@@ -11,7 +11,7 @@ const stroke = {
 } as const;
 
 /* Official HomesBrain mark: white house in an indigo squircle (rx 23%), arched door
-   as negative space. Exact geometry from the brand artifact — do not redraw. */
+   as negative space. Exact geometry from the brand artifact - do not redraw. */
 
 export type LogoVariant = "primary" | "reversed" | "onDark" | "mono";
 
@@ -59,7 +59,7 @@ export function LogoMark({
   );
 }
 
-/* Mark + wordmark lockup. The wordmark is always the sans stack at 800 — never Fraunces. */
+/* Mark + wordmark lockup. The wordmark is always the sans stack at 800, never Fraunces. */
 export function Logo({
   size = 28,
   variant = "primary",
@@ -91,87 +91,6 @@ export function Logo({
         </span>
       )}
     </span>
-  );
-}
-
-/* Hero illustration: a house with service-system nodes. `active` lights one up. */
-export function HouseScene({
-  active = null,
-  className = "",
-}: {
-  active?: "pro" | "record" | "owner" | null;
-  className?: string;
-}) {
-  const nodeCls = (k: string) =>
-    `transition-all duration-500 ${active === k ? "opacity-100" : active ? "opacity-25" : "opacity-100"}`;
-  return (
-    <svg
-      viewBox="0 0 420 340"
-      className={className}
-      role="img"
-      aria-label="A home with its service history connected to pros and homeowners"
-    >
-      {/* ground */}
-      <path d="M30 296h360" {...stroke} stroke="var(--line)" strokeWidth={2} />
-      {/* house body */}
-      <g style={{ color: "var(--ink)" }}>
-        <path d="M120 296V160l90-70 90 70v136" {...stroke} strokeWidth={2.25} />
-        <path d="M100 176l110-86 110 86" {...stroke} strokeWidth={2.25} />
-        {/* door */}
-        <path d="M192 296v-52a18 18 0 0 1 36 0v52" {...stroke} strokeWidth={2} />
-        {/* window */}
-        <rect x="146" y="196" width="30" height="30" rx="6" {...stroke} strokeWidth={2} />
-        <rect x="244" y="196" width="30" height="30" rx="6" {...stroke} strokeWidth={2} />
-      </g>
-
-      {/* dashed connections */}
-      <g strokeDasharray="4 6" {...stroke} strokeWidth={1.5}>
-        <path
-          d="M118 168C80 150 62 120 66 84"
-          className={`${nodeCls("pro")} dash-flow`}
-          style={{ color: "var(--teal)" }}
-        />
-        <path
-          d="M210 92V46"
-          className={`${nodeCls("record")} dash-flow`}
-          style={{ color: "var(--indigo)" }}
-        />
-        <path
-          d="M302 168c38-18 56-48 52-84"
-          className={`${nodeCls("owner")} dash-flow`}
-          style={{ color: "var(--coral)" }}
-        />
-      </g>
-
-      {/* pro node */}
-      <g className={nodeCls("pro")} style={{ color: "var(--teal)" }}>
-        <circle cx="66" cy="62" r="24" fill="var(--tealbg)" />
-        <path
-          d="M60 68l-4 4M70 54a7 7 0 0 0-9.5 9.5L56 68l4 4 4.5-4.5A7 7 0 0 0 74 58l-4 4-4-4 4-4"
-          {...stroke}
-        />
-      </g>
-      {/* record node */}
-      <g className={nodeCls("record")} style={{ color: "var(--indigo)" }}>
-        <circle cx="210" cy="26" r="22" fill="var(--indigobg)" />
-        <path
-          d="M203 17h10l4 4v14a1.5 1.5 0 0 1-1.5 1.5h-11a1.5 1.5 0 0 1-1.5-1.5V18.5A1.5 1.5 0 0 1 203 17Z"
-          {...stroke}
-        />
-        <path d="M206 26h8M206 30h5" {...stroke} strokeWidth={1.4} />
-      </g>
-      {/* owner node */}
-      <g className={nodeCls("owner")} style={{ color: "var(--coral)" }}>
-        <circle cx="356" cy="62" r="24" fill="var(--coralbg)" />
-        <path
-          d="M356 72c-6-4.5-10-8-10-12.4a5.6 5.6 0 0 1 10-3.4 5.6 5.6 0 0 1 10 3.4c0 4.4-4 7.9-10 12.4Z"
-          {...stroke}
-        />
-      </g>
-
-      {/* pulse in the doorway */}
-      <circle cx="210" cy="230" r="4" fill="var(--indigo)" className="pulse-dot" />
-    </svg>
   );
 }
 
@@ -327,7 +246,7 @@ export function LinkIcon({ size = 22, className = "" }: { size?: number; classNa
   );
 }
 
-/* Camera + mic — the magic-capture controls on log-a-job. */
+/* Camera + mic - the magic-capture controls on log-a-job. */
 export function CameraIcon({ size = 22, className = "" }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -349,7 +268,7 @@ export function MicIcon({ size = 18, className = "" }: { size?: number; classNam
   );
 }
 
-/* Success check inside a burst — for done/sent states. */
+/* Success check inside a burst - for done/sent states. */
 export function CheckBurst({ size = 72, className = "" }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 72 72" className={className} aria-hidden="true">
@@ -504,7 +423,7 @@ export function ProgressRing({
   );
 }
 
-/* Hand-drawn underline flourish for headlines. Indigo is the brand accent —
+/* Hand-drawn underline flourish for headlines. Indigo is the brand accent;
    coral is reserved for the homeowner role and must not underline brand copy. */
 export function Scribble({
   className = "",

@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
-import { CountUp, HouseScene, ProgressRing, SparkLine } from "@/components/svg";
+import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
+import { CoreLoopScene } from "@/components/core-loop-scene";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/")({
-  head: () => ({ meta: [{ title: "Dashboard — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Dashboard - HomesBrain" }] }),
   component: ProDashboard,
 });
 
@@ -99,10 +100,10 @@ function ProDashboard() {
 
       {empty && (
         <Card className="anim-fade-up mb-5 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-          <HouseScene className="w-28 shrink-0 opacity-90" />
+          <CoreLoopScene variant="compact" pose="pro" className="w-28 shrink-0 opacity-90" />
           <div className="flex-1 min-w-[200px]">
             <Eyebrow accent="teal">Get started</Eyebrow>
-            <div className="mt-1 font-semibold text-ink">Log your first job — about 30 seconds</div>
+            <div className="mt-1 font-semibold text-ink">Log your first job (about 30 seconds)</div>
             <p className="text-sm text-muted mt-0.5">
               We'll send a branded record to your customer and ask for a Google review.
             </p>
@@ -169,7 +170,7 @@ function ProDashboard() {
           </div>
           {jobs.length === 0 && (
             <p className="mt-3 text-sm text-muted">
-              No jobs yet — the jobs you log will show here with their record status.
+              No jobs yet. The jobs you log will show here with their record status.
             </p>
           )}
           <div className="mt-3 divide-y divide-line">
@@ -178,7 +179,7 @@ function ProDashboard() {
               const inner = (
                 <>
                   <div>
-                    <div className="font-semibold text-ink">{j.customers?.name ?? "—"}</div>
+                    <div className="font-semibold text-ink">{j.customers?.name ?? "-"}</div>
                     <div className="text-xs text-muted">{j.homes?.address}</div>
                     <div className="text-sm mt-0.5">{j.what_done}</div>
                   </div>
@@ -249,7 +250,7 @@ function ProDashboard() {
                   {dueSoon.map((j) => (
                     <KV
                       key={j.id}
-                      k={`${j.customers?.name ?? "—"} · ${j.homes?.address ?? ""}`}
+                      k={`${j.customers?.name ?? "-"} · ${j.homes?.address ?? ""}`}
                       v={formatDate(j.next_service_date)}
                     />
                   ))}
@@ -262,7 +263,7 @@ function ProDashboard() {
             <div key="customers" className="anim-fade-in mt-4 divide-y divide-line">
               {customers.length === 0 && (
                 <p className="text-sm text-muted">
-                  No customers yet — they're added when you log a job.
+                  No customers yet. They're added when you log a job.
                 </p>
               )}
               {customers.slice(0, 8).map((c) => (

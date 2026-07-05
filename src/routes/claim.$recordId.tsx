@@ -4,14 +4,15 @@ import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
 import { setSession } from "@/lib/session";
-import { HouseScene, Logo } from "@/components/svg";
+import { Logo } from "@/components/svg";
+import { CoreLoopScene } from "@/components/core-loop-scene";
 
 export const Route = createFileRoute("/claim/$recordId")({
-  head: () => ({ meta: [{ title: "Claim your home — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Claim your home - HomesBrain" }] }),
   component: ClaimFlow,
 });
 
-// OTP verification parked until real Supabase OTP ships — see OtpBoxes note in @/lib/ui.
+// OTP verification parked until real Supabase OTP ships - see OtpBoxes note in @/lib/ui.
 function ClaimFlow() {
   const { recordId } = Route.useParams();
   const navigate = useNavigate();
@@ -71,7 +72,12 @@ function ClaimFlow() {
 
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="anim-fade-up">
-          <HouseScene active={contact ? "owner" : null} className="w-48 mx-auto mb-2" />
+          <CoreLoopScene
+            variant="compact"
+            pose="owner"
+            celebrate={!!contact}
+            className="w-48 mx-auto mb-2"
+          />
         </div>
 
         <div className="anim-fade-up mt-8">
