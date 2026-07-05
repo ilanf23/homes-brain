@@ -19,7 +19,13 @@ type Customer = {
   consent_at: string | null;
   created_at: string;
   home_id: string;
-  homes: { id: string; address: string; claimed_at: string | null } | null;
+  homes: {
+    id: string;
+    address: string;
+    claimed_at: string | null;
+    claimed_by_homeowner: string | null;
+    homeowners: { id: string; phone: string | null; email: string | null; created_at: string } | null;
+  } | null;
 };
 type JobRow = {
   id: string;
