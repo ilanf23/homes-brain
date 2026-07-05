@@ -30,11 +30,16 @@ type ProRow = { id: string; business: string; trade: string };
 
 function ItemDetail() {
   const { itemId } = Route.useParams();
+  const navigate = useNavigate();
   const { homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [item, setItem] = useState<EquipmentRow | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!home) return;
