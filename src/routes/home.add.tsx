@@ -32,6 +32,10 @@ function AddToHome() {
   const [prosCount, setProsCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
+
   // Snap-an-item form
   const [itemType, setItemType] = useState(ITEM_TYPES[0]);
   const [make, setMake] = useState("");
