@@ -272,94 +272,97 @@ function HandoffScene({ className = "" }: { className?: string }) {
 function HandoffTimeline({ className = "" }: { className?: string }) {
   return (
     <div className={className}>
-      <svg
-        viewBox="0 0 720 208"
-        className="w-full"
-        role="img"
-        aria-label="Timeline of a home sold twice: paper records fade out at each sale while the HomesBrain record continues unbroken."
-      >
-        {/* closing markers */}
-        {[
-          { x: 150, label: "Built 2021" },
-          { x: 380, label: "Sold 2024" },
-          { x: 610, label: "Sold 2029" },
-        ].map((m) => (
-          <g key={m.x}>
-            <line
-              x1={m.x}
-              y1={34}
-              x2={m.x}
-              y2={168}
-              stroke="var(--line)"
-              strokeWidth={2}
-              strokeDasharray="2 6"
-            />
-            <text
-              x={m.x}
-              y={22}
-              textAnchor="middle"
-              fontSize={12}
-              fontWeight={700}
-              fill="var(--muted)"
-            >
-              {m.label}
-            </text>
-          </g>
-        ))}
-        {/* lane 1: binders and PDFs, dying at each closing */}
-        <text x={24} y={66} fontSize={12} fontWeight={700} fill="var(--muted)">
-          Binders and PDFs
-        </text>
-        <path
-          d="M24 88 H136"
-          stroke="var(--muted)"
-          strokeWidth={3}
-          strokeLinecap="round"
-          opacity={0.75}
-        />
-        <path
-          d="M164 88 H366"
-          stroke="var(--muted)"
-          strokeWidth={3}
-          strokeLinecap="round"
-          strokeDasharray="8 6"
-          opacity={0.45}
-        />
-        <path
-          d="M394 88 H480"
-          stroke="var(--muted)"
-          strokeWidth={3}
-          strokeLinecap="round"
-          strokeDasharray="3 9"
-          opacity={0.25}
-        />
-        {[380, 610].map((x) => (
-          <g key={x} stroke="var(--muted)" strokeWidth={2.5} strokeLinecap="round" opacity={0.6}>
-            <path d={`M${x - 7} 81 l14 14`} />
-            <path d={`M${x + 7} 81 l-14 14`} />
-          </g>
-        ))}
-        <text x={496} y={92} fontSize={11.5} fontWeight={600} fill="var(--muted)" opacity={0.7}>
-          gone by the second sale
-        </text>
-        {/* lane 2: the HomesBrain record, unbroken */}
-        <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--indigo)">
-          The HomesBrain record
-        </text>
-        <path
-          d="M24 154 H696"
-          stroke="var(--indigo)"
-          strokeWidth={3.5}
-          strokeLinecap="round"
-          strokeDasharray={672}
-          strokeDashoffset={672}
-          className="draw-path"
-          style={{ transitionDuration: "1.4s" }}
-        />
-        {[150, 380, 610].map((x) => (
-          <circle key={x} cx={x} cy={154} r={5.5} fill="var(--indigo)" />
-        ))}
-      </svg>
+      {/* min-width keeps the in-SVG labels legible on phones; the card scrolls instead */}
+      <div className="overflow-x-auto">
+        <svg
+          viewBox="0 0 720 208"
+          className="w-full min-w-[560px]"
+          role="img"
+          aria-label="Timeline of a home sold twice: paper records fade out at each sale while the HomesBrain record continues unbroken."
+        >
+          {/* closing markers */}
+          {[
+            { x: 150, label: "Built 2021" },
+            { x: 380, label: "Sold 2024" },
+            { x: 610, label: "Sold 2029" },
+          ].map((m) => (
+            <g key={m.x}>
+              <line
+                x1={m.x}
+                y1={34}
+                x2={m.x}
+                y2={168}
+                stroke="var(--line)"
+                strokeWidth={2}
+                strokeDasharray="2 6"
+              />
+              <text
+                x={m.x}
+                y={22}
+                textAnchor="middle"
+                fontSize={12}
+                fontWeight={700}
+                fill="var(--muted)"
+              >
+                {m.label}
+              </text>
+            </g>
+          ))}
+          {/* lane 1: binders and PDFs, dying at each closing */}
+          <text x={24} y={66} fontSize={12} fontWeight={700} fill="var(--muted)">
+            Binders and PDFs
+          </text>
+          <path
+            d="M24 88 H136"
+            stroke="var(--muted)"
+            strokeWidth={3}
+            strokeLinecap="round"
+            opacity={0.75}
+          />
+          <path
+            d="M164 88 H366"
+            stroke="var(--muted)"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeDasharray="8 6"
+            opacity={0.45}
+          />
+          <path
+            d="M394 88 H480"
+            stroke="var(--muted)"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeDasharray="3 9"
+            opacity={0.25}
+          />
+          {[380, 610].map((x) => (
+            <g key={x} stroke="var(--muted)" strokeWidth={2.5} strokeLinecap="round" opacity={0.6}>
+              <path d={`M${x - 7} 81 l14 14`} />
+              <path d={`M${x + 7} 81 l-14 14`} />
+            </g>
+          ))}
+          <text x={394} y={70} fontSize={11.5} fontWeight={600} fill="var(--muted)" opacity={0.7}>
+            gone by the second sale
+          </text>
+          {/* lane 2: the HomesBrain record, unbroken */}
+          <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--indigo)">
+            The HomesBrain record
+          </text>
+          <path
+            d="M24 154 H696"
+            stroke="var(--indigo)"
+            strokeWidth={3.5}
+            strokeLinecap="round"
+            strokeDasharray={672}
+            strokeDashoffset={672}
+            className="draw-path"
+            style={{ transitionDuration: "1.4s" }}
+          />
+          {[150, 380, 610].map((x) => (
+            <circle key={x} cx={x} cy={154} r={5.5} fill="var(--indigo)" />
+          ))}
+        </svg>
+      </div>
       <p className="mt-3 text-center text-xs text-muted">
         Two sales in, the binder is gone. The record is not.
       </p>
