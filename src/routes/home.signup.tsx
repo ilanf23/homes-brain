@@ -172,7 +172,7 @@ function HomeownerSignup() {
         </Card>
 
         <p className="mt-4 text-center text-xs text-muted">
-          Have a record link from your pro? Open it to claim your home in one tap.
+          Already have a record link from a pro? Open it to claim your home in one tap.
         </p>
       </div>
     </div>

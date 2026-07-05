@@ -24,7 +24,7 @@ const PATHS = [
     to: "/login",
     pill: "Homeowner",
     title: "I own a home",
-    sub: "Claim your home free from the record your pro sends, then log in here any time.",
+    sub: "Start your home's living record free. Add your address, invite pros later, or claim from a record a pro sent.",
     cta: "Open my home",
   },
 ] as const;

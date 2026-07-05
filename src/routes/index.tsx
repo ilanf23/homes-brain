@@ -268,7 +268,7 @@ const FAQ = [
   },
   {
     q: "Do I have to enter anything?",
-    a: "No. It fills itself when a pro does the work.",
+    a: "No. Sign up with your address and the record fills itself as your pros do the work. Prefer to start now? Add your appliances yourself anytime.",
   },
   {
     q: "What if I change pros?",
