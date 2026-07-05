@@ -61,10 +61,11 @@ export function useHomeownerGuard() {
   return { homeownerId, homeowner, setHomeowner, home, loading };
 }
 
-export type HomeNavKey = "overview" | "pros" | "reminders" | "add" | "settings";
+export type HomeNavKey = "overview" | "appliances" | "pros" | "reminders" | "add" | "settings";
 
 const NAV: { key: HomeNavKey; label: string; to: string; icon: typeof Home }[] = [
   { key: "overview", label: "My home", to: "/home", icon: Home },
+  { key: "appliances", label: "Appliances", to: "/home/appliances", icon: Wrench },
   { key: "pros", label: "My pros", to: "/home/pros", icon: Users },
   { key: "reminders", label: "Reminders", to: "/home/reminders", icon: Bell },
   { key: "settings", label: "Settings", to: "/home/settings", icon: Settings },
