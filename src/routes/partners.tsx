@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Btn, Card, Eyebrow, Field, Input, Pill, SectionHead, Select } from "@/lib/ui";
-import { MarketingShell, marketingHead, PhoneKV } from "@/components/marketing";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { Btn, Card, Eyebrow, Field, Input, KV, Pill, SectionHead, Select } from "@/lib/ui";
+import { MarketingShell, marketingHead, Phone, PhoneKV, PhoneRow } from "@/components/marketing";
 import { CheckBurst, LogoMark, Scribble, ShieldCheck } from "@/components/svg";
 import { logEvent } from "@/lib/hb";
 
@@ -53,6 +60,33 @@ function InView({
   return (
     <div ref={ref} className={`${className} ${inView ? "in-view" : ""}`}>
       {children}
+    </div>
+  );
+}
+
+/* Inline delay for the .seq sequenced reveal (styles.css). */
+const seq = (s: number) => ({ "--d": `${s}s` }) as CSSProperties;
+
+/* Floating UI chip laid over a photo. Same pattern as for-homeowners. */
+function PhotoChip({
+  className = "",
+  float = false,
+  floatDelay,
+  children,
+}: {
+  className?: string;
+  float?: boolean;
+  floatDelay?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`absolute ${float ? "anim-float" : ""} ${className}`}
+      style={floatDelay ? { animationDelay: floatDelay } : undefined}
+    >
+      <div className="rounded-2xl border border-line bg-paper/95 px-3.5 py-2.5 shadow-[0_16px_32px_-18px_rgba(22,22,15,0.45)] backdrop-blur-sm">
+        {children}
+      </div>
     </div>
   );
 }
@@ -335,7 +369,233 @@ function Partners() {
         </InView>
       </section>
 
-      {/* Task 3 inserts: who we work with */}
+      {/* 2 · Who we work with */}
+      <section className="py-24">
+        <div className="mx-auto max-w-6xl px-5">
+          <InView>
+            <div className="reveal">
+              <SectionHead
+                accent="indigo"
+                eyebrow="Who we work with"
+                title="Five doors into the same record."
+                sub="Wherever you meet the home, the record starts there, and your name goes on it."
+              />
+            </div>
+          </InView>
+
+          <div className="mt-16 space-y-20">
+            {/* Builders */}
+            <InView>
+              <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+                <div className="reveal">
+                  <Pill accent="indigo">Builders</Pill>
+                  <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
+                    Hand over the keys and the memory.
+                  </h3>
+                  <p className="mt-3 text-[15px] text-muted max-w-md">
+                    Every new home leaves your hands with its record already alive: equipment,
+                    serials, and warranties from day one. No binder to lose, nothing for the buyer
+                    to type.
+                  </p>
+                </div>
+                <div className="reveal rd-2">
+                  <Phone title="Day one record" titleRight="New build">
+                    <div className="seq" style={seq(0.3)}>
+                      <PhoneKV k="HVAC" v="Trane XR14" />
+                    </div>
+                    <div className="seq" style={seq(0.6)}>
+                      <PhoneKV k="Water heater" v="Bradford White 50g" />
+                    </div>
+                    <div className="seq" style={seq(0.9)}>
+                      <PhoneKV k="Serial" v="BW50-77812" />
+                    </div>
+                    <div className="seq" style={seq(1.2)}>
+                      <PhoneKV k="Warranty" v="to 2032" accentV />
+                    </div>
+                    <div className="seq" style={seq(1.5)}>
+                      <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-xs font-bold text-indigodark">
+                        Handed over with the keys
+                      </div>
+                    </div>
+                  </Phone>
+                </div>
+              </div>
+            </InView>
+
+            {/* Realtors */}
+            <InView>
+              <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+                <div className="reveal md:order-2">
+                  <Pill accent="indigo">Realtors</Pill>
+                  <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
+                    List the home with its history attached.
+                  </h3>
+                  <p className="mt-3 text-[15px] text-muted max-w-md">
+                    A verified service record answers the buyer's questions before they're asked. A
+                    documented home is an easier close on both sides of the table.
+                  </p>
+                </div>
+                <div className="reveal rd-2 md:order-1">
+                  <div className="relative">
+                    <img
+                      src="/images/homeowners/sold-home.jpg"
+                      alt="A sold sign in front of a well-kept home"
+                      loading="lazy"
+                      className="aspect-[4/3.2] w-full rounded-[22px] object-cover shadow-[0_28px_56px_-32px_rgba(22,22,15,0.45)]"
+                    />
+                    <div
+                      className="absolute inset-x-0 bottom-0 h-28 rounded-b-[22px] bg-gradient-to-t from-ink/50 to-transparent"
+                      aria-hidden="true"
+                    />
+                    <PhotoChip className="left-4 top-4" float>
+                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo">
+                        <ShieldCheck size={15} animate={false} /> Verified record
+                      </div>
+                    </PhotoChip>
+                    <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-paper/95 px-3 py-1 text-[11px] font-extrabold text-ink shadow-sm">
+                        42 jobs · 6 yrs on file
+                      </span>
+                      <span className="rounded-full bg-coralbg px-3 py-1 text-[11px] font-extrabold text-coraldark shadow-sm">
+                        Closes faster
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </InView>
+
+            {/* Inspectors */}
+            <InView>
+              <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+                <div className="reveal">
+                  <Pill accent="indigo">Inspectors</Pill>
+                  <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
+                    Your inspection outlives the PDF.
+                  </h3>
+                  <p className="mt-3 text-[15px] text-muted max-w-md">
+                    Findings become the seed of a living record instead of a report that dies in a
+                    download folder. The buyer keeps your work in front of them for years.
+                  </p>
+                </div>
+                <div className="reveal rd-2">
+                  <Phone title="Inspection day" titleRight="4-point">
+                    <div className="seq" style={seq(0.3)}>
+                      <PhoneRow
+                        left={<span className="text-sm text-muted">Roof</span>}
+                        right={<span className="text-sm font-semibold text-ink">2019 · good</span>}
+                      />
+                    </div>
+                    <div className="seq" style={seq(0.6)}>
+                      <PhoneRow
+                        left={<span className="text-sm text-muted">Electrical panel</span>}
+                        right={<span className="text-sm font-semibold text-ink">200A · clear</span>}
+                      />
+                    </div>
+                    <div className="seq" style={seq(0.9)}>
+                      <PhoneRow
+                        left={<span className="text-sm text-muted">HVAC</span>}
+                        right={<span className="text-sm font-semibold text-ink">2021 · clear</span>}
+                      />
+                    </div>
+                    <div className="seq" style={seq(1.2)}>
+                      <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-xs font-bold text-indigodark">
+                        34 findings became record rows
+                      </div>
+                    </div>
+                  </Phone>
+                </div>
+              </div>
+            </InView>
+
+            {/* Insurers */}
+            <InView>
+              <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+                <div className="reveal md:order-2">
+                  <Pill accent="indigo">Insurers</Pill>
+                  <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
+                    Underwrite the home you can actually see.
+                  </h3>
+                  <p className="mt-3 text-[15px] text-muted max-w-md">
+                    Maintained homes are lower-risk homes. Verified service history, straight from
+                    the pros who did the work, is a signal you can price.
+                  </p>
+                </div>
+                <div className="reveal rd-2 md:order-1">
+                  <Card className="max-w-md mx-auto w-full">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-extrabold text-ink">14 Palm Row</span>
+                      <Pill accent="indigo">Verified history</Pill>
+                    </div>
+                    <div className="mt-3">
+                      <KV k="Last service" v="Apr 2026" />
+                      <KV k="Water heater age" v="3 yrs" />
+                      <KV k="Roof" v="2019 · shingle" />
+                      <KV k="Maintenance cadence" v="On schedule" mono={false} />
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </InView>
+
+            {/* Home-watch firms */}
+            <InView>
+              <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+                <div className="reveal">
+                  <Pill accent="indigo">Home-watch firms</Pill>
+                  <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
+                    Every visit, on the record.
+                  </h3>
+                  <p className="mt-3 text-[15px] text-muted max-w-md">
+                    Log every walk-through of the homes you watch. Owners see the proof from
+                    anywhere, and you keep the contract at renewal time.
+                  </p>
+                </div>
+                <div className="reveal rd-2">
+                  <Phone title="Visit log" titleRight="Weekly">
+                    <div className="seq" style={seq(0.3)}>
+                      <PhoneRow
+                        left={<span className="text-sm text-muted">Tue, Jun 30</span>}
+                        right={<span className="text-sm font-semibold text-ink">All clear ✓</span>}
+                      />
+                    </div>
+                    <div className="seq" style={seq(0.6)}>
+                      <PhoneRow
+                        left={<span className="text-sm text-muted">Fri, Jul 3</span>}
+                        right={<span className="text-sm font-semibold text-ink">All clear ✓</span>}
+                      />
+                    </div>
+                    <div className="seq" style={seq(0.9)}>
+                      <div className="rounded-xl bg-amberbg px-3.5 py-2.5 text-xs font-bold text-amberdark">
+                        Leak flagged · photo attached
+                      </div>
+                    </div>
+                    <div className="seq" style={seq(1.2)}>
+                      <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-xs font-bold text-indigodark">
+                        Owner sees every visit
+                      </div>
+                    </div>
+                  </Phone>
+                </div>
+              </div>
+            </InView>
+          </div>
+
+          {/* Someone else */}
+          <InView>
+            <p className="reveal mt-16 text-center text-[15px] text-muted">
+              Property managers, warranty companies, utilities: if you touch the home, we want to
+              talk.{" "}
+              <a
+                href="#become-a-partner"
+                className="font-semibold text-indigo underline underline-offset-4 hover:text-indigodark"
+              >
+                Tell us who you are below.
+              </a>
+            </p>
+          </InView>
+        </div>
+      </section>
 
       {/* Task 4 inserts: stat band + how partnering works */}
 
