@@ -66,17 +66,33 @@ function HomeownerSignup() {
         .eq("address", addr)
         .maybeSingle();
 
+      if (existingHome && existingHome.claimed_by_homeowner && existingHome.claimed_by_homeowner !== data.id) {
+        setErr("That address is already claimed by another homeowner. Sign in or use a different address.");
+        setBusy(false);
+        return;
+      }
+
       if (existingHome && !existingHome.claimed_by_homeowner) {
-        await supabase
+        const { error: claimErr } = await supabase
           .from("homes")
           .update({ claimed_by_homeowner: data.id, claimed_at: new Date().toISOString() })
           .eq("id", existingHome.id);
+        if (claimErr) {
+          setErr(claimErr.message);
+          setBusy(false);
+          return;
+        }
       } else if (!existingHome) {
-        await supabase.from("homes").insert({
+        const { error: insertErr } = await supabase.from("homes").insert({
           address: addr,
           claimed_by_homeowner: data.id,
           claimed_at: new Date().toISOString(),
         });
+        if (insertErr) {
+          setErr(insertErr.message);
+          setBusy(false);
+          return;
+        }
       }
     }
 
@@ -84,6 +100,7 @@ function HomeownerSignup() {
     await logEvent(`homeowner:${data.id}`, "homeowner_signed_up", { has_address: !!addr });
     navigate({ to: "/home" });
   }
+
 
   return (
     <div className="font-app min-h-dvh bg-soft">
