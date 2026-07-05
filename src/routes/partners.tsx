@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Btn, Card, Eyebrow, Field, Input, KV, Pill, SectionHead, Select } from "@/lib/ui";
 import { MarketingShell, marketingHead, Phone, PhoneKV, PhoneRow } from "@/components/marketing";
-import { CheckBurst, LogoMark, Scribble, ShieldCheck } from "@/components/svg";
+import { CheckBurst, CountUp, LogoMark, Scribble, ShieldCheck } from "@/components/svg";
 import { logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/partners")({
@@ -91,9 +91,65 @@ function PhotoChip({
   );
 }
 
+/* Count-up gated on viewport entry, same pattern as the audience pages. */
+function StatNumber({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return <span ref={ref}>{inView ? <CountUp value={value} /> : 0}</span>;
+}
+
+/* Colored step numeral, same as the landing how-it-works. */
+function StepBadge({ n, accent }: { n: number; accent: "indigo" | "coral" }) {
+  const bg = { indigo: "bg-indigo", coral: "bg-coral" }[accent];
+  return (
+    <span
+      className={`relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full ${bg} text-white text-sm font-extrabold ring-4 ring-background`}
+    >
+      {n}
+    </span>
+  );
+}
+
 /* ---- Page data ---- */
 
 const PARTNER_TYPES = ["Builders", "Realtors", "Inspectors", "Insurers", "Home-watch firms"];
+
+const STEPS: { title: string; body: string; accent: "indigo" | "coral" }[] = [
+  {
+    title: "Tell us where you fit",
+    body: "A short note through the form below. We reply within a couple of days.",
+    accent: "indigo",
+  },
+  {
+    title: "We wire it into your workflow",
+    body: "Closing, inspection, or handover: the record starts where you already work.",
+    accent: "indigo",
+  },
+  {
+    title: "Every home remembers you",
+    body: "Your name stays on the record, in front of the owner for years.",
+    accent: "coral",
+  },
+];
 
 const PROBLEM_STATS = [
   { value: "~$15B", caption: "the forgetting tax, every year" },
@@ -597,7 +653,62 @@ function Partners() {
         </div>
       </section>
 
-      {/* Task 4 inserts: stat band + how partnering works */}
+      {/* 3 · The partner math */}
+      <section className="bg-soft border-y border-line py-24">
+        <InView className="mx-auto max-w-5xl px-5">
+          <div className="reveal">
+            <SectionHead
+              accent="indigo"
+              eyebrow="The partner math"
+              title="Almost nothing to give. Years to get."
+            />
+          </div>
+          <div className="mt-12 grid gap-4 sm:grid-cols-3">
+            <div className="reveal rd-1 rounded-2xl border border-line bg-white px-5 py-8 text-center">
+              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo tnum">
+                <StatNumber value={30} /> sec
+              </div>
+              <div className="mt-1.5 text-sm text-muted">for a pro to log a job</div>
+            </div>
+            <div className="reveal rd-2 rounded-2xl border border-line bg-white px-5 py-8 text-center">
+              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo tnum">
+                <StatNumber value={1} /> link
+              </div>
+              <div className="mt-1.5 text-sm text-muted">handed over at closing</div>
+            </div>
+            <div className="reveal rd-3 rounded-2xl border border-line bg-white px-5 py-8 text-center">
+              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo">
+                Life of the home
+              </div>
+              <div className="mt-1.5 text-sm text-muted">
+                how long your name stays on the record
+              </div>
+            </div>
+          </div>
+        </InView>
+      </section>
+
+      {/* 4 · How partnering works */}
+      <section id="how-it-works" className="py-24">
+        <InView className="mx-auto max-w-6xl px-5">
+          <div className="reveal">
+            <SectionHead
+              accent="indigo"
+              eyebrow="How it works"
+              title="Three steps, and the record starts working for you."
+            />
+          </div>
+          <div className="mt-14 grid md:grid-cols-3 gap-8">
+            {STEPS.map((s, i) => (
+              <div key={s.title} className={`reveal rd-${i + 1} text-center`}>
+                <StepBadge n={i + 1} accent={s.accent} />
+                <h3 className="mt-3 text-xl tracking-tight">{s.title}</h3>
+                <p className="mt-2 text-sm text-muted max-w-[280px] mx-auto">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </InView>
+      </section>
 
       {/* Task 5 inserts: FAQ */}
 
