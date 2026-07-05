@@ -5,14 +5,14 @@
 @custom-variant dark (&:is(.dark *));
 
 /* HomesBrain design tokens.
-   Color carries meaning — never mix the roles.
+   Color carries meaning. Never mix the roles.
    indigo = brand, teal = pros, coral = homeowners, amber = partners, red = compliance. */
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--ink);
   /* App code uses text-muted for secondary text, so this maps to the gray
-     token — not the soft surface color shadcn's bg-muted convention expects. */
+     token, not the soft surface color shadcn's bg-muted convention expects. */
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted);
   --color-border: var(--line);
@@ -58,14 +58,14 @@
   --radius-2xl: 28px;
 
   /* Brand guidelines: system UI stack, no web fonts. Headlines are the same
-     family at weight 800 — the serif display face was a drift, now reverted. */
+     family at weight 800 - the serif display face was a drift, now reverted. */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace;
 }
 
 :root {
-  /* Neutrals — exact values from the Notion brand guidelines. */
+  /* Neutrals: exact values from the Notion brand guidelines. */
   --ink: #16160f;
   --muted: #73706a;
   --line: #e7e5de;
@@ -74,7 +74,7 @@
   --soft: #f7f6f1;
 
   /* Accents ship in three tones: strong (fills, text on white/soft),
-     tint (backgrounds), dark (text ON the tint — strong fails AA there). */
+     tint (backgrounds), dark (text ON the tint, where strong fails AA). */
   --indigo: #473fb0;
   --indigobg: #eeedfd;
   --indigo-dark: #2a2470;
@@ -105,7 +105,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  /* Headlines: heavy (800) and tight — sans, never serif (brand guidelines). */
+  /* Headlines: heavy (800) and tight - sans, never serif (brand guidelines). */
   h1,
   h2,
   h3 {
@@ -238,7 +238,156 @@
   }
 }
 
-/* Entry motion stays under the 300ms ceiling — fast enough to never feel
+/* ---------- CoreLoopScene choreography ----------
+   The hero scene acts out the core loop. Element visibility is driven by
+   [data-step] on .cls-scene; one-shot animations restart via keyed remounts.
+   data-static="true" (reduced motion) shows the whole tableau, frozen. */
+
+@keyframes hb-cls-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hb-cls-typein {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hb-cls-send {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes hb-cls-travel {
+  0% {
+    opacity: 0;
+    transform: translate(0px, 6px) scale(0.7);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(12px, -14px) scale(1);
+  }
+  55% {
+    transform: translate(86px, -36px) scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: translate(166px, 52px) scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(172px, 66px) scale(0.75);
+  }
+}
+@keyframes hb-cls-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hb-cls-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes hb-cls-ripple {
+  from {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* Arc + window pulse only light up while the record travels. */
+.cls-scene .cls-arc,
+.cls-scene .cls-window-dot {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.cls-scene[data-step="record"] .cls-arc {
+  opacity: 1;
+}
+.cls-scene[data-step="record"] .cls-window-dot {
+  opacity: 1;
+  animation: hb-pulse-dot 1.1s ease-in-out 2;
+}
+
+/* Traveling record chip (SVG group, remounted each record phase). */
+.cls-chip {
+  animation: hb-cls-travel 2.8s cubic-bezier(0.45, 0, 0.4, 1) 0.25s both;
+}
+
+/* Job card: hero of the pro phase, dimmed the rest of the loop. */
+.cls-scene .cls-job {
+  transition: opacity 0.5s ease;
+  opacity: 0.4;
+}
+.cls-scene[data-step="pro"] .cls-job,
+.cls-scene[data-static="true"] .cls-job {
+  opacity: 1;
+}
+.cls-job-enter {
+  animation: hb-cls-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cls-typein {
+  animation: hb-cls-typein 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cls-send {
+  animation: hb-cls-send 0.7s ease-in-out 1.7s 2;
+}
+.cls-drop {
+  animation: hb-cls-drop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cls-stamp {
+  animation: hb-cls-stamp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cls-ripple {
+  animation: hb-cls-ripple 0.9s ease-out 0.5s 2;
+  opacity: 0;
+}
+
+/* Static tableau (reduced motion): everything visible, chip frozen mid-arc. */
+.cls-scene[data-static="true"] .cls-arc,
+.cls-scene[data-static="true"] .cls-window-dot {
+  opacity: 1;
+}
+.cls-scene[data-static="true"] .cls-chip {
+  animation: none;
+  opacity: 1;
+  transform: translate(86px, -36px);
+}
+
+/* Entry motion stays under the 300ms ceiling: fast enough to never feel
    like the UI is making the user wait, slow enough to explain "this just appeared". */
 @utility anim-fade-up {
   animation: hb-fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -272,7 +421,7 @@
 }
 
 /* Pressable feedback: instant snap down on press (0ms), eased release.
-   The press itself must feel caused by the finger — never eased in. */
+   The press itself must feel caused by the finger, never eased in. */
 @utility pressable {
   transition:
     transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
