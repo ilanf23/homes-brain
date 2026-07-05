@@ -102,7 +102,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      /* Brand guidelines: system font stack only, no web fonts. */
+      /* Marketing: system font stack. App portal: Plus Jakarta Sans,
+         self-hosted via fontsource and bundled into this stylesheet. */
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },

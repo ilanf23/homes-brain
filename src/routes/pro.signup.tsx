@@ -62,7 +62,7 @@ function ProSignup() {
   }
 
   return (
-    <div className="min-h-dvh bg-soft">
+    <div className="font-app min-h-dvh bg-soft">
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-3xl px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">

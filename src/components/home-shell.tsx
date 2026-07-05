@@ -89,7 +89,7 @@ export function HomeShell({
   }
 
   return (
-    <div className="min-h-dvh bg-soft md:flex">
+    <div className="font-app min-h-dvh bg-soft md:flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
         <div className="px-5 h-16 flex items-center border-b border-line">
@@ -219,7 +219,7 @@ export function HomePageHead({
 /* Shown when a signed-in homeowner has not claimed a home yet. */
 export function NoHomeYet() {
   return (
-    <div className="min-h-dvh bg-soft flex items-center justify-center">
+    <div className="font-app min-h-dvh bg-soft flex items-center justify-center">
       <Card className="anim-scale-in text-center max-w-sm mx-5">
         <LogoMark size={36} className="mx-auto" />
         <h1 className="mt-4 text-xl tracking-tight">No home claimed yet</h1>

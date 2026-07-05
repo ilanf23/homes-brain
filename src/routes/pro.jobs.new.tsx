@@ -317,7 +317,7 @@ function NewJob() {
   const showPreview = stage === "work" || stage === "review";
 
   return (
-    <div className="min-h-dvh bg-soft">
+    <div className="font-app min-h-dvh bg-soft">
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-5xl px-5 h-16 flex items-center justify-between">
           <Link to="/pro" className="flex items-center gap-2.5 group">

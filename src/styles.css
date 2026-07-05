@@ -1,6 +1,9 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+/* App-portal typeface, self-hosted (no font CDN). Marketing stays on the
+   system stack; portal surfaces opt in via the font-app utility below. */
+@import "@fontsource-variable/plus-jakarta-sans";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -57,8 +60,9 @@
   --radius-xl: 22px;
   --radius-2xl: 28px;
 
-  /* Brand guidelines: system UI stack, no web fonts. Headlines are the same
-     family at weight 800 - the serif display face was a drift, now reverted. */
+  /* Marketing keeps the system UI stack; the app portal (pro + homeowner
+     dashboards and their flows) uses Plus Jakarta Sans via .font-app.
+     Headlines are the same family at weight 800 on both. */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace;
@@ -86,6 +90,12 @@
   --amber-dark: #6f4206;
   --red: #a32d2d;
   --redbg: #fcebeb;
+
+  /* Portal typeface stack. Fontsource registers the family as
+     "Plus Jakarta Sans Variable" (wght 200-800). */
+  --font-portal:
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+    Arial, sans-serif;
 }
 
 @layer base {
@@ -102,11 +112,11 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  /* Headlines: heavy (800) and tight - sans, never serif (brand guidelines). */
+  /* Headlines: heavy (800) and tight - sans, never serif (brand guidelines).
+     Family inherits so .font-app scopes cascade into headings. */
   h1,
   h2,
   h3 {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     font-weight: 800;
     letter-spacing: -0.02em;
     text-wrap: balance;
@@ -137,10 +147,18 @@
   text-transform: uppercase;
 }
 
-/* Kept for compatibility: "display" type is the same sans stack at 800. */
+/* Kept for compatibility: "display" type is the same sans stack at 800.
+   Follows the portal family inside .font-app via the local var override. */
 @utility font-display {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--font-display-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
   font-weight: 800;
+}
+
+/* Scopes a subtree to the app-portal typeface (pro + homeowner dashboards,
+   log-a-job, signup, login). Marketing pages never get this class. */
+@utility font-app {
+  font-family: var(--font-portal);
+  --font-display-family: var(--font-portal);
 }
 
 @utility tnum {
