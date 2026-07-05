@@ -76,10 +76,15 @@ const emptyForm: FormState = {
 };
 
 function Appliances() {
+  const navigate = useNavigate();
   const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [items, setItems] = useState<Appliance[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   // Add / edit modal state
   const [editing, setEditing] = useState<Appliance | null>(null);
