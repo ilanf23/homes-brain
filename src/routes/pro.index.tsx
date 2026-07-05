@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { Star } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
@@ -28,33 +29,65 @@ type JobRow = {
   homes: { address: string } | null;
   records: { id: string; viewed_at: string | null; sent_sms_at: string | null }[] | null;
 };
+type RebookEvent = {
+  id: string;
+  created_at: string;
+  props: { job_id?: string; pro_id?: string; home_id?: string };
+};
+type ReviewEvent = { id: string; created_at: string; props: { customer_id?: string } };
+type ClaimedHome = { id: string; address: string; claimed_at: string };
 
 function ProDashboard() {
   const { proId, pro } = useProGuard();
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [rebooks, setRebooks] = useState<RebookEvent[]>([]);
+  const [reviewAsks, setReviewAsks] = useState<ReviewEvent[]>([]);
+  const [claimedHomes, setClaimedHomes] = useState<ClaimedHome[]>([]);
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<"due" | "customers">("due");
 
   useEffect(() => {
     if (!proId) return;
     (async () => {
-      const [{ data: c }, { data: j }] = await Promise.all([
-        supabase
-          .from("customers")
-          .select("id,name,phone,email,homes(address)")
-          .eq("pro_id", proId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("jobs")
-          .select(
-            "id,what_done,next_service_date,created_at,customers(name),homes(address),records(id,viewed_at,sent_sms_at)",
-          )
-          .eq("pro_id", proId)
-          .order("created_at", { ascending: false }),
-      ]);
+      const [{ data: c }, { data: j }, { data: rb }, { data: rv }, { data: ch }] =
+        await Promise.all([
+          supabase
+            .from("customers")
+            .select("id,name,phone,email,homes(address)")
+            .eq("pro_id", proId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("jobs")
+            .select(
+              "id,what_done,next_service_date,created_at,customers(name),homes(address),records(id,viewed_at,sent_sms_at)",
+            )
+            .eq("pro_id", proId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("events")
+            .select("id,created_at,props")
+            .eq("type", "rebooked")
+            .eq("props->>pro_id", proId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("events")
+            .select("id,created_at,props")
+            .eq("actor", `pro:${proId}`)
+            .eq("type", "review_requested")
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("homes")
+            .select("id,address,claimed_at")
+            .eq("created_by_pro", proId)
+            .not("claimed_at", "is", null)
+            .order("claimed_at", { ascending: false }),
+        ]);
       setCustomers((c ?? []) as unknown as CustomerRow[]);
       setJobs((j ?? []) as unknown as JobRow[]);
+      setRebooks((rb ?? []) as unknown as RebookEvent[]);
+      setReviewAsks((rv ?? []) as unknown as ReviewEvent[]);
+      setClaimedHomes((ch ?? []) as unknown as ClaimedHome[]);
       setLoading(false);
     })();
   }, [proId]);
@@ -78,6 +111,14 @@ function ProDashboard() {
     }
     return buckets;
   }, [jobs]);
+
+  const rebooksThisMonth = useMemo(() => {
+    const now = new Date();
+    return rebooks.filter((r) => {
+      const d = new Date(r.created_at);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }).length;
+  }, [rebooks]);
 
   if (loading || !pro) {
     return (
@@ -155,6 +196,51 @@ function ProDashboard() {
             </div>
             <div className="mt-2 text-3xl font-semibold font-display">
               <CountUp value={dueSoon.length} />
+            </div>
+          </Card>
+        </Link>
+      </div>
+
+      <div className="mt-4 grid md:grid-cols-3 gap-4">
+        <Card lift className="anim-fade-up d-2 md:col-span-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs uppercase tracking-wider text-muted font-bold">
+              Rebooked via HomesBrain
+            </div>
+            {rebooks.length > 0 && <Pill accent="coral">Payoff</Pill>}
+          </div>
+          {rebooks.length === 0 ? (
+            <p className="mt-2 text-sm text-muted">
+              When homeowners rebook from their HomesBrain reminders, wins land here.
+            </p>
+          ) : (
+            <div className="mt-2 flex items-end gap-8">
+              <div>
+                <div className="text-3xl font-semibold font-display text-coral">
+                  <CountUp value={rebooksThisMonth} />
+                </div>
+                <div className="text-xs text-muted mt-0.5">this month</div>
+              </div>
+              <div>
+                <div className="text-3xl font-semibold font-display">
+                  <CountUp value={rebooks.length} />
+                </div>
+                <div className="text-xs text-muted mt-0.5">all time</div>
+              </div>
+            </div>
+          )}
+        </Card>
+        <Link to="/pro/reviews" className="block">
+          <Card lift className="anim-fade-up d-3 h-full">
+            <div className="text-xs uppercase tracking-wider text-muted font-bold">Reviews</div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="text-3xl font-semibold font-display tnum">
+                {pro.google_place_id && pro.google_rating ? pro.google_rating : "-"}
+              </div>
+              {!!pro.google_place_id && <Star size={18} className="text-coral fill-coralbg" />}
+            </div>
+            <div className="text-xs text-muted mt-1">
+              {reviewAsks.length} review {reviewAsks.length === 1 ? "ask" : "asks"} sent
             </div>
           </Card>
         </Link>
