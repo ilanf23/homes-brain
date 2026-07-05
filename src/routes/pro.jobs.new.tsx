@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { getSession } from "@/lib/session";
 import { buildRecordUrl, checkRecall, logEvent, mockSend, tradeLabel } from "@/lib/hb";
-import { CheckBurst, Logo, ShieldCheck } from "@/components/svg";
+import { scanNameplate, useDictation } from "@/lib/capture";
+import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job — HomesBrain" }] }),
@@ -48,6 +49,17 @@ function NewJob() {
   const [whatDone, setWhatDone] = useState("");
   const [nextService, setNextService] = useState("");
 
+  // Nameplate scan
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  // Voice note
+  const dictation = useDictation((text) => {
+    setWhatDone((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
+  });
+
   // Review
   const [sendRecord, setSendRecord] = useState(true);
   const [askReview, setAskReview] = useState(true);
@@ -79,6 +91,49 @@ function NewJob() {
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     })();
   }, [navigate]);
+
+  async function onNameplate(file: File) {
+    setScanState("scanning");
+    setScanError(null);
+    if (scanPreview) URL.revokeObjectURL(scanPreview);
+    setScanPreview(URL.createObjectURL(file));
+    try {
+      const r = await scanNameplate(file);
+      const filled: string[] = [];
+      // Fill blanks only — never clobber what the pro already typed.
+      if (r.type && !eqType) {
+        setEqType(r.type);
+        filled.push("type");
+      }
+      if (r.make && !eqMake) {
+        setEqMake(r.make);
+        filled.push("make");
+      }
+      if (r.model && !eqModel) {
+        setEqModel(r.model);
+        filled.push("model");
+      }
+      if (r.serial && !eqSerial) {
+        setEqSerial(r.serial);
+        filled.push("serial");
+      }
+      if (r.warranty_until && /^\d{4}-\d{2}-\d{2}$/.test(r.warranty_until) && !warrantyUntil) {
+        setWarrantyUntil(r.warranty_until);
+        filled.push("warranty");
+      }
+      const detectedNothing = !r.type && !r.make && !r.model && !r.serial && !r.warranty_until;
+      if (detectedNothing) {
+        setScanState("error");
+        setScanError("Couldn't read the nameplate — type the details in below.");
+        return;
+      }
+      setScanState("done");
+      await logEvent(proId ? `pro:${proId}` : null, "nameplate_scanned", { filled });
+    } catch (e) {
+      setScanState("error");
+      setScanError(e instanceof Error ? e.message : "Scan failed — try again.");
+    }
+  }
 
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
@@ -245,6 +300,11 @@ function NewJob() {
     setWarrantyUntil("");
     setWhatDone("");
     setNextService("");
+    if (scanPreview) URL.revokeObjectURL(scanPreview);
+    setScanPreview(null);
+    setScanState("idle");
+    setScanError(null);
+    dictation.stop();
     setSendRecord(true);
     setAskReview(true);
     setRecordUrl(null);
@@ -378,9 +438,72 @@ function NewJob() {
 
             {stage === "work" && (
               <Card className="space-y-4">
-                <Field label="Photo (optional)" hint="Upload a nameplate or completed-work photo.">
-                  <Input type="file" accept="image/*" />
-                </Field>
+                <div>
+                  <div className="text-sm font-semibold text-ink mb-1.5">Nameplate</div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) onNameplate(f);
+                      e.target.value = "";
+                    }}
+                  />
+                  {scanState === "idle" ? (
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="pressable w-full rounded-xl border-2 border-dashed border-teal/40 bg-tealbg/50 px-4 py-6 text-center hover:border-teal transition-colors"
+                    >
+                      <CameraIcon size={26} className="mx-auto text-teal" />
+                      <div className="mt-2 text-sm font-semibold text-teal">Snap the nameplate</div>
+                      <div className="mt-0.5 text-xs text-muted">
+                        Make, model, serial and warranty fill in for you.
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="rounded-xl border border-line bg-paper p-3">
+                      <div className="flex items-center gap-3">
+                        {scanPreview && (
+                          <img
+                            src={scanPreview}
+                            alt="Nameplate photo"
+                            className="h-14 w-14 rounded-lg object-cover"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          {scanState === "scanning" && (
+                            <div className="flex items-center gap-2 text-sm font-semibold text-teal">
+                              <span className="h-4 w-4 rounded-full border-2 border-teal border-t-transparent animate-spin" />
+                              Reading nameplate…
+                            </div>
+                          )}
+                          {scanState === "done" && (
+                            <div className="flex items-center gap-1.5 text-sm font-semibold text-teal">
+                              <ShieldCheck size={16} animate={false} /> Auto-detected — check the
+                              fields below
+                            </div>
+                          )}
+                          {scanState === "error" && (
+                            <div className="text-sm text-red">{scanError}</div>
+                          )}
+                        </div>
+                        {scanState !== "scanning" && (
+                          <button
+                            type="button"
+                            onClick={() => fileRef.current?.click()}
+                            className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
+                          >
+                            Retake
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Equipment type">
                     <Input
@@ -422,11 +545,40 @@ function NewJob() {
                   </Field>
                 </div>
                 <Field label="What was done">
-                  <Textarea
-                    value={whatDone}
-                    onChange={(e) => setWhatDone(e.target.value)}
-                    placeholder="Annual service, resin check, replaced pre-filter."
-                  />
+                  <div className="relative">
+                    <Textarea
+                      value={whatDone}
+                      onChange={(e) => setWhatDone(e.target.value)}
+                      placeholder="Annual service, resin check, replaced pre-filter."
+                      className={dictation.supported ? "pr-12" : ""}
+                    />
+                    {dictation.supported && (
+                      <button
+                        type="button"
+                        onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
+                        aria-label={
+                          dictation.listening ? "Stop dictation" : "Dictate what was done"
+                        }
+                        aria-pressed={dictation.listening}
+                        className={`pressable absolute bottom-2.5 right-2.5 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                          dictation.listening
+                            ? "bg-teal text-white"
+                            : "bg-soft text-muted hover:bg-tealbg hover:text-teal"
+                        }`}
+                      >
+                        <MicIcon size={17} />
+                      </button>
+                    )}
+                  </div>
+                  {dictation.listening && (
+                    <div className="mt-1.5 flex items-center gap-2 text-xs text-teal">
+                      <span className="h-2 w-2 rounded-full bg-teal animate-pulse" />
+                      <span className="font-semibold">Listening — talk through the job.</span>
+                      {dictation.interim && (
+                        <span className="truncate italic text-muted">{dictation.interim}</span>
+                      )}
+                    </div>
+                  )}
                 </Field>
 
                 <div className="rounded-xl bg-tealbg px-3 py-2 flex items-center justify-between">

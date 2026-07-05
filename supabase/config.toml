@@ -1,1 +1,6 @@
 project_id = "ccglxkhrlfxlvpzcitso"
+
+# Public by design: the log-a-job page already gates on a pro session, and the
+# function holds no data — it only reads an image the caller sends.
+[functions.scan-nameplate]
+verify_jwt = false
