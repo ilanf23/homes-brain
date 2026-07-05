@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronRight, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import {
@@ -18,7 +18,6 @@ import { ShieldCheck } from "@/components/svg";
 import {
   HomePageHead,
   HomeShell,
-  NoHomeYet,
   useHomeownerGuard,
 } from "@/components/home-shell";
 
