@@ -1,48 +1,127 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Btn, Card, Eyebrow, Field, Input, Pill, SectionHead, Select } from "@/lib/ui";
-import { MarketingShell, marketingHead } from "@/components/marketing";
-import { CheckBurst } from "@/components/svg";
+import { MarketingShell, marketingHead, PhoneKV } from "@/components/marketing";
+import { CheckBurst, LogoMark, Scribble, ShieldCheck } from "@/components/svg";
 import { logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/partners")({
   head: () =>
     marketingHead({
-      title: "HomesBrain partners: every company that touches the home.",
+      title: "HomesBrain partners: the record follows the home.",
       description:
-        "Builders, realtors, inspectors, insurers, and home-watch firms: give every home you touch a memory from day one.",
+        "Builders, realtors, inspectors, insurers, and home-watch firms: start the record at closing, inspection, or handover, and stay part of the home's story.",
       path: "/partners",
     }),
   component: Partners,
 });
 
-const PARTNER_TYPES = [
-  {
-    key: "Builders",
-    title: "Builders",
-    body: "Hand over every new home with its record already started: equipment, warranties, and serials from day one.",
-  },
-  {
-    key: "Realtors",
-    title: "Realtors",
-    body: "List homes with a verified history attached. A documented home is an easier close on both sides.",
-  },
-  {
-    key: "Inspectors",
-    title: "Inspectors",
-    body: "Turn the inspection into the seed of a living record instead of a PDF that dies in a download folder.",
-  },
-  {
-    key: "Insurers",
-    title: "Insurers",
-    body: "Maintained homes are lower-risk homes. Verified service history you can actually underwrite against.",
-  },
-  {
-    key: "Home-watch firms",
-    title: "Home-watch firms",
-    body: "Log every visit to the homes you watch: owners see the proof, you keep the contract.",
-  },
-];
+/* ---- Motion helper (same pattern as the other marketing pages) ---- */
+
+/* Adds .in-view once the wrapper scrolls into the viewport, which triggers
+   the CSS .reveal / .draw-path / .seq children. Fires once. */
+function InView({
+  children,
+  className = "",
+  threshold = 0.18,
+}: {
+  children: ReactNode;
+  className?: string;
+  threshold?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { threshold, rootMargin: "0px 0px -8% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [threshold]);
+  return (
+    <div ref={ref} className={`${className} ${inView ? "in-view" : ""}`}>
+      {children}
+    </div>
+  );
+}
+
+/* ---- Page data ---- */
+
+const PARTNER_TYPES = ["Builders", "Realtors", "Inspectors", "Insurers", "Home-watch firms"];
+
+/* ---- Hero visual: the record card outliving three owners of the same home ---- */
+
+function HandoffScene({ className = "" }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="mx-auto max-w-md rounded-[26px] border border-line bg-soft p-6 sm:p-7">
+        {/* three ownerships, handed off left to right */}
+        <div className="flex items-center justify-between gap-1.5">
+          {(["Built · 2021", "Sold · 2024", "Sold · 2029"] as const).map((label, i) => (
+            <div key={label} className="flex min-w-0 items-center gap-1.5">
+              <span className="whitespace-nowrap rounded-full border border-line bg-paper px-2.5 py-1.5 text-[11px] font-extrabold text-ink shadow-sm">
+                {label}
+              </span>
+              {i < 2 && (
+                <svg viewBox="0 0 34 12" className="w-7 shrink-0 text-indigo" aria-hidden="true">
+                  <path
+                    d="M2 6h24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray="3 5"
+                    className="dash-flow"
+                  />
+                  <path
+                    d="M24 2l6 4-6 4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </div>
+          ))}
+        </div>
+        {/* the record card that persists through every sale */}
+        <div className="anim-float mt-6 rounded-[22px] border border-line bg-paper p-5 shadow-[0_24px_48px_-28px_rgba(22,22,15,0.4)]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <LogoMark size={18} />
+              <span className="text-sm font-extrabold text-ink">14 Palm Row</span>
+            </div>
+            <Pill accent="indigo">Verified</Pill>
+          </div>
+          <div className="mt-4 space-y-2">
+            <PhoneKV k="HVAC" v="Trane XR14 · 2021" />
+            <PhoneKV k="Inspection" v="Clear · 2024" accentV />
+            <PhoneKV k="Water heater" v="Serviced · 2029" />
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-xs font-bold text-indigodark">
+            <span className="pulse-dot h-2 w-2 rounded-full bg-indigo" aria-hidden="true" />
+            The record stays with the home
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Page ---- */
 
 function Partners() {
   const [form, setForm] = useState({ name: "", company: "", type: "", email: "" });
@@ -68,53 +147,56 @@ function Partners() {
   return (
     <MarketingShell mobileCta={null}>
       {/* Hero */}
-      <section className="mx-auto max-w-4xl px-5 pt-16 pb-14 text-center">
-        <div className="anim-fade-up">
-          <Eyebrow accent="indigo">Partners</Eyebrow>
-        </div>
-        <h1 className="anim-fade-up d-1 mt-4 text-4xl sm:text-6xl tracking-tight text-ink leading-[1.06]">
-          Give every home a memory from day one.
-        </h1>
-        <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-2xl mx-auto">
-          If your business touches the home, you can start its record, and stay part of its story
-          for as long as it stands.
-        </p>
-        <div className="anim-fade-up d-3 mt-8">
-          <a href="#become-a-partner">
-            <Btn variant="indigo" size="lg">
-              Become a partner
-            </Btn>
-          </a>
-        </div>
-      </section>
-
-      {/* Partner cards */}
-      <section className="bg-soft border-y border-line py-20">
-        <div className="mx-auto max-w-6xl px-5">
-          <SectionHead
-            accent="indigo"
-            eyebrow="Who we work with"
-            title="Every company that touches the home"
-          />
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PARTNER_TYPES.map((p, i) => (
-              <Card key={p.key} lift className={`anim-fade-up d-${Math.min(i + 1, 6)}`}>
-                <Pill accent="indigo">{p.title}</Pill>
-                <p className="mt-4 text-sm text-muted">{p.body}</p>
-              </Card>
-            ))}
-            <Card lift className="anim-fade-up d-6 border-dashed">
-              <Pill accent="ink">Someone else?</Pill>
-              <p className="mt-4 text-sm text-muted">
-                Property managers, warranty companies, utilities: if you touch the home, we want to
-                talk. Tell us who you are below.
-              </p>
-            </Card>
+      <section className="mx-auto max-w-6xl px-5 pt-14 pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
+        <div className="text-center lg:text-left">
+          <div className="anim-fade-up">
+            <Eyebrow accent="indigo">For everyone who touches the home</Eyebrow>
+          </div>
+          <h1 className="anim-fade-up d-1 mt-4 text-5xl sm:text-6xl tracking-tight text-ink leading-[1.04]">
+            Every home you touch{" "}
+            <span className="relative inline-block">
+              keeps a memory.
+              <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
+            </span>
+          </h1>
+          <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-xl mx-auto lg:mx-0">
+            If your business touches the home, you can start its record and stay part of its story
+            for as long as the home stands.
+          </p>
+          <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
+            <a href="#become-a-partner">
+              <Btn variant="indigo" size="lg">
+                Become a partner
+              </Btn>
+            </a>
+            <a href="#how-it-works">
+              <Btn variant="secondary" size="lg">
+                See how it works
+              </Btn>
+            </a>
+          </div>
+          <div className="anim-fade-up d-4 mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 text-xs text-muted">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck size={16} className="text-indigo" animate={false} /> Free to start
+            </span>
+            <span>·</span>
+            <span>The homeowner owns the record</span>
+            <span>·</span>
+            <span>Verified at the source</span>
           </div>
         </div>
+        <HandoffScene className="anim-scale-in d-2 hidden sm:block" />
       </section>
 
-      {/* Lead form */}
+      {/* Task 2 inserts: the handoff problem */}
+
+      {/* Task 3 inserts: who we work with */}
+
+      {/* Task 4 inserts: stat band + how partnering works */}
+
+      {/* Task 5 inserts: FAQ */}
+
+      {/* Lead form (restyled into a split layout in Task 5) */}
       <section id="become-a-partner" className="py-20">
         <div className="mx-auto max-w-xl px-5">
           <SectionHead
@@ -163,9 +245,9 @@ function Partners() {
                     <option value="" disabled>
                       Choose one…
                     </option>
-                    {PARTNER_TYPES.map((p) => (
-                      <option key={p.key} value={p.key}>
-                        {p.title}
+                    {PARTNER_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
                       </option>
                     ))}
                     <option value="Other">Someone else</option>
