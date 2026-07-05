@@ -75,7 +75,7 @@ const FOOTER_GROUPS: { title: string; links: { to: string; label: string }[] }[]
 
 export function MarketingShell({
   children,
-  mobileCta = { label: "Start free", to: "/pro/signup", variant: "indigo" as const },
+  mobileCta = { label: "Start free", to: "/start", variant: "indigo" as const },
 }: {
   children: ReactNode;
   /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide. */
@@ -126,7 +126,7 @@ export function MarketingShell({
             >
               Log in
             </Link>
-            <Link to="/pro/signup">
+            <Link to="/start">
               <Btn variant="indigo" size="sm">
                 Start free
               </Btn>
@@ -205,7 +205,7 @@ export function MarketingShell({
               className="border-t border-line px-5 py-4 flex flex-col gap-2"
               style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
             >
-              <Link to="/pro/signup" className="w-full">
+              <Link to="/start" className="w-full">
                 <Btn variant="indigo" size="lg" className="w-full">
                   Start free, no card
                 </Btn>

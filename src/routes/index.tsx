@@ -262,9 +262,7 @@ function Landing() {
   const heroKey = (["pro", "record", "owner"] as const)[heroStep];
 
   return (
-    <MarketingShell
-      mobileCta={{ label: "Start free for pros", to: "/pro/signup", variant: "indigo" }}
-    >
+    <MarketingShell mobileCta={{ label: "Start free", to: "/start", variant: "indigo" }}>
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
         <div className="text-center lg:text-left">

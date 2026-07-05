@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StartRouteImport } from './routes/start'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PartnersRouteImport } from './routes/partners'
@@ -36,9 +37,11 @@ import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ProRecordsIndexRouteImport } from './routes/pro.records.index'
+import { Route as ProInvoicesIndexRouteImport } from './routes/pro.invoices.index'
 import { Route as ProCustomersIndexRouteImport } from './routes/pro.customers.index'
 import { Route as ProRecordsRecordIdRouteImport } from './routes/pro.records.$recordId'
 import { Route as ProJobsNewRouteImport } from './routes/pro.jobs.new'
+import { Route as ProInvoicesNewRouteImport } from './routes/pro.invoices.new'
 import { Route as ProCustomersCustomerIdRouteImport } from './routes/pro.customers.$customerId'
 import { Route as HomeItemsItemIdRouteImport } from './routes/home.items.$itemId'
 import { Route as ProCityTradeBusinessRouteImport } from './routes/pro.$city.$trade.$business'
@@ -46,6 +49,11 @@ import { Route as ProCityTradeBusinessRouteImport } from './routes/pro.$city.$tr
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StartRoute = StartRouteImport.update({
+  id: '/start',
+  path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecurityRoute = SecurityRouteImport.update({
@@ -178,6 +186,11 @@ const ProRecordsIndexRoute = ProRecordsIndexRouteImport.update({
   path: '/pro/records/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProInvoicesIndexRoute = ProInvoicesIndexRouteImport.update({
+  id: '/pro/invoices/',
+  path: '/pro/invoices/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProCustomersIndexRoute = ProCustomersIndexRouteImport.update({
   id: '/pro/customers/',
   path: '/pro/customers/',
@@ -191,6 +204,11 @@ const ProRecordsRecordIdRoute = ProRecordsRecordIdRouteImport.update({
 const ProJobsNewRoute = ProJobsNewRouteImport.update({
   id: '/pro/jobs/new',
   path: '/pro/jobs/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProInvoicesNewRoute = ProInvoicesNewRouteImport.update({
+  id: '/pro/invoices/new',
+  path: '/pro/invoices/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProCustomersCustomerIdRoute = ProCustomersCustomerIdRouteImport.update({
@@ -220,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
+  '/start': typeof StartRoute
   '/terms': typeof TermsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
@@ -238,9 +257,11 @@ export interface FileRoutesByFullPath {
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
+  '/pro/invoices/new': typeof ProInvoicesNewRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
   '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
   '/pro/customers/': typeof ProCustomersIndexRoute
+  '/pro/invoices/': typeof ProInvoicesIndexRoute
   '/pro/records/': typeof ProRecordsIndexRoute
   '/pro/$city/$trade/$business': typeof ProCityTradeBusinessRoute
 }
@@ -255,6 +276,7 @@ export interface FileRoutesByTo {
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
+  '/start': typeof StartRoute
   '/terms': typeof TermsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
@@ -273,9 +295,11 @@ export interface FileRoutesByTo {
   '/pro': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
+  '/pro/invoices/new': typeof ProInvoicesNewRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
   '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
   '/pro/customers': typeof ProCustomersIndexRoute
+  '/pro/invoices': typeof ProInvoicesIndexRoute
   '/pro/records': typeof ProRecordsIndexRoute
   '/pro/$city/$trade/$business': typeof ProCityTradeBusinessRoute
 }
@@ -291,6 +315,7 @@ export interface FileRoutesById {
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
+  '/start': typeof StartRoute
   '/terms': typeof TermsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
@@ -309,9 +334,11 @@ export interface FileRoutesById {
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
+  '/pro/invoices/new': typeof ProInvoicesNewRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
   '/pro/records/$recordId': typeof ProRecordsRecordIdRoute
   '/pro/customers/': typeof ProCustomersIndexRoute
+  '/pro/invoices/': typeof ProInvoicesIndexRoute
   '/pro/records/': typeof ProRecordsIndexRoute
   '/pro/$city/$trade/$business': typeof ProCityTradeBusinessRoute
 }
@@ -328,6 +355,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/privacy'
     | '/security'
+    | '/start'
     | '/terms'
     | '/blog/$slug'
     | '/claim/$recordId'
@@ -346,9 +374,11 @@ export interface FileRouteTypes {
     | '/pro/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
+    | '/pro/invoices/new'
     | '/pro/jobs/new'
     | '/pro/records/$recordId'
     | '/pro/customers/'
+    | '/pro/invoices/'
     | '/pro/records/'
     | '/pro/$city/$trade/$business'
   fileRoutesByTo: FileRoutesByTo
@@ -363,6 +393,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/privacy'
     | '/security'
+    | '/start'
     | '/terms'
     | '/blog/$slug'
     | '/claim/$recordId'
@@ -381,9 +412,11 @@ export interface FileRouteTypes {
     | '/pro'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
+    | '/pro/invoices/new'
     | '/pro/jobs/new'
     | '/pro/records/$recordId'
     | '/pro/customers'
+    | '/pro/invoices'
     | '/pro/records'
     | '/pro/$city/$trade/$business'
   id:
@@ -398,6 +431,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/privacy'
     | '/security'
+    | '/start'
     | '/terms'
     | '/blog/$slug'
     | '/claim/$recordId'
@@ -416,9 +450,11 @@ export interface FileRouteTypes {
     | '/pro/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
+    | '/pro/invoices/new'
     | '/pro/jobs/new'
     | '/pro/records/$recordId'
     | '/pro/customers/'
+    | '/pro/invoices/'
     | '/pro/records/'
     | '/pro/$city/$trade/$business'
   fileRoutesById: FileRoutesById
@@ -434,6 +470,7 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   PrivacyRoute: typeof PrivacyRoute
   SecurityRoute: typeof SecurityRoute
+  StartRoute: typeof StartRoute
   TermsRoute: typeof TermsRoute
   BlogSlugRoute: typeof BlogSlugRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
@@ -452,9 +489,11 @@ export interface RootRouteChildren {
   ProIndexRoute: typeof ProIndexRoute
   HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
   ProCustomersCustomerIdRoute: typeof ProCustomersCustomerIdRoute
+  ProInvoicesNewRoute: typeof ProInvoicesNewRoute
   ProJobsNewRoute: typeof ProJobsNewRoute
   ProRecordsRecordIdRoute: typeof ProRecordsRecordIdRoute
   ProCustomersIndexRoute: typeof ProCustomersIndexRoute
+  ProInvoicesIndexRoute: typeof ProInvoicesIndexRoute
   ProRecordsIndexRoute: typeof ProRecordsIndexRoute
   ProCityTradeBusinessRoute: typeof ProCityTradeBusinessRoute
 }
@@ -466,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/start': {
+      id: '/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/security': {
@@ -650,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProRecordsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/invoices/': {
+      id: '/pro/invoices/'
+      path: '/pro/invoices'
+      fullPath: '/pro/invoices/'
+      preLoaderRoute: typeof ProInvoicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/customers/': {
       id: '/pro/customers/'
       path: '/pro/customers'
@@ -669,6 +722,13 @@ declare module '@tanstack/react-router' {
       path: '/pro/jobs/new'
       fullPath: '/pro/jobs/new'
       preLoaderRoute: typeof ProJobsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/invoices/new': {
+      id: '/pro/invoices/new'
+      path: '/pro/invoices/new'
+      fullPath: '/pro/invoices/new'
+      preLoaderRoute: typeof ProInvoicesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro/customers/$customerId': {
@@ -706,6 +766,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   PrivacyRoute: PrivacyRoute,
   SecurityRoute: SecurityRoute,
+  StartRoute: StartRoute,
   TermsRoute: TermsRoute,
   BlogSlugRoute: BlogSlugRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
@@ -724,9 +785,11 @@ const rootRouteChildren: RootRouteChildren = {
   ProIndexRoute: ProIndexRoute,
   HomeItemsItemIdRoute: HomeItemsItemIdRoute,
   ProCustomersCustomerIdRoute: ProCustomersCustomerIdRoute,
+  ProInvoicesNewRoute: ProInvoicesNewRoute,
   ProJobsNewRoute: ProJobsNewRoute,
   ProRecordsRecordIdRoute: ProRecordsRecordIdRoute,
   ProCustomersIndexRoute: ProCustomersIndexRoute,
+  ProInvoicesIndexRoute: ProInvoicesIndexRoute,
   ProRecordsIndexRoute: ProRecordsIndexRoute,
   ProCityTradeBusinessRoute: ProCityTradeBusinessRoute,
 }

@@ -31,7 +31,7 @@ const BELIEFS = [
 
 function About() {
   return (
-    <MarketingShell mobileCta={{ label: "Start free", to: "/pro/signup", variant: "indigo" }}>
+    <MarketingShell mobileCta={{ label: "Start free", to: "/start", variant: "indigo" }}>
       {/* Mission */}
       <section className="mx-auto max-w-3xl px-5 pt-16 pb-14 text-center">
         <div className="anim-fade-up flex justify-center">
