@@ -35,12 +35,15 @@ const PREF_ITEMS: { key: keyof Prefs; label: string; sub: string }[] = [
 
 function HomeownerSettings() {
   const navigate = useNavigate();
-  const { homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
+  const { homeownerId, homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
+  const [savingAddr, setSavingAddr] = useState(false);
+  const [addrErr, setAddrErr] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,6 +57,10 @@ function HomeownerSettings() {
     setEmail(homeowner.email ?? "");
     setPrefs(loadPrefs());
   }, [homeowner]);
+
+  useEffect(() => {
+    if (home) setAddress(home.address);
+  }, [home]);
 
   useEffect(() => {
     if (!toast) return;
@@ -75,6 +82,45 @@ function HomeownerSettings() {
     setToast("Contact info saved");
   }
 
+  async function saveAddress() {
+    if (!home || !homeownerId) return;
+    const addr = address.trim();
+    if (!addr) {
+      setAddrErr("Address cannot be empty.");
+      return;
+    }
+    if (addr === home.address) return;
+    setSavingAddr(true);
+    setAddrErr(null);
+
+    const { data: existing } = await supabase
+      .from("homes")
+      .select("id, claimed_by_homeowner")
+      .eq("address", addr)
+      .maybeSingle();
+
+    if (existing && existing.id !== home.id) {
+      setAddrErr("That address is already on file. Contact support to merge homes.");
+      setSavingAddr(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("homes")
+      .update({ address: addr })
+      .eq("id", home.id);
+
+    if (error) {
+      setAddrErr(error.message);
+      setSavingAddr(false);
+      return;
+    }
+    setSavingAddr(false);
+    setToast("Home address saved");
+    // Refresh so the shell/header reflects the new address.
+    window.location.reload();
+  }
+
   function togglePref(key: keyof Prefs) {
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
@@ -83,6 +129,7 @@ function HomeownerSettings() {
 
   if (guardLoading) return <PageLoader label="Loading settings" />;
   if (!home) return <PageLoader label="Setting up your home" />;
+
 
   return (
     <HomeShell active="settings" homeowner={homeowner} home={home}>
