@@ -139,8 +139,8 @@ function Referral() {
             <Eyebrow accent="indigo">Your referrals</Eyebrow>
             {referred.length === 0 ? (
               <p className="mt-2 text-sm text-muted">
-                No referrals yet. Share your link. You'll see each signup and their first-job
-                status here.
+                No referrals yet. Share your link. You'll see each signup and their first-job status
+                here.
               </p>
             ) : (
               <div className="mt-2 divide-y divide-line">

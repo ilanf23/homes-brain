@@ -71,8 +71,8 @@ function Security() {
             <Card>
               <h3 className="text-lg font-semibold tracking-tight font-display">About people</h3>
               <p className="mt-2 text-sm text-muted">
-                The contact details used to send records and sign in (phone and email), plus a
-                pro's business profile. No passwords exist to steal: sign-in is by one-time code.
+                The contact details used to send records and sign in (phone and email), plus a pro's
+                business profile. No passwords exist to steal: sign-in is by one-time code.
               </p>
             </Card>
           </div>

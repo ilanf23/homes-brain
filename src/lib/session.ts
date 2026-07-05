@@ -1,9 +1,7 @@
 // Mock auth session for v0. Stored in localStorage.
 // Real OTP via Twilio/Resend is intentionally out of scope.
 
-export type Session =
-  | { role: "pro"; proId: string }
-  | { role: "homeowner"; homeownerId: string };
+export type Session = { role: "pro"; proId: string } | { role: "homeowner"; homeownerId: string };
 
 const KEY = "hb_session";
 

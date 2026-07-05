@@ -138,11 +138,7 @@ function AddToHome() {
                 className="hidden"
                 onChange={(e) => setPhotoName(e.target.files?.[0]?.name ?? null)}
               />
-              <Btn
-                variant="secondary"
-                className="w-full"
-                onClick={() => photoRef.current?.click()}
-              >
+              <Btn variant="secondary" className="w-full" onClick={() => photoRef.current?.click()}>
                 <Camera size={15} /> {photoName ?? "Snap the nameplate"}
               </Btn>
             </Field>

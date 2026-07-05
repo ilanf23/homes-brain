@@ -28,7 +28,11 @@ export function checkRecall(_make?: string, _model?: string) {
   };
 }
 
-export async function logEvent(actor: string | null, type: string, props: Record<string, unknown> = {}) {
+export async function logEvent(
+  actor: string | null,
+  type: string,
+  props: Record<string, unknown> = {},
+) {
   console.log("[event]", type, { actor, ...props });
   await supabase.from("events").insert({ actor: actor ?? undefined, type, props: props as never });
 }
@@ -63,5 +67,9 @@ export function initials(name: string) {
 
 export function formatDate(iso?: string | null) {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }

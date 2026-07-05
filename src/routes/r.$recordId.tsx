@@ -229,8 +229,8 @@ function PublicRecord() {
           >
             <div className="overflow-hidden">
               <p className="text-sm text-muted px-4 py-3">
-                HomesBrain keeps a permanent, verified history of the work done on your home, like
-                a Carfax report, but for houses. Pros log the work, you own the record. Free for
+                HomesBrain keeps a permanent, verified history of the work done on your home, like a
+                Carfax report, but for houses. Pros log the work, you own the record. Free for
                 homeowners, forever.
               </p>
             </div>

@@ -165,8 +165,8 @@ function HomeownerSettings() {
             <KV k="Your plan" v="Free for life" mono={false} />
           </div>
           <p className="mt-3 text-sm text-muted">
-            This record sells as a $49 seller history report when homes change hands. Yours is
-            free for life because your pros write it.
+            This record sells as a $49 seller history report when homes change hands. Yours is free
+            for life because your pros write it.
           </p>
         </Card>
       </div>

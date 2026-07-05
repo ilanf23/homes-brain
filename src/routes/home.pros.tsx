@@ -93,8 +93,8 @@ function MyPros() {
           <Card className="anim-fade-up text-center py-14">
             <h2 className="text-2xl tracking-tight">No pros yet</h2>
             <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-              When a pro logs a job on your home, they show up here. Invite the ones you already
-              use below.
+              When a pro logs a job on your home, they show up here. Invite the ones you already use
+              below.
             </p>
           </Card>
         ) : (

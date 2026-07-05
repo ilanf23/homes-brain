@@ -100,8 +100,8 @@ function Terms() {
       <LegalSection title="9. Termination">
         <p>
           You may close your account at any time. We may suspend or terminate accounts that violate
-          these Terms (including consent and review-gating violations) or that create risk for
-          other users. Homeowner records survive a Pro's termination.
+          these Terms (including consent and review-gating violations) or that create risk for other
+          users. Homeowner records survive a Pro's termination.
         </p>
       </LegalSection>
 

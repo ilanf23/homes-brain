@@ -32,13 +32,12 @@ function statusOf(r: RecordRow): Status {
   return "created";
 }
 
-const STATUS_PILL: Record<Status, { accent: "coral" | "indigo" | "ink"; label: string }> =
-  {
-    claimed: { accent: "coral", label: "Claimed" },
-    viewed: { accent: "indigo", label: "Viewed" },
-    sent: { accent: "indigo", label: "Sent" },
-    created: { accent: "ink", label: "Created" },
-  };
+const STATUS_PILL: Record<Status, { accent: "coral" | "indigo" | "ink"; label: string }> = {
+  claimed: { accent: "coral", label: "Claimed" },
+  viewed: { accent: "indigo", label: "Viewed" },
+  sent: { accent: "indigo", label: "Sent" },
+  created: { accent: "ink", label: "Created" },
+};
 
 function RecordsList() {
   const { proId, pro } = useProGuard();

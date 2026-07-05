@@ -97,8 +97,8 @@ function HomeOverview() {
 
       {/* The free-for-life anchor (locked in Strategy) */}
       <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
-        This record sells as a $49 seller history report when homes change hands. Yours is free
-        for life because your pros write it.
+        This record sells as a $49 seller history report when homes change hands. Yours is free for
+        life because your pros write it.
       </div>
 
       {/* Stat row */}

@@ -459,7 +459,9 @@ function NewJob() {
                       className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-indigobg/50 px-4 py-6 text-center hover:border-indigo transition-colors"
                     >
                       <CameraIcon size={26} className="mx-auto text-indigo" />
-                      <div className="mt-2 text-sm font-semibold text-indigo">Snap the nameplate</div>
+                      <div className="mt-2 text-sm font-semibold text-indigo">
+                        Snap the nameplate
+                      </div>
                       <div className="mt-0.5 text-xs text-muted">
                         Make, model, serial and warranty fill in for you.
                       </div>

@@ -81,9 +81,7 @@ function ItemDetail() {
       <HomeShell active="overview" homeowner={homeowner} home={home}>
         <Card className="anim-fade-up text-center py-14">
           <h1 className="text-2xl tracking-tight">Item not found</h1>
-          <p className="mt-2 text-sm text-muted">
-            This item isn't on your home's record.
-          </p>
+          <p className="mt-2 text-sm text-muted">This item isn't on your home's record.</p>
           <div className="mt-6">
             <Link to="/home">
               <Btn variant="secondary">Back to my home</Btn>
