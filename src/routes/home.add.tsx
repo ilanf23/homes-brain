@@ -100,7 +100,7 @@ function AddToHome() {
   }
 
   if (guardLoading) return <PageLoader label="Loading" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
 
   const inboxAddr = `home-${home.id.slice(0, 8)}@in.homesbrain.com`;
 
