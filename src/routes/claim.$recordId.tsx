@@ -86,6 +86,12 @@ function ClaimFlow() {
             <p className="mt-2 text-sm text-muted">Free, forever. Yours for life.</p>
           </div>
 
+          {/* The free-for-life anchor (locked in Strategy) */}
+          <div className="rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-4">
+            This record sells as a $49 seller history report when homes change hands. Yours is free
+            for life because your pros write it.
+          </div>
+
           <Card>
             <div className="space-y-4">
               <Field label="Email or phone" hint="You'll use this to log in.">

@@ -570,9 +570,7 @@ function PhotoChip({
 
 function ForHomeowners() {
   return (
-    <MarketingShell
-      mobileCta={{ label: "Claim your home", to: "/how-it-works", variant: "indigo" }}
-    >
+    <MarketingShell mobileCta={{ label: "Claim your home", to: "/login", variant: "indigo" }}>
       {/* Hero - copy beside the home itself, with the record floating on top */}
       <section className="relative overflow-hidden">
         <HeroWaves />
@@ -593,7 +591,7 @@ function ForHomeowners() {
               the work, so you never start from zero again. Free for homeowners.
             </p>
             <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
-              <Link to="/how-it-works">
+              <Link to="/login">
                 <Btn variant="indigo" size="lg">
                   Claim your home
                 </Btn>
@@ -1201,7 +1199,7 @@ function ForHomeowners() {
             Free for homeowners. Owned for life.
           </h2>
           <div className="reveal rd-2 mt-9">
-            <Link to="/how-it-works">
+            <Link to="/login">
               <Btn variant="indigo" size="lg">
                 Claim your home
               </Btn>

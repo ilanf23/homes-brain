@@ -4,7 +4,8 @@ import { Logo } from "@/components/svg";
 
 // Entry chooser behind every generic "Start free" CTA. Pros go straight to
 // signup; homeowners have no self-serve signup (they claim from a record a
-// pro sends), so their path routes to the homeowner story.
+// pro sends), so their path routes to login, which explains the record-link
+// door to anyone without an account yet.
 
 export const Route = createFileRoute("/start")({
   head: () => ({ meta: [{ title: "Get started - HomesBrain" }] }),
@@ -20,11 +21,11 @@ const PATHS = [
     cta: "Start free",
   },
   {
-    to: "/for-homeowners",
+    to: "/login",
     pill: "Homeowner",
     title: "I own a home",
-    sub: "Claim your home free from the record your pro sends. It fills itself.",
-    cta: "See how it works",
+    sub: "Claim your home free from the record your pro sends, then log in here any time.",
+    cta: "Open my home",
   },
 ] as const;
 

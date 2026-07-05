@@ -143,7 +143,7 @@ function About() {
             I'm a pro, start free
           </Btn>
         </Link>
-        <Link to="/for-homeowners">
+        <Link to="/login">
           <Btn variant="indigo" size="lg">
             I own a home
           </Btn>

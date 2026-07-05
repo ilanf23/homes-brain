@@ -65,9 +65,10 @@ function Login() {
 
     if (!p && !ho) {
       setErr(
-        isEmail
+        (isEmail
           ? "No account found for that email."
-          : "No account found for that phone. Try it exactly as you entered it when you signed up.",
+          : "No account found for that phone. Try it exactly as you entered it when you signed up.") +
+          " New homeowner? Open the record link your pro sent you to claim your home free.",
       );
       setBusy(false);
       return;
