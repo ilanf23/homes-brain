@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Bell, Home, LogOut, Plus, Settings, Users } from "lucide-react";
+import { Bell, Home, LogOut, Plus, Settings, Users, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSession, getSession } from "@/lib/session";
 import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
