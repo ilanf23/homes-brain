@@ -1,7 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Btn, Eyebrow, SectionHead } from "@/lib/ui";
-import { DocumentIcon, LinkIcon, Scribble, ShieldCheck, TradeIcon } from "@/components/svg";
+import {
+  CountUp,
+  DocumentIcon,
+  LinkIcon,
+  Scribble,
+  ShieldCheck,
+  TradeIcon,
+} from "@/components/svg";
 import { CoreLoopScene } from "@/components/core-loop-scene";
 import { ForgettingScene } from "@/components/forgetting-scene";
 import { MarketingShell, marketingHead, Phone, PhoneRow } from "@/components/marketing";
