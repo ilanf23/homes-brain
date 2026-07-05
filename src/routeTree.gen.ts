@@ -30,9 +30,11 @@ import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
 import { Route as ProDueRouteImport } from './routes/pro.due'
+import { Route as HomeSignupRouteImport } from './routes/home.signup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
 import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
+import { Route as HomeAppliancesRouteImport } from './routes/home.appliances'
 import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -151,6 +153,11 @@ const ProDueRoute = ProDueRouteImport.update({
   path: '/pro/due',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeSignupRoute = HomeSignupRouteImport.update({
+  id: '/home/signup',
+  path: '/home/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeSettingsRoute = HomeSettingsRouteImport.update({
   id: '/home/settings',
   path: '/home/settings',
@@ -164,6 +171,11 @@ const HomeRemindersRoute = HomeRemindersRouteImport.update({
 const HomeProsRoute = HomeProsRouteImport.update({
   id: '/home/pros',
   path: '/home/pros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeAppliancesRoute = HomeAppliancesRouteImport.update({
+  id: '/home/appliances',
+  path: '/home/appliances',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeAddRoute = HomeAddRouteImport.update({
@@ -243,9 +255,11 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
+  '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
+  '/home/signup': typeof HomeSignupRoute
   '/pro/due': typeof ProDueRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
@@ -281,9 +295,11 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
+  '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
+  '/home/signup': typeof HomeSignupRoute
   '/pro/due': typeof ProDueRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
@@ -320,9 +336,11 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
+  '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
+  '/home/signup': typeof HomeSignupRoute
   '/pro/due': typeof ProDueRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
@@ -360,9 +378,11 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
+    | '/home/appliances'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
+    | '/home/signup'
     | '/pro/due'
     | '/pro/referral'
     | '/pro/reviews'
@@ -398,9 +418,11 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
+    | '/home/appliances'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
+    | '/home/signup'
     | '/pro/due'
     | '/pro/referral'
     | '/pro/reviews'
@@ -436,9 +458,11 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
+    | '/home/appliances'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
+    | '/home/signup'
     | '/pro/due'
     | '/pro/referral'
     | '/pro/reviews'
@@ -475,9 +499,11 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
   HomeAddRoute: typeof HomeAddRoute
+  HomeAppliancesRoute: typeof HomeAppliancesRoute
   HomeProsRoute: typeof HomeProsRoute
   HomeRemindersRoute: typeof HomeRemindersRoute
   HomeSettingsRoute: typeof HomeSettingsRoute
+  HomeSignupRoute: typeof HomeSignupRoute
   ProDueRoute: typeof ProDueRoute
   ProReferralRoute: typeof ProReferralRoute
   ProReviewsRoute: typeof ProReviewsRoute
@@ -647,6 +673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProDueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/signup': {
+      id: '/home/signup'
+      path: '/home/signup'
+      fullPath: '/home/signup'
+      preLoaderRoute: typeof HomeSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home/settings': {
       id: '/home/settings'
       path: '/home/settings'
@@ -666,6 +699,13 @@ declare module '@tanstack/react-router' {
       path: '/home/pros'
       fullPath: '/home/pros'
       preLoaderRoute: typeof HomeProsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/appliances': {
+      id: '/home/appliances'
+      path: '/home/appliances'
+      fullPath: '/home/appliances'
+      preLoaderRoute: typeof HomeAppliancesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home/add': {
@@ -771,9 +811,11 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
   HomeAddRoute: HomeAddRoute,
+  HomeAppliancesRoute: HomeAppliancesRoute,
   HomeProsRoute: HomeProsRoute,
   HomeRemindersRoute: HomeRemindersRoute,
   HomeSettingsRoute: HomeSettingsRoute,
+  HomeSignupRoute: HomeSignupRoute,
   ProDueRoute: ProDueRoute,
   ProReferralRoute: ProReferralRoute,
   ProReviewsRoute: ProReviewsRoute,

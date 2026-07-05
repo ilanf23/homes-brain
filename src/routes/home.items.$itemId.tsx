@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 
 export const Route = createFileRoute("/home/items/$itemId")({
   head: () => ({ meta: [{ title: "Item - HomesBrain" }] }),
@@ -30,11 +30,16 @@ type ProRow = { id: string; business: string; trade: string };
 
 function ItemDetail() {
   const { itemId } = Route.useParams();
+  const navigate = useNavigate();
   const { homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [item, setItem] = useState<EquipmentRow | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!home) return;
@@ -73,7 +78,7 @@ function ItemDetail() {
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
 
   if (guardLoading) return <PageLoader label="Loading item" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
   if (loading) return <PageLoader label="Loading item" />;
 
   if (!item) {

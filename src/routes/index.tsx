@@ -350,7 +350,7 @@ function Landing() {
             Owned by you for life.
           </p>
           <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
-            <Link to="/login">
+            <Link to="/home/signup">
               <Btn variant="indigo" size="lg">
                 I own a home
               </Btn>
@@ -842,7 +842,7 @@ function Landing() {
             Every home deserves a memory.
           </h2>
           <div className="reveal rd-2 mt-9 flex flex-wrap justify-center gap-3">
-            <Link to="/login">
+            <Link to="/home/signup">
               <Btn variant="indigo" size="lg">
                 I own a home
               </Btn>
