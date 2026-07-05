@@ -90,6 +90,14 @@ function MyPros() {
       />
 
       <div className="space-y-6">
+        <ProSearch
+          homeownerId={homeownerId}
+          homeId={home.id}
+          existingProIds={pros.map((p) => p.id)}
+          onToast={setToast}
+        />
+
+
         {pros.length === 0 ? (
           <Card className="anim-fade-up text-center py-14">
             <h2 className="text-2xl tracking-tight">No pros yet</h2>
