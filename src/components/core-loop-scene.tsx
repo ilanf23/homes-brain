@@ -112,7 +112,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
         {/* traveling record chip */}
         {showChip && (
           <g key={`chip-${logged}`} className="cls-chip" style={{ transformBox: "fill-box" }}>
-            <g transform="translate(172, 86)">
+            <g transform="translate(158, 112)">
               <rect width="76" height="30" rx="9" fill="var(--bg)" stroke="var(--line)" />
               <rect x="7" y="7" width="16" height="16" rx="5" fill="var(--indigo)" />
               <path d="M15 10.5l6 5h-12Z" fill="#fff" />
