@@ -4,7 +4,7 @@ import { Bell, Home, LogOut, Plus, Settings, Users, Wrench } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { clearSession, getSession } from "@/lib/session";
 import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
-import { Logo, LogoMark } from "@/components/svg";
+import { Logo } from "@/components/svg";
 
 export type HomeownerRow = {
   id: string;
@@ -217,22 +217,3 @@ export function HomePageHead({
   );
 }
 
-/* Shown when a signed-in homeowner has not claimed a home yet. */
-export function NoHomeYet() {
-  return (
-    <div className="font-app min-h-dvh bg-soft flex items-center justify-center">
-      <Card className="anim-scale-in text-center max-w-sm mx-5">
-        <LogoMark size={36} className="mx-auto" />
-        <h1 className="mt-4 text-xl tracking-tight">No home claimed yet</h1>
-        <p className="mt-2 text-sm text-muted">
-          Claim your home from a service record link to get started.
-        </p>
-        <Link to="/" className="block mt-4">
-          <Btn variant="secondary" className="w-full">
-            Go to HomesBrain
-          </Btn>
-        </Link>
-      </Card>
-    </div>
-  );
-}

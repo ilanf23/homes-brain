@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronRight, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import {
@@ -18,7 +18,6 @@ import { ShieldCheck } from "@/components/svg";
 import {
   HomePageHead,
   HomeShell,
-  NoHomeYet,
   useHomeownerGuard,
 } from "@/components/home-shell";
 
@@ -77,10 +76,15 @@ const emptyForm: FormState = {
 };
 
 function Appliances() {
+  const navigate = useNavigate();
   const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [items, setItems] = useState<Appliance[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   // Add / edit modal state
   const [editing, setEditing] = useState<Appliance | null>(null);
@@ -183,7 +187,7 @@ function Appliances() {
   }
 
   if (guardLoading) return <PageLoader label="Loading appliances" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
   if (loading) return <PageLoader label="Loading appliances" />;
 
   const verifiedCount = items.filter((i) => i.source === "pro").length;

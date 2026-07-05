@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Btn, Card, Eyebrow, Field, Input, KV, PageLoader, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 
 export const Route = createFileRoute("/home/settings")({
   head: () => ({ meta: [{ title: "Settings - HomesBrain" }] }),
@@ -34,6 +34,7 @@ const PREF_ITEMS: { key: keyof Prefs; label: string; sub: string }[] = [
 ];
 
 function HomeownerSettings() {
+  const navigate = useNavigate();
   const { homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,6 +42,10 @@ function HomeownerSettings() {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!homeowner) return;
@@ -77,7 +82,7 @@ function HomeownerSettings() {
   }
 
   if (guardLoading) return <PageLoader label="Loading settings" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
 
   return (
     <HomeShell active="settings" homeowner={homeowner} home={home}>

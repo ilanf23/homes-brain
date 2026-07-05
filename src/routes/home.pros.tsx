@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Search, Share2, UserPlus, X } from "lucide-react";
 import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Select, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, TRADES, tradeLabel } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/pros")({
@@ -24,6 +24,7 @@ type JobRow = {
 };
 
 function MyPros() {
+  const navigate = useNavigate();
   const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [pros, setPros] = useState<ProRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
@@ -31,6 +32,10 @@ function MyPros() {
   const [toast, setToast] = useState<string | null>(null);
   const [rebooked, setRebooked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!home) return;
@@ -78,7 +83,7 @@ function MyPros() {
   }
 
   if (guardLoading) return <PageLoader label="Loading your pros" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
   if (loading) return <PageLoader label="Loading your pros" />;
 
   return (

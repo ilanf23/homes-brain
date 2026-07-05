@@ -4,7 +4,7 @@ import { Camera, Copy, FileUp, Mail } from "lucide-react";
 import { Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Select, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/add")({
@@ -31,6 +31,10 @@ function AddToHome() {
   const [knownTrades, setKnownTrades] = useState<string[]>([]);
   const [prosCount, setProsCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   // Snap-an-item form
   const [itemType, setItemType] = useState(ITEM_TYPES[0]);
@@ -96,7 +100,7 @@ function AddToHome() {
   }
 
   if (guardLoading) return <PageLoader label="Loading" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
 
   const inboxAddr = `home-${home.id.slice(0, 8)}@in.homesbrain.com`;
 

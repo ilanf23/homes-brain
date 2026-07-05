@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Eyebrow, PageLoader, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 
 export const Route = createFileRoute("/home/reminders")({
   head: () => ({ meta: [{ title: "Reminders - HomesBrain" }] }),
@@ -35,6 +35,7 @@ const BUCKETS = [
 ] as const;
 
 function Reminders() {
+  const navigate = useNavigate();
   const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
   const [jobs, setJobs] = useState<DueJob[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
@@ -42,6 +43,10 @@ function Reminders() {
   const [booked, setBooked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!guardLoading && !home) navigate({ to: "/home" });
+  }, [guardLoading, home, navigate]);
 
   useEffect(() => {
     if (!home) return;
@@ -87,7 +92,7 @@ function Reminders() {
   }
 
   if (guardLoading) return <PageLoader label="Loading reminders" />;
-  if (!home) return <NoHomeYet />;
+  if (!home) return <PageLoader label="Setting up your home" />;
   if (loading) return <PageLoader label="Loading reminders" />;
 
   const byBucket = {
