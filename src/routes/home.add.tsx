@@ -4,7 +4,7 @@ import { Camera, Copy, FileUp, Mail } from "lucide-react";
 import { Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Select, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
-import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/add")({
