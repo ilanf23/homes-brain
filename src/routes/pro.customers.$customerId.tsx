@@ -4,6 +4,13 @@ import { ArrowLeft } from "lucide-react";
 import { Avatar, Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
+import {
+  formatMoney,
+  isOverdue,
+  listInvoicesForCustomer,
+  markInvoicePaid,
+  type Invoice,
+} from "@/lib/invoices";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
@@ -43,6 +50,7 @@ function CustomerDetail() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [equipment, setEquipment] = useState<EquipmentRow[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,7 +65,7 @@ function CustomerDetail() {
       const cust = c as unknown as Customer | null;
       setCustomer(cust);
       if (cust) {
-        const [{ data: j }, { data: eq }] = await Promise.all([
+        const [{ data: j }, { data: eq }, inv] = await Promise.all([
           supabase
             .from("jobs")
             .select("id,what_done,created_at,next_service_date,records(id,viewed_at,sent_sms_at)")
@@ -69,13 +77,25 @@ function CustomerDetail() {
             .select("id,type,make,model,warranty_until,recall_status")
             .eq("home_id", cust.home_id)
             .order("created_at", { ascending: false }),
+          listInvoicesForCustomer(proId, customerId),
         ]);
         setJobs((j ?? []) as unknown as JobRow[]);
         setEquipment((eq ?? []) as EquipmentRow[]);
+        setInvoices(inv);
       }
       setLoading(false);
     })();
   }, [proId, customerId]);
+
+  async function onMarkPaid(inv: Invoice) {
+    if (await markInvoicePaid(inv)) {
+      setInvoices((rs) =>
+        rs.map((r) =>
+          r.id === inv.id ? { ...r, status: "paid", paid_at: new Date().toISOString() } : r,
+        ),
+      );
+    }
+  }
 
   if (!pro || loading) {
     return (
@@ -153,6 +173,66 @@ function CustomerDetail() {
                 mono={false}
               />
             </div>
+          </Card>
+
+          <Card className="anim-fade-up d-2">
+            <div className="flex items-center justify-between">
+              <Eyebrow accent="indigo">Invoices</Eyebrow>
+              <Link
+                to="/pro/invoices/new"
+                search={{ customer: customer.id, job: undefined }}
+                className="text-xs font-semibold text-indigo hover:underline"
+              >
+                New invoice
+              </Link>
+            </div>
+            {invoices.length === 0 ? (
+              <p className="mt-2 text-sm text-muted">No invoices yet.</p>
+            ) : (
+              <>
+                {(() => {
+                  const open = invoices.filter((i) => i.status === "open");
+                  const balance = open.reduce((s, i) => s + Number(i.total), 0);
+                  return open.length > 0 ? (
+                    <div className="mt-2 text-sm text-muted">
+                      Open balance{" "}
+                      <span className="font-bold text-ink tnum">{formatMoney(balance)}</span>
+                    </div>
+                  ) : null;
+                })()}
+                <div className="mt-2 divide-y divide-line">
+                  {invoices.map((inv) => (
+                    <div key={inv.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-ink tnum">
+                          {formatMoney(Number(inv.total))}
+                        </div>
+                        <div className="text-xs text-muted truncate">
+                          {inv.items[0]?.description ?? ""}
+                          {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {inv.status === "open" ? (
+                          <>
+                            <Pill accent={isOverdue(inv) ? "amber" : "indigo"}>
+                              {isOverdue(inv) ? "Overdue" : "Open"}
+                            </Pill>
+                            <Btn variant="secondary" size="sm" onClick={() => onMarkPaid(inv)}>
+                              Mark paid
+                            </Btn>
+                          </>
+                        ) : (
+                          <Pill accent={inv.status === "paid" ? "coral" : "ink"}>
+                            {inv.status === "paid" ? "Paid" : "Void"}
+                          </Pill>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </Card>
 
           <Card className="anim-fade-up d-2">

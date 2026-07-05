@@ -108,11 +108,18 @@ function RecordDetail() {
             {job?.customers?.name} · {job?.homes?.address}
           </div>
         </div>
-        <a href={publicUrl} target="_blank" rel="noreferrer">
-          <Btn variant="indigo">
-            View public record <ExternalLink size={15} />
-          </Btn>
-        </a>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {job?.customers && (
+            <Link to="/pro/invoices/new" search={{ customer: job.customers.id, job: job.id }}>
+              <Btn variant="secondary">Create invoice</Btn>
+            </Link>
+          )}
+          <a href={publicUrl} target="_blank" rel="noreferrer">
+            <Btn variant="indigo">
+              View public record <ExternalLink size={15} />
+            </Btn>
+          </a>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5 items-start">

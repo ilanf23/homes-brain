@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Avatar, Btn, Card, Eyebrow, PageLoader, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, tradeLabel } from "@/lib/hb";
+import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, NoHomeYet, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
@@ -35,13 +36,14 @@ function HomeOverview() {
   const [equipment, setEquipment] = useState<EquipmentRow[]>([]);
   const [pros, setPros] = useState<ProRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!home) return;
     (async () => {
-      const [{ data: eq }, { data: jb }] = await Promise.all([
+      const [{ data: eq }, { data: jb }, inv] = await Promise.all([
         supabase
           .from("equipment")
           .select("id,type,make,model,warranty_until,source")
@@ -52,9 +54,11 @@ function HomeOverview() {
           .select("id,what_done,created_at,pro_id,next_service_date")
           .eq("home_id", home.id)
           .order("created_at", { ascending: false }),
+        listInvoicesForHome(home.id),
       ]);
       setEquipment((eq ?? []) as EquipmentRow[]);
       setJobs((jb ?? []) as JobRow[]);
+      setInvoices(inv);
       const proIds = Array.from(new Set((jb ?? []).map((j) => j.pro_id)));
       if (proIds.length) {
         const { data: pr } = await supabase
@@ -186,6 +190,41 @@ function HomeOverview() {
                 </Btn>
               </Link>
             </div>
+          </Card>
+        )}
+
+        {/* Invoices from pros: read-only, rendered only when there's something to show */}
+        {invoices.length > 0 && (
+          <Card className="anim-fade-up d-3">
+            <Eyebrow accent="indigo">Invoices</Eyebrow>
+            <div className="mt-3 divide-y divide-line">
+              {invoices.map((inv) => (
+                <div key={inv.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-ink truncate">
+                      {inv.pros?.business ?? "Your pro"}
+                    </div>
+                    <div className="text-xs text-muted truncate">
+                      {inv.items[0]?.description ?? ""}
+                      {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="font-bold text-ink tnum">{formatMoney(Number(inv.total))}</div>
+                    {inv.status === "paid" ? (
+                      <Pill accent="indigo">Paid</Pill>
+                    ) : isOverdue(inv) ? (
+                      <Pill accent="amber">Overdue</Pill>
+                    ) : (
+                      <Pill accent="ink">Open</Pill>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted">
+              Sent by your pros. Pay them the way you always do; this is just your record.
+            </p>
           </Card>
         )}
 

@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Plus,
+  ReceiptText,
   Settings,
   Star,
   Users,
@@ -63,6 +64,7 @@ export type ProNavKey =
   | "dashboard"
   | "customers"
   | "records"
+  | "invoices"
   | "due"
   | "reviews"
   | "referral"
@@ -72,6 +74,7 @@ const NAV: { key: ProNavKey; label: string; to: string; icon: typeof LayoutDashb
   { key: "dashboard", label: "Dashboard", to: "/pro", icon: LayoutDashboard },
   { key: "customers", label: "Customers", to: "/pro/customers", icon: Users },
   { key: "records", label: "Records", to: "/pro/records", icon: FileText },
+  { key: "invoices", label: "Invoices", to: "/pro/invoices", icon: ReceiptText },
   { key: "due", label: "Due for service", to: "/pro/due", icon: CalendarClock },
   { key: "reviews", label: "Reviews", to: "/pro/reviews", icon: Star },
   { key: "referral", label: "Referral", to: "/pro/referral", icon: Gift },
@@ -95,7 +98,7 @@ export function ProShell({
   }
 
   return (
-    <div className="min-h-dvh bg-soft md:flex">
+    <div className="font-app min-h-dvh bg-soft md:flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
         <div className="px-5 h-16 flex items-center border-b border-line">
