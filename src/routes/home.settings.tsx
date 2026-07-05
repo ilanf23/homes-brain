@@ -211,8 +211,30 @@ function HomeownerSettings() {
         {/* Your home */}
         <Card className="anim-fade-up d-3">
           <Eyebrow accent="indigo">Your home</Eyebrow>
-          <div className="mt-2">
-            <KV k="Address" v={home.address} mono={false} />
+          <div className="mt-4 space-y-3">
+            <Field label="Home address" hint="Update this if you moved or fix a typo.">
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="123 Main St, Austin, TX"
+              />
+            </Field>
+            {addrErr && (
+              <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
+                {addrErr}
+              </div>
+            )}
+            <div>
+              <Btn
+                variant="indigo"
+                disabled={savingAddr || !address.trim() || address.trim() === home.address}
+                onClick={saveAddress}
+              >
+                {savingAddr ? "Saving…" : "Save address"}
+              </Btn>
+            </div>
+          </div>
+          <div className="mt-4">
             {home.claimed_at && <KV k="Claimed" v={formatDate(home.claimed_at)} />}
             <KV k="Your plan" v="Free for life" mono={false} />
           </div>
@@ -221,6 +243,7 @@ function HomeownerSettings() {
             for life because your pros write it.
           </p>
         </Card>
+
       </div>
 
       {toast && <Toast>{toast}</Toast>}
