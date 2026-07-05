@@ -258,7 +258,7 @@ function ProProfile() {
               <p className="mt-4 text-sm text-muted">Recent activity will appear here.</p>
             ) : (
               <ul className="mt-3">
-                {profile.activity.map((a, i) => (
+                {profile.activity.map((a: { what_done: string; done_on: string; equipment_type: string | null }, i: number) => (
                   <li
                     key={i}
                     className="flex items-start justify-between gap-4 border-b border-line py-3 last:border-b-0"
