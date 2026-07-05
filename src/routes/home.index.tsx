@@ -94,10 +94,12 @@ function HomeOverview() {
       <HomeShell active="overview" homeowner={homeowner} home={null}>
         <OnboardingNoHome
           homeownerId={homeownerId}
+          homeowner={homeowner}
           onCreated={() => window.location.reload()}
         />
       </HomeShell>
     );
+
   if (loading) return <PageLoader label="Loading your home" />;
 
 
