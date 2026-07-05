@@ -326,25 +326,14 @@ function Landing() {
             {PROBLEM_PANELS.map((p, i) => (
               <div key={p.title} className={`reveal rd-${i + 1} h-full`}>
                 <div className="flex h-full flex-col overflow-hidden rounded-[22px] border border-line bg-paper shadow-[0_18px_36px_-28px_rgba(22,22,15,0.4)]">
-                  <div className="relative">
-                    <img
-                      src={p.img}
-                      alt={p.imgAlt}
-                      loading="lazy"
-                      className={`h-52 sm:h-60 w-full object-cover ${p.imgPos}`}
-                    />
-                    {/* Ink fade so the status chip stays legible on any photo */}
-                    <div
-                      className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/50 to-transparent"
-                      aria-hidden="true"
-                    />
-                    <span className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-paper/95 px-3.5 py-1.5 text-xs font-bold text-ink shadow-[0_8px_20px_-10px_rgba(22,22,15,0.5)]">
+                  <div className="flex-1 p-7 sm:p-8">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-soft px-3.5 py-1.5 text-xs font-bold text-ink">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber" aria-hidden="true" />
                       {p.chip}
                     </span>
-                  </div>
-                  <div className="flex-1 p-7 sm:p-8">
-                    <Eyebrow accent={p.accent}>{p.eyebrow}</Eyebrow>
+                    <div className="mt-5">
+                      <Eyebrow accent={p.accent}>{p.eyebrow}</Eyebrow>
+                    </div>
                     <h3 className="mt-3 text-2xl tracking-tight text-ink">{p.title}</h3>
                     <p className="mt-3 text-[15px] text-muted">{p.body}</p>
                   </div>
