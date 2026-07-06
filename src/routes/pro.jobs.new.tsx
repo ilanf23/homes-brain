@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { getSession } from "@/lib/session";
+import { useProGuard } from "@/components/pro-shell";
 import { buildRecordUrl, checkRecall, geocodeHome, logEvent, mockSend, tradeLabel } from "@/lib/hb";
 import { scanNameplate, useDictation } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
@@ -27,9 +27,9 @@ const STAGE_LABELS = ["Customer", "The work", "Send"];
 
 function NewJob() {
   const navigate = useNavigate();
-  const [proId, setProId] = useState<string | null>(null);
-  const [proName, setProName] = useState("");
-  const [proTrade, setProTrade] = useState("");
+  const { proId, pro } = useProGuard();
+  const proName = pro?.business ?? "";
+  const proTrade = pro?.trade ?? "";
   const [stage, setStage] = useState<Stage>("customer");
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -67,30 +67,16 @@ function NewJob() {
   const [recordUrl, setRecordUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const s = getSession();
-    if (!s || s.role !== "pro") {
-      navigate({ to: "/login" });
-      return;
-    }
-    setProId(s.proId);
+    if (!proId) return;
     (async () => {
-      const { data: p } = await supabase
-        .from("pros")
-        .select("business,trade")
-        .eq("id", s.proId)
-        .maybeSingle();
-      if (p) {
-        setProName(p.business);
-        setProTrade(p.trade);
-      }
       const { data: c } = await supabase
         .from("customers")
         .select("id,name,phone,email,home_id,homes(address)")
-        .eq("pro_id", s.proId)
+        .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     })();
-  }, [navigate]);
+  }, [proId]);
 
   async function onNameplate(file: File) {
     setScanState("scanning");
@@ -318,6 +304,14 @@ function NewJob() {
   const canCustomer = selectedCustomerId || (newCustomer.name && newCustomer.address && consent);
   const canWork = whatDone.length > 0;
   const showPreview = stage === "work" || stage === "review";
+
+  if (!proId) {
+    return (
+      <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
+        Loading…
+      </div>
+    );
+  }
 
   return (
     <div className="font-app min-h-dvh bg-soft">
