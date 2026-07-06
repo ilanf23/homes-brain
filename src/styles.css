@@ -98,11 +98,42 @@
   --red: #a32d2d;
   --redbg: #fcebeb;
 
+  /* Text on solid accent fills (indigo/coral buttons, badges). Flips dark
+     in dark mode because the dark palette brightens accents past
+     AA-with-white. */
+  --on-accent: #ffffff;
+
   /* Portal typeface stack: same Plus Jakarta Sans as everywhere else. The var
      survives so .font-app scoping keeps working if the portal ever diverges. */
   --font-portal:
     "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
     Arial, sans-serif;
+}
+
+/* Dark theme: applied by the portal shells on their root div only.
+   Marketing and public record pages never get this class. Same warm-ledger
+   personality, inverted: cards stay one step lighter than the page. */
+.dark {
+  --ink: #f0eee6;
+  --muted: #9b988f;
+  --line: #33322a;
+  --bg: #201f18;
+  --paper: #201f18;
+  --soft: #171610;
+
+  --indigo: #8a82ea;
+  --indigobg: #2a2751;
+  --indigo-dark: #c5c1f5;
+  --coral: #e87a4a;
+  --coralbg: #3f2118;
+  --coral-dark: #f2a184;
+  --amber: #d9a04a;
+  --amberbg: #3a2f16;
+  --amber-dark: #ecc687;
+  --red: #e06c6c;
+  --redbg: #402020;
+
+  --on-accent: #191813;
 }
 
 @layer base {

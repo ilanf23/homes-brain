@@ -111,13 +111,17 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
 /* indigo = default brand CTA; coral = payoff CTAs (rebook, revenue) only. */
 type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "ghost";
 
+/* Fill text tokens instead of text-white so dark mode stays AA: ink fills
+   flip light (text follows --bg), accent fills brighten (text follows
+   --on-accent). */
 const btnStyles: Record<BtnVariant, string> = {
-  primary: "bg-ink text-white hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)]",
+  primary:
+    "bg-ink text-background hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)]",
   secondary: "bg-soft text-ink hover:bg-line",
   coral:
-    "bg-coral text-white hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
+    "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
   indigo:
-    "bg-indigo text-white hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
+    "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
   ghost: "bg-transparent text-ink hover:bg-soft",
 };
 
@@ -201,6 +205,68 @@ export function Avatar({
   );
 }
 
+/* Switch with a 44px hit area around a 24px visual track. Writes should be
+   optimistic: flip state before the request, revert on failure. */
+export function Toggle({
+  checked,
+  onChange,
+  label,
+  disabled = false,
+  accent = "indigo",
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+  disabled?: boolean;
+  accent?: Accent;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className="pressable shrink-0 rounded-full p-2.5 -m-2.5 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ink/40"
+    >
+      <span
+        className={`relative block w-11 h-6 rounded-full transition-colors duration-200 ${
+          checked ? accentSolid[accent] : "bg-line"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 w-5 h-5 rounded-full bg-paper shadow transition-all duration-200 ${
+            checked ? "left-[22px]" : "left-0.5"
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
+/* Label + optional sub on the left, control on the right. The list-row unit
+   of every settings section. */
+export function SettingRow({
+  label,
+  sub,
+  children,
+}: {
+  label: string;
+  sub?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3.5 border-b border-line last:border-b-0 last:pb-0 first:pt-0">
+      <div className="min-w-0">
+        <div className="text-sm font-semibold text-ink">{label}</div>
+        {sub && <div className="text-xs text-muted mt-0.5">{sub}</div>}
+      </div>
+      {children && <div className="shrink-0 flex items-center">{children}</div>}
+    </div>
+  );
+}
+
 export function Field({
   label,
   hint,
@@ -240,7 +306,7 @@ export function Toast({ children, onDismiss }: { children: ReactNode; onDismiss?
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 z-50 flex items-center gap-2.5 rounded-2xl bg-ink text-white pl-4 pr-3 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(22,22,15,0.5)] max-w-[92vw]"
+      className="fixed bottom-4 left-1/2 z-50 flex items-center gap-2.5 rounded-2xl bg-ink text-background pl-4 pr-3 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(22,22,15,0.5)] max-w-[92vw]"
       style={{ animation: "hb-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both" }}
     >
       <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" className="shrink-0">
@@ -248,7 +314,7 @@ export function Toast({ children, onDismiss }: { children: ReactNode; onDismiss?
         <path
           d="m4.8 8.3 2.1 2.1 4.3-4.6"
           fill="none"
-          stroke="#fff"
+          stroke="var(--bg)"
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -259,7 +325,7 @@ export function Toast({ children, onDismiss }: { children: ReactNode; onDismiss?
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="pressable shrink-0 rounded-full p-1 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          className="pressable shrink-0 rounded-full p-1 text-background/60 hover:text-background hover:bg-background/10 transition-colors"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
             <path

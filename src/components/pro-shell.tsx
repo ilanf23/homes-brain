@@ -141,7 +141,7 @@ function NotificationsBell({ proId, align }: { proId: string; align: "left" | "r
       >
         <Bell size={17} />
         {badge > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-indigo text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-indigo text-(--on-accent) text-[10px] font-bold flex items-center justify-center">
             {badge > 9 ? "9+" : badge}
           </span>
         )}
