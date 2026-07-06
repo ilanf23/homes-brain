@@ -273,7 +273,9 @@ export function ProShell({
 
   return (
     /* text-ink re-resolves the inherited body color inside the .dark scope. */
-    <div className={`font-app min-h-dvh bg-soft text-ink md:flex ${theme === "dark" ? "dark" : ""}`}>
+    <div
+      className={`font-app min-h-dvh bg-soft text-ink md:flex ${theme === "dark" ? "dark" : ""}`}
+    >
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
         <div className="px-5 h-16 flex items-center border-b border-line">
