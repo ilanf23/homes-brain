@@ -101,7 +101,7 @@ function timeAgo(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-/* Bell + unread badge + dropdown, shown in the sidebar (desktop) and header (mobile).
+/* Bell + unread badge + dropdown, shown in the top bar (desktop) and header (mobile).
    Opening the panel marks everything read; unread dots persist until it closes. */
 function NotificationsBell({ proId, align }: { proId: string; align: "left" | "right" }) {
   const [open, setOpen] = useState(false);
