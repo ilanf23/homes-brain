@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
-import { setSession } from "@/lib/session";
 import { Logo } from "@/components/svg";
 
 export const Route = createFileRoute("/login")({
@@ -25,10 +24,11 @@ function Login() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotSent, setForgotSent] = useState<string | null>(null);
 
-  // Homeowner state (temporary mock session)
-  const [contact, setContact] = useState("");
+  // Homeowner state - real magic link auth
+  const [hoEmail, setHoEmail] = useState("");
   const [hoErr, setHoErr] = useState<string | null>(null);
   const [hoBusy, setHoBusy] = useState(false);
+  const [hoSent, setHoSent] = useState<string | null>(null);
 
   async function proLogin() {
     setBusy(true);
@@ -42,7 +42,6 @@ function Login() {
       setBusy(false);
       return;
     }
-    // Confirm the pros row exists and is linked to this auth user.
     const { data: pro } = await supabase
       .from("pros")
       .select("id,business")
@@ -78,24 +77,17 @@ function Login() {
   async function homeownerLogin() {
     setHoBusy(true);
     setHoErr(null);
-    const c = contact.trim();
-    const { data, error } = await supabase.rpc("get_homeowner_by_contact", { p_contact: c });
+    const { error } = await supabase.auth.signInWithOtp({
+      email: hoEmail.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/home` },
+    });
     if (error) {
       setHoErr(error.message);
       setHoBusy(false);
       return;
     }
-    const match = data as { id: string; address: string | null } | null;
-    if (!match) {
-      setHoErr(
-        "No homeowner account found for that contact. New here? Sign up free to start your home's record.",
-      );
-      setHoBusy(false);
-      return;
-    }
-    setSession({ role: "homeowner", homeownerId: match.id });
-    await logEvent(`homeowner:${match.id}`, "logged_in", { role: "homeowner" });
-    navigate({ to: "/home" });
+    setHoSent(hoEmail.trim());
+    setHoBusy(false);
   }
 
   return (
@@ -115,7 +107,7 @@ function Login() {
           <p className="mt-2 text-sm text-muted">
             {tab === "pro"
               ? "Sign in with your email and password."
-              : "Sign in with the email or phone you used at signup."}
+              : "We'll email you a one-tap sign-in link."}
           </p>
         </div>
 
@@ -232,50 +224,63 @@ function Login() {
 
           {tab === "homeowner" && (
             <div className="space-y-4">
-              <Field label="Email or phone">
-                <Input
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                  placeholder="you@email.com or 555-555-1234"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && contact.trim() && !hoBusy) homeownerLogin();
-                  }}
-                />
-              </Field>
-              {hoErr && (
-                <div
-                  role="alert"
-                  className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                >
-                  {hoErr}
+              {hoSent ? (
+                <div className="space-y-3">
+                  <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
+                    Check your email at <span className="font-semibold">{hoSent}</span> and click
+                    the link to sign in.
+                  </div>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-indigo hover:underline"
+                    onClick={() => setHoSent(null)}
+                  >
+                    Use a different email
+                  </button>
                 </div>
+              ) : (
+                <>
+                  <Field label="Email">
+                    <Input
+                      type="email"
+                      value={hoEmail}
+                      onChange={(e) => setHoEmail(e.target.value)}
+                      placeholder="you@email.com"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && hoEmail.trim() && !hoBusy) homeownerLogin();
+                      }}
+                    />
+                  </Field>
+                  {hoErr && (
+                    <div
+                      role="alert"
+                      className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
+                    >
+                      {hoErr}
+                    </div>
+                  )}
+                  <Btn
+                    variant="indigo"
+                    size="lg"
+                    className="w-full"
+                    disabled={!hoEmail.trim() || hoBusy}
+                    onClick={homeownerLogin}
+                  >
+                    {hoBusy ? "Sending…" : "Email me a sign-in link"}
+                  </Btn>
+                  <div className="text-center text-xs text-muted">
+                    New homeowner?{" "}
+                    <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
+                      Start free
+                    </Link>
+                  </div>
+                </>
               )}
-              <Btn
-                variant="indigo"
-                size="lg"
-                className="w-full"
-                disabled={!contact.trim() || hoBusy}
-                onClick={homeownerLogin}
-              >
-                {hoBusy ? "Signing in…" : "Sign in"}
-              </Btn>
-              <div className="text-center text-xs text-muted">
-                New homeowner?{" "}
-                <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
-                  Start free
-                </Link>
-              </div>
             </div>
           )}
         </Card>
-
-        <p className="mt-4 text-center text-[11px] text-muted">
-          Pros use email + password with verification. Homeowner sign-in is a temporary mock while
-          real homeowner auth is built.
-        </p>
       </div>
     </div>
   );
 }
-
