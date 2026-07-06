@@ -36,10 +36,16 @@ const BUCKETS = [
 
 function Reminders() {
   const navigate = useNavigate();
-  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
-  const [jobs, setJobs] = useState<DueJob[]>([]);
-  const [pros, setPros] = useState<ProRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    homeownerId,
+    homeowner,
+    home,
+    jobs: allJobs,
+    pros: allPros,
+    loading: guardLoading,
+  } = useHomeownerGuard();
+  const jobs = (allJobs as unknown as DueJob[]).filter((j) => j.next_service_date);
+  const pros = allPros as unknown as ProRow[];
   const [booked, setBooked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -47,28 +53,6 @@ function Reminders() {
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
   }, [guardLoading, home, navigate]);
-
-  useEffect(() => {
-    if (!home) return;
-    (async () => {
-      const { data: jb } = await supabase
-        .from("jobs")
-        .select("id,what_done,next_service_date,pro_id")
-        .eq("home_id", home.id)
-        .not("next_service_date", "is", null)
-        .order("next_service_date", { ascending: true });
-      setJobs((jb ?? []) as DueJob[]);
-      const proIds = Array.from(new Set((jb ?? []).map((j) => j.pro_id)));
-      if (proIds.length) {
-        const { data: pr } = await supabase
-          .from("pros")
-          .select("id,business,trade")
-          .in("id", proIds);
-        setPros((pr ?? []) as ProRow[]);
-      }
-      setLoading(false);
-    })();
-  }, [home]);
 
   useEffect(() => {
     if (!toast) return;
