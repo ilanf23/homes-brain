@@ -154,12 +154,14 @@ function HomeownerSettings() {
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
     setPrefErr(null);
-    const params: Record<string, unknown> = {};
-    params[`p_${key}`] = value;
-    const { error } = await supabase.rpc(
-      "homeowner_update_profile",
-      params as unknown as Parameters<typeof supabase.rpc>[1],
-    );
+    const params = { [`p_${key}`]: value } as {
+      p_notify_email?: boolean;
+      p_notify_sms?: boolean;
+      p_sms_opt_out?: boolean;
+      p_respect_quiet_hrs?: boolean;
+      p_marketing_consent?: boolean;
+    };
+    const { error } = await supabase.rpc("homeowner_update_profile", params);
     if (error) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
