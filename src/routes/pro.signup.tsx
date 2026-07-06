@@ -31,7 +31,6 @@ function ProSignup() {
   const [password, setPassword] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [phone, setPhone] = useState("");
   const [trade, setTrade] = useState<string>("water_treatment");
   const [area, setArea] = useState("");
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -56,7 +55,7 @@ function ProSignup() {
           business: business.trim(),
           trade,
           service_area: area.trim(),
-          phone: phone.trim() || null,
+          phone: null,
           google_place_id: googleConnected ? "demo_place_id" : null,
           google_rating: googleConnected ? "4.8" : null,
           ref: ref ?? null,
@@ -202,20 +201,6 @@ function ProSignup() {
                   {confirmPw && confirmPw !== password && (
                     <div className="mt-1 text-xs text-red">Passwords don't match.</div>
                   )}
-                </Field>
-                <Field label="Phone (optional)" hint="SMS verification coming soon.">
-                  <div className="flex gap-2">
-                    <Input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="555-555-1234"
-                      autoComplete="tel"
-                      className="flex-1"
-                    />
-                    <Btn variant="secondary" disabled title="SMS verification coming soon">
-                      Verify phone
-                    </Btn>
-                  </div>
                 </Field>
                 <Btn
                   variant="indigo"
