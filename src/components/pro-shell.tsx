@@ -196,10 +196,13 @@ function NotificationsBell({ proId, align }: { proId: string; align: "left" | "r
 export function ProShell({
   pro,
   active,
+  wide = false,
   children,
 }: {
   pro: ProRow | null;
   active: ProNavKey;
+  /* Wider content column for three-column record pages (customer detail). */
+  wide?: boolean;
   children: ReactNode;
 }) {
   const navigate = useNavigate();
@@ -313,7 +316,9 @@ export function ProShell({
           </nav>
         </header>
 
-        <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 md:py-10 pb-28 md:pb-10">
+        <main
+          className={`mx-auto ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 sm:px-6 py-6 md:py-10 pb-28 md:pb-10`}
+        >
           {children}
         </main>
 
