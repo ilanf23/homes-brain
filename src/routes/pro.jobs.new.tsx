@@ -305,6 +305,14 @@ function NewJob() {
   const canWork = whatDone.length > 0;
   const showPreview = stage === "work" || stage === "review";
 
+  if (!proId) {
+    return (
+      <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
+        Loading…
+      </div>
+    );
+  }
+
   return (
     <div className="font-app min-h-dvh bg-soft">
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
