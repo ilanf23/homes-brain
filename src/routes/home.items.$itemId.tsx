@@ -31,55 +31,29 @@ type ProRow = { id: string; business: string; trade: string };
 function ItemDetail() {
   const { itemId } = Route.useParams();
   const navigate = useNavigate();
-  const { homeowner, home, loading: guardLoading } = useHomeownerGuard();
-  const [item, setItem] = useState<EquipmentRow | null>(null);
-  const [jobs, setJobs] = useState<JobRow[]>([]);
-  const [pros, setPros] = useState<ProRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    homeowner,
+    home,
+    equipment,
+    jobs: allJobs,
+    pros: allPros,
+    loading: guardLoading,
+  } = useHomeownerGuard();
+  const item = useMemo(
+    () => (equipment.find((e) => e.id === itemId) as unknown as EquipmentRow | undefined) ?? null,
+    [equipment, itemId],
+  );
+  const jobs = (allJobs as unknown as JobRow[]).filter((j) => (j as JobRow & { equipment_id?: string }).equipment_id === itemId);
+  const pros = allPros as unknown as ProRow[];
 
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
   }, [guardLoading, home, navigate]);
 
-  useEffect(() => {
-    if (!home) return;
-    (async () => {
-      const { data: eq } = await supabase
-        .from("equipment")
-        .select(
-          "id,home_id,type,make,model,serial,warranty_until,recall_status,recall_checked_at,source,created_at",
-        )
-        .eq("id", itemId)
-        .eq("home_id", home.id)
-        .maybeSingle();
-      if (!eq) {
-        setLoading(false);
-        return;
-      }
-      setItem(eq as EquipmentRow);
-      const { data: jb } = await supabase
-        .from("jobs")
-        .select("id,what_done,created_at,pro_id")
-        .eq("equipment_id", itemId)
-        .order("created_at", { ascending: false });
-      setJobs((jb ?? []) as JobRow[]);
-      const proIds = Array.from(new Set((jb ?? []).map((j) => j.pro_id)));
-      if (proIds.length) {
-        const { data: pr } = await supabase
-          .from("pros")
-          .select("id,business,trade")
-          .in("id", proIds);
-        setPros((pr ?? []) as ProRow[]);
-      }
-      setLoading(false);
-    })();
-  }, [home, itemId]);
-
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
 
   if (guardLoading) return <PageLoader label="Loading item" />;
   if (!home) return <PageLoader label="Setting up your home" />;
-  if (loading) return <PageLoader label="Loading item" />;
 
   if (!item) {
     return (
