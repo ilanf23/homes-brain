@@ -86,7 +86,7 @@ function MyPros() {
 
   if (guardLoading) return <PageLoader label="Loading your pros" />;
   if (!home) return <PageLoader label="Setting up your home" />;
-  if (loading) return <PageLoader label="Loading your pros" />;
+  
 
   return (
     <HomeShell active="pros" homeowner={homeowner} home={home}>
