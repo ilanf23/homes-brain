@@ -31,7 +31,7 @@ export function InviteProsCard({
   useEffect(() => {
     if (!homeownerId) return;
     (async () => {
-      const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: homeownerId });
+      const { data } = await supabase.rpc("get_home_view");
       const view = data as { invites?: InviteRow[] } | null;
       setInvites((view?.invites ?? []) as InviteRow[]);
     })();
@@ -42,7 +42,6 @@ export function InviteProsCard({
   async function sendInvite(toName: string, toPhone: string | null, trade: string | null) {
     if (!homeownerId) return;
     const { data, error } = await supabase.rpc("homeowner_create_invite", {
-      p_homeowner_id: homeownerId,
       p_to_pro_name: toName,
       p_to_pro_phone: toPhone ?? "",
       p_trade: trade ?? "",

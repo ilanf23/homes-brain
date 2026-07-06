@@ -59,7 +59,6 @@ function AddToHome() {
     if (!home || !homeownerId) return;
     setSaving(true);
     const { error } = await supabase.rpc("homeowner_add_equipment", {
-      p_homeowner_id: homeownerId,
       p_type: itemType,
       p_make: make,
       p_model: model,

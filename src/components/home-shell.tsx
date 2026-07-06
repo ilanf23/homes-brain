@@ -2,7 +2,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Bell, Home, LogOut, Plus, Settings, Users, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { clearSession, getSession } from "@/lib/session";
 import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -87,27 +86,26 @@ export type HomeViewBundle = {
   records: HomeRecord[];
 };
 
-/* Session guard + full home view fetched via the get_home_view RPC (SECURITY
-   DEFINER, so it works from the anon key even though direct table access is
-   closed). Screens read all data from this hook. */
+const EMPTY_BUNDLE: HomeViewBundle = {
+  homeowner: null,
+  home: null,
+  equipment: [],
+  jobs: [],
+  pros: [],
+  invites: [],
+  records: [],
+};
+
+/* Homeowner guard: requires a real Supabase auth session. Loads the home
+   bundle via get_home_view() (SECURITY DEFINER, scoped to auth.uid()). */
 export function useHomeownerGuard() {
   const navigate = useNavigate();
   const [homeownerId, setHomeownerId] = useState<string | null>(null);
-  const [bundle, setBundle] = useState<HomeViewBundle>({
-    homeowner: null,
-    home: null,
-    equipment: [],
-    jobs: [],
-    pros: [],
-    invites: [],
-    records: [],
-  });
+  const [bundle, setBundle] = useState<HomeViewBundle>(EMPTY_BUNDLE);
   const [loading, setLoading] = useState(true);
 
-  const refresh = async (id?: string) => {
-    const hid = id ?? homeownerId;
-    if (!hid) return;
-    const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: hid });
+  const load = async () => {
+    const { data } = await supabase.rpc("get_home_view");
     const view = (data as HomeViewBundle | null) ?? null;
     if (view) {
       setBundle({
@@ -119,35 +117,32 @@ export function useHomeownerGuard() {
         invites: view.invites ?? [],
         records: view.records ?? [],
       });
+      if (view.homeowner) setHomeownerId(view.homeowner.id);
     }
   };
 
+  const refresh = async () => {
+    await load();
+  };
+
   useEffect(() => {
-    const s = getSession();
-    if (!s || s.role !== "homeowner") {
-      navigate({ to: "/login" });
-      return;
-    }
-    setHomeownerId(s.homeownerId);
+    let cancelled = false;
     (async () => {
-      const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: s.homeownerId });
-      const view = data as HomeViewBundle | null;
-      if (!view || !view.homeowner) {
-        clearSession();
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
         navigate({ to: "/login" });
         return;
       }
-      setBundle({
-        homeowner: view.homeowner,
-        home: view.home,
-        equipment: view.equipment ?? [],
-        jobs: view.jobs ?? [],
-        pros: view.pros ?? [],
-        invites: view.invites ?? [],
-        records: view.records ?? [],
-      });
-      setLoading(false);
+      await load();
+      if (!cancelled) setLoading(false);
     })();
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") navigate({ to: "/login" });
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
@@ -190,8 +185,8 @@ export function HomeShell({
   const navigate = useNavigate();
   const [theme] = useTheme();
 
-  function signOut() {
-    clearSession();
+  async function signOut() {
+    await supabase.auth.signOut();
     navigate({ to: "/" });
   }
 
@@ -302,6 +297,12 @@ export function HomeShell({
       </div>
     </div>
   );
+}
+
+/* Loading state shortcut so consumers can suspend on the guard. */
+export function useHomeownerPageLoader(loading: boolean) {
+  if (loading) return <PageLoader label="Loading" />;
+  return null;
 }
 
 /* Standard page heading inside the homeowner shell. */

@@ -124,7 +124,6 @@ function HomeownerSettings() {
     setSaving(true);
     setProfileErr(null);
     const { error } = await supabase.rpc("homeowner_update_profile", {
-      p_homeowner_id: homeownerId,
       p_name: name.trim(),
       p_phone: phone.trim(),
       p_email: email.trim(),
@@ -155,12 +154,14 @@ function HomeownerSettings() {
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
     setPrefErr(null);
-    const params: Record<string, unknown> = { p_homeowner_id: homeownerId };
-    params[`p_${key}`] = value;
-    const { error } = await supabase.rpc(
-      "homeowner_update_profile",
-      params as unknown as { p_homeowner_id: string },
-    );
+    const params = { [`p_${key}`]: value } as {
+      p_notify_email?: boolean;
+      p_notify_sms?: boolean;
+      p_sms_opt_out?: boolean;
+      p_respect_quiet_hrs?: boolean;
+      p_marketing_consent?: boolean;
+    };
+    const { error } = await supabase.rpc("homeowner_update_profile", params);
     if (error) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
@@ -174,8 +175,7 @@ function HomeownerSettings() {
   async function exportData() {
     if (!homeownerId) return;
     setExporting(true);
-    // Reuse the public home view for a full JSON export.
-    const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: homeownerId });
+    const { data } = await supabase.rpc("get_home_view");
     downloadJson(
       `homesbrain-home-record-${new Date().toISOString().slice(0, 10)}.json`,
       data ?? {},
@@ -185,10 +185,12 @@ function HomeownerSettings() {
     setToast("Your record downloaded");
   }
 
-  function signOut() {
+  async function signOut() {
+    await supabase.auth.signOut();
     clearSession();
     navigate({ to: "/" });
   }
+
 
 
   if (guardLoading) return <PageLoader label="Loading settings" />;
