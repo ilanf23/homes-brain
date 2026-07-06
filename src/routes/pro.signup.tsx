@@ -31,7 +31,6 @@ function ProSignup() {
   const [password, setPassword] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [phone, setPhone] = useState("");
   const [trade, setTrade] = useState<string>("water_treatment");
   const [area, setArea] = useState("");
   const [googleConnected, setGoogleConnected] = useState(false);
