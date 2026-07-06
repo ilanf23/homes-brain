@@ -1,7 +1,9 @@
 // Mock auth session for v0. Stored in localStorage.
-// Real OTP via Twilio/Resend is intentionally out of scope.
+// Only pros still use this local session for legacy compatibility; real
+// pro auth is via supabase.auth.signInWithPassword. Homeowners use real
+// supabase.auth (magic link) - see useHomeownerGuard.
 
-export type Session = { role: "pro"; proId: string } | { role: "homeowner"; homeownerId: string };
+export type Session = { role: "pro"; proId: string };
 
 const KEY = "hb_session";
 
