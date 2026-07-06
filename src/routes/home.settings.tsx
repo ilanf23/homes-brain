@@ -158,7 +158,7 @@ function HomeownerSettings() {
     params[`p_${key}`] = value;
     const { error } = await supabase.rpc(
       "homeowner_update_profile",
-      params as Parameters<typeof supabase.rpc<"homeowner_update_profile">>[1],
+      params as unknown as Parameters<typeof supabase.rpc>[1],
     );
     if (error) {
       setPrefs(prev);
