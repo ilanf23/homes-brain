@@ -4,6 +4,8 @@ import { Bell, Home, LogOut, Plus, Settings, Users, Wrench } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { clearSession, getSession } from "@/lib/session";
 import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
+import { useTheme } from "@/lib/theme";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 
 export type HomeownerRow = {
@@ -83,6 +85,7 @@ export function HomeShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const [theme] = useTheme();
 
   function signOut() {
     clearSession();
@@ -90,7 +93,7 @@ export function HomeShell({
   }
 
   return (
-    <div className="font-app min-h-dvh bg-soft md:flex">
+    <div className={`font-app min-h-dvh bg-soft md:flex ${theme === "dark" ? "dark" : ""}`}>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
         <div className="px-5 h-16 flex items-center border-b border-line">
@@ -131,6 +134,7 @@ export function HomeShell({
               </div>
               <div className="text-xs text-muted truncate">{home?.address ?? ""}</div>
             </div>
+            <ThemeToggle />
             <button
               onClick={signOut}
               aria-label="Sign out"
@@ -157,6 +161,7 @@ export function HomeShell({
                 </Btn>
               </Link>
               <Pill accent="indigo">Homeowner</Pill>
+              <ThemeToggle />
               <button
                 onClick={signOut}
                 aria-label="Sign out"
@@ -216,4 +221,3 @@ export function HomePageHead({
     </div>
   );
 }
-
