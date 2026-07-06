@@ -84,7 +84,7 @@ There is no test suite. Verify changes by running the dev server and exercising 
 
 The warm paper neutrals (ink / soft / line) carry the personality - a beautifully kept ledger. On accent tint backgrounds (`*bg`), use the `*-dark` text tone where the strong tone fails AA.
 
-- Type: marketing pages use the system font stack; the app portal (pro + homeowner dashboards, log-a-job, signup, login) uses Plus Jakarta Sans (self-hosted via `@fontsource-variable/plus-jakarta-sans`, scoped with the `font-app` utility - never on marketing). Headlines weight 800, tight tracking (~-0.02em). Eyebrows: ~12px UPPERCASE bold, +0.14em, indigo (coral only on a payoff moment). Body 15–17px, line-height ~1.55.
+- Type: Plus Jakarta Sans site-wide (marketing, portal, public record - self-hosted via `@fontsource-variable/plus-jakarta-sans`, one family for everything including dates/codes; the `font-app` utility and `--font-mono` token remain as no-op compatibility hooks). Headlines weight 800, tight tracking (~-0.02em). Eyebrows: ~12px UPPERCASE bold, +0.14em, indigo (coral only on a payoff moment). Body 15–17px, line-height ~1.55. Dates and numeric columns keep alignment via the `tnum` utility (Jakarta has tabular figures).
 - Components: fully rounded pill buttons; cards 16–22px radius on soft/white; KV rows (white, line border, muted key left / bold value right); chips/pills (999px, tint bg, accent text); phone mockups where useful. Rounded everything, generous whitespace, centered section headers.
 - Keep secondary text at `--muted` (#73706a) exactly - never lighten it with opacity; maintain WCAG AA.
 
