@@ -62,7 +62,14 @@ const NAV = [
 
 function HomeownerSettings() {
   const navigate = useNavigate();
-  const { homeownerId, homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
+  const {
+    homeownerId,
+    homeowner,
+    setHomeowner,
+    home,
+    jobs: hookJobs,
+    loading: guardLoading,
+  } = useHomeownerGuard();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
