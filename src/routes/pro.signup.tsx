@@ -55,7 +55,7 @@ function ProSignup() {
           business: business.trim(),
           trade,
           service_area: area.trim(),
-          phone: phone.trim() || null,
+          phone: null,
           google_place_id: googleConnected ? "demo_place_id" : null,
           google_rating: googleConnected ? "4.8" : null,
           ref: ref ?? null,
