@@ -22,6 +22,9 @@ import {
   type ProNotification,
 } from "@/lib/hb";
 import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
+import { useTheme } from "@/lib/theme";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { GlobalSearch } from "@/components/pro-search";
 import { Logo } from "@/components/svg";
 
 export type ProRow = {
@@ -193,6 +196,61 @@ function NotificationsBell({ proId, align }: { proId: string; align: "left" | "r
   );
 }
 
+/* Avatar dropdown in the top bar: identity, Settings, Sign out.
+   Same overlay pattern as NotificationsBell. */
+function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => void }) {
+  const [open, setOpen] = useState(false);
+  if (!pro) return <Skeleton className="w-8 h-8 rounded-xl shrink-0" />;
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        aria-label="Account menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="pressable block rounded-xl"
+      >
+        <Avatar name={pro.business} accent="indigo" size={32} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
+          <div
+            role="menu"
+            aria-label="Account"
+            className="absolute top-full right-0 mt-2 z-50 w-64 rounded-2xl border border-line bg-paper shadow-[0_24px_60px_-24px_rgba(22,22,15,0.3)] overflow-hidden"
+          >
+            <div className="px-4 py-3 border-b border-line flex items-center gap-2.5">
+              <Avatar name={pro.business} accent="indigo" size={36} />
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-ink truncate">{pro.business}</div>
+                <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
+              </div>
+            </div>
+            <div className="p-1.5">
+              <Link
+                to="/pro/settings"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted font-semibold hover:text-ink hover:bg-soft"
+              >
+                <Settings size={16} /> Settings
+              </Link>
+              <button
+                role="menuitem"
+                onClick={onSignOut}
+                className="pressable w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted font-semibold hover:text-ink hover:bg-soft"
+              >
+                <LogOut size={16} /> Sign out
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function ProShell({
   pro,
   active,
@@ -206,6 +264,7 @@ export function ProShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const [theme] = useTheme();
 
   function signOut() {
     clearSession();
@@ -213,14 +272,13 @@ export function ProShell({
   }
 
   return (
-    <div className="font-app min-h-dvh bg-soft md:flex">
+    <div className={`font-app min-h-dvh bg-soft md:flex ${theme === "dark" ? "dark" : ""}`}>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
-        <div className="px-5 h-16 flex items-center justify-between border-b border-line">
+        <div className="px-5 h-16 flex items-center border-b border-line">
           <Link to="/" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          {pro && <NotificationsBell proId={pro.id} align="left" />}
         </div>
         <div className="p-3">
           <Link to="/pro/jobs/new">
@@ -246,45 +304,37 @@ export function ProShell({
             </Link>
           ))}
         </nav>
-        <div className="p-3 border-t border-line">
-          <div className="flex items-center gap-2.5 px-2">
-            {pro ? (
-              <>
-                <Avatar name={pro.business} accent="indigo" size={36} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-ink truncate">{pro.business}</div>
-                  <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <Skeleton className="h-3.5 w-24" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              </>
-            )}
-            <button
-              onClick={signOut}
-              aria-label="Sign out"
-              title="Sign out"
-              className="pressable text-muted hover:text-ink p-1.5 rounded-lg hover:bg-soft transition-colors"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
-        </div>
       </aside>
 
       {/* Content column (with mobile header + nav) */}
       <div className="flex-1 min-w-0">
+        {/* Desktop top bar: search left, actions right. Mobile keeps its own header. */}
+        <header className="hidden md:flex sticky top-0 z-40 h-16 items-center gap-3 px-6 border-b border-line bg-paper/85 backdrop-blur-md">
+          <GlobalSearch proId={pro?.id ?? null} />
+          <div className="ml-auto flex items-center gap-1.5">
+            <Link to="/pro/jobs/new">
+              <Btn variant="indigo" size="sm" tabIndex={-1}>
+                <Plus size={14} />
+                <span className="hidden lg:inline">Log a job</span>
+              </Btn>
+            </Link>
+            <ThemeToggle />
+            {pro ? (
+              <NotificationsBell proId={pro.id} align="right" />
+            ) : (
+              <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+            )}
+            <AccountMenu pro={pro} onSignOut={signOut} />
+          </div>
+        </header>
+
         <header className="md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
           <div className="px-4 h-14 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
             <div className="flex items-center gap-1">
+              <ThemeToggle />
               {pro && <NotificationsBell proId={pro.id} align="right" />}
               <button
                 onClick={signOut}
