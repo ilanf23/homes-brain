@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Star } from "lucide-react";
-import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchNotifications, formatDate, type ProNotification } from "@/lib/hb";
+import { backfillHomeGeocodes, fetchProHomes, formatDate, type ProHome } from "@/lib/hb";
+import { isOverdue, listInvoicesForPro, type ProInvoice } from "@/lib/invoices";
 import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
 import { CoreLoopScene } from "@/components/core-loop-scene";
+import { MoneyRow } from "@/components/money-row";
+import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
+import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/")({
@@ -18,14 +21,16 @@ type CustomerRow = {
   name: string;
   phone: string | null;
   email: string | null;
+  home_id: string;
   homes: { address: string } | null;
 };
 type JobRow = {
   id: string;
+  home_id: string;
   what_done: string;
   next_service_date: string | null;
   created_at: string;
-  customers: { name: string } | null;
+  customers: { id: string; name: string; phone: string | null; email: string | null } | null;
   homes: { address: string } | null;
   records: { id: string; viewed_at: string | null; sent_sms_at: string | null }[] | null;
 };
@@ -35,7 +40,6 @@ type RebookEvent = {
   props: { job_id?: string; pro_id?: string; home_id?: string };
 };
 type ReviewEvent = { id: string; created_at: string; props: { customer_id?: string } };
-type ClaimedHome = { id: string; address: string; claimed_at: string };
 type Win = {
   key: string;
   ts: string;
@@ -44,81 +48,91 @@ type Win = {
   kind: "viewed" | "claimed" | "rebooked" | "review";
 };
 
+const DAY = 24 * 3600 * 1000;
+const DUE_WINDOW = 14 * DAY;
+const STALE_UNCLAIMED = 7 * DAY;
+
 function ProDashboard() {
   const { proId, pro } = useProGuard();
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [invoices, setInvoices] = useState<ProInvoice[]>([]);
+  const [homes, setHomes] = useState<ProHome[]>([]);
   const [rebooks, setRebooks] = useState<RebookEvent[]>([]);
   const [reviewAsks, setReviewAsks] = useState<ReviewEvent[]>([]);
-  const [claimedHomes, setClaimedHomes] = useState<ClaimedHome[]>([]);
-  const [requests, setRequests] = useState<ProNotification[]>([]);
+  const [geocodingCount, setGeocodingCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [panel, setPanel] = useState<"due" | "customers">("due");
+  const [toast, setToast] = useState<string | null>(null);
+  const backfillStarted = useRef(false);
 
   useEffect(() => {
     if (!proId) return;
     (async () => {
-      const [{ data: c }, { data: j }, { data: rb }, { data: rv }, { data: ch }] =
-        await Promise.all([
-          supabase
-            .from("customers")
-            .select("id,name,phone,email,homes(address)")
-            .eq("pro_id", proId)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("jobs")
-            .select(
-              "id,what_done,next_service_date,created_at,customers(name),homes(address),records(id,viewed_at,sent_sms_at)",
-            )
-            .eq("pro_id", proId)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("events")
-            .select("id,created_at,props")
-            .eq("type", "rebooked")
-            .eq("props->>pro_id", proId)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("events")
-            .select("id,created_at,props")
-            .eq("actor", `pro:${proId}`)
-            .eq("type", "review_requested")
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("homes")
-            .select("id,address,claimed_at")
-            .eq("created_by_pro", proId)
-            .not("claimed_at", "is", null)
-            .order("claimed_at", { ascending: false }),
-        ]);
+      const [{ data: c }, { data: j }, inv, hs, { data: rb }, { data: rv }] = await Promise.all([
+        supabase
+          .from("customers")
+          .select("id,name,phone,email,home_id,homes(address)")
+          .eq("pro_id", proId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("jobs")
+          .select(
+            "id,home_id,what_done,next_service_date,created_at,customers(id,name,phone,email),homes(address),records(id,viewed_at,sent_sms_at)",
+          )
+          .eq("pro_id", proId)
+          .order("created_at", { ascending: false }),
+        listInvoicesForPro(proId),
+        fetchProHomes(proId),
+        supabase
+          .from("events")
+          .select("id,created_at,props")
+          .eq("type", "rebooked")
+          .eq("props->>pro_id", proId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("events")
+          .select("id,created_at,props")
+          .eq("actor", `pro:${proId}`)
+          .eq("type", "review_requested")
+          .order("created_at", { ascending: false }),
+      ]);
       setCustomers((c ?? []) as unknown as CustomerRow[]);
       setJobs((j ?? []) as unknown as JobRow[]);
+      setInvoices(inv);
+      setHomes(hs);
       setRebooks((rb ?? []) as unknown as RebookEvent[]);
       setReviewAsks((rv ?? []) as unknown as ReviewEvent[]);
-      setClaimedHomes((ch ?? []) as unknown as ClaimedHome[]);
-      const notifs = await fetchNotifications(proId, 30);
-      setRequests(
-        notifs.filter((n) => n.type === "connect_request" || n.type === "rebook_request"),
-      );
       setLoading(false);
     })();
   }, [proId]);
 
+  // Lazy geocode backfill: up to 5 ungeocoded homes per visit, 1s apart.
+  useEffect(() => {
+    if (loading || backfillStarted.current) return;
+    const pending = homes.filter((h) => !h.geocoded_at);
+    if (pending.length === 0) return;
+    backfillStarted.current = true;
+    setGeocodingCount(Math.min(pending.length, 5));
+    void backfillHomeGeocodes(homes, (updated) => {
+      setHomes((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
+      setGeocodingCount((n) => Math.max(0, n - 1));
+    });
+  }, [loading, homes]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const sentCount = jobs.length;
   const viewedCount = jobs.filter((j) => j.records?.[0]?.viewed_at).length;
-  const dueSoon = jobs
-    .filter((j) => j.next_service_date)
-    .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))
-    .slice(0, 5);
 
-  // Jobs per week over the last 8 weeks, for the sparkline.
   const weeklyJobs = useMemo(() => {
     const buckets = new Array(8).fill(0);
     const now = Date.now();
     for (const j of jobs) {
-      const weeksAgo = Math.floor(
-        (now - new Date(j.created_at).getTime()) / (7 * 24 * 3600 * 1000),
-      );
+      const weeksAgo = Math.floor((now - new Date(j.created_at).getTime()) / (7 * DAY));
       if (weeksAgo >= 0 && weeksAgo < 8) buckets[7 - weeksAgo] += 1;
     }
     return buckets;
@@ -131,6 +145,96 @@ function ProDashboard() {
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     }).length;
   }, [rebooks]);
+
+  // Queue source 1: jobs due within 14 days or overdue, most overdue first.
+  const dueQueue = useMemo<QueueJob[]>(
+    () =>
+      jobs
+        .filter(
+          (j) =>
+            j.next_service_date &&
+            new Date(j.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
+        )
+        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))
+        .map((j) => ({
+          id: j.id,
+          what_done: j.what_done,
+          next_service_date: j.next_service_date!,
+          customer: j.customers,
+          address: j.homes?.address ?? null,
+        })),
+    [jobs],
+  );
+
+  // Queue source 2: open invoices past due, most overdue first.
+  const overdueInvoices = useMemo(
+    () => invoices.filter((i) => isOverdue(i)).sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1)),
+    [invoices],
+  );
+
+  // Queue source 3: unclaimed homes whose latest record went out 7+ days ago.
+  const staleHomes = useMemo<QueueStaleHome[]>(() => {
+    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
+    const latestSentByHome = new Map<string, string>();
+    for (const j of jobs) {
+      const sent = j.records?.[0]?.sent_sms_at;
+      if (!sent) continue;
+      const prev = latestSentByHome.get(j.home_id);
+      if (!prev || sent > prev) latestSentByHome.set(j.home_id, sent);
+    }
+    return homes
+      .filter((h) => !h.claimed_at)
+      .flatMap((h) => {
+        const sentAt = latestSentByHome.get(h.id);
+        if (!sentAt || Date.now() - new Date(sentAt).getTime() < STALE_UNCLAIMED) return [];
+        const c = customerByHome.get(h.id);
+        return [
+          {
+            homeId: h.id,
+            address: h.address,
+            customer: c ? { id: c.id, name: c.name, phone: c.phone, email: c.email } : null,
+            sentAt,
+          },
+        ];
+      })
+      .sort((a, b) => (a.sentAt < b.sentAt ? -1 : 1));
+  }, [homes, jobs, customers]);
+
+  // Map pins: status priority owes > due > unclaimed > active.
+  const pins = useMemo<MapPin[]>(() => {
+    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
+    const owesHomes = new Set(invoices.filter((i) => i.status === "open").map((i) => i.home_id));
+    const dueHomes = new Set(
+      jobs
+        .filter(
+          (j) =>
+            j.next_service_date &&
+            new Date(j.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
+        )
+        .map((j) => j.home_id),
+    );
+    return homes
+      .filter((h) => h.lat !== null && h.lng !== null)
+      .map((h) => {
+        const c = customerByHome.get(h.id);
+        const status = owesHomes.has(h.id)
+          ? ("owes" as const)
+          : dueHomes.has(h.id)
+            ? ("due" as const)
+            : !h.claimed_at
+              ? ("unclaimed" as const)
+              : ("active" as const);
+        return {
+          homeId: h.id,
+          customerId: c?.id ?? null,
+          name: c?.name ?? "Customer",
+          address: h.address,
+          lat: h.lat!,
+          lng: h.lng!,
+          status,
+        };
+      });
+  }, [homes, customers, invoices, jobs]);
 
   const wins = useMemo<Win[]>(() => {
     const jobById = new Map(jobs.map((j) => [j.id, j]));
@@ -148,7 +252,8 @@ function ProDashboard() {
         });
       }
     }
-    for (const h of claimedHomes) {
+    for (const h of homes) {
+      if (!h.claimed_at) continue;
       list.push({
         key: `claimed-${h.id}`,
         ts: h.claimed_at,
@@ -175,8 +280,8 @@ function ProDashboard() {
         kind: "review",
       });
     }
-    return list.sort((a, b) => (a.ts < b.ts ? 1 : -1)).slice(0, 10);
-  }, [jobs, customers, claimedHomes, rebooks, reviewAsks]);
+    return list.sort((a, b) => (a.ts < b.ts ? 1 : -1)).slice(0, 5);
+  }, [jobs, customers, homes, rebooks, reviewAsks]);
 
   if (loading || !pro) {
     return (
@@ -213,128 +318,68 @@ function ProDashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card lift className="anim-fade-up d-1">
+      <MoneyRow
+        invoices={invoices}
+        rebooksThisMonth={rebooksThisMonth}
+        rebooksAllTime={rebooks.length}
+      />
+
+      <ActionQueue
+        proId={proId!}
+        proBusiness={pro.business}
+        dueJobs={dueQueue}
+        overdueInvoices={overdueInvoices}
+        staleHomes={staleHomes}
+        onInvoicePaid={(invoiceId) =>
+          setInvoices((prev) =>
+            prev.map((i) =>
+              i.id === invoiceId
+                ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
+                : i,
+            ),
+          )
+        }
+        onToast={setToast}
+      />
+
+      <CustomerMap pins={pins} geocodingCount={geocodingCount} />
+
+      <div className="mt-4 grid grid-cols-3 gap-4">
+        <Card className="anim-fade-up d-4">
           <div className="text-xs uppercase tracking-wider text-muted font-bold">Records sent</div>
-          <div className="mt-2 flex items-end justify-between gap-2">
-            <div className="text-3xl font-semibold font-display">
+          <div className="mt-1.5 flex items-end justify-between gap-2">
+            <div className="text-xl font-semibold font-display">
               <CountUp value={sentCount} />
             </div>
-            <SparkLine points={weeklyJobs} color="var(--indigo)" />
+            <SparkLine points={weeklyJobs} color="var(--indigo)" width={64} height={22} />
           </div>
         </Card>
-        <Card lift className="anim-fade-up d-2">
-          <div className="text-xs uppercase tracking-wider text-muted font-bold">
-            Records viewed
-          </div>
-          <div className="mt-2 flex items-end justify-between gap-2">
-            <div className="text-3xl font-semibold font-display">
-              <CountUp value={viewedCount} />
-            </div>
+        <Card className="anim-fade-up d-4">
+          <div className="text-xs uppercase tracking-wider text-muted font-bold">View rate</div>
+          <div className="mt-1.5 flex items-end justify-between gap-2">
             <ProgressRing
               value={viewRate}
-              size={52}
-              strokeWidth={5}
+              size={40}
+              strokeWidth={4}
               label={`${Math.round(viewRate * 100)}% of records viewed`}
             />
+            <div className="text-xs text-muted tnum">
+              {viewedCount} of {sentCount} viewed
+            </div>
           </div>
         </Card>
         <Link to="/pro/customers" className="block">
-          <Card lift className="anim-fade-up d-3 h-full">
+          <Card lift className="anim-fade-up d-4 h-full">
             <div className="text-xs uppercase tracking-wider text-muted font-bold">Customers</div>
-            <div className="mt-2 text-3xl font-semibold font-display">
+            <div className="mt-1.5 text-xl font-semibold font-display">
               <CountUp value={customers.length} />
             </div>
           </Card>
         </Link>
-        <Link to="/pro/due" className="block">
-          <Card lift className="anim-fade-up d-4 h-full">
-            <div className="text-xs uppercase tracking-wider text-muted font-bold">
-              Due for service
-            </div>
-            <div className="mt-2 text-3xl font-semibold font-display">
-              <CountUp value={dueSoon.length} />
-            </div>
-          </Card>
-        </Link>
       </div>
 
-      {requests.length > 0 && (
-        <Card className="anim-fade-up d-2 mt-4">
-          <div className="flex items-center justify-between gap-2">
-            <Eyebrow accent="indigo">Requests from homeowners</Eyebrow>
-            {requests.some((n) => !n.read_at) && <Pill accent="indigo">New</Pill>}
-          </div>
-          <div className="mt-2 divide-y divide-line">
-            {requests.slice(0, 5).map((n) => (
-              <div key={n.id} className="py-3 flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold text-ink">{n.title}</div>
-                  {n.detail && <div className="text-xs text-muted mt-0.5">{n.detail}</div>}
-                </div>
-                <div className="shrink-0 flex items-center gap-3">
-                  <div className="text-xs text-muted font-mono tnum">
-                    {formatDate(n.created_at)}
-                  </div>
-                  {n.type === "rebook_request" ? (
-                    <Pill accent="coral">Rebook</Pill>
-                  ) : (
-                    <Pill accent="indigo">Connect</Pill>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      <div className="mt-4 grid md:grid-cols-3 gap-4">
-        <Card lift className="anim-fade-up d-2 md:col-span-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xs uppercase tracking-wider text-muted font-bold">
-              Rebooked via HomesBrain
-            </div>
-            {rebooks.length > 0 && <Pill accent="coral">Payoff</Pill>}
-          </div>
-          {rebooks.length === 0 ? (
-            <p className="mt-2 text-sm text-muted">
-              When homeowners rebook from their HomesBrain reminders, wins land here.
-            </p>
-          ) : (
-            <div className="mt-2 flex items-end gap-8">
-              <div>
-                <div className="text-3xl font-semibold font-display text-coral">
-                  <CountUp value={rebooksThisMonth} />
-                </div>
-                <div className="text-xs text-muted mt-0.5">this month</div>
-              </div>
-              <div>
-                <div className="text-3xl font-semibold font-display">
-                  <CountUp value={rebooks.length} />
-                </div>
-                <div className="text-xs text-muted mt-0.5">all time</div>
-              </div>
-            </div>
-          )}
-        </Card>
-        <Link to="/pro/reviews" className="block">
-          <Card lift className="anim-fade-up d-3 h-full">
-            <div className="text-xs uppercase tracking-wider text-muted font-bold">Reviews</div>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="text-3xl font-semibold font-display tnum">
-                {pro.google_place_id && pro.google_rating ? pro.google_rating : "-"}
-              </div>
-              {!!pro.google_place_id && <Star size={18} className="text-coral fill-coralbg" />}
-            </div>
-            <div className="text-xs text-muted mt-1">
-              {reviewAsks.length} review {reviewAsks.length === 1 ? "ask" : "asks"} sent
-            </div>
-          </Card>
-        </Link>
-      </div>
-
-      <div className="mt-8 grid md:grid-cols-2 gap-5 items-start">
-        <Card className="anim-fade-up d-3">
+      <div className="mt-5 grid md:grid-cols-2 gap-5 items-start">
+        <Card className="anim-fade-up d-5">
           <div className="flex items-center justify-between">
             <Eyebrow accent="indigo">Recent jobs</Eyebrow>
             <Link to="/pro/records" className="text-xs font-semibold text-indigo hover:underline">
@@ -388,111 +433,42 @@ function ProDashboard() {
           </div>
         </Card>
 
-        <Card className="anim-fade-up d-4">
-          <div
-            className="flex items-center gap-1 rounded-full bg-soft p-1 w-fit"
-            role="tablist"
-            aria-label="Dashboard panel"
-          >
-            {(
-              [
-                ["due", "Due for service"],
-                ["customers", "Customers"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={panel === key}
-                onClick={() => setPanel(key)}
-                className={`pressable rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
-                  panel === key ? "bg-paper text-ink shadow-sm" : "text-muted hover:text-ink"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {panel === "due" && (
-            <div key="due" className="anim-fade-in mt-4">
-              {dueSoon.length === 0 ? (
-                <p className="text-sm text-muted">Nothing scheduled yet.</p>
-              ) : (
-                <div>
-                  {dueSoon.map((j) => (
-                    <KV
-                      key={j.id}
-                      k={`${j.customers?.name ?? "-"} · ${j.homes?.address ?? ""}`}
-                      v={formatDate(j.next_service_date)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {panel === "customers" && (
-            <div key="customers" className="anim-fade-in mt-4 divide-y divide-line">
-              {customers.length === 0 && (
-                <p className="text-sm text-muted">
-                  No customers yet. They're added when you log a job.
-                </p>
-              )}
-              {customers.slice(0, 8).map((c) => (
-                <Link
-                  key={c.id}
-                  to="/pro/customers/$customerId"
-                  params={{ customerId: c.id }}
-                  className="py-3 flex items-center justify-between -mx-2 px-2 rounded-lg hover:bg-soft transition-colors duration-200"
-                >
+        <Card className="anim-fade-up d-5">
+          <Eyebrow accent="indigo">Wins</Eyebrow>
+          {wins.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">
+              Wins from your records (views, claims, rebooks) will show up here.
+            </p>
+          ) : (
+            <div className="mt-3 divide-y divide-line">
+              {wins.map((w) => (
+                <div key={w.key} className="py-3 flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-semibold text-ink">{c.name}</div>
-                    <div className="text-xs text-muted">{c.homes?.address}</div>
+                    <div className="font-semibold text-ink">{w.label}</div>
+                    {w.detail && <div className="text-xs text-muted">{w.detail}</div>}
                   </div>
-                  <div className="text-xs text-muted font-mono tnum">
-                    {c.phone ?? c.email ?? ""}
+                  <div className="shrink-0 flex items-center gap-3">
+                    <div className="text-xs text-muted font-mono tnum">{formatDate(w.ts)}</div>
+                    {w.kind === "rebooked" ? (
+                      <Pill accent="coral">Rebooked</Pill>
+                    ) : (
+                      <Pill accent="indigo">
+                        {w.kind === "viewed"
+                          ? "Viewed"
+                          : w.kind === "claimed"
+                            ? "Claimed"
+                            : "Review ask"}
+                      </Pill>
+                    )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}
         </Card>
       </div>
 
-      <Card className="anim-fade-up d-5 mt-5">
-        <Eyebrow accent="indigo">Wins</Eyebrow>
-        {wins.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">
-            Wins from your records (views, claims, rebooks) will show up here.
-          </p>
-        ) : (
-          <div className="mt-3 divide-y divide-line">
-            {wins.map((w) => (
-              <div key={w.key} className="py-3 flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold text-ink">{w.label}</div>
-                  {w.detail && <div className="text-xs text-muted">{w.detail}</div>}
-                </div>
-                <div className="shrink-0 flex items-center gap-3">
-                  <div className="text-xs text-muted font-mono tnum">{formatDate(w.ts)}</div>
-                  {w.kind === "rebooked" ? (
-                    <Pill accent="coral">Rebooked</Pill>
-                  ) : (
-                    <Pill accent="indigo">
-                      {w.kind === "viewed"
-                        ? "Viewed"
-                        : w.kind === "claimed"
-                          ? "Claimed"
-                          : "Review ask"}
-                    </Pill>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
   );
 }
