@@ -494,3 +494,75 @@ export function CountUp({
   }, [value, duration]);
   return <span className={`tnum ${className}`}>{n}</span>;
 }
+
+/* Grouped bar chart for the dashboard money row. Plain SVG, brand tokens,
+   values surfaced on hover via <title>. Bars share one linear scale. */
+
+export type BarGroup = {
+  label: string;
+  bars: { value: number; fill: string; stroke?: string; title?: string }[];
+};
+
+export function BarChart({
+  groups,
+  height = 110,
+  className = "",
+}: {
+  groups: BarGroup[];
+  height?: number;
+  className?: string;
+}) {
+  const width = 300;
+  const labelH = 16;
+  const chartH = height - labelH;
+  const max = Math.max(...groups.flatMap((g) => g.bars.map((b) => b.value)), 1);
+  const groupW = width / Math.max(groups.length, 1);
+  const barGap = 3;
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className={`w-full ${className}`}
+      role="img"
+      aria-label="Bar chart"
+    >
+      {groups.map((g, gi) => {
+        const n = Math.max(g.bars.length, 1);
+        const innerW = groupW * 0.62;
+        const barW = (innerW - barGap * (n - 1)) / n;
+        const x0 = gi * groupW + (groupW - innerW) / 2;
+        return (
+          <g key={gi}>
+            {g.bars.map((b, bi) => {
+              const h = b.value > 0 ? Math.max((b.value / max) * (chartH - 6), 2) : 0;
+              return (
+                <rect
+                  key={bi}
+                  x={x0 + bi * (barW + barGap)}
+                  y={chartH - h}
+                  width={barW}
+                  height={h}
+                  rx={2}
+                  fill={b.fill}
+                  stroke={b.stroke ?? "none"}
+                  strokeWidth={b.stroke ? 1 : 0}
+                >
+                  {b.title ? <title>{b.title}</title> : null}
+                </rect>
+              );
+            })}
+            <text
+              x={gi * groupW + groupW / 2}
+              y={height - 3}
+              textAnchor="middle"
+              fontSize={10}
+              fill="var(--muted)"
+            >
+              {g.label}
+            </text>
+          </g>
+        );
+      })}
+      <line x1={0} y1={chartH} x2={width} y2={chartH} stroke="var(--line)" strokeWidth={1} />
+    </svg>
+  );
+}
