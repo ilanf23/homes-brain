@@ -77,7 +77,7 @@ function Reminders() {
 
   if (guardLoading) return <PageLoader label="Loading reminders" />;
   if (!home) return <PageLoader label="Setting up your home" />;
-  if (loading) return <PageLoader label="Loading reminders" />;
+  
 
   const byBucket = {
     overdue: jobs.filter((j) => bucketOf(j.next_service_date) === "overdue"),
