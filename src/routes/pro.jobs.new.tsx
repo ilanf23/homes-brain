@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { getSession } from "@/lib/session";
-import { buildRecordUrl, checkRecall, logEvent, mockSend, tradeLabel } from "@/lib/hb";
+import { buildRecordUrl, checkRecall, geocodeHome, logEvent, mockSend, tradeLabel } from "@/lib/hb";
 import { scanNameplate, useDictation } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
 
@@ -170,6 +170,9 @@ function NewJob() {
           .select("id")
           .single();
         homeId = newHome!.id;
+        // Fire-and-forget: pin the home on the dashboard map. Failure is
+        // silent; the dashboard backfill will not retry (geocoded_at is stamped).
+        void geocodeHome(newHome!.id, newCustomer.address);
       }
       const { data: newC } = await supabase
         .from("customers")
