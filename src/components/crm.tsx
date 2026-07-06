@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, ChevronUp, Pencil } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, ChevronUp, Pencil, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Btn, Card, Input } from "@/lib/ui";
 import { formatDate } from "@/lib/hb";
@@ -11,10 +11,12 @@ export function UnderlineTabs({
   tabs,
   active,
   onChange,
+  onClose,
 }: {
-  tabs: { key: string; label: string; count?: number }[];
+  tabs: { key: string; label: string; count?: number; closable?: boolean }[];
   active: string;
   onChange: (key: string) => void;
+  onClose?: (key: string) => void;
 }) {
   return (
     <div className="flex gap-1 border-b border-line overflow-x-auto no-scrollbar" role="tablist">
@@ -24,7 +26,7 @@ export function UnderlineTabs({
           role="tab"
           aria-selected={active === t.key}
           onClick={() => onChange(t.key)}
-          className={`pressable shrink-0 px-3.5 py-2 text-sm -mb-px border-b-2 transition-colors ${
+          className={`pressable shrink-0 inline-flex items-center px-3.5 py-2 text-sm -mb-px border-b-2 transition-colors ${
             active === t.key
               ? "border-indigo text-indigo font-bold"
               : "border-transparent text-muted font-semibold hover:text-ink"
@@ -34,8 +36,61 @@ export function UnderlineTabs({
           {typeof t.count === "number" && (
             <span className="ml-1.5 text-xs tnum opacity-70">{t.count}</span>
           )}
+          {t.closable && onClose && (
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={`Remove ${t.label}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose(t.key);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  onClose(t.key);
+                }
+              }}
+              className="ml-1.5 p-0.5 rounded text-muted hover:text-ink hover:bg-soft"
+            >
+              <X size={12} />
+            </span>
+          )}
         </button>
       ))}
+    </div>
+  );
+}
+
+/* Right slide-in panel (HubSpot preview / edit-columns pattern). */
+export function SlideOver({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="absolute inset-0 bg-ink/30" onClick={onClose} />
+      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-paper border-l border-line shadow-[0_0_48px_-12px_rgba(22,22,15,0.4)] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line shrink-0">
+          <div className="eyebrow text-indigo">{title}</div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="pressable p-1.5 rounded-lg text-muted hover:text-ink hover:bg-soft"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+      </div>
     </div>
   );
 }
