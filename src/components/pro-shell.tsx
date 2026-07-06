@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  Bell,
   CalendarClock,
   FileText,
   Gift,
@@ -14,7 +15,12 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSession, getSession } from "@/lib/session";
-import { tradeLabel } from "@/lib/hb";
+import {
+  fetchNotifications,
+  markNotificationsRead,
+  tradeLabel,
+  type ProNotification,
+} from "@/lib/hb";
 import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
 import { Logo } from "@/components/svg";
 
@@ -81,6 +87,112 @@ const NAV: { key: ProNavKey; label: string; to: string; icon: typeof LayoutDashb
   { key: "settings", label: "Settings", to: "/pro/settings", icon: Settings },
 ];
 
+function timeAgo(iso: string) {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/* Bell + unread badge + dropdown, shown in the sidebar (desktop) and header (mobile).
+   Opening the panel marks everything read; unread dots persist until it closes. */
+function NotificationsBell({ proId, align }: { proId: string; align: "left" | "right" }) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<ProNotification[]>([]);
+  const [badge, setBadge] = useState(0);
+  const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const list = await fetchNotifications(proId);
+      if (cancelled) return;
+      setItems(list);
+      const unread = list.filter((n) => !n.read_at).map((n) => n.id);
+      setBadge(unread.length);
+      setUnreadIds(new Set(unread));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [proId]);
+
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && badge > 0) {
+      setBadge(0);
+      markNotificationsRead(proId);
+    }
+    if (!next) setUnreadIds(new Set());
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={toggle}
+        aria-label={badge > 0 ? `Notifications, ${badge} unread` : "Notifications"}
+        aria-expanded={open}
+        className="pressable relative text-muted hover:text-ink p-2 rounded-lg hover:bg-soft transition-colors"
+      >
+        <Bell size={17} />
+        {badge > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-indigo text-white text-[10px] font-bold flex items-center justify-center">
+            {badge > 9 ? "9+" : badge}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={toggle} aria-hidden="true" />
+          <div
+            className={`absolute top-full mt-2 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-paper shadow-[0_24px_60px_-24px_rgba(22,22,15,0.3)] ${
+              align === "left" ? "left-0" : "right-0"
+            }`}
+            role="dialog"
+            aria-label="Notifications"
+          >
+            <div className="px-4 py-3 border-b border-line text-sm font-bold text-ink">
+              Notifications
+            </div>
+            {items.length === 0 ? (
+              <p className="px-4 py-6 text-sm text-muted">
+                Nothing yet. When homeowners view records, claim homes, or ask to connect, it lands
+                here.
+              </p>
+            ) : (
+              <div className="max-h-96 overflow-y-auto divide-y divide-line">
+                {items.map((n) => (
+                  <div key={n.id} className="px-4 py-3 flex items-start gap-2.5">
+                    <span
+                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
+                        unreadIds.has(n.id) ? "bg-indigo" : "bg-transparent"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-ink">{n.title}</div>
+                      {n.detail && <div className="text-xs text-muted mt-0.5">{n.detail}</div>}
+                    </div>
+                    <span className="text-xs text-muted font-mono tnum shrink-0">
+                      {timeAgo(n.created_at)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function ProShell({
   pro,
   active,
@@ -101,10 +213,11 @@ export function ProShell({
     <div className="font-app min-h-dvh bg-soft md:flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
-        <div className="px-5 h-16 flex items-center border-b border-line">
+        <div className="px-5 h-16 flex items-center justify-between border-b border-line">
           <Link to="/" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
+          {pro && <NotificationsBell proId={pro.id} align="left" />}
         </div>
         <div className="p-3">
           <Link to="/pro/jobs/new">
@@ -168,13 +281,16 @@ export function ProShell({
             <Link to="/" className="flex items-center gap-2">
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
-            <button
-              onClick={signOut}
-              aria-label="Sign out"
-              className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
-            >
-              <LogOut size={16} />
-            </button>
+            <div className="flex items-center gap-1">
+              {pro && <NotificationsBell proId={pro.id} align="right" />}
+              <button
+                onClick={signOut}
+                aria-label="Sign out"
+                className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
           <nav
             className="flex gap-1 px-3 pb-2 overflow-x-auto no-scrollbar"

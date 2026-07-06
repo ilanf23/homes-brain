@@ -37,6 +37,70 @@ export async function logEvent(
   await supabase.from("events").insert({ actor: actor ?? undefined, type, props: props as never });
 }
 
+export type NotificationType =
+  | "connect_request"
+  | "rebook_request"
+  | "home_claimed"
+  | "record_viewed";
+
+export type ProNotification = {
+  id: string;
+  pro_id: string;
+  type: NotificationType;
+  title: string;
+  detail: string | null;
+  props: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+};
+
+/* The notifications table is not in the Lovable-generated Database types yet
+   (types.ts regenerates on sync), so these helpers go through an untyped view
+   of the client. Keep every notifications query in this file. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const untyped = supabase as unknown as { from: (table: string) => any };
+
+/* Fire-and-forget: a failed notification must never break the homeowner's flow. */
+export async function notifyPro(
+  proId: string,
+  type: NotificationType,
+  title: string,
+  detail?: string | null,
+  props: Record<string, unknown> = {},
+) {
+  try {
+    await untyped.from("notifications").insert({ pro_id: proId, type, title, detail, props });
+  } catch (e) {
+    console.warn("[notifyPro] failed", e);
+  }
+}
+
+export async function fetchNotifications(proId: string, limit = 15) {
+  try {
+    const { data } = await untyped
+      .from("notifications")
+      .select("id,pro_id,type,title,detail,props,read_at,created_at")
+      .eq("pro_id", proId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return (data ?? []) as ProNotification[];
+  } catch {
+    return [];
+  }
+}
+
+export async function markNotificationsRead(proId: string) {
+  try {
+    await untyped
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("pro_id", proId)
+      .is("read_at", null);
+  } catch {
+    /* non-fatal */
+  }
+}
+
 export async function mockSend(args: {
   channel: "sms" | "email";
   to: string;
@@ -49,6 +113,38 @@ export async function mockSend(args: {
     body: args.body,
     kind: args.kind,
   });
+}
+
+/* Accepts a pasted Google Maps / business link and returns a normalized https URL,
+   or null when it is not a recognizable Google link. Stored in pros.google_place_id
+   until the real Places integration lands (nothing parses that column as a place ID). */
+export function normalizeGoogleUrl(input: string): string | null {
+  const raw = input.trim();
+  if (!raw) return null;
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname;
+  const ok =
+    host === "maps.app.goo.gl" ||
+    host === "g.page" ||
+    host === "share.google" ||
+    (host === "goo.gl" && path.startsWith("/maps")) ||
+    (host === "search.google.com" && path.startsWith("/local/writereview")) ||
+    (/(^|\.)google\.[a-z.]{2,6}$/.test(host) && path.startsWith("/maps"));
+  if (!ok) return null;
+  url.protocol = "https:";
+  return url.toString();
+}
+
+/* True when a stored google_place_id value is actually a link we can send people to
+   (older stub rows hold "demo_place_id", which is not). */
+export function isGoogleUrl(value?: string | null): value is string {
+  return !!value && value.startsWith("https://");
 }
 
 export function buildRecordUrl(recordId: string) {

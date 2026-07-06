@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent } from "@/lib/hb";
+import { logEvent, notifyPro } from "@/lib/hb";
 import { setSession } from "@/lib/session";
 import { Logo } from "@/components/svg";
 import { CoreLoopScene } from "@/components/core-loop-scene";
@@ -18,6 +18,8 @@ function ClaimFlow() {
   const navigate = useNavigate();
   const [contact, setContact] = useState("");
   const [homeId, setHomeId] = useState<string | null>(null);
+  const [homeAddress, setHomeAddress] = useState<string | null>(null);
+  const [proId, setProId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -25,11 +27,19 @@ function ClaimFlow() {
     (async () => {
       const { data } = await supabase
         .from("records")
-        .select("jobs!inner(homes(id))")
+        .select("jobs!inner(pro_id, homes(id, address))")
         .eq("id", recordId)
         .maybeSingle();
-      const hid = (data as unknown as { jobs: { homes: { id: string } } } | null)?.jobs?.homes?.id;
-      if (hid) setHomeId(hid);
+      const job = (
+        data as unknown as {
+          jobs: { pro_id: string | null; homes: { id: string; address: string } | null };
+        } | null
+      )?.jobs;
+      if (job?.homes?.id) {
+        setHomeId(job.homes.id);
+        setHomeAddress(job.homes.address);
+      }
+      if (job?.pro_id) setProId(job.pro_id);
     })();
   }, [recordId]);
 
@@ -56,6 +66,17 @@ function ClaimFlow() {
       .eq("id", homeId);
     setSession({ role: "homeowner", homeownerId: ho.id });
     await logEvent(`homeowner:${ho.id}`, "home_claimed", { home_id: homeId, record_id: recordId });
+    if (proId) {
+      await notifyPro(
+        proId,
+        "home_claimed",
+        "Home claimed",
+        homeAddress
+          ? `${homeAddress} was claimed by the homeowner`
+          : "A homeowner claimed their home from your record",
+        { home_id: homeId, record_id: recordId, homeowner_id: ho.id },
+      );
+    }
     navigate({ to: "/home" });
   }
 

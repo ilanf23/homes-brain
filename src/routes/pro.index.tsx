@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/lib/hb";
+import { fetchNotifications, formatDate, type ProNotification } from "@/lib/hb";
 import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
 import { CoreLoopScene } from "@/components/core-loop-scene";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
@@ -51,6 +51,7 @@ function ProDashboard() {
   const [rebooks, setRebooks] = useState<RebookEvent[]>([]);
   const [reviewAsks, setReviewAsks] = useState<ReviewEvent[]>([]);
   const [claimedHomes, setClaimedHomes] = useState<ClaimedHome[]>([]);
+  const [requests, setRequests] = useState<ProNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<"due" | "customers">("due");
 
@@ -95,6 +96,10 @@ function ProDashboard() {
       setRebooks((rb ?? []) as unknown as RebookEvent[]);
       setReviewAsks((rv ?? []) as unknown as ReviewEvent[]);
       setClaimedHomes((ch ?? []) as unknown as ClaimedHome[]);
+      const notifs = await fetchNotifications(proId, 30);
+      setRequests(
+        notifs.filter((n) => n.type === "connect_request" || n.type === "rebook_request"),
+      );
       setLoading(false);
     })();
   }, [proId]);
@@ -253,6 +258,35 @@ function ProDashboard() {
           </Card>
         </Link>
       </div>
+
+      {requests.length > 0 && (
+        <Card className="anim-fade-up d-2 mt-4">
+          <div className="flex items-center justify-between gap-2">
+            <Eyebrow accent="indigo">Requests from homeowners</Eyebrow>
+            {requests.some((n) => !n.read_at) && <Pill accent="indigo">New</Pill>}
+          </div>
+          <div className="mt-2 divide-y divide-line">
+            {requests.slice(0, 5).map((n) => (
+              <div key={n.id} className="py-3 flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-ink">{n.title}</div>
+                  {n.detail && <div className="text-xs text-muted mt-0.5">{n.detail}</div>}
+                </div>
+                <div className="shrink-0 flex items-center gap-3">
+                  <div className="text-xs text-muted font-mono tnum">
+                    {formatDate(n.created_at)}
+                  </div>
+                  {n.type === "rebook_request" ? (
+                    <Pill accent="coral">Rebook</Pill>
+                  ) : (
+                    <Pill accent="indigo">Connect</Pill>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="mt-4 grid md:grid-cols-3 gap-4">
         <Card lift className="anim-fade-up d-2 md:col-span-2">

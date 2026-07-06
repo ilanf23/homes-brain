@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Avatar, Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
+import { formatDate, isGoogleUrl, logEvent, notifyPro, tradeLabel } from "@/lib/hb";
 import { Logo, LogoMark, ShieldCheck, TradeIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/r/$recordId")({
@@ -70,6 +70,18 @@ function PublicRecord() {
           .update({ viewed_at: new Date().toISOString() })
           .eq("id", recordId);
         await logEvent(null, "record_viewed", { record_id: recordId });
+        const view = data as RecordView;
+        if (view.jobs?.pros?.id) {
+          const who = view.jobs.customers?.name ?? "Your customer";
+          const where = view.jobs.homes?.address ? ` at ${view.jobs.homes.address}` : "";
+          await notifyPro(
+            view.jobs.pros.id,
+            "record_viewed",
+            "Record viewed",
+            `${who}${where} viewed their service record`,
+            { record_id: recordId, home_id: view.jobs.homes?.id },
+          );
+        }
       }
     })();
   }, [recordId]);
@@ -100,6 +112,7 @@ function PublicRecord() {
 
   const j = rec.jobs;
   const pro = j.pros;
+  const reviewUrl = pro && isGoogleUrl(pro.google_place_id) ? pro.google_place_id : null;
   const eq = j.equipment;
   const isClaimed = !!j.homes?.claimed_by_homeowner;
 
@@ -194,7 +207,21 @@ function PublicRecord() {
         )}
 
         <div className="anim-fade-up d-3 grid grid-cols-2 gap-3">
-          <Btn variant="secondary">Leave {pro?.business} a review</Btn>
+          {reviewUrl ? (
+            <a
+              href={reviewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="contents"
+              onClick={() => logEvent(pro?.id ? `pro:${pro.id}` : null, "review_link_clicked")}
+            >
+              <Btn variant="secondary" className="w-full">
+                Leave {pro?.business} a review
+              </Btn>
+            </a>
+          ) : (
+            <Btn variant="secondary">Leave {pro?.business} a review</Btn>
+          )}
           <Btn variant="coral">Rebook {pro?.business}</Btn>
         </div>
 

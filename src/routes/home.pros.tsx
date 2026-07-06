@@ -1,9 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Search, Share2, UserPlus, X } from "lucide-react";
-import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Select, Toast } from "@/lib/ui";
+import {
+  Avatar,
+  Btn,
+  Card,
+  Eyebrow,
+  Field,
+  Input,
+  PageLoader,
+  Pill,
+  Select,
+  Toast,
+} from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, TRADES, tradeLabel } from "@/lib/hb";
+import { formatDate, logEvent, notifyPro, TRADES, tradeLabel } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
@@ -12,7 +23,6 @@ export const Route = createFileRoute("/home/pros")({
   head: () => ({ meta: [{ title: "My pros - HomesBrain" }] }),
   component: MyPros,
 });
-
 
 type ProRow = { id: string; business: string; trade: string; service_area: string | null };
 type JobRow = {
@@ -67,6 +77,13 @@ function MyPros() {
   async function rebook(p: ProRow) {
     setBusy(p.id);
     await logEvent(`homeowner:${homeownerId}`, "rebooked", { pro_id: p.id, home_id: home?.id });
+    await notifyPro(
+      p.id,
+      "rebook_request",
+      "Rebook request",
+      home ? `The homeowner at ${home.address} wants to rebook` : "A homeowner wants to rebook",
+      { home_id: home?.id, homeowner_id: homeownerId },
+    );
     setRebooked((prev) => new Set(prev).add(p.id));
     setBusy(null);
     setToast(`Rebook request sent to ${p.business} (mock)`);
@@ -98,10 +115,10 @@ function MyPros() {
         <ProSearch
           homeownerId={homeownerId}
           homeId={home.id}
+          address={home.address}
           existingProIds={pros.map((p) => p.id)}
           onToast={setToast}
         />
-
 
         {pros.length === 0 ? (
           <Card className="anim-fade-up text-center py-14">
@@ -209,11 +226,13 @@ type SearchPro = {
 function ProSearch({
   homeownerId,
   homeId,
+  address,
   existingProIds,
   onToast,
 }: {
   homeownerId: string | null;
   homeId: string;
+  address: string;
   existingProIds: string[];
   onToast: (m: string) => void;
 }) {
@@ -255,6 +274,13 @@ function ProSearch({
       home_id: homeId,
       source: "search",
     });
+    await notifyPro(
+      p.id,
+      "connect_request",
+      "New connect request",
+      `The homeowner at ${address} wants to connect with you`,
+      { home_id: homeId, homeowner_id: homeownerId },
+    );
     onToast(`Request sent to ${p.business}`);
   }
 
@@ -355,4 +381,3 @@ function ProSearch({
     </Card>
   );
 }
-
