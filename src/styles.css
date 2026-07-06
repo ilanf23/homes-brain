@@ -1,8 +1,9 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-/* App-portal typeface, self-hosted (no font CDN). Marketing stays on the
-   system stack; portal surfaces opt in via the font-app utility below. */
+/* Site-wide typeface, self-hosted (no font CDN): Plus Jakarta Sans
+   everywhere, marketing and portal alike. Warm, rounded, friendly.
+   Variable weight 200-800. */
 @import "@fontsource-variable/plus-jakarta-sans";
 
 @custom-variant dark (&:is(.dark *));
@@ -60,12 +61,18 @@
   --radius-xl: 22px;
   --radius-2xl: 28px;
 
-  /* Marketing keeps the system UI stack; the app portal (pro + homeowner
-     dashboards and their flows) uses Plus Jakarta Sans via .font-app.
-     Headlines are the same family at weight 800 on both. */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace;
+  /* One family for the whole site: Plus Jakarta Sans on marketing, portal,
+     and public record pages alike. Headlines are the same family at 800.
+     Dates/codes (the font-mono spots) share it too, kept aligned via tnum. */
+  --font-sans:
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+    Arial, sans-serif;
+  --font-display:
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+    Arial, sans-serif;
+  --font-mono:
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+    Arial, sans-serif;
 }
 
 :root {
@@ -91,8 +98,8 @@
   --red: #a32d2d;
   --redbg: #fcebeb;
 
-  /* Portal typeface stack. Fontsource registers the family as
-     "Plus Jakarta Sans Variable" (wght 200-800). */
+  /* Portal typeface stack: same Plus Jakarta Sans as everywhere else. The var
+     survives so .font-app scoping keeps working if the portal ever diverges. */
   --font-portal:
     "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
     Arial, sans-serif;
@@ -109,7 +116,7 @@
   body {
     background-color: var(--bg);
     color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
   /* Headlines: heavy (800) and tight - sans, never serif (brand guidelines).
@@ -147,15 +154,14 @@
   text-transform: uppercase;
 }
 
-/* Kept for compatibility: "display" type is the same sans stack at 800.
-   Follows the portal family inside .font-app via the local var override. */
+/* Kept for compatibility: "display" type is the same family at 800. */
 @utility font-display {
-  font-family: var(--font-display-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
+  font-family: var(--font-display-family, var(--font-sans));
   font-weight: 800;
 }
 
-/* Scopes a subtree to the app-portal typeface (pro + homeowner dashboards,
-   log-a-job, signup, login). Marketing pages never get this class. */
+/* Kept for compatibility: portal and marketing now share one family, so
+   this scope is a no-op unless --font-portal diverges again. */
 @utility font-app {
   font-family: var(--font-portal);
   --font-display-family: var(--font-portal);
@@ -730,4 +736,18 @@
   .loop-node {
     opacity: 1 !important;
   }
+}
+
+/* Pro dashboard customer map */
+.hb-map-pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  padding: 0;
+}
+.hb-map-canvas .maplibregl-canvas {
+  filter: saturate(0.82);
 }
