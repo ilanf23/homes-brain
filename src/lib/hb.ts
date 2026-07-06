@@ -101,6 +101,99 @@ export async function markNotificationsRead(proId: string) {
   }
 }
 
+/* ---- Customer map geocoding ----
+   homes.lat/lng/geocoded_at ship in supabase/migrations but the generated
+   Database types only refresh on the Lovable sync, so these helpers go
+   through the same untyped cast as the notifications helpers above. */
+
+export type ProHome = {
+  id: string;
+  address: string;
+  claimed_at: string | null;
+  lat: number | null;
+  lng: number | null;
+  geocoded_at: string | null;
+};
+
+/* Free Nominatim geocoding. Policy: identify the app (email param, since a
+   browser fetch cannot set User-Agent) and stay at or under 1 request/second.
+   Callers are responsible for sequencing; this never throws. */
+export async function geocodeAddress(
+  address: string,
+): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&email=ilanfridman23%40gmail.com&q=${encodeURIComponent(address)}`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as { lat: string; lon: string }[];
+    const hit = rows?.[0];
+    if (!hit) return null;
+    const lat = Number.parseFloat(hit.lat);
+    const lng = Number.parseFloat(hit.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  } catch {
+    return null;
+  }
+}
+
+/* Geocode one home and persist the result. geocoded_at is stamped even on
+   failure so bad addresses are not retried every visit. Never throws. */
+export async function geocodeHome(
+  homeId: string,
+  address: string,
+): Promise<{ lat: number; lng: number } | null> {
+  const coords = await geocodeAddress(address);
+  try {
+    await untyped
+      .from("homes")
+      .update({
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+        geocoded_at: new Date().toISOString(),
+      })
+      .eq("id", homeId);
+  } catch (e) {
+    console.warn("[geocodeHome] failed", e);
+  }
+  return coords;
+}
+
+export async function fetchProHomes(proId: string): Promise<ProHome[]> {
+  try {
+    const { data } = await untyped
+      .from("homes")
+      .select("id,address,claimed_at,lat,lng,geocoded_at")
+      .eq("created_by_pro", proId)
+      .order("claimed_at", { ascending: false });
+    return (data ?? []) as ProHome[];
+  } catch {
+    return [];
+  }
+}
+
+/* Lazy backfill: geocode up to `limit` ungeocoded homes, sequentially,
+   1 second apart (Nominatim rate limit). Calls onUpdate after each home
+   so pins can appear without a reload. */
+export async function backfillHomeGeocodes(
+  homes: ProHome[],
+  onUpdate: (home: ProHome) => void,
+  limit = 5,
+): Promise<void> {
+  const targets = homes.filter((h) => !h.geocoded_at).slice(0, limit);
+  for (let i = 0; i < targets.length; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 1000));
+    const h = targets[i];
+    const coords = await geocodeHome(h.id, h.address);
+    onUpdate({
+      ...h,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
+      geocoded_at: new Date().toISOString(),
+    });
+  }
+}
+
 export async function mockSend(args: {
   channel: "sms" | "email";
   to: string;
