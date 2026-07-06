@@ -12,34 +12,29 @@ export const Route = createFileRoute("/claim/$recordId")({
   component: ClaimFlow,
 });
 
-// OTP verification parked until real Supabase OTP ships - see OtpBoxes note in @/lib/ui.
+// Homeowner claim uses a security-definer RPC so the anon key can create the
+// homeowner + link the home even though direct table access is closed.
 function ClaimFlow() {
   const { recordId } = Route.useParams();
   const navigate = useNavigate();
   const [contact, setContact] = useState("");
-  const [homeId, setHomeId] = useState<string | null>(null);
   const [homeAddress, setHomeAddress] = useState<string | null>(null);
+  const [homeId, setHomeId] = useState<string | null>(null);
   const [proId, setProId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("records")
-        .select("jobs!inner(pro_id, homes(id, address))")
-        .eq("id", recordId)
-        .maybeSingle();
-      const job = (
-        data as unknown as {
-          jobs: { pro_id: string | null; homes: { id: string; address: string } | null };
-        } | null
-      )?.jobs;
-      if (job?.homes?.id) {
-        setHomeId(job.homes.id);
-        setHomeAddress(job.homes.address);
+      const { data } = await supabase.rpc("get_public_record", { p_record_id: recordId });
+      const rec = data as {
+        job?: { pro?: { id: string } | null; home?: { id: string; address: string } | null };
+      } | null;
+      if (rec?.job?.home) {
+        setHomeId(rec.job.home.id);
+        setHomeAddress(rec.job.home.address);
       }
-      if (job?.pro_id) setProId(job.pro_id);
+      if (rec?.job?.pro) setProId(rec.job.pro.id);
     })();
   }, [recordId]);
 
@@ -49,23 +44,21 @@ function ClaimFlow() {
       return;
     }
     setBusy(true);
-    const isEmail = contact.includes("@");
-    const { data: ho, error } = await supabase
-      .from("homeowners")
-      .insert({ email: isEmail ? contact : null, phone: isEmail ? null : contact })
-      .select("id")
-      .single();
-    if (error || !ho) {
+    const { data, error } = await supabase.rpc("claim_home", {
+      p_record_id: recordId,
+      p_contact: contact.trim(),
+    });
+    if (error || !data) {
       setErr(error?.message ?? "Could not create account");
       setBusy(false);
       return;
     }
-    await supabase
-      .from("homes")
-      .update({ claimed_by_homeowner: ho.id, claimed_at: new Date().toISOString() })
-      .eq("id", homeId);
-    setSession({ role: "homeowner", homeownerId: ho.id });
-    await logEvent(`homeowner:${ho.id}`, "home_claimed", { home_id: homeId, record_id: recordId });
+    const homeownerId = data as string;
+    setSession({ role: "homeowner", homeownerId });
+    await logEvent(`homeowner:${homeownerId}`, "home_claimed", {
+      home_id: homeId,
+      record_id: recordId,
+    });
     if (proId) {
       await notifyPro(
         proId,
@@ -74,7 +67,7 @@ function ClaimFlow() {
         homeAddress
           ? `${homeAddress} was claimed by the homeowner`
           : "A homeowner claimed their home from your record",
-        { home_id: homeId, record_id: recordId, homeowner_id: ho.id },
+        { home_id: homeId, record_id: recordId, homeowner_id: homeownerId },
       );
     }
     navigate({ to: "/home" });
@@ -99,23 +92,15 @@ function ClaimFlow() {
             celebrate={!!contact}
             className="w-48 mx-auto mb-2"
           />
-        </div>
-
-        <div className="anim-fade-up mt-8">
           <div className="text-center mb-6">
             <h1 className="text-3xl tracking-tight">Claim your home</h1>
-            <p className="mt-2 text-sm text-muted">Free, forever. Yours for life.</p>
+            <p className="mt-2 text-sm text-muted">
+              {homeAddress ? homeAddress : "Free. Yours for life."}
+            </p>
           </div>
-
-          {/* The free-for-life anchor (locked in Strategy) */}
-          <div className="rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-4">
-            This record sells as a $49 seller history report when homes change hands. Yours is free
-            for life because your pros write it.
-          </div>
-
           <Card>
             <div className="space-y-4">
-              <Field label="Email or phone" hint="You'll use this to log in.">
+              <Field label="Email or phone">
                 <Input
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
@@ -124,22 +109,20 @@ function ClaimFlow() {
                 />
               </Field>
               {err && (
-                <div
-                  role="alert"
-                  className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                >
-                  {err}
-                </div>
+                <div className="text-sm text-red bg-redbg rounded-xl px-3 py-2">{err}</div>
               )}
               <Btn
                 variant="indigo"
                 size="lg"
                 className="w-full"
-                disabled={!contact || busy}
+                disabled={!contact.trim() || busy}
                 onClick={complete}
               >
                 {busy ? "Claiming…" : "Claim my home"}
               </Btn>
+              <p className="text-center text-[11px] text-muted">
+                Free forever. We'll text or email when there's something to know.
+              </p>
             </div>
           </Card>
         </div>

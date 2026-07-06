@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import { HomePageHead, HomeShell, useHomeownerGuard, type HomeownerRow } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/")({
@@ -14,61 +14,25 @@ export const Route = createFileRoute("/home/")({
   component: HomeOverview,
 });
 
-
-type EquipmentRow = {
-  id: string;
-  type: string | null;
-  make: string | null;
-  model: string | null;
-  warranty_until: string | null;
-  source: string;
-};
-type ProRow = { id: string; business: string; trade: string };
-type JobRow = {
-  id: string;
-  what_done: string;
-  created_at: string;
-  pro_id: string;
-  next_service_date: string | null;
-};
-
 function HomeOverview() {
-  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
-  const [equipment, setEquipment] = useState<EquipmentRow[]>([]);
-  const [pros, setPros] = useState<ProRow[]>([]);
-  const [jobs, setJobs] = useState<JobRow[]>([]);
+  const {
+    homeownerId,
+    homeowner,
+    home,
+    equipment,
+    jobs,
+    pros,
+    loading: guardLoading,
+    refresh,
+  } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!home) return;
     (async () => {
-      const [{ data: eq }, { data: jb }, inv] = await Promise.all([
-        supabase
-          .from("equipment")
-          .select("id,type,make,model,warranty_until,source")
-          .eq("home_id", home.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("jobs")
-          .select("id,what_done,created_at,pro_id,next_service_date")
-          .eq("home_id", home.id)
-          .order("created_at", { ascending: false }),
-        listInvoicesForHome(home.id),
-      ]);
-      setEquipment((eq ?? []) as EquipmentRow[]);
-      setJobs((jb ?? []) as JobRow[]);
+      const inv = await listInvoicesForHome(home.id);
       setInvoices(inv);
-      const proIds = Array.from(new Set((jb ?? []).map((j) => j.pro_id)));
-      if (proIds.length) {
-        const { data: pr } = await supabase
-          .from("pros")
-          .select("id,business,trade")
-          .in("id", proIds);
-        setPros((pr ?? []) as ProRow[]);
-      }
-      setLoading(false);
     })();
   }, [home]);
 
@@ -95,13 +59,10 @@ function HomeOverview() {
         <OnboardingNoHome
           homeownerId={homeownerId}
           homeowner={homeowner}
-          onCreated={() => window.location.reload()}
+          onCreated={() => refresh()}
         />
       </HomeShell>
     );
-
-  if (loading) return <PageLoader label="Loading your home" />;
-
 
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
@@ -111,13 +72,11 @@ function HomeOverview() {
         sub="Every home remembers. Your pros write the record, you own it."
       />
 
-      {/* The free-for-life anchor (locked in Strategy) */}
       <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
         This record sells as a $49 seller history report when homes change hands. Yours is free for
         life because your pros write it.
       </div>
 
-      {/* Stat row */}
       <div className="anim-fade-up d-1 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {(
           [
@@ -135,7 +94,6 @@ function HomeOverview() {
       </div>
 
       <div className="space-y-6">
-        {/* On file */}
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between">
             <Eyebrow accent="indigo">On file</Eyebrow>
@@ -184,7 +142,6 @@ function HomeOverview() {
           )}
         </Card>
 
-        {/* Next up */}
         {nextDue && (
           <Card className="anim-fade-up d-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -205,7 +162,6 @@ function HomeOverview() {
           </Card>
         )}
 
-        {/* Invoices from pros: read-only, rendered only when there's something to show */}
         {invoices.length > 0 && (
           <Card className="anim-fade-up d-3">
             <Eyebrow accent="indigo">Invoices</Eyebrow>
@@ -240,7 +196,6 @@ function HomeOverview() {
           </Card>
         )}
 
-        {/* My pros preview */}
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
             <Eyebrow accent="indigo">My pros</Eyebrow>
@@ -299,7 +254,7 @@ function OnboardingNoHome({
   onCreated,
 }: {
   homeownerId: string | null;
-  homeowner: { id: string; phone: string | null; email: string | null } | null;
+  homeowner: HomeownerRow | null;
   onCreated: () => void;
 }) {
   const [address, setAddress] = useState("");
@@ -315,50 +270,22 @@ function OnboardingNoHome({
     if (!homeownerId || !address.trim()) return;
     setBusy(true);
     setErr(null);
-    const addr = address.trim();
     const trimmedPhone = phone.trim();
 
-    // If the homeowner added or changed their phone, save it back.
     if (trimmedPhone && trimmedPhone !== (homeowner?.phone ?? "")) {
-      await supabase
-        .from("homeowners")
-        .update({ phone: trimmedPhone })
-        .eq("id", homeownerId);
+      await supabase.rpc("homeowner_update_profile", {
+        p_homeowner_id: homeownerId,
+        p_phone: trimmedPhone,
+      });
     }
-
-    const { data: existing } = await supabase
-      .from("homes")
-      .select("id, claimed_by_homeowner")
-      .eq("address", addr)
-      .maybeSingle();
-
-    if (existing && existing.claimed_by_homeowner && existing.claimed_by_homeowner !== homeownerId) {
-      setErr("That address is already claimed by another homeowner.");
+    const { error } = await supabase.rpc("homeowner_update_home", {
+      p_homeowner_id: homeownerId,
+      p_address: address.trim(),
+    });
+    if (error) {
+      setErr(error.message);
       setBusy(false);
       return;
-    }
-
-    if (existing) {
-      const { error } = await supabase
-        .from("homes")
-        .update({ claimed_by_homeowner: homeownerId, claimed_at: new Date().toISOString() })
-        .eq("id", existing.id);
-      if (error) {
-        setErr(error.message);
-        setBusy(false);
-        return;
-      }
-    } else {
-      const { error } = await supabase.from("homes").insert({
-        address: addr,
-        claimed_by_homeowner: homeownerId,
-        claimed_at: new Date().toISOString(),
-      });
-      if (error) {
-        setErr(error.message);
-        setBusy(false);
-        return;
-      }
     }
     await logEvent(`homeowner:${homeownerId}`, "home_added_self", {});
     onCreated();
@@ -427,5 +354,3 @@ function OnboardingNoHome({
     </>
   );
 }
-
-

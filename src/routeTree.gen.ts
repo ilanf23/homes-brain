@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as MessagingTermsRouteImport } from './routes/messaging-terms'
@@ -38,6 +39,7 @@ import { Route as HomeAppliancesRouteImport } from './routes/home.appliances'
 import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ProRecordsIndexRouteImport } from './routes/pro.records.index'
 import { Route as ProInvoicesIndexRouteImport } from './routes/pro.invoices.index'
 import { Route as ProCustomersIndexRouteImport } from './routes/pro.customers.index'
@@ -61,6 +63,11 @@ const StartRoute = StartRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -193,6 +200,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProRecordsIndexRoute = ProRecordsIndexRouteImport.update({
   id: '/pro/records/',
   path: '/pro/records/',
@@ -249,9 +261,11 @@ export interface FileRoutesByFullPath {
   '/messaging-terms': typeof MessagingTermsRoute
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
@@ -289,9 +303,11 @@ export interface FileRoutesByTo {
   '/messaging-terms': typeof MessagingTermsRoute
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
@@ -330,9 +346,11 @@ export interface FileRoutesById {
   '/messaging-terms': typeof MessagingTermsRoute
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
@@ -372,9 +390,11 @@ export interface FileRouteTypes {
     | '/messaging-terms'
     | '/partners'
     | '/privacy'
+    | '/reset-password'
     | '/security'
     | '/start'
     | '/terms'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
@@ -412,9 +432,11 @@ export interface FileRouteTypes {
     | '/messaging-terms'
     | '/partners'
     | '/privacy'
+    | '/reset-password'
     | '/security'
     | '/start'
     | '/terms'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
@@ -452,9 +474,11 @@ export interface FileRouteTypes {
     | '/messaging-terms'
     | '/partners'
     | '/privacy'
+    | '/reset-password'
     | '/security'
     | '/start'
     | '/terms'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/claim/$recordId'
     | '/home/add'
@@ -493,9 +517,11 @@ export interface RootRouteChildren {
   MessagingTermsRoute: typeof MessagingTermsRoute
   PartnersRoute: typeof PartnersRoute
   PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
   StartRoute: typeof StartRoute
   TermsRoute: typeof TermsRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   BlogSlugRoute: typeof BlogSlugRoute
   ClaimRecordIdRoute: typeof ClaimRecordIdRoute
   HomeAddRoute: typeof HomeAddRoute
@@ -545,6 +571,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -729,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/records/': {
       id: '/pro/records/'
       path: '/pro/records'
@@ -805,9 +845,11 @@ const rootRouteChildren: RootRouteChildren = {
   MessagingTermsRoute: MessagingTermsRoute,
   PartnersRoute: PartnersRoute,
   PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
   StartRoute: StartRoute,
   TermsRoute: TermsRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   BlogSlugRoute: BlogSlugRoute,
   ClaimRecordIdRoute: ClaimRecordIdRoute,
   HomeAddRoute: HomeAddRoute,
@@ -838,13 +880,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

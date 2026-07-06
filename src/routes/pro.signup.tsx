@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Btn, Card, Field, Input, Pill, Avatar, StepBar } from "@/lib/ui";
 import { TRADES, logEvent } from "@/lib/hb";
 import { supabase } from "@/integrations/supabase/client";
-import { setSession } from "@/lib/session";
 import { Logo, TradeIcon, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/signup")({
@@ -11,54 +10,115 @@ export const Route = createFileRoute("/pro/signup")({
   component: ProSignup,
 });
 
-// "Verify" step parked until real OTP ships - see OtpBoxes note in @/lib/ui.
+// Phone-verify UI is present but inert until A2P 10DLC (Twilio) is set up.
+// Email + password + Supabase email verification is the real auth for v0.
 type Step = 1 | 2 | 3 | 4;
 const STEP_LABELS = ["Start", "Business", "Google", "Plan"];
+
+function isValidEmail(s: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
 
 function ProSignup() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   const [business, setBusiness] = useState("");
-  const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [phone, setPhone] = useState("");
   const [trade, setTrade] = useState<string>("water_treatment");
   const [area, setArea] = useState("");
   const [googleConnected, setGoogleConnected] = useState(false);
 
+  const step1Valid =
+    business.trim().length > 1 &&
+    isValidEmail(email.trim()) &&
+    password.length >= 8 &&
+    password === confirmPw;
+
   async function finish() {
     setSubmitting(true);
     setErr(null);
-    const isEmail = contact.includes("@");
-    const { data, error } = await supabase
-      .from("pros")
-      .insert({
-        business,
-        trade,
-        service_area: area,
-        email: isEmail ? contact : null,
-        phone: isEmail ? null : contact,
-        google_place_id: googleConnected ? "demo_place_id" : null,
-        google_rating: googleConnected ? 4.8 : null,
-        plan: "free",
-      })
-      .select("id")
-      .single();
-    if (error || !data) {
-      setErr(error?.message ?? "Could not create account");
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          role: "pro",
+          business: business.trim(),
+          trade,
+          service_area: area.trim(),
+          phone: phone.trim() || null,
+          google_place_id: googleConnected ? "demo_place_id" : null,
+          google_rating: googleConnected ? "4.8" : null,
+          ref: ref ?? null,
+        },
+      },
+    });
+    if (error) {
+      setErr(error.message);
       setSubmitting(false);
       return;
     }
-    setSession({ role: "pro", proId: data.id });
-    // Referral attribution: /pro/signup?ref=<proId> tags the signup for the referrer.
-    const ref = new URLSearchParams(window.location.search).get("ref");
-    await logEvent(`pro:${data.id}`, "pro_signed_up", {
-      trade,
-      business,
-      ...(ref ? { ref } : {}),
-    });
-    navigate({ to: "/pro" });
+    if (data.user) {
+      await logEvent(`pro:${data.user.id}`, "pro_signed_up", {
+        trade,
+        business,
+        ...(ref ? { ref } : {}),
+      });
+    }
+    setSentTo(email.trim());
+    setSubmitting(false);
+  }
+
+  if (sentTo) {
+    return (
+      <div className="font-app min-h-dvh bg-soft">
+        <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
+          <div className="mx-auto max-w-3xl px-5 h-16 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
+            </Link>
+            <Pill accent="indigo">Verify email</Pill>
+          </div>
+        </header>
+        <div className="mx-auto max-w-md px-5 py-16">
+          <Card className="text-center">
+            <ShieldCheck size={40} className="mx-auto text-indigo" />
+            <h1 className="mt-4 text-2xl tracking-tight">Check your email</h1>
+            <p className="mt-2 text-sm text-muted">
+              We sent a verification link to <span className="font-semibold text-ink">{sentTo}</span>.
+              Click it to finish setting up your account.
+            </p>
+            <div className="mt-6 text-xs text-muted">
+              Wrong email?{" "}
+              <button
+                onClick={() => {
+                  setSentTo(null);
+                  setStep(1);
+                }}
+                className="font-semibold text-indigo hover:underline"
+              >
+                Start over
+              </button>
+            </div>
+            <div className="mt-4">
+              <Link to="/login" className="text-sm font-semibold text-indigo hover:underline">
+                Already verified? Log in
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -86,7 +146,7 @@ function ProSignup() {
               {step === 4 && "Pick a plan"}
             </h1>
             <p className="mt-2 text-sm text-muted">
-              {step === 1 && "No credit card. 60 seconds."}
+              {step === 1 && "No credit card. Real email verification."}
               {step === 2 && "Just the basics."}
               {step === 3 && "Route reviews to your profile, show your rating."}
               {step === 4 && "Free is free, forever."}
@@ -104,22 +164,74 @@ function ProSignup() {
                     autoFocus
                   />
                 </Field>
-                <Field label="Email or phone" hint="You'll use this to log in.">
+                <Field label="Email" hint="You'll use this to log in.">
                   <Input
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="you@business.com or 555-555-1234"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@business.com"
+                    autoComplete="email"
                   />
+                </Field>
+                <Field label="Password" hint="At least 8 characters.">
+                  <div className="relative">
+                    <Input
+                      type={showPw ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="8+ characters"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted hover:text-ink"
+                    >
+                      {showPw ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                </Field>
+                <Field label="Confirm password">
+                  <Input
+                    type={showPw ? "text" : "password"}
+                    value={confirmPw}
+                    onChange={(e) => setConfirmPw(e.target.value)}
+                    placeholder="Re-enter password"
+                    autoComplete="new-password"
+                  />
+                  {confirmPw && confirmPw !== password && (
+                    <div className="mt-1 text-xs text-red">Passwords don't match.</div>
+                  )}
+                </Field>
+                <Field label="Phone (optional)" hint="SMS verification coming soon.">
+                  <div className="flex gap-2">
+                    <Input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="555-555-1234"
+                      autoComplete="tel"
+                      className="flex-1"
+                    />
+                    <Btn variant="secondary" disabled title="SMS verification coming soon">
+                      Verify phone
+                    </Btn>
+                  </div>
                 </Field>
                 <Btn
                   variant="indigo"
                   size="lg"
                   className="w-full"
-                  disabled={!business || !contact}
+                  disabled={!step1Valid}
                   onClick={() => setStep(2)}
                 >
                   Continue
                 </Btn>
+                <div className="text-center text-xs text-muted">
+                  Already have an account?{" "}
+                  <Link to="/login" className="font-semibold text-indigo hover:underline">
+                    Log in
+                  </Link>
+                </div>
               </div>
             )}
 

@@ -77,33 +77,25 @@ const emptyForm: FormState = {
 
 function Appliances() {
   const navigate = useNavigate();
-  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
-  const [items, setItems] = useState<Appliance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    homeownerId,
+    homeowner,
+    home,
+    equipment,
+    loading: guardLoading,
+    refresh,
+  } = useHomeownerGuard();
+  const items = equipment as unknown as Appliance[];
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
   }, [guardLoading, home, navigate]);
 
-  // Add / edit modal state
   const [editing, setEditing] = useState<Appliance | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!home) return;
-    (async () => {
-      const { data } = await supabase
-        .from("equipment")
-        .select("id,type,make,model,serial,warranty_until,source,created_at")
-        .eq("home_id", home.id)
-        .order("created_at", { ascending: false });
-      setItems((data ?? []) as Appliance[]);
-      setLoading(false);
-    })();
-  }, [home]);
 
   useEffect(() => {
     if (!toast) return;
@@ -130,42 +122,42 @@ function Appliances() {
   }
 
   async function saveForm() {
-    if (!home) return;
+    if (!home || !homeownerId) return;
     setSaving(true);
-    const payload = {
-      type: form.type || null,
-      make: form.make.trim() || null,
-      model: form.model.trim() || null,
-      serial: form.serial.trim() || null,
-      warranty_until: form.warranty_until || null,
-    };
     if (editing) {
-      const { data, error } = await supabase
-        .from("equipment")
-        .update(payload)
-        .eq("id", editing.id)
-        .select("id,type,make,model,serial,warranty_until,source,created_at")
-        .single();
+      const { error } = await supabase.rpc("homeowner_update_equipment", {
+        p_homeowner_id: homeownerId,
+        p_equipment_id: editing.id,
+        p_type: form.type || "",
+        p_make: form.make.trim(),
+        p_model: form.model.trim(),
+        p_serial: form.serial.trim(),
+        p_warranty_until: form.warranty_until || null as unknown as string,
+      });
       setSaving(false);
-      if (error || !data) {
+      if (error) {
         setToast("Could not save. Try again.");
         return;
       }
-      setItems((prev) => prev.map((it) => (it.id === data.id ? (data as Appliance) : it)));
+      await refresh();
       await logEvent(`homeowner:${homeownerId}`, "item_self_updated", { type: form.type });
       setToast(`${form.type} updated`);
     } else {
-      const { data, error } = await supabase
-        .from("equipment")
-        .insert({ ...payload, home_id: home.id, source: "self" })
-        .select("id,type,make,model,serial,warranty_until,source,created_at")
-        .single();
+      const { error } = await supabase.rpc("homeowner_add_equipment", {
+        p_homeowner_id: homeownerId,
+        p_type: form.type || "",
+        p_make: form.make.trim(),
+        p_model: form.model.trim(),
+        p_serial: form.serial.trim(),
+        p_warranty_until: form.warranty_until || null as unknown as string,
+        p_source: "self",
+      });
       setSaving(false);
-      if (error || !data) {
+      if (error) {
         setToast("Could not add. Try again.");
         return;
       }
-      setItems((prev) => [data as Appliance, ...prev]);
+      await refresh();
       await logEvent(`homeowner:${homeownerId}`, "item_self_added", { type: form.type });
       setToast(`${form.type} added`);
     }
@@ -175,20 +167,23 @@ function Appliances() {
   }
 
   async function remove(a: Appliance) {
+    if (!homeownerId) return;
     if (!confirm(`Remove ${a.type ?? "this item"} from your home?`)) return;
-    const { error } = await supabase.from("equipment").delete().eq("id", a.id);
+    const { error } = await supabase.rpc("homeowner_delete_equipment", {
+      p_homeowner_id: homeownerId,
+      p_equipment_id: a.id,
+    });
     if (error) {
       setToast("Could not remove. Try again.");
       return;
     }
-    setItems((prev) => prev.filter((it) => it.id !== a.id));
+    await refresh();
     await logEvent(`homeowner:${homeownerId}`, "item_removed", { type: a.type });
     setToast("Removed");
   }
 
   if (guardLoading) return <PageLoader label="Loading appliances" />;
   if (!home) return <PageLoader label="Setting up your home" />;
-  if (loading) return <PageLoader label="Loading appliances" />;
 
   const verifiedCount = items.filter((i) => i.source === "pro").length;
   const selfCount = items.length - verifiedCount;

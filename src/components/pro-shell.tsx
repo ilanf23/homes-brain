@@ -14,7 +14,6 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { clearSession, getSession } from "@/lib/session";
 import {
   fetchNotifications,
   markNotificationsRead,
@@ -38,32 +37,43 @@ export type ProRow = {
   plan: string;
 };
 
-/* Session guard + pro fetch shared by every /pro/* page (except signup). */
+/* Real Supabase auth guard for every /pro/* page (except signup).
+   Redirects to /login when there's no session or the user isn't a pro. */
 export function useProGuard() {
   const navigate = useNavigate();
   const [pro, setPro] = useState<ProRow | null>(null);
   const [proId, setProId] = useState<string | null>(null);
 
   useEffect(() => {
-    const s = getSession();
-    if (!s || s.role !== "pro") {
-      navigate({ to: "/login" });
-      return;
-    }
-    setProId(s.proId);
+    let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("pros")
-        .select("id,business,trade,service_area,logo,google_place_id,google_rating,plan")
-        .eq("id", s.proId)
-        .maybeSingle();
-      if (!data) {
-        clearSession();
+      const { data: sess } = await supabase.auth.getSession();
+      const user = sess.session?.user;
+      if (!user) {
         navigate({ to: "/login" });
         return;
       }
+      const { data } = await supabase
+        .from("pros")
+        .select("id,business,trade,service_area,logo,google_place_id,google_rating,plan")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!data) {
+        await supabase.auth.signOut();
+        navigate({ to: "/login" });
+        return;
+      }
+      setProId(data.id);
       setPro(data as ProRow);
     })();
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") navigate({ to: "/login" });
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return { proId, pro, setPro };
@@ -266,8 +276,8 @@ export function ProShell({
   const navigate = useNavigate();
   const [theme] = useTheme();
 
-  function signOut() {
-    clearSession();
+  async function signOut() {
+    await supabase.auth.signOut();
     navigate({ to: "/" });
   }
 
