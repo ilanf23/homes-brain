@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
-import { Card, Eyebrow, Pill } from "@/lib/ui";
+import { Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { CountUp } from "@/components/svg";
+import { GoogleConnect } from "@/components/google-connect";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/reviews")({
@@ -15,10 +16,17 @@ export const Route = createFileRoute("/pro/reviews")({
 type ReviewEvent = { id: string; created_at: string; props: { customer_id?: string } };
 
 function Reviews() {
-  const { proId, pro } = useProGuard();
+  const { proId, pro, setPro } = useProGuard();
   const [requests, setRequests] = useState<ReviewEvent[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2400);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     if (!proId) return;
@@ -73,14 +81,7 @@ function Reviews() {
             </div>
             {connected && <Star size={20} className="text-coral fill-coralbg" />}
           </div>
-          {!connected && (
-            <Link
-              to="/pro/settings"
-              className="text-xs font-semibold text-indigo hover:underline mt-1 inline-block"
-            >
-              Connect Google →
-            </Link>
-          )}
+          {!connected && <div className="text-xs text-muted mt-1">Not connected yet</div>}
         </Card>
       </div>
 
@@ -110,19 +111,35 @@ function Reviews() {
           )}
         </Card>
 
-        <Card className="anim-fade-up d-3 bg-redbg/40 border-red/15">
-          <Eyebrow accent="red">The rule we follow</Eyebrow>
-          <p className="mt-2 text-sm text-ink">
-            <strong>No review gating.</strong> Every homeowner gets the same Google review ask, and
-            everyone also gets a private feedback path. We never filter who gets asked based on how
-            happy they seem. It's an FTC rule, and it keeps your rating trustworthy.
-          </p>
-          <p className="mt-2 text-xs text-muted">
-            Google doesn't tell us which review came from which ask, so "asks sent" is the number we
-            can track; your rating reflects what lands.
-          </p>
-        </Card>
+        <div className="space-y-5">
+          <Card className="anim-fade-up d-3">
+            <Eyebrow accent="indigo">Google connection</Eyebrow>
+            {proId && (
+              <GoogleConnect
+                proId={proId}
+                pro={pro}
+                onUpdated={(patch) => setPro({ ...pro, ...patch })}
+                onToast={setToast}
+              />
+            )}
+          </Card>
+
+          <Card className="anim-fade-up d-4 bg-redbg/40 border-red/15">
+            <Eyebrow accent="red">The rule we follow</Eyebrow>
+            <p className="mt-2 text-sm text-ink">
+              <strong>No review gating.</strong> Every homeowner gets the same Google review ask,
+              and everyone also gets a private feedback path. We never filter who gets asked based
+              on how happy they seem. It's an FTC rule, and it keeps your rating trustworthy.
+            </p>
+            <p className="mt-2 text-xs text-muted">
+              Google doesn't tell us which review came from which ask, so "asks sent" is the number
+              we can track; your rating reflects what lands.
+            </p>
+          </Card>
+        </div>
       </div>
+
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
   );
 }
