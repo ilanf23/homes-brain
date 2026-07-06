@@ -13,18 +13,19 @@ export const Route = createFileRoute("/r/$recordId")({
 type RecordView = {
   id: string;
   viewed_at: string | null;
-  jobs: {
+  created_at: string;
+  job: {
     what_done: string;
     next_service_date: string | null;
     created_at: string;
-    pros: {
+    pro: {
       id: string;
       business: string;
       trade: string;
       google_rating: number | null;
       google_place_id: string | null;
     } | null;
-    homes: { id: string; address: string; claimed_by_homeowner: string | null } | null;
+    home: { id: string; address: string; claimed_by_homeowner: string | null } | null;
     equipment: {
       type: string | null;
       make: string | null;
@@ -32,7 +33,7 @@ type RecordView = {
       warranty_until: string | null;
       recall_status: string;
     } | null;
-    customers: { name: string } | null;
+    customer: { name: string } | null;
   } | null;
 };
 
@@ -46,40 +47,22 @@ function PublicRecord() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("records")
-        .select(
-          `
-          id, viewed_at,
-          jobs!inner(
-            what_done, next_service_date, created_at,
-            pros(id,business,trade,google_rating,google_place_id),
-            homes(id,address,claimed_by_homeowner),
-            equipment(type,make,model,warranty_until,recall_status),
-            customers(name)
-          )
-        `,
-        )
-        .eq("id", recordId)
-        .maybeSingle();
-      setRec(data as unknown as RecordView);
+      const { data } = await supabase.rpc("get_public_record", { p_record_id: recordId });
+      const view = data as RecordView | null;
+      setRec(view);
       setLoading(false);
-      if (data && !(data as RecordView).viewed_at) {
-        await supabase
-          .from("records")
-          .update({ viewed_at: new Date().toISOString() })
-          .eq("id", recordId);
+      if (view && !view.viewed_at) {
+        await supabase.rpc("mark_record_viewed", { p_record_id: recordId });
         await logEvent(null, "record_viewed", { record_id: recordId });
-        const view = data as RecordView;
-        if (view.jobs?.pros?.id) {
-          const who = view.jobs.customers?.name ?? "Your customer";
-          const where = view.jobs.homes?.address ? ` at ${view.jobs.homes.address}` : "";
+        if (view.job?.pro?.id) {
+          const who = view.job.customer?.name ?? "Your customer";
+          const where = view.job.home?.address ? ` at ${view.job.home.address}` : "";
           await notifyPro(
-            view.jobs.pros.id,
+            view.job.pro.id,
             "record_viewed",
             "Record viewed",
             `${who}${where} viewed their service record`,
-            { record_id: recordId, home_id: view.jobs.homes?.id },
+            { record_id: recordId, home_id: view.job.home?.id },
           );
         }
       }
@@ -93,7 +76,7 @@ function PublicRecord() {
   }
 
   if (loading) return <PageLoader label="Loading record" />;
-  if (!rec || !rec.jobs) {
+  if (!rec || !rec.job) {
     return (
       <div className="min-h-dvh bg-soft flex items-center justify-center">
         <Card className="anim-scale-in text-center max-w-sm mx-5">
@@ -110,11 +93,11 @@ function PublicRecord() {
     );
   }
 
-  const j = rec.jobs;
-  const pro = j.pros;
+  const j = rec.job;
+  const pro = j.pro;
   const reviewUrl = pro && isGoogleUrl(pro.google_place_id) ? pro.google_place_id : null;
   const eq = j.equipment;
-  const isClaimed = !!j.homes?.claimed_by_homeowner;
+  const isClaimed = !!j.home?.claimed_by_homeowner;
 
   return (
     <div className="min-h-dvh bg-soft">
@@ -152,7 +135,7 @@ function PublicRecord() {
           <div className="mt-5">
             <Eyebrow accent="indigo">Service record</Eyebrow>
             <div className="text-sm text-muted mt-1 font-mono tnum">
-              {formatDate(j.created_at)} · {j.homes?.address}
+              {formatDate(j.created_at)} · {j.home?.address}
             </div>
           </div>
 

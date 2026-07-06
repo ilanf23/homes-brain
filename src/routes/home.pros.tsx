@@ -35,10 +35,16 @@ type JobRow = {
 
 function MyPros() {
   const navigate = useNavigate();
-  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
-  const [pros, setPros] = useState<ProRow[]>([]);
-  const [jobs, setJobs] = useState<JobRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    homeownerId,
+    homeowner,
+    home,
+    jobs: allJobs,
+    pros: allPros,
+    loading: guardLoading,
+  } = useHomeownerGuard();
+  const pros = allPros as unknown as ProRow[];
+  const jobs = allJobs as unknown as JobRow[];
   const [toast, setToast] = useState<string | null>(null);
   const [rebooked, setRebooked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
@@ -46,27 +52,6 @@ function MyPros() {
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
   }, [guardLoading, home, navigate]);
-
-  useEffect(() => {
-    if (!home) return;
-    (async () => {
-      const { data: jb } = await supabase
-        .from("jobs")
-        .select("id,what_done,created_at,pro_id,next_service_date")
-        .eq("home_id", home.id)
-        .order("created_at", { ascending: false });
-      setJobs((jb ?? []) as JobRow[]);
-      const proIds = Array.from(new Set((jb ?? []).map((j) => j.pro_id)));
-      if (proIds.length) {
-        const { data: pr } = await supabase
-          .from("pros")
-          .select("id,business,trade,service_area")
-          .in("id", proIds);
-        setPros((pr ?? []) as ProRow[]);
-      }
-      setLoading(false);
-    })();
-  }, [home]);
 
   useEffect(() => {
     if (!toast) return;
@@ -101,7 +86,7 @@ function MyPros() {
 
   if (guardLoading) return <PageLoader label="Loading your pros" />;
   if (!home) return <PageLoader label="Setting up your home" />;
-  if (loading) return <PageLoader label="Loading your pros" />;
+  
 
   return (
     <HomeShell active="pros" homeowner={homeowner} home={home}>

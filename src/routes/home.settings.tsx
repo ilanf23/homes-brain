@@ -62,7 +62,14 @@ const NAV = [
 
 function HomeownerSettings() {
   const navigate = useNavigate();
-  const { homeownerId, homeowner, setHomeowner, home, loading: guardLoading } = useHomeownerGuard();
+  const {
+    homeownerId,
+    homeowner,
+    setHomeowner,
+    home,
+    jobs: hookJobs,
+    loading: guardLoading,
+  } = useHomeownerGuard();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -89,24 +96,22 @@ function HomeownerSettings() {
   }, [homeowner]);
 
   useEffect(() => {
-    if (!homeownerId) return;
-    (async () => {
-      const { data } = await supabase
-        .from("homeowners")
-        .select("notify_email,notify_sms,sms_opt_out,respect_quiet_hrs,marketing_consent")
-        .eq("id", homeownerId)
-        .maybeSingle();
-      if (data) setPrefs(data as DbPrefs);
-    })();
-  }, [homeownerId]);
+    if (!homeowner) return;
+    // Prefs live on the homeowner row; get_home_view returns the full row.
+    const ho = homeowner as unknown as DbPrefs & { notify_email: boolean };
+    setPrefs({
+      notify_email: ho.notify_email ?? true,
+      notify_sms: ho.notify_sms ?? true,
+      sms_opt_out: ho.sms_opt_out ?? false,
+      respect_quiet_hrs: ho.respect_quiet_hrs ?? true,
+      marketing_consent: ho.marketing_consent ?? false,
+    });
+  }, [homeowner]);
 
   useEffect(() => {
-    if (!home) return;
-    (async () => {
-      const { data } = await supabase.from("jobs").select("pro_id").eq("home_id", home.id);
-      setProCount(new Set((data ?? []).map((j) => j.pro_id)).size);
-    })();
-  }, [home]);
+    // Distinct-pro count from hook jobs.
+    setProCount(new Set(hookJobs.map((j) => j.pro_id)).size);
+  }, [hookJobs]);
 
   useEffect(() => {
     if (!toast) return;
@@ -115,22 +120,24 @@ function HomeownerSettings() {
   }, [toast]);
 
   async function saveContact() {
-    if (!homeowner) return;
+    if (!homeowner || !homeownerId) return;
     setSaving(true);
     setProfileErr(null);
-    const { data, error } = await supabase
-      .from("homeowners")
-      .update({
+    const { error } = await supabase.rpc("homeowner_update_profile", {
+      p_homeowner_id: homeownerId,
+      p_name: name.trim(),
+      p_phone: phone.trim(),
+      p_email: email.trim(),
+    });
+    if (error) {
+      setProfileErr(error.message || "Couldn't save. Try again.");
+    } else {
+      setHomeowner({
+        ...homeowner,
         name: name.trim() || null,
         phone: phone.trim() || null,
         email: email.trim() || null,
-      })
-      .eq("id", homeowner.id)
-      .select("id,name,phone,email");
-    if (error || !data?.length) {
-      setProfileErr(error?.message ?? "Couldn't save. Try again.");
-    } else {
-      setHomeowner(data[0]);
+      });
       setToast("Profile saved");
     }
     setSaving(false);
@@ -148,17 +155,17 @@ function HomeownerSettings() {
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
     setPrefErr(null);
-    const { data, error } = await supabase
-      .from("homeowners")
-      .update({ [key]: value } as Partial<Record<typeof key, boolean>>)
-      .eq("id", homeownerId)
-      .select("id");
-    if (error || !data?.length) {
+    const params: Record<string, unknown> = { p_homeowner_id: homeownerId };
+    params[`p_${key}`] = value;
+    const { error } = await supabase.rpc(
+      "homeowner_update_profile",
+      params as unknown as { p_homeowner_id: string },
+    );
+    if (error) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
       return;
     }
-    // STOP is compliance-relevant: log both directions.
     if (key === "sms_opt_out") {
       await logEvent(`homeowner:${homeownerId}`, value ? "sms_opted_out" : "sms_opted_in", {});
     }
@@ -167,27 +174,12 @@ function HomeownerSettings() {
   async function exportData() {
     if (!homeownerId) return;
     setExporting(true);
-    let payload: unknown = null;
-    // The scoped RPC needs a real auth session; under v0 mock auth it comes
-    // back empty, so fall back to a same-shape client query by session id.
-    const { data, error } = await supabase.rpc("export_my_homeowner_data");
-    if (!error && data && (data as { homeowner?: unknown }).homeowner) {
-      payload = data;
-    } else {
-      const [{ data: ho }, { data: homes }] = await Promise.all([
-        supabase.from("homeowners").select("*").eq("id", homeownerId).maybeSingle(),
-        supabase.from("homes").select("*").eq("claimed_by_homeowner", homeownerId),
-      ]);
-      const homeIds = (homes ?? []).map((h) => h.id);
-      const [{ data: eq }, { data: jobs }] = homeIds.length
-        ? await Promise.all([
-            supabase.from("equipment").select("*").in("home_id", homeIds),
-            supabase.from("jobs").select("*").in("home_id", homeIds),
-          ])
-        : [{ data: [] }, { data: [] }];
-      payload = { homeowner: ho, homes: homes ?? [], equipment: eq ?? [], jobs: jobs ?? [] };
-    }
-    downloadJson(`homesbrain-home-record-${new Date().toISOString().slice(0, 10)}.json`, payload);
+    // Reuse the public home view for a full JSON export.
+    const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: homeownerId });
+    downloadJson(
+      `homesbrain-home-record-${new Date().toISOString().slice(0, 10)}.json`,
+      data ?? {},
+    );
     await logEvent(`homeowner:${homeownerId}`, "data_exported", { kind: "homeowner" });
     setExporting(false);
     setToast("Your record downloaded");
@@ -197,6 +189,7 @@ function HomeownerSettings() {
     clearSession();
     navigate({ to: "/" });
   }
+
 
   if (guardLoading) return <PageLoader label="Loading settings" />;
   if (!home) return <PageLoader label="Setting up your home" />;

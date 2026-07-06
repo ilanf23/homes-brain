@@ -1,91 +1,101 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Avatar, Btn, Card, Field, Input, Pill } from "@/lib/ui";
+import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent, tradeLabel } from "@/lib/hb";
+import { logEvent } from "@/lib/hb";
 import { setSession } from "@/lib/session";
 import { Logo } from "@/components/svg";
-
-// NOTE: OTP verification is parked until real Supabase OTP auth ships.
-// The archived OtpBoxes component lives in @/lib/ui. Restore a "Verify"
-// step here (and in signup/claim) when codes are actually sent.
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Log in - HomesBrain" }] }),
   component: Login,
 });
 
-type ProMatch = { id: string; business: string; trade: string };
-type HomeownerMatch = { id: string; address: string | null };
+type Tab = "pro" | "homeowner";
 
 function Login() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<1 | 2>(1);
-  const [contact, setContact] = useState("");
-  const [pro, setPro] = useState<ProMatch | null>(null);
-  const [homeowner, setHomeowner] = useState<HomeownerMatch | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("pro");
+
+  // Pro state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotSent, setForgotSent] = useState<string | null>(null);
 
-  async function complete(role: "pro" | "homeowner", p = pro, ho = homeowner) {
-    if (role === "pro" && p) {
-      setSession({ role: "pro", proId: p.id });
-      await logEvent(`pro:${p.id}`, "logged_in", { role: "pro" });
-      navigate({ to: "/pro" });
-    } else if (role === "homeowner" && ho) {
-      setSession({ role: "homeowner", homeownerId: ho.id });
-      await logEvent(`homeowner:${ho.id}`, "logged_in", { role: "homeowner" });
-      navigate({ to: "/home" });
-    }
-  }
+  // Homeowner state (temporary mock session)
+  const [contact, setContact] = useState("");
+  const [hoErr, setHoErr] = useState<string | null>(null);
+  const [hoBusy, setHoBusy] = useState(false);
 
-  async function logIn() {
+  async function proLogin() {
     setBusy(true);
     setErr(null);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    // Confirm the pros row exists and is linked to this auth user.
+    const { data: pro } = await supabase
+      .from("pros")
+      .select("id,business")
+      .eq("auth_user_id", data.user.id)
+      .maybeSingle();
+    if (!pro) {
+      setErr("This account isn't a pro account. Contact support.");
+      await supabase.auth.signOut();
+      setBusy(false);
+      return;
+    }
+    await logEvent(`pro:${pro.id}`, "logged_in", { role: "pro" });
+    navigate({ to: "/pro" });
+  }
+
+  async function sendReset() {
+    setForgotSent(null);
+    setErr(null);
+    if (!email.trim()) {
+      setErr("Enter your email above first.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    setForgotSent(email.trim());
+  }
+
+  async function homeownerLogin() {
+    setHoBusy(true);
+    setHoErr(null);
     const c = contact.trim();
-    const isEmail = c.includes("@");
-    const col = isEmail ? "email" : "phone";
-
-    const [{ data: p }, { data: ho }] = await Promise.all([
-      supabase
-        .from("pros")
-        .select("id,business,trade")
-        .eq(col, c)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("homeowners")
-        .select("id, homes!homes_homeowner_fk(address)")
-        .eq(col, c)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
-
-    if (!p && !ho) {
-      setErr(
-        (isEmail
-          ? "No account found for that email."
-          : "No account found for that phone. Try it exactly as you entered it when you signed up.") +
-          " New homeowner? Sign up free to start your home's record.",
+    const { data, error } = await supabase.rpc("get_homeowner_by_contact", { p_contact: c });
+    if (error) {
+      setHoErr(error.message);
+      setHoBusy(false);
+      return;
+    }
+    const match = data as { id: string; address: string | null } | null;
+    if (!match) {
+      setHoErr(
+        "No homeowner account found for that contact. New here? Sign up free to start your home's record.",
       );
-      setBusy(false);
+      setHoBusy(false);
       return;
     }
-
-    const proMatch = (p as ProMatch | null) ?? null;
-    const hoRow = ho as unknown as { id: string; homes: { address: string }[] | null } | null;
-    const hoMatch = hoRow ? { id: hoRow.id, address: hoRow.homes?.[0]?.address ?? null } : null;
-    setPro(proMatch);
-    setHomeowner(hoMatch);
-
-    if (proMatch && hoMatch) {
-      setBusy(false);
-      setStep(2);
-      return;
-    }
-    complete(proMatch ? "pro" : "homeowner", proMatch, hoMatch);
+    setSession({ role: "homeowner", homeownerId: match.id });
+    await logEvent(`homeowner:${match.id}`, "logged_in", { role: "homeowner" });
+    navigate({ to: "/home" });
   }
 
   return (
@@ -100,102 +110,172 @@ function Login() {
       </header>
 
       <div className="mx-auto max-w-md px-5 py-12">
-        <div key={step} className="anim-fade-up">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl tracking-tight">
-              {step === 1 ? "Welcome back" : "Choose account"}
-            </h1>
-            <p className="mt-2 text-sm text-muted">
-              {step === 1
-                ? "Enter the email or phone you signed up with."
-                : "That contact has two accounts. Where to?"}
-            </p>
-          </div>
+        <div className="text-center mb-6">
+          <h1 className="text-3xl tracking-tight">Welcome back</h1>
+          <p className="mt-2 text-sm text-muted">
+            {tab === "pro"
+              ? "Sign in with your email and password."
+              : "Sign in with the email or phone you used at signup."}
+          </p>
+        </div>
 
-          <Card>
-            {step === 1 && (
-              <div className="space-y-4">
-                <Field label="Email or phone">
-                  <Input
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="you@email.com or 555-555-1234"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && contact.trim() && !busy) logIn();
-                    }}
-                  />
-                </Field>
-                {err && (
-                  <div
-                    role="alert"
-                    className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                  >
-                    {err}
-                  </div>
-                )}
-                <Btn
-                  variant="indigo"
-                  size="lg"
-                  className="w-full"
-                  disabled={!contact.trim() || busy}
-                  onClick={logIn}
+        <div className="mb-4 flex gap-1 rounded-full bg-paper border border-line p-1">
+          <button
+            type="button"
+            onClick={() => setTab("pro")}
+            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+              tab === "pro" ? "bg-indigobg text-indigo" : "text-muted hover:text-ink"
+            }`}
+          >
+            I'm a pro
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("homeowner")}
+            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+              tab === "homeowner" ? "bg-indigobg text-indigo" : "text-muted hover:text-ink"
+            }`}
+          >
+            I'm a homeowner
+          </button>
+        </div>
+
+        <Card>
+          {tab === "pro" && !forgotOpen && (
+            <div className="space-y-4">
+              <Field label="Email">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@business.com"
+                  autoComplete="email"
+                  autoFocus
+                />
+              </Field>
+              <Field label="Password">
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Your password"
+                  autoComplete="current-password"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && email && password && !busy) proLogin();
+                  }}
+                />
+              </Field>
+              {err && (
+                <div
+                  role="alert"
+                  className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
                 >
-                  {busy ? "Logging in…" : "Log in"}
-                </Btn>
-                <div className="text-center text-xs text-muted">
-                  New here?{" "}
-                  <Link to="/pro/signup" className="font-semibold text-indigo hover:underline">
-                    Pros start free
-                  </Link>
-                  {" · "}
-                  <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
-                    Homeowners start free
-                  </Link>
+                  {err}
                 </div>
+              )}
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                disabled={!email || !password || busy}
+                onClick={proLogin}
+              >
+                {busy ? "Signing in…" : "Sign in"}
+              </Btn>
+              <div className="flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotOpen(true);
+                    setErr(null);
+                  }}
+                  className="font-semibold text-indigo hover:underline"
+                >
+                  Forgot password?
+                </button>
+                <Link to="/pro/signup" className="font-semibold text-indigo hover:underline">
+                  Start free
+                </Link>
               </div>
-            )}
+            </div>
+          )}
 
-            {step === 2 && (
-              <div className="space-y-3">
-                {pro && (
-                  <button
-                    type="button"
-                    onClick={() => complete("pro")}
-                    className="pressable liftable w-full text-left rounded-xl border border-line bg-paper p-4 flex items-center gap-3 hover:border-indigo transition-colors"
-                  >
-                    <Avatar name={pro.business} accent="indigo" />
-                    <div className="flex-1">
-                      <div className="font-semibold text-ink">{pro.business}</div>
-                      <div className="text-xs text-muted">{tradeLabel(pro.trade)}</div>
-                    </div>
-                    <Pill accent="indigo">Pro</Pill>
-                  </button>
-                )}
-                {homeowner && (
-                  <button
-                    type="button"
-                    onClick={() => complete("homeowner")}
-                    className="pressable liftable w-full text-left rounded-xl border border-line bg-paper p-4 flex items-center gap-3 hover:border-indigo transition-colors"
-                  >
-                    <Avatar name={homeowner.address ?? "My home"} accent="indigo" />
-                    <div className="flex-1">
-                      <div className="font-semibold text-ink">My home</div>
-                      <div className="text-xs text-muted">
-                        {homeowner.address ?? "No home claimed yet"}
-                      </div>
-                    </div>
-                    <Pill accent="indigo">Homeowner</Pill>
-                  </button>
-                )}
-                <Btn variant="secondary" className="w-full" onClick={() => setStep(1)}>
+          {tab === "pro" && forgotOpen && (
+            <div className="space-y-4">
+              <Field label="Email" hint="We'll send a reset link.">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@business.com"
+                  autoFocus
+                />
+              </Field>
+              {err && (
+                <div className="text-sm text-red bg-redbg rounded-xl px-3 py-2">{err}</div>
+              )}
+              {forgotSent && (
+                <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
+                  Reset link sent to <span className="font-semibold">{forgotSent}</span>.
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Btn variant="secondary" onClick={() => setForgotOpen(false)}>
                   Back
                 </Btn>
+                <Btn variant="indigo" className="flex-1" onClick={sendReset}>
+                  Send reset link
+                </Btn>
               </div>
-            )}
-          </Card>
-        </div>
+            </div>
+          )}
+
+          {tab === "homeowner" && (
+            <div className="space-y-4">
+              <Field label="Email or phone">
+                <Input
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="you@email.com or 555-555-1234"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && contact.trim() && !hoBusy) homeownerLogin();
+                  }}
+                />
+              </Field>
+              {hoErr && (
+                <div
+                  role="alert"
+                  className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
+                >
+                  {hoErr}
+                </div>
+              )}
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                disabled={!contact.trim() || hoBusy}
+                onClick={homeownerLogin}
+              >
+                {hoBusy ? "Signing in…" : "Sign in"}
+              </Btn>
+              <div className="text-center text-xs text-muted">
+                New homeowner?{" "}
+                <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
+                  Start free
+                </Link>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <p className="mt-4 text-center text-[11px] text-muted">
+          Pros use email + password with verification. Homeowner sign-in is a temporary mock while
+          real homeowner auth is built.
+        </p>
       </div>
     </div>
   );
 }
+

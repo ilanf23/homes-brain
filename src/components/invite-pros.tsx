@@ -29,32 +29,30 @@ export function InviteProsCard({
   const [inviteTrade, setInviteTrade] = useState<string>("electrical");
 
   useEffect(() => {
+    if (!homeownerId) return;
     (async () => {
-      const { data } = await supabase
-        .from("invites")
-        .select("id,to_pro_name,trade,status")
-        .eq("home_id", homeId)
-        .order("created_at", { ascending: false });
-      setInvites((data ?? []) as InviteRow[]);
+      const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: homeownerId });
+      const view = data as { invites?: InviteRow[] } | null;
+      setInvites((view?.invites ?? []) as InviteRow[]);
     })();
-  }, [homeId]);
+  }, [homeownerId, homeId]);
 
   const gaps = useMemo(() => suggestTradeGaps(knownTrades).slice(0, 3), [knownTrades]);
 
   async function sendInvite(toName: string, toPhone: string | null, trade: string | null) {
-    const { data } = await supabase
-      .from("invites")
-      .insert({
-        home_id: homeId,
-        from_homeowner: homeownerId,
-        to_pro_name: toName,
-        to_pro_phone: toPhone,
-        trade,
-        status: "pending",
-      })
-      .select("id,to_pro_name,trade,status")
-      .single();
-    if (data) setInvites((prev) => [data as InviteRow, ...prev]);
+    if (!homeownerId) return;
+    const { data, error } = await supabase.rpc("homeowner_create_invite", {
+      p_homeowner_id: homeownerId,
+      p_to_pro_name: toName,
+      p_to_pro_phone: toPhone ?? "",
+      p_trade: trade ?? "",
+    });
+    if (!error && data) {
+      setInvites((prev) => [
+        { id: data as string, to_pro_name: toName, trade, status: "pending" },
+        ...prev,
+      ]);
+    }
     if (toPhone) {
       await mockSend({
         channel: "sms",

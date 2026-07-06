@@ -13,6 +13,11 @@ export type HomeownerRow = {
   name: string | null;
   phone: string | null;
   email: string | null;
+  notify_email?: boolean;
+  notify_sms?: boolean;
+  sms_opt_out?: boolean;
+  respect_quiet_hrs?: boolean;
+  marketing_consent?: boolean;
 };
 
 export type HomeRow = {
@@ -21,13 +26,101 @@ export type HomeRow = {
   claimed_at: string | null;
 };
 
-/* Session guard + homeowner and claimed-home fetch shared by every /home/* page. */
+export type HomeEquipment = {
+  id: string;
+  home_id: string;
+  type: string | null;
+  make: string | null;
+  model: string | null;
+  serial: string | null;
+  warranty_until: string | null;
+  recall_status: string;
+  source: string;
+  created_at: string;
+};
+
+export type HomeJob = {
+  id: string;
+  pro_id: string;
+  home_id: string;
+  customer_id: string | null;
+  equipment_id: string | null;
+  what_done: string;
+  next_service_date: string | null;
+  created_at: string;
+};
+
+export type HomeProRow = {
+  id: string;
+  business: string;
+  trade: string;
+  logo: string | null;
+  google_rating: number | null;
+};
+
+export type HomeInvite = {
+  id: string;
+  home_id: string;
+  from_homeowner: string;
+  to_pro_name: string;
+  to_pro_phone: string | null;
+  trade: string | null;
+  status: string;
+  created_at: string;
+};
+
+export type HomeRecord = {
+  id: string;
+  public_url: string;
+  viewed_at: string | null;
+  created_at: string;
+  job_id: string;
+};
+
+export type HomeViewBundle = {
+  homeowner: HomeownerRow | null;
+  home: HomeRow | null;
+  equipment: HomeEquipment[];
+  jobs: HomeJob[];
+  pros: HomeProRow[];
+  invites: HomeInvite[];
+  records: HomeRecord[];
+};
+
+/* Session guard + full home view fetched via the get_home_view RPC (SECURITY
+   DEFINER, so it works from the anon key even though direct table access is
+   closed). Screens read all data from this hook. */
 export function useHomeownerGuard() {
   const navigate = useNavigate();
   const [homeownerId, setHomeownerId] = useState<string | null>(null);
-  const [homeowner, setHomeowner] = useState<HomeownerRow | null>(null);
-  const [home, setHome] = useState<HomeRow | null>(null);
+  const [bundle, setBundle] = useState<HomeViewBundle>({
+    homeowner: null,
+    home: null,
+    equipment: [],
+    jobs: [],
+    pros: [],
+    invites: [],
+    records: [],
+  });
   const [loading, setLoading] = useState(true);
+
+  const refresh = async (id?: string) => {
+    const hid = id ?? homeownerId;
+    if (!hid) return;
+    const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: hid });
+    const view = (data as HomeViewBundle | null) ?? null;
+    if (view) {
+      setBundle({
+        homeowner: view.homeowner,
+        home: view.home,
+        equipment: view.equipment ?? [],
+        jobs: view.jobs ?? [],
+        pros: view.pros ?? [],
+        invites: view.invites ?? [],
+        records: view.records ?? [],
+      });
+    }
+  };
 
   useEffect(() => {
     const s = getSession();
@@ -37,30 +130,40 @@ export function useHomeownerGuard() {
     }
     setHomeownerId(s.homeownerId);
     (async () => {
-      const [{ data: ho }, { data: h }] = await Promise.all([
-        supabase
-          .from("homeowners")
-          .select("id,name,phone,email")
-          .eq("id", s.homeownerId)
-          .maybeSingle(),
-        supabase
-          .from("homes")
-          .select("id,address,claimed_at")
-          .eq("claimed_by_homeowner", s.homeownerId)
-          .maybeSingle(),
-      ]);
-      if (!ho) {
+      const { data } = await supabase.rpc("get_home_view", { p_homeowner_id: s.homeownerId });
+      const view = data as HomeViewBundle | null;
+      if (!view || !view.homeowner) {
         clearSession();
         navigate({ to: "/login" });
         return;
       }
-      setHomeowner(ho as HomeownerRow);
-      setHome((h as HomeRow) ?? null);
+      setBundle({
+        homeowner: view.homeowner,
+        home: view.home,
+        equipment: view.equipment ?? [],
+        jobs: view.jobs ?? [],
+        pros: view.pros ?? [],
+        invites: view.invites ?? [],
+        records: view.records ?? [],
+      });
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  return { homeownerId, homeowner, setHomeowner, home, loading };
+  return {
+    homeownerId,
+    homeowner: bundle.homeowner,
+    setHomeowner: (h: HomeownerRow) => setBundle((b) => ({ ...b, homeowner: h })),
+    home: bundle.home,
+    equipment: bundle.equipment,
+    jobs: bundle.jobs,
+    pros: bundle.pros,
+    invites: bundle.invites,
+    records: bundle.records,
+    loading,
+    refresh,
+  };
 }
 
 export type HomeNavKey = "overview" | "appliances" | "pros" | "reminders" | "add" | "settings";

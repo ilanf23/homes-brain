@@ -27,9 +27,9 @@ const ITEM_TYPES = [
 
 function AddToHome() {
   const navigate = useNavigate();
-  const { homeownerId, homeowner, home, loading: guardLoading } = useHomeownerGuard();
-  const [knownTrades, setKnownTrades] = useState<string[]>([]);
-  const [prosCount, setProsCount] = useState(0);
+  const { homeownerId, homeowner, home, pros, loading: guardLoading } = useHomeownerGuard();
+  const knownTrades = Array.from(new Set(pros.map((p) => p.trade)));
+  const prosCount = pros.length;
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,37 +50,29 @@ function AddToHome() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!home) return;
-    (async () => {
-      const { data: jb } = await supabase.from("jobs").select("pro_id").eq("home_id", home.id);
-      const proIds = Array.from(new Set((jb ?? []).map((j) => j.pro_id)));
-      setProsCount(proIds.length);
-      if (proIds.length) {
-        const { data: pr } = await supabase.from("pros").select("trade").in("id", proIds);
-        setKnownTrades(Array.from(new Set((pr ?? []).map((p) => p.trade))));
-      }
-    })();
-  }, [home]);
-
-  useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2600);
     return () => clearTimeout(t);
   }, [toast]);
 
   async function saveItem() {
-    if (!home) return;
+    if (!home || !homeownerId) return;
     setSaving(true);
-    await supabase.from("equipment").insert({
-      home_id: home.id,
-      type: itemType,
-      make: make || null,
-      model: model || null,
-      serial: serial || null,
-      source: "self",
+    const { error } = await supabase.rpc("homeowner_add_equipment", {
+      p_homeowner_id: homeownerId,
+      p_type: itemType,
+      p_make: make,
+      p_model: model,
+      p_serial: serial,
+      p_warranty_until: null as unknown as string,
+      p_source: "self",
     });
-    await logEvent(`homeowner:${homeownerId}`, "item_self_added", { type: itemType });
     setSaving(false);
+    if (error) {
+      setToast("Could not add. Try again.");
+      return;
+    }
+    await logEvent(`homeowner:${homeownerId}`, "item_self_added", { type: itemType });
     setToast(`${itemType} added to your home`);
     setMake("");
     setModel("");

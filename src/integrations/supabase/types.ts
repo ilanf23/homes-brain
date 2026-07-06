@@ -475,9 +475,80 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_home: {
+        Args: { p_contact: string; p_record_id: string }
+        Returns: string
+      }
       export_my_homeowner_data: { Args: never; Returns: Json }
       export_my_pro_data: { Args: never; Returns: Json }
       generate_referral_code: { Args: never; Returns: string }
+      get_home_view: { Args: { p_homeowner_id: string }; Returns: Json }
+      get_homeowner_by_contact: { Args: { p_contact: string }; Returns: Json }
+      get_public_pro_profile: {
+        Args: { p_business: string; p_trade: string }
+        Returns: Json
+      }
+      get_public_record: { Args: { p_record_id: string }; Returns: Json }
+      homeowner_add_equipment: {
+        Args: {
+          p_homeowner_id: string
+          p_make: string
+          p_model: string
+          p_serial: string
+          p_source: string
+          p_type: string
+          p_warranty_until: string
+        }
+        Returns: string
+      }
+      homeowner_create_invite: {
+        Args: {
+          p_homeowner_id: string
+          p_to_pro_name: string
+          p_to_pro_phone: string
+          p_trade: string
+        }
+        Returns: string
+      }
+      homeowner_delete_equipment: {
+        Args: { p_equipment_id: string; p_homeowner_id: string }
+        Returns: undefined
+      }
+      homeowner_signup: {
+        Args: { p_address: string; p_contact: string }
+        Returns: string
+      }
+      homeowner_update_equipment: {
+        Args: {
+          p_equipment_id: string
+          p_homeowner_id: string
+          p_make?: string
+          p_model?: string
+          p_serial?: string
+          p_type?: string
+          p_warranty_until?: string
+        }
+        Returns: undefined
+      }
+      homeowner_update_home: {
+        Args: { p_address: string; p_homeowner_id: string }
+        Returns: string
+      }
+      homeowner_update_profile: {
+        Args: {
+          p_email?: string
+          p_homeowner_id: string
+          p_marketing_consent?: boolean
+          p_name?: string
+          p_notify_email?: boolean
+          p_notify_sms?: boolean
+          p_phone?: string
+          p_respect_quiet_hrs?: boolean
+          p_sms_opt_out?: boolean
+        }
+        Returns: undefined
+      }
+      mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
     }
