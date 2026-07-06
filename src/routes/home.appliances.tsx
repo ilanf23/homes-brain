@@ -126,7 +126,6 @@ function Appliances() {
     setSaving(true);
     if (editing) {
       const { error } = await supabase.rpc("homeowner_update_equipment", {
-        p_homeowner_id: homeownerId,
         p_equipment_id: editing.id,
         p_type: form.type || "",
         p_make: form.make.trim(),
@@ -144,7 +143,6 @@ function Appliances() {
       setToast(`${form.type} updated`);
     } else {
       const { error } = await supabase.rpc("homeowner_add_equipment", {
-        p_homeowner_id: homeownerId,
         p_type: form.type || "",
         p_make: form.make.trim(),
         p_model: form.model.trim(),
@@ -170,7 +168,6 @@ function Appliances() {
     if (!homeownerId) return;
     if (!confirm(`Remove ${a.type ?? "this item"} from your home?`)) return;
     const { error } = await supabase.rpc("homeowner_delete_equipment", {
-      p_homeowner_id: homeownerId,
       p_equipment_id: a.id,
     });
     if (error) {
