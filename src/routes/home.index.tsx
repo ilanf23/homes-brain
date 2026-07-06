@@ -274,12 +274,10 @@ function OnboardingNoHome({
 
     if (trimmedPhone && trimmedPhone !== (homeowner?.phone ?? "")) {
       await supabase.rpc("homeowner_update_profile", {
-        p_homeowner_id: homeownerId,
         p_phone: trimmedPhone,
       });
     }
     const { error } = await supabase.rpc("homeowner_update_home", {
-      p_homeowner_id: homeownerId,
       p_address: address.trim(),
     });
     if (error) {
