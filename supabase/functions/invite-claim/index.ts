@@ -84,8 +84,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { customer_id, origin } = await req.json();
+    const { customer_id, pro_id, origin } = await req.json();
     if (typeof customer_id !== "string" || !customer_id) {
+      return json({ ok: false, code: "bad_request" }, 400);
+    }
+    if (typeof pro_id !== "string" || !pro_id) {
       return json({ ok: false, code: "bad_request" }, 400);
     }
 
@@ -94,14 +97,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
-    const { data: userData } = await admin.auth.getUser(token);
-    if (!userData?.user) return json({ ok: false, code: "forbidden" }, 403);
-
     const { data: pro } = await admin
       .from("pros")
       .select("id,business")
-      .eq("auth_user_id", userData.user.id)
+      .eq("id", pro_id)
       .maybeSingle();
     if (!pro) return json({ ok: false, code: "forbidden" }, 403);
 
