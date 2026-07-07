@@ -232,13 +232,22 @@ function NewJob() {
       if (newCustomer.phone || existing.find((x) => x.id === customerId)?.phone) {
         await mockSend({ channel: "sms", to: toContact, body, kind: "record" });
       }
-      if (newCustomer.email || existing.find((x) => x.id === customerId)?.email) {
-        await mockSend({
-          channel: "email",
-          to: newCustomer.email || existing.find((x) => x.id === customerId)?.email || "",
-          body: `Subject: Your service record from ${proName}\n\nHi ${toName},\n\nYour service record is ready: ${finalUrl}\n\nThanks,\n${proName}`,
-          kind: "record",
+      const emailAddr = newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
+      if (emailAddr) {
+        const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+          body: { customer_id: customerId, origin: window.location.origin },
         });
+        if (sendErr || (sendResp && sendResp.ok === false)) {
+          const code = (sendResp && sendResp.code) || sendErr?.message || "send_failed";
+          await mockSend({
+            channel: "email",
+            to: emailAddr,
+            body: `Subject: Your service record from ${proName}\n\n(Fallback preview — real send failed: ${code})\n\nHi ${toName},\n\nYour service record is ready: ${finalUrl}\n\nThanks,\n${proName}`,
+            kind: "record",
+          });
+          setToast(`Email preview saved (${code})`);
+          setTimeout(() => setToast(null), 3500);
+        }
       }
       await logEvent(`pro:${proId}`, "record_sent", { record_id: rec!.id });
     }
