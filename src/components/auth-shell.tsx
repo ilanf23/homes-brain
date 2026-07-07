@@ -4,7 +4,7 @@ import { Logo } from "@/components/svg";
 
 /* Split-screen shell for the auth pages (/login, /reset-password).
    Left: logo top-left, form column vertically centered, muted footer line.
-   Right (lg and up): warm indigo panel with a mini record card, so the
+   Right (lg and up): warm indigo panel with a ledger timeline, so the
    auth pages read as the product's front door, not an app screen. */
 export function AuthShell({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (

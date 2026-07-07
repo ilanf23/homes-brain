@@ -49,8 +49,8 @@ New `src/components/auth-shell.tsx`, used by `/login` and `/reset-password`:
 
 - Two-column grid at `lg` and up, `min-h-dvh`.
 - Left column: logo top-left linking to `/` (replaces the sticky app header; auth pages read as a door, not an app screen), form content vertically centered at about `max-w-sm`, small muted footer line.
-- Right column (hidden below `lg`): warm indigo-tint panel. Background blends `indigobg` toward `soft` (not flat brand indigo) to keep the ledger warmth. Contents:
-  - A static mini service record card built from existing `Card`/`KV`/`Pill` primitives: "Verified record" indigo pill, business name, job done, "Next service" KV row. Slight tilt and soft shadow so it floats.
+- Right column (hidden below `lg`): warm indigo-tint panel. Background blends `indigobg` toward `soft` (not flat brand indigo) to keep the ledger warmth. Contents (revised 2026-07-06 after review; the original single tilted record card read flat and empty):
+  - A static ledger timeline for a fictional home ("128 Alder Lane", "The ledger so far"): three small record cards on a connected vertical line, two completed visits with verified checks and one upcoming visit, each with trade, business, and date.
   - Tagline below: "A home that remembers itself." plus one muted supporting line.
 - Mobile: single centered column, panel hidden, no functional loss.
 
