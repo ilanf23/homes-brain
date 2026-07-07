@@ -180,18 +180,14 @@ function NewJob() {
         setEqModel(r.model);
         filled.push("model");
       }
-      if (r.serial && !eqSerial) {
-        setEqSerial(r.serial);
-        filled.push("serial");
-      }
       if (r.warranty_until && /^\d{4}-\d{2}-\d{2}$/.test(r.warranty_until) && !warrantyUntil) {
         setWarrantyUntil(r.warranty_until);
         filled.push("warranty");
       }
-      const detectedNothing = !r.type && !r.make && !r.model && !r.serial && !r.warranty_until;
+      const detectedNothing = !r.type && !r.make && !r.model && !r.warranty_until;
       if (detectedNothing) {
         setScanState("error");
-        setScanError("Couldn't read the nameplate. Type the details in below.");
+        setScanError("Couldn't read the photo. Type the details in below.");
         return;
       }
       setScanState("done");
