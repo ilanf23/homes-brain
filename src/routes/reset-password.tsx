@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
+import { AuthShell } from "@/components/auth-shell";
+import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { Logo, ShieldCheck } from "@/components/svg";
+import { ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [{ title: "Reset password - HomesBrain" }] }),
@@ -60,70 +61,61 @@ function ResetPassword() {
   }
 
   return (
-    <div className="font-app min-h-dvh bg-soft">
-      <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto max-w-xl px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-          </Link>
-          <Pill accent="indigo">Reset password</Pill>
+    <AuthShell>
+      {!ready && <div className="text-sm text-muted">Loading…</div>}
+      {ready && done && (
+        <div className="text-center space-y-3">
+          <ShieldCheck size={36} className="mx-auto text-indigo" />
+          <h1 className="text-2xl tracking-tight">Password updated</h1>
+          <p className="text-sm text-muted">Redirecting you to your dashboard…</p>
         </div>
-      </header>
-
-      <div className="mx-auto max-w-md px-5 py-12">
-        <Card>
-          {!ready && <div className="text-sm text-muted">Loading…</div>}
-          {ready && done && (
-            <div className="text-center space-y-3">
-              <ShieldCheck size={36} className="mx-auto text-indigo" />
-              <h1 className="text-2xl tracking-tight">Password updated</h1>
-              <p className="text-sm text-muted">Redirecting you to your dashboard…</p>
-            </div>
-          )}
-          {ready && !done && hasRecovery && (
-            <div className="space-y-4">
-              <h1 className="text-2xl tracking-tight">Set a new password</h1>
-              <Field label="New password" hint="At least 8 characters.">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  autoFocus
-                />
-              </Field>
-              <Field label="Confirm new password">
-                <Input
-                  type="password"
-                  value={confirmPw}
-                  onChange={(e) => setConfirmPw(e.target.value)}
-                  autoComplete="new-password"
-                />
-              </Field>
-              {err && (
-                <div className="text-sm text-red bg-redbg rounded-xl px-3 py-2">{err}</div>
-              )}
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={updatePassword}>
-                Update password
-              </Btn>
-            </div>
-          )}
-          {ready && !done && !hasRecovery && (
-            <div className="space-y-3 text-center">
-              <h1 className="text-2xl tracking-tight">Reset link required</h1>
-              <p className="text-sm text-muted">
-                Open the reset link from your email to set a new password. If it expired, request a
-                new one on the login page.
-              </p>
-              <Link to="/login">
-                <Btn variant="indigo" className="w-full">
-                  Back to login
-                </Btn>
-              </Link>
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
+      )}
+      {ready && !done && hasRecovery && (
+        <div className="space-y-4">
+          <h1 className="text-2xl tracking-tight">Set a new password</h1>
+          <Field label="New password" hint="At least 8 characters.">
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              autoFocus
+            />
+          </Field>
+          <Field label="Confirm new password">
+            <Input
+              type="password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              autoComplete="new-password"
+            />
+          </Field>
+          {err && <div className="text-sm text-red bg-redbg rounded-xl px-3 py-2">{err}</div>}
+          <Btn
+            variant="indigo"
+            size="lg"
+            className="w-full"
+            loading={busy}
+            onClick={updatePassword}
+          >
+            Update password
+          </Btn>
+        </div>
+      )}
+      {ready && !done && !hasRecovery && (
+        <div className="space-y-3 text-center">
+          <h1 className="text-2xl tracking-tight">Reset link required</h1>
+          <p className="text-sm text-muted">
+            Open the reset link from your email to set a new password. If it expired, request a new
+            one on the login page.
+          </p>
+          <Link to="/login">
+            <Btn variant="indigo" className="w-full">
+              Back to login
+            </Btn>
+          </Link>
+        </div>
+      )}
+    </AuthShell>
   );
 }
