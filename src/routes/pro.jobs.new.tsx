@@ -279,7 +279,7 @@ function NewJob() {
           type: eqType || null,
           make: eqMake || null,
           model: eqModel || null,
-          serial: eqSerial || null,
+          warranty_until: warrantyUntil || null,
           warranty_until: warrantyUntil || null,
           recall_status: recall.status,
           recall_checked_at: recall.checked_at,
