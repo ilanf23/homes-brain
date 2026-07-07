@@ -60,6 +60,12 @@ function NewJob() {
   const [whatDone, setWhatDone] = useState("");
   const [nextService, setNextService] = useState("");
 
+  // Appliance picker (for repeat visits to same home)
+  const [homeAppliances, setHomeAppliances] = useState<ApplianceOpt[]>([]);
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>(""); // "" = add new
+  const [editDetails, setEditDetails] = useState(false);
+  const [applianceHistory, setApplianceHistory] = useState<JobHistoryRow[]>([]);
+
   // Nameplate scan
   const fileRef = useRef<HTMLInputElement>(null);
   const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
