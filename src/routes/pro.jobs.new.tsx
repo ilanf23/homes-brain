@@ -95,6 +95,73 @@ function NewJob() {
     })();
   }, [proId]);
 
+  /* When an existing customer is picked, load that home's appliances (with
+     last-job info) so the pro can attach this new visit to the same physical
+     unit instead of creating a duplicate equipment row. */
+  useEffect(() => {
+    const homeId = existing.find((x) => x.id === selectedCustomerId)?.home_id;
+    if (!homeId) {
+      setHomeAppliances([]);
+      setSelectedEquipmentId("");
+      setEditDetails(false);
+      return;
+    }
+    (async () => {
+      const { data: eq } = await supabase
+        .from("equipment")
+        .select("id,type,make,model,serial,warranty_until,jobs(created_at)")
+        .eq("home_id", homeId)
+        .order("created_at", { ascending: false });
+      const rows = (eq ?? []).map((r) => {
+        const jobs = (r as { jobs?: { created_at: string }[] }).jobs ?? [];
+        const last = jobs
+          .map((j) => j.created_at)
+          .sort()
+          .at(-1) ?? null;
+        return {
+          id: r.id as string,
+          type: (r.type as string | null) ?? null,
+          make: (r.make as string | null) ?? null,
+          model: (r.model as string | null) ?? null,
+          serial: (r.serial as string | null) ?? null,
+          warranty_until: (r.warranty_until as string | null) ?? null,
+          last_job_at: last,
+          job_count: jobs.length,
+        } satisfies ApplianceOpt;
+      });
+      setHomeAppliances(rows);
+      setSelectedEquipmentId("");
+      setEditDetails(false);
+    })();
+  }, [selectedCustomerId, existing]);
+
+  /* When an existing appliance is picked, prefill the equipment fields (so the
+     "correct details" toggle has real values to edit) and load its short
+     service history to show inline while the pro writes the new job. */
+  useEffect(() => {
+    if (!selectedEquipmentId) {
+      setApplianceHistory([]);
+      return;
+    }
+    const app = homeAppliances.find((a) => a.id === selectedEquipmentId);
+    if (app) {
+      setEqType(app.type ?? "");
+      setEqMake(app.make ?? "");
+      setEqModel(app.model ?? "");
+      setEqSerial(app.serial ?? "");
+      setWarrantyUntil(app.warranty_until ?? "");
+    }
+    (async () => {
+      const { data: js } = await supabase
+        .from("jobs")
+        .select("id,what_done,created_at")
+        .eq("equipment_id", selectedEquipmentId)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      setApplianceHistory((js ?? []) as JobHistoryRow[]);
+    })();
+  }, [selectedEquipmentId, homeAppliances]);
+
   async function onNameplate(file: File) {
     setScanState("scanning");
     setScanError(null);
