@@ -93,7 +93,7 @@ The warm paper neutrals (ink / soft / line) carry the personality - a beautifull
 ```
 pros        ( id, business, trade, service_area, logo, google_place_id, google_rating, plan, created_at )
 homes       ( id, address UNIQUE, created_by_pro, claimed_by_homeowner NULL, claimed_at )
-customers   ( id, pro_id, home_id, name, phone, email, consent_at, consent_ref )
+customers   ( id, pro_id, home_id, name, phone, email, consent_at, consent_ref, claim_invited_at )
 jobs        ( id, pro_id, home_id, equipment_id, what_done, next_service_date, photo_url, created_at )
 equipment   ( id, home_id, type, make, model, serial, warranty_until, recall_status, recall_checked_at )
 records     ( id, job_id, public_url, sent_sms_at, sent_email_at, viewed_at )
