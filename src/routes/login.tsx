@@ -1,34 +1,92 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
+import { AuthShell } from "@/components/auth-shell";
+import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
-import { Logo } from "@/components/svg";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Log in - HomesBrain" }] }),
   component: Login,
 });
 
-type Tab = "pro" | "homeowner";
+/* Email-first login. One email field for everyone; the
+   lookup_login_method RPC decides the path:
+   pro -> password step, homeowner -> magic link sent immediately,
+   both -> small choice, none -> signup pointers. */
+type Step =
+  | "email"
+  | "pro-password"
+  | "ho-sent"
+  | "no-account"
+  | "choose-role"
+  | "forgot"
+  | "forgot-sent";
+
+const STEP_COPY: Record<Step, { title: string; sub: string }> = {
+  email: { title: "Welcome back", sub: "Enter your email and we'll take it from there." },
+  "pro-password": { title: "Welcome back", sub: "Enter your password to sign in." },
+  "ho-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
+  "no-account": { title: "No account yet", sub: "We couldn't find an account for that email." },
+  "choose-role": { title: "Two accounts, one email", sub: "How do you want to sign in?" },
+  forgot: { title: "Reset your password", sub: "We'll email you a reset link." },
+  "forgot-sent": { title: "Check your email", sub: "Your reset link is on the way." },
+};
 
 function Login() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("pro");
-
-  // Pro state
+  const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotSent, setForgotSent] = useState<string | null>(null);
 
-  // Homeowner state - real magic link auth
-  const [hoEmail, setHoEmail] = useState("");
-  const [hoErr, setHoErr] = useState<string | null>(null);
-  const [hoBusy, setHoBusy] = useState(false);
-  const [hoSent, setHoSent] = useState<string | null>(null);
+  function resetToEmail() {
+    setStep("email");
+    setPassword("");
+    setErr(null);
+  }
+
+  async function continueWithEmail() {
+    setBusy(true);
+    setErr(null);
+    const { data, error } = await supabase.rpc("lookup_login_method", {
+      p_email: email.trim(),
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    if (data === "pro") {
+      setStep("pro-password");
+      setBusy(false);
+    } else if (data === "homeowner") {
+      await sendMagicLink();
+    } else if (data === "both") {
+      setStep("choose-role");
+      setBusy(false);
+    } else {
+      setStep("no-account");
+      setBusy(false);
+    }
+  }
+
+  async function sendMagicLink() {
+    setBusy(true);
+    setErr(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/home` },
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    setStep("ho-sent");
+    setBusy(false);
+  }
 
   async function proLogin() {
     setBusy(true);
@@ -58,229 +116,239 @@ function Login() {
   }
 
   async function sendReset() {
-    setForgotSent(null);
+    setBusy(true);
     setErr(null);
-    if (!email.trim()) {
-      setErr("Enter your email above first.");
-      return;
-    }
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) {
       setErr(error.message);
+      setBusy(false);
       return;
     }
-    setForgotSent(email.trim());
+    setStep("forgot-sent");
+    setBusy(false);
   }
 
-  async function homeownerLogin() {
-    setHoBusy(true);
-    setHoErr(null);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: hoEmail.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/home` },
-    });
-    if (error) {
-      setHoErr(error.message);
-      setHoBusy(false);
-      return;
-    }
-    setHoSent(hoEmail.trim());
-    setHoBusy(false);
-  }
+  const copy = STEP_COPY[step];
 
   return (
-    <div className="font-app min-h-dvh bg-soft">
-      <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto max-w-xl px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-          </Link>
-          <Pill accent="indigo">Log in</Pill>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-md px-5 py-12">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl tracking-tight">Welcome back</h1>
-          <p className="mt-2 text-sm text-muted">
-            {tab === "pro"
-              ? "Sign in with your email and password."
-              : "We'll email you a one-tap sign-in link."}
-          </p>
-        </div>
-
-        <div className="mb-4 flex gap-1 rounded-full bg-paper border border-line p-1">
-          <button
-            type="button"
-            onClick={() => setTab("pro")}
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              tab === "pro" ? "bg-indigobg text-indigo" : "text-muted hover:text-ink"
-            }`}
-          >
-            I'm a pro
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("homeowner")}
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              tab === "homeowner" ? "bg-indigobg text-indigo" : "text-muted hover:text-ink"
-            }`}
-          >
-            I'm a homeowner
-          </button>
-        </div>
-
-        <Card>
-          {tab === "pro" && !forgotOpen && (
-            <div className="space-y-4">
-              <Field label="Email">
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@business.com"
-                  autoComplete="email"
-                  autoFocus
-                />
-              </Field>
-              <Field label="Password">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Your password"
-                  autoComplete="current-password"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && email && password && !busy) proLogin();
-                  }}
-                />
-              </Field>
-              {err && (
-                <div
-                  role="alert"
-                  className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                >
-                  {err}
-                </div>
-              )}
-              <Btn
-                variant="indigo"
-                size="lg"
-                className="w-full"
-                disabled={!email || !password || busy}
-                onClick={proLogin}
-              >
-                {busy ? "Signing in…" : "Sign in"}
-              </Btn>
-              <div className="flex items-center justify-between text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForgotOpen(true);
-                    setErr(null);
-                  }}
-                  className="font-semibold text-indigo hover:underline"
-                >
-                  Forgot password?
-                </button>
-                <Link to="/pro/signup" className="font-semibold text-indigo hover:underline">
-                  Start free
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {tab === "pro" && forgotOpen && (
-            <div className="space-y-4">
-              <Field label="Email" hint="We'll send a reset link.">
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@business.com"
-                  autoFocus
-                />
-              </Field>
-              {err && (
-                <div className="text-sm text-red bg-redbg rounded-xl px-3 py-2">{err}</div>
-              )}
-              {forgotSent && (
-                <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
-                  Reset link sent to <span className="font-semibold">{forgotSent}</span>.
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Btn variant="secondary" onClick={() => setForgotOpen(false)}>
-                  Back
-                </Btn>
-                <Btn variant="indigo" className="flex-1" onClick={sendReset}>
-                  Send reset link
-                </Btn>
-              </div>
-            </div>
-          )}
-
-          {tab === "homeowner" && (
-            <div className="space-y-4">
-              {hoSent ? (
-                <div className="space-y-3">
-                  <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
-                    Check your email at <span className="font-semibold">{hoSent}</span> and click
-                    the link to sign in.
-                  </div>
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-indigo hover:underline"
-                    onClick={() => setHoSent(null)}
-                  >
-                    Use a different email
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Field label="Email">
-                    <Input
-                      type="email"
-                      value={hoEmail}
-                      onChange={(e) => setHoEmail(e.target.value)}
-                      placeholder="you@email.com"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && hoEmail.trim() && !hoBusy) homeownerLogin();
-                      }}
-                    />
-                  </Field>
-                  {hoErr && (
-                    <div
-                      role="alert"
-                      className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                    >
-                      {hoErr}
-                    </div>
-                  )}
-                  <Btn
-                    variant="indigo"
-                    size="lg"
-                    className="w-full"
-                    disabled={!hoEmail.trim() || hoBusy}
-                    onClick={homeownerLogin}
-                  >
-                    {hoBusy ? "Sending…" : "Email me a sign-in link"}
-                  </Btn>
-                  <div className="text-center text-xs text-muted">
-                    New homeowner?{" "}
-                    <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
-                      Start free
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </Card>
+    <AuthShell>
+      <div className="mb-6">
+        <h1 className="text-3xl tracking-tight">{copy.title}</h1>
+        <p className="mt-2 text-sm text-muted">{copy.sub}</p>
       </div>
+
+      <div className="space-y-4">
+        {step === "email" && (
+          <>
+            <Field label="Email">
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                autoComplete="email"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && email.trim() && !busy) continueWithEmail();
+                }}
+              />
+            </Field>
+            <ErrorRow err={err} />
+            <Btn
+              variant="indigo"
+              size="lg"
+              className="w-full"
+              disabled={!email.trim()}
+              loading={busy}
+              onClick={continueWithEmail}
+            >
+              Continue
+            </Btn>
+            <p className="text-center text-xs text-muted">
+              New here?{" "}
+              <Link to="/pro/signup" className="font-semibold text-indigo hover:underline">
+                Start free as a pro
+              </Link>{" "}
+              or{" "}
+              <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
+                create your home account
+              </Link>
+            </p>
+          </>
+        )}
+
+        {step === "pro-password" && (
+          <>
+            <EmailSummary email={email} onChange={resetToEmail} />
+            <Field label="Password">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                autoComplete="current-password"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && password && !busy) proLogin();
+                }}
+              />
+            </Field>
+            <ErrorRow err={err} />
+            <Btn
+              variant="indigo"
+              size="lg"
+              className="w-full"
+              disabled={!password}
+              loading={busy}
+              onClick={proLogin}
+            >
+              Sign in
+            </Btn>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("forgot");
+                  setErr(null);
+                }}
+                className="text-xs font-semibold text-indigo hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === "ho-sent" && (
+          <>
+            <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
+              We emailed a sign-in link to <span className="font-semibold">{email.trim()}</span>.
+              Click it and you're in.
+            </div>
+            <BackToEmail onClick={resetToEmail} />
+          </>
+        )}
+
+        {step === "no-account" && (
+          <>
+            <div className="text-sm text-ink bg-soft border border-line rounded-xl px-3 py-2">
+              Nothing yet for <span className="font-semibold">{email.trim()}</span>. Pick where to
+              start:
+            </div>
+            <Link to="/pro/signup" className="block">
+              <Btn variant="indigo" size="lg" className="w-full">
+                Start free as a pro
+              </Btn>
+            </Link>
+            <Link to="/home/signup" className="block">
+              <Btn variant="secondary" size="lg" className="w-full">
+                Create your home account
+              </Btn>
+            </Link>
+            <BackToEmail onClick={resetToEmail} />
+          </>
+        )}
+
+        {step === "choose-role" && (
+          <>
+            <EmailSummary email={email} onChange={resetToEmail} />
+            <ErrorRow err={err} />
+            <Btn
+              variant="indigo"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                setStep("pro-password");
+                setErr(null);
+              }}
+            >
+              Sign in with password
+            </Btn>
+            <Btn
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              loading={busy}
+              onClick={sendMagicLink}
+            >
+              Email me a sign-in link
+            </Btn>
+          </>
+        )}
+
+        {step === "forgot" && (
+          <>
+            <EmailSummary email={email} onChange={resetToEmail} />
+            <ErrorRow err={err} />
+            <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={sendReset}>
+              Send reset link
+            </Btn>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("pro-password");
+                  setErr(null);
+                }}
+                className="text-xs font-semibold text-indigo hover:underline"
+              >
+                Back to sign in
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === "forgot-sent" && (
+          <>
+            <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
+              Reset link sent to <span className="font-semibold">{email.trim()}</span>. Open it to
+              set a new password.
+            </div>
+            <BackToEmail onClick={resetToEmail} />
+          </>
+        )}
+      </div>
+    </AuthShell>
+  );
+}
+
+function ErrorRow({ err }: { err: string | null }) {
+  if (!err) return null;
+  return (
+    <div role="alert" className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2">
+      {err}
+    </div>
+  );
+}
+
+/* The confirmed email, shown read-only above later steps. */
+function EmailSummary({ email, onChange }: { email: string; onChange: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3.5 py-2.5">
+      <span className="truncate text-sm font-semibold text-ink">{email.trim()}</span>
+      <button
+        type="button"
+        onClick={onChange}
+        className="shrink-0 text-xs font-semibold text-indigo hover:underline"
+      >
+        Not you?
+      </button>
+    </div>
+  );
+}
+
+function BackToEmail({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="text-center">
+      <button
+        type="button"
+        onClick={onClick}
+        className="text-xs font-semibold text-indigo hover:underline"
+      >
+        Use a different email
+      </button>
     </div>
   );
 }
