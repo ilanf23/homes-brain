@@ -242,7 +242,7 @@ function NewJob() {
           await mockSend({
             channel: "email",
             to: emailAddr,
-            body: `Subject: Your service record from ${proName}\n\n(Fallback preview — real send failed: ${code})\n\nHi ${toName},\n\nYour service record is ready: ${finalUrl}\n\nThanks,\n${proName}`,
+            body: `Subject: Your service record from ${proName}\n\n(Fallback preview. Real send failed: ${code})\n\nHi ${toName},\n\nYour service record is ready: ${finalUrl}\n\nThanks,\n${proName}`,
             kind: "record",
           });
           setToast(`Email preview saved (${code})`);
