@@ -108,7 +108,7 @@ function NewJob() {
     (async () => {
       const { data: eq } = await supabase
         .from("equipment")
-        .select("id,type,make,model,serial,warranty_until,jobs(created_at)")
+        .select("id,type,make,model,warranty_until,jobs(created_at)")
         .eq("home_id", homeId)
         .order("created_at", { ascending: false });
       const rows = (eq ?? []).map((r) => {
@@ -122,7 +122,6 @@ function NewJob() {
           type: (r.type as string | null) ?? null,
           make: (r.make as string | null) ?? null,
           model: (r.model as string | null) ?? null,
-          serial: (r.serial as string | null) ?? null,
           warranty_until: (r.warranty_until as string | null) ?? null,
           last_job_at: last,
           job_count: jobs.length,
