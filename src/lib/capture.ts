@@ -8,7 +8,6 @@ export type NameplateScan = {
   type: string | null;
   make: string | null;
   model: string | null;
-  serial: string | null;
   warranty_until: string | null;
 };
 
