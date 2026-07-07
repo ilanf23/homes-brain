@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     try {
       fields = JSON.parse(text.replace(/```json|```/g, "").trim());
     } catch {
-      return json({ error: "Couldn't read the nameplate. Try a closer, straighter shot." }, 422);
+      return json({ error: "Couldn't read the photo. Try a closer, straighter shot." }, 422);
     }
 
     const clean = (v: unknown) =>
@@ -82,7 +82,6 @@ Deno.serve(async (req) => {
       type: clean(fields.type),
       make: clean(fields.make),
       model: clean(fields.model),
-      serial: clean(fields.serial),
       warranty_until: clean(fields.warranty_until),
     });
   } catch (e) {
