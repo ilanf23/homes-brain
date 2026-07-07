@@ -260,9 +260,26 @@ function NewJob() {
       toContact = newCustomer.phone || newCustomer.email || "";
     }
 
-    // Equipment
+    // Equipment: reuse an existing appliance on this home when the pro picked
+    // one (so a repeat visit builds a real service history), otherwise insert.
     let equipmentId: string | undefined;
-    if (eqType || eqMake || eqModel) {
+    if (selectedEquipmentId) {
+      equipmentId = selectedEquipmentId;
+      if (editDetails) {
+        await supabase
+          .from("equipment")
+          .update({
+            type: eqType || null,
+            make: eqMake || null,
+            model: eqModel || null,
+            serial: eqSerial || null,
+            warranty_until: warrantyUntil || null,
+            recall_status: recall.status,
+            recall_checked_at: recall.checked_at,
+          })
+          .eq("id", selectedEquipmentId);
+      }
+    } else if (eqType || eqMake || eqModel) {
       const { data: eq } = await supabase
         .from("equipment")
         .insert({
