@@ -237,7 +237,7 @@ function CustomerDetail() {
     if (!proId || !customer || inviting) return;
     setInviting(true);
     const { data, error } = await supabase.functions.invoke("invite-claim", {
-      body: { customer_id: customerId, origin: window.location.origin },
+      body: { customer_id: customerId, pro_id: proId, origin: window.location.origin },
     });
     setInviting(false);
     const result = data as {
