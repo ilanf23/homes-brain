@@ -26,7 +26,6 @@ type ApplianceOpt = {
   type: string | null;
   make: string | null;
   model: string | null;
-  serial: string | null;
   warranty_until: string | null;
   last_job_at: string | null;
   job_count: number;
