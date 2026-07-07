@@ -4,3 +4,6 @@ project_id = "ccglxkhrlfxlvpzcitso"
 # function holds no data: it only reads an image the caller sends.
 [functions.scan-nameplate]
 verify_jwt = false
+
+# invite-claim keeps the default verify_jwt = true on purpose: only a signed-in
+# user may reach it, and the function resolves the pro from the JWT itself.
