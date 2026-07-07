@@ -397,6 +397,10 @@ function NewJob() {
     setWarrantyUntil("");
     setWhatDone("");
     setNextService("");
+    setSelectedEquipmentId("");
+    setEditDetails(false);
+    setHomeAppliances([]);
+    setApplianceHistory([]);
     if (scanPreview) URL.revokeObjectURL(scanPreview);
     setScanPreview(null);
     setScanState("idle");
