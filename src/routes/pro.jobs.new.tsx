@@ -577,7 +577,6 @@ function NewJob() {
                           setEqType("");
                           setEqMake("");
                           setEqModel("");
-                          setEqModel("");
                           setWarrantyUntil("");
                         }}
                         aria-pressed={!selectedEquipmentId}
