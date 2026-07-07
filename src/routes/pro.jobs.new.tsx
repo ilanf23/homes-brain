@@ -147,7 +147,6 @@ function NewJob() {
       setEqMake(app.make ?? "");
       setEqModel(app.model ?? "");
       setWarrantyUntil(app.warranty_until ?? "");
-      setWarrantyUntil(app.warranty_until ?? "");
     }
     (async () => {
       const { data: js } = await supabase
