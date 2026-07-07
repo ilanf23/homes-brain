@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
-import { buildRecordUrl, checkRecall, geocodeHome, logEvent, mockSend, tradeLabel } from "@/lib/hb";
+import { buildRecordUrl, checkRecall, formatDate, geocodeHome, logEvent, mockSend, tradeLabel } from "@/lib/hb";
 import { scanNameplate, useDictation } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
 
@@ -21,6 +21,17 @@ type CustomerOpt = {
   home_id: string;
   homes: { address: string } | null;
 };
+type ApplianceOpt = {
+  id: string;
+  type: string | null;
+  make: string | null;
+  model: string | null;
+  serial: string | null;
+  warranty_until: string | null;
+  last_job_at: string | null;
+  job_count: number;
+};
+type JobHistoryRow = { id: string; what_done: string; created_at: string };
 
 const STAGES: Stage[] = ["customer", "work", "review"];
 const STAGE_LABELS = ["Customer", "The work", "Send"];
@@ -48,6 +59,12 @@ function NewJob() {
   const [warrantyUntil, setWarrantyUntil] = useState("");
   const [whatDone, setWhatDone] = useState("");
   const [nextService, setNextService] = useState("");
+
+  // Appliance picker (for repeat visits to same home)
+  const [homeAppliances, setHomeAppliances] = useState<ApplianceOpt[]>([]);
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>(""); // "" = add new
+  const [editDetails, setEditDetails] = useState(false);
+  const [applianceHistory, setApplianceHistory] = useState<JobHistoryRow[]>([]);
 
   // Nameplate scan
   const fileRef = useRef<HTMLInputElement>(null);
@@ -77,6 +94,73 @@ function NewJob() {
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     })();
   }, [proId]);
+
+  /* When an existing customer is picked, load that home's appliances (with
+     last-job info) so the pro can attach this new visit to the same physical
+     unit instead of creating a duplicate equipment row. */
+  useEffect(() => {
+    const homeId = existing.find((x) => x.id === selectedCustomerId)?.home_id;
+    if (!homeId) {
+      setHomeAppliances([]);
+      setSelectedEquipmentId("");
+      setEditDetails(false);
+      return;
+    }
+    (async () => {
+      const { data: eq } = await supabase
+        .from("equipment")
+        .select("id,type,make,model,serial,warranty_until,jobs(created_at)")
+        .eq("home_id", homeId)
+        .order("created_at", { ascending: false });
+      const rows = (eq ?? []).map((r) => {
+        const jobs = (r as { jobs?: { created_at: string }[] }).jobs ?? [];
+        const last = jobs
+          .map((j) => j.created_at)
+          .sort()
+          .at(-1) ?? null;
+        return {
+          id: r.id as string,
+          type: (r.type as string | null) ?? null,
+          make: (r.make as string | null) ?? null,
+          model: (r.model as string | null) ?? null,
+          serial: (r.serial as string | null) ?? null,
+          warranty_until: (r.warranty_until as string | null) ?? null,
+          last_job_at: last,
+          job_count: jobs.length,
+        } satisfies ApplianceOpt;
+      });
+      setHomeAppliances(rows);
+      setSelectedEquipmentId("");
+      setEditDetails(false);
+    })();
+  }, [selectedCustomerId, existing]);
+
+  /* When an existing appliance is picked, prefill the equipment fields (so the
+     "correct details" toggle has real values to edit) and load its short
+     service history to show inline while the pro writes the new job. */
+  useEffect(() => {
+    if (!selectedEquipmentId) {
+      setApplianceHistory([]);
+      return;
+    }
+    const app = homeAppliances.find((a) => a.id === selectedEquipmentId);
+    if (app) {
+      setEqType(app.type ?? "");
+      setEqMake(app.make ?? "");
+      setEqModel(app.model ?? "");
+      setEqSerial(app.serial ?? "");
+      setWarrantyUntil(app.warranty_until ?? "");
+    }
+    (async () => {
+      const { data: js } = await supabase
+        .from("jobs")
+        .select("id,what_done,created_at")
+        .eq("equipment_id", selectedEquipmentId)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      setApplianceHistory((js ?? []) as JobHistoryRow[]);
+    })();
+  }, [selectedEquipmentId, homeAppliances]);
 
   async function onNameplate(file: File) {
     setScanState("scanning");
@@ -176,9 +260,26 @@ function NewJob() {
       toContact = newCustomer.phone || newCustomer.email || "";
     }
 
-    // Equipment
+    // Equipment: reuse an existing appliance on this home when the pro picked
+    // one (so a repeat visit builds a real service history), otherwise insert.
     let equipmentId: string | undefined;
-    if (eqType || eqMake || eqModel) {
+    if (selectedEquipmentId) {
+      equipmentId = selectedEquipmentId;
+      if (editDetails) {
+        await supabase
+          .from("equipment")
+          .update({
+            type: eqType || null,
+            make: eqMake || null,
+            model: eqModel || null,
+            serial: eqSerial || null,
+            warranty_until: warrantyUntil || null,
+            recall_status: recall.status,
+            recall_checked_at: recall.checked_at,
+          })
+          .eq("id", selectedEquipmentId);
+      }
+    } else if (eqType || eqMake || eqModel) {
       const { data: eq } = await supabase
         .from("equipment")
         .insert({
@@ -296,6 +397,10 @@ function NewJob() {
     setWarrantyUntil("");
     setWhatDone("");
     setNextService("");
+    setSelectedEquipmentId("");
+    setEditDetails(false);
+    setHomeAppliances([]);
+    setApplianceHistory([]);
     if (scanPreview) URL.revokeObjectURL(scanPreview);
     setScanPreview(null);
     setScanState("idle");
@@ -442,8 +547,94 @@ function NewJob() {
 
             {stage === "work" && (
               <Card className="space-y-4">
-                <div>
-                  <div className="text-sm font-semibold text-ink mb-1.5">Nameplate</div>
+                {homeAppliances.length > 0 && (
+                  <div>
+                    <div className="text-sm font-semibold text-ink mb-2">Which appliance?</div>
+                    <div className="space-y-2">
+                      {homeAppliances.map((a) => {
+                        const label = [a.type, a.make, a.model].filter(Boolean).join(" · ") || "Unnamed appliance";
+                        const meta = a.last_job_at
+                          ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
+                          : "No visits yet";
+                        const picked = selectedEquipmentId === a.id;
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedEquipmentId(picked ? "" : a.id);
+                              setEditDetails(false);
+                            }}
+                            aria-pressed={picked}
+                            className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
+                              picked
+                                ? "border-indigo bg-indigobg shadow-sm"
+                                : "border-line bg-paper hover:bg-soft hover:border-ink/20"
+                            }`}
+                          >
+                            <div className="font-semibold text-sm text-ink">{label}</div>
+                            <div className="text-xs text-muted mt-0.5 tnum">
+                              {meta}
+                              {a.serial ? ` · #${a.serial}` : ""}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedEquipmentId("");
+                          setEditDetails(false);
+                          setEqType("");
+                          setEqMake("");
+                          setEqModel("");
+                          setEqSerial("");
+                          setWarrantyUntil("");
+                        }}
+                        aria-pressed={!selectedEquipmentId}
+                        className={`pressable w-full text-left rounded-xl border border-dashed px-3 py-2.5 transition-all duration-200 ${
+                          !selectedEquipmentId
+                            ? "border-indigo bg-indigobg/50 text-indigo"
+                            : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
+                        }`}
+                      >
+                        <div className="font-semibold text-sm">+ Add a new appliance</div>
+                      </button>
+                    </div>
+
+                    {selectedEquipmentId && applianceHistory.length > 0 && (
+                      <div className="mt-3 rounded-xl bg-soft px-3 py-2.5">
+                        <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                          Recent history
+                        </div>
+                        <ul className="space-y-1">
+                          {applianceHistory.map((j) => (
+                            <li key={j.id} className="text-xs text-ink flex gap-2">
+                              <span className="text-muted tnum shrink-0 w-20">
+                                {formatDate(j.created_at)}
+                              </span>
+                              <span className="truncate">{j.what_done}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedEquipmentId && (
+                      <button
+                        type="button"
+                        onClick={() => setEditDetails((v) => !v)}
+                        className="mt-3 text-xs font-semibold text-indigo hover:underline"
+                      >
+                        {editDetails ? "Hide details" : "Correct appliance details"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {(!selectedEquipmentId || editDetails) && (
+                  <div>
+                    <div className="text-sm font-semibold text-ink mb-1.5">Nameplate</div>
                   <input
                     ref={fileRef}
                     type="file"
@@ -509,39 +700,46 @@ function NewJob() {
                       </div>
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
+
+                {(!selectedEquipmentId || editDetails) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Equipment type">
+                      <Input
+                        value={eqType}
+                        onChange={(e) => setEqType(e.target.value)}
+                        placeholder="Softener"
+                      />
+                    </Field>
+                    <Field label="Make">
+                      <Input
+                        value={eqMake}
+                        onChange={(e) => setEqMake(e.target.value)}
+                        placeholder="EcoWater"
+                      />
+                    </Field>
+                    <Field label="Model">
+                      <Input
+                        value={eqModel}
+                        onChange={(e) => setEqModel(e.target.value)}
+                        placeholder="EVR3700R30"
+                      />
+                    </Field>
+                    <Field label="Serial (optional)">
+                      <Input value={eqSerial} onChange={(e) => setEqSerial(e.target.value)} />
+                    </Field>
+                    <Field label="Warranty until">
+                      <Input
+                        type="date"
+                        value={warrantyUntil}
+                        onChange={(e) => setWarrantyUntil(e.target.value)}
+                      />
+                    </Field>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Equipment type">
-                    <Input
-                      value={eqType}
-                      onChange={(e) => setEqType(e.target.value)}
-                      placeholder="Softener"
-                    />
-                  </Field>
-                  <Field label="Make">
-                    <Input
-                      value={eqMake}
-                      onChange={(e) => setEqMake(e.target.value)}
-                      placeholder="EcoWater"
-                    />
-                  </Field>
-                  <Field label="Model">
-                    <Input
-                      value={eqModel}
-                      onChange={(e) => setEqModel(e.target.value)}
-                      placeholder="EVR3700R30"
-                    />
-                  </Field>
-                  <Field label="Serial (optional)">
-                    <Input value={eqSerial} onChange={(e) => setEqSerial(e.target.value)} />
-                  </Field>
-                  <Field label="Warranty until">
-                    <Input
-                      type="date"
-                      value={warrantyUntil}
-                      onChange={(e) => setWarrantyUntil(e.target.value)}
-                    />
-                  </Field>
                   <Field label="Next service">
                     <Input
                       type="date"
