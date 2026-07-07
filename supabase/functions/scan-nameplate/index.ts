@@ -12,16 +12,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PROMPT = `You are reading a photo of an equipment nameplate / data plate (water softener, water heater, furnace, AC, appliance, etc).
-Extract ONLY what is printed on the plate. Respond with strict JSON, no markdown, using exactly these keys:
+const PROMPT = `You are reading a photo of a home appliance or unit (water softener, water heater, furnace, AC, appliance, etc), typically its data plate/sticker.
+Extract ONLY what is printed. Respond with strict JSON, no markdown, using exactly these keys:
 {
   "type": short equipment type like "Water softener", "Water heater", "Furnace": infer from the brand/model context when clear, else null,
   "make": brand name, else null,
   "model": model number, else null,
-  "serial": serial number, else null,
   "warranty_until": "YYYY-MM-DD" ONLY if a warranty end date is explicitly printed, else null
 }
-If the photo is not a nameplate or nothing is readable, return all nulls.`;
+Do not include serial numbers. If nothing is readable, return all nulls.`;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
