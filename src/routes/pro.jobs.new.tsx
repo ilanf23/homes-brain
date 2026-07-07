@@ -21,6 +21,17 @@ type CustomerOpt = {
   home_id: string;
   homes: { address: string } | null;
 };
+type ApplianceOpt = {
+  id: string;
+  type: string | null;
+  make: string | null;
+  model: string | null;
+  serial: string | null;
+  warranty_until: string | null;
+  last_job_at: string | null;
+  job_count: number;
+};
+type JobHistoryRow = { id: string; what_done: string; created_at: string };
 
 const STAGES: Stage[] = ["customer", "work", "review"];
 const STAGE_LABELS = ["Customer", "The work", "Send"];
