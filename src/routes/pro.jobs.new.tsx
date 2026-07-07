@@ -54,10 +54,10 @@ function NewJob() {
   const [eqType, setEqType] = useState("");
   const [eqMake, setEqMake] = useState("");
   const [eqModel, setEqModel] = useState("");
-  const [eqSerial, setEqSerial] = useState("");
   const [warrantyUntil, setWarrantyUntil] = useState("");
   const [whatDone, setWhatDone] = useState("");
   const [nextService, setNextService] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Appliance picker (for repeat visits to same home)
   const [homeAppliances, setHomeAppliances] = useState<ApplianceOpt[]>([]);
