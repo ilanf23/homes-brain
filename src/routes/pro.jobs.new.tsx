@@ -384,8 +384,8 @@ function NewJob() {
     setEqType("");
     setEqMake("");
     setEqModel("");
-    setEqSerial("");
     setWarrantyUntil("");
+    setDetailsOpen(false);
     setWhatDone("");
     setNextService("");
     setSelectedEquipmentId("");
