@@ -240,7 +240,21 @@ function CustomerDetail() {
       body: { customer_id: customerId, origin: window.location.origin },
     });
     setInviting(false);
-    const result = data as { ok: boolean; code?: string; invited_at?: string } | null;
+    const result = data as {
+      ok: boolean;
+      code?:
+        | "no_email"
+        | "already_claimed"
+        | "no_record"
+        | "cooldown"
+        | "not_configured"
+        | "daily_limit"
+        | "bad_request"
+        | "forbidden"
+        | "send_failed"
+        | "error";
+      invited_at?: string;
+    } | null;
     if (error || !result?.ok) {
       const code = result?.code;
       setToast(
@@ -254,7 +268,9 @@ function CustomerDetail() {
                 ? `Already invited ${result?.invited_at ? formatDate(result.invited_at) : "recently"}. Invites can go out once every 7 days.`
                 : code === "not_configured"
                   ? "Email is not configured yet."
-                  : "Could not send the invite. Try again.",
+                  : code === "daily_limit"
+                    ? "Daily invite limit reached. Try again tomorrow."
+                    : "Could not send the invite. Try again.",
       );
       if (code === "cooldown" && result?.invited_at) {
         setCustomer((c) => (c ? { ...c, claim_invited_at: result.invited_at! } : c));

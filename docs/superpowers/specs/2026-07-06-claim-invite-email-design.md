@@ -37,14 +37,15 @@ Flow:
    - `already_claimed`: the customer's home has `claimed_at` set.
    - `no_record`: no job by this pro on this home has a record row yet.
    - `cooldown`: `claim_invited_at` is within the last 7 days. Response includes the date.
+   - `daily_limit`: more than 50 invites in the last 24 hours across this pro's customers.
    - `not_configured`: `RESEND_API_KEY` secret is missing. Surfaced honestly, no mock fallback.
-4. Find the newest record: latest `records` row joined through this pro's jobs on the customer's home. Build the claim URL as `{origin}/claim/{recordId}` (origin passed by the client, validated against an allowlist, falling back to https://homesbrain.com).
+4. Find the newest record: latest `records` row joined through this pro's jobs on the customer's home. Build the claim URL as `{origin}/claim/{recordId}` (origin passed by the client, honored only for localhost and homesbrain.com, otherwise falling back to https://homesbrain.com).
 5. Send via Resend REST API with `RESEND_API_KEY`:
    - From: `HomesBrain <invites@homesbrain.com>`
    - Subject: `{Business} started a home record for {address}`
    - HTML body: short and branded (warm paper neutrals, indigo CTA button "Claim your home record", brand rules from CLAUDE.md apply). Footer line: "You're receiving this because {Business} logged a service visit at {address}."
    - Plain-text alternative included.
-6. On Resend success only: stamp `customers.claim_invited_at = now()`, insert a `messages` row (`channel: "email"`, `to_contact`, `body` = plain-text version, `kind: "invite"`), return `{ ok: true }`. Resend failure: 502 with Resend's error message, nothing stamped, no messages row.
+6. On Resend success only: stamp `customers.claim_invited_at = now()`, insert a `messages` row (`channel: "email"`, `to_contact`, `body` = plain-text version, `kind: "invite"`), return `{ ok: true }`. Resend failure: the client receives a generic `send_failed` code; Resend's own error is logged server-side only, nothing stamped, no messages row.
 
 ## UI: customer detail page (`src/routes/pro.customers.$customerId.tsx`)
 

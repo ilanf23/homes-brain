@@ -19,13 +19,13 @@ const corsHeaders = {
 };
 
 const COOLDOWN_MS = 7 * 24 * 3600 * 1000;
+const DAILY_LIMIT = 50;
 const FALLBACK_ORIGIN = "https://homesbrain.com";
-const ALLOWED_ORIGINS = [
-  /^http:\/\/localhost(:\d+)?$/,
-  /^https:\/\/(www\.)?homesbrain\.com$/,
-  /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
-  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
-];
+// Wildcard Lovable patterns would let a lookalike Lovable app receive
+// genuine DKIM-signed claim links, so the allowlist stays narrow: local
+// dev and the real domain only. Preview environments fall back to
+// https://homesbrain.com.
+const ALLOWED_ORIGINS = [/^http:\/\/localhost(:\d+)?$/, /^https:\/\/(www\.)?homesbrain\.com$/];
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -124,6 +124,17 @@ Deno.serve(async (req) => {
       return json({ ok: false, code: "cooldown", invited_at: customer.claim_invited_at });
     }
 
+    // Volume cap: a pro controls customer emails, so without a cap a hostile
+    // account could burn the sending domain's reputation. Counted on
+    // claim_invited_at, which only this function writes.
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { count: sentToday } = await admin
+      .from("customers")
+      .select("id", { count: "exact", head: true })
+      .eq("pro_id", pro.id)
+      .gt("claim_invited_at", since);
+    if ((sentToday ?? 0) >= DAILY_LIMIT) return json({ ok: false, code: "daily_limit" });
+
     const { data: jobRows } = await admin
       .from("jobs")
       .select("id,created_at,records(id)")
@@ -157,13 +168,19 @@ Deno.serve(async (req) => {
     }
 
     const invited_at = new Date().toISOString();
-    await admin.from("customers").update({ claim_invited_at: invited_at }).eq("id", customer.id);
-    await admin.from("messages").insert({
+    const { error: stampError } = await admin
+      .from("customers")
+      .update({ claim_invited_at: invited_at })
+      .eq("id", customer.id);
+    const { error: messageError } = await admin.from("messages").insert({
       channel: "email",
       to_contact: customer.email,
       body: text,
       kind: "invite",
     });
+    if (stampError || messageError) {
+      console.error("invite-claim post-send write failed", stampError ?? messageError);
+    }
 
     return json({ ok: true, invited_at });
   } catch (e) {
