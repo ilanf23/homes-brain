@@ -1,6 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BellRing, Eye, ReceiptText, Send, StickyNote, Wrench } from "lucide-react";
+import {
+  ArrowLeft,
+  BellRing,
+  Eye,
+  Mail,
+  ReceiptText,
+  Send,
+  StickyNote,
+  Wrench,
+} from "lucide-react";
 import { Avatar, Btn, Card, KV, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
@@ -32,6 +41,7 @@ type Customer = {
   name: string;
   phone: string | null;
   email: string | null;
+  claim_invited_at: string | null;
   consent_at: string | null;
   created_at: string;
   home_id: string;
@@ -88,6 +98,7 @@ function CustomerDetail() {
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [nudging, setNudging] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
@@ -97,7 +108,7 @@ function CustomerDetail() {
       const { data: c } = await supabase
         .from("customers")
         .select(
-          "id,name,phone,email,consent_at,created_at,home_id,homes(id,address,claimed_at,claimed_by_homeowner,homeowners!homes_homeowner_fk(id,phone,email,created_at))",
+          "id,name,phone,email,consent_at,created_at,home_id,claim_invited_at,homes(id,address,claimed_at,claimed_by_homeowner,homeowners!homes_homeowner_fk(id,phone,email,created_at))",
         )
         .eq("id", customerId)
         .eq("pro_id", proId)
@@ -220,6 +231,39 @@ function CustomerDetail() {
     ]);
     setNudging(false);
     setToast(`Rebook nudge sent to ${customer.name} (mock)`);
+  }
+
+  async function sendClaimInvite() {
+    if (!proId || !customer || inviting) return;
+    setInviting(true);
+    const { data, error } = await supabase.functions.invoke("invite-claim", {
+      body: { customer_id: customerId, origin: window.location.origin },
+    });
+    setInviting(false);
+    const result = data as { ok: boolean; code?: string; invited_at?: string } | null;
+    if (error || !result?.ok) {
+      const code = result?.code;
+      setToast(
+        code === "no_email"
+          ? "No email on file."
+          : code === "already_claimed"
+            ? "This home is already claimed."
+            : code === "no_record"
+              ? "Log a job first so there's a record to claim."
+              : code === "cooldown"
+                ? `Already invited ${result?.invited_at ? formatDate(result.invited_at) : "recently"}. Invites can go out once every 7 days.`
+                : code === "not_configured"
+                  ? "Email is not configured yet."
+                  : "Could not send the invite. Try again.",
+      );
+      if (code === "cooldown" && result?.invited_at) {
+        setCustomer((c) => (c ? { ...c, claim_invited_at: result.invited_at! } : c));
+      }
+      return;
+    }
+    setCustomer((c) => (c ? { ...c, claim_invited_at: result.invited_at ?? null } : c));
+    await logEvent(`pro:${proId}`, "claim_invite_sent", { customer_id: customerId });
+    setToast("Claim invite sent");
   }
 
   function focusComposer() {
@@ -364,6 +408,11 @@ function CustomerDetail() {
   const openInvoices = invoices.filter((i) => i.status === "open");
   const openBalance = openInvoices.reduce((s, i) => s + Number(i.total), 0);
   const homeowner = customer.homes?.homeowners ?? null;
+  const inviteCooldownUntil = customer.claim_invited_at
+    ? new Date(new Date(customer.claim_invited_at).getTime() + 7 * 24 * 3600 * 1000).toISOString()
+    : null;
+  const inviteOnCooldown =
+    inviteCooldownUntil != null && new Date(inviteCooldownUntil).getTime() > Date.now();
 
   return (
     <ProShell pro={pro} active="customers" wide>
@@ -417,6 +466,21 @@ function CustomerDetail() {
                     : "Send a rebook nudge (mock)"
                 }
               />
+              {!customer.homes?.claimed_at && (
+                <ActionCircle
+                  icon={Mail}
+                  label="Invite"
+                  onClick={sendClaimInvite}
+                  disabled={!customer.email || inviting || inviteOnCooldown}
+                  title={
+                    !customer.email
+                      ? "No email on file"
+                      : inviteOnCooldown
+                        ? `Invited ${formatDate(customer.claim_invited_at!)} · resend available ${formatDate(inviteCooldownUntil!)}`
+                        : "Email an invite to claim this home record"
+                  }
+                />
+              )}
             </div>
           </Card>
 
@@ -458,6 +522,18 @@ function CustomerDetail() {
                   )
                 }
               />
+              {!customer.homes?.claimed_at && (
+                <PropertyRow
+                  label="Claim invite"
+                  display={
+                    customer.claim_invited_at ? (
+                      <Pill accent="indigo">Sent · {formatDate(customer.claim_invited_at)}</Pill>
+                    ) : (
+                      <Pill accent="ink">Not sent</Pill>
+                    )
+                  }
+                />
+              )}
             </CollapsibleCard>
           </div>
         </div>
