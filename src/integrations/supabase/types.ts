@@ -547,6 +547,7 @@ export type Database = {
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
+      upsert_home_by_address: { Args: { p_address: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
