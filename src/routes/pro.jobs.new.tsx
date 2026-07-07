@@ -141,25 +141,23 @@ function NewJob() {
       toName = c.name;
       toContact = c.phone || c.email || "";
     } else {
-      // Upsert home by address
-      const { data: existingHome } = await supabase
-        .from("homes")
-        .select("id")
-        .eq("address", newCustomer.address)
-        .maybeSingle();
-      if (existingHome) {
-        homeId = existingHome.id;
-      } else {
-        const { data: newHome } = await supabase
-          .from("homes")
-          .insert({ address: newCustomer.address, created_by_pro: proId })
-          .select("id")
-          .single();
-        homeId = newHome!.id;
-        // Fire-and-forget: pin the home on the dashboard map. Failure is
-        // silent; the dashboard backfill will not retry (geocoded_at is stamped).
-        void geocodeHome(newHome!.id, newCustomer.address);
+      // Upsert home by address via RPC so a second pro serving the same
+      // address does not hit the unique-address 409.
+      const { data: upsertedHomeId, error: homeErr } = await supabase.rpc(
+        "upsert_home_by_address",
+        { p_address: newCustomer.address },
+      );
+      if (homeErr || !upsertedHomeId) {
+        setSubmitting(false);
+        setToast(homeErr?.message ?? "Could not save home");
+        setTimeout(() => setToast(null), 3500);
+        return;
       }
+      homeId = upsertedHomeId as string;
+      // Fire-and-forget geocode; safe to call even if home already existed
+      // (geocoded_at gate prevents double work).
+      void geocodeHome(homeId, newCustomer.address);
+
       const { data: newC } = await supabase
         .from("customers")
         .insert({
