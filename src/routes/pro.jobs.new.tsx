@@ -547,8 +547,94 @@ function NewJob() {
 
             {stage === "work" && (
               <Card className="space-y-4">
-                <div>
-                  <div className="text-sm font-semibold text-ink mb-1.5">Nameplate</div>
+                {homeAppliances.length > 0 && (
+                  <div>
+                    <div className="text-sm font-semibold text-ink mb-2">Which appliance?</div>
+                    <div className="space-y-2">
+                      {homeAppliances.map((a) => {
+                        const label = [a.type, a.make, a.model].filter(Boolean).join(" · ") || "Unnamed appliance";
+                        const meta = a.last_job_at
+                          ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
+                          : "No visits yet";
+                        const picked = selectedEquipmentId === a.id;
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedEquipmentId(picked ? "" : a.id);
+                              setEditDetails(false);
+                            }}
+                            aria-pressed={picked}
+                            className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
+                              picked
+                                ? "border-indigo bg-indigobg shadow-sm"
+                                : "border-line bg-paper hover:bg-soft hover:border-ink/20"
+                            }`}
+                          >
+                            <div className="font-semibold text-sm text-ink">{label}</div>
+                            <div className="text-xs text-muted mt-0.5 tnum">
+                              {meta}
+                              {a.serial ? ` · #${a.serial}` : ""}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedEquipmentId("");
+                          setEditDetails(false);
+                          setEqType("");
+                          setEqMake("");
+                          setEqModel("");
+                          setEqSerial("");
+                          setWarrantyUntil("");
+                        }}
+                        aria-pressed={!selectedEquipmentId}
+                        className={`pressable w-full text-left rounded-xl border border-dashed px-3 py-2.5 transition-all duration-200 ${
+                          !selectedEquipmentId
+                            ? "border-indigo bg-indigobg/50 text-indigo"
+                            : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
+                        }`}
+                      >
+                        <div className="font-semibold text-sm">+ Add a new appliance</div>
+                      </button>
+                    </div>
+
+                    {selectedEquipmentId && applianceHistory.length > 0 && (
+                      <div className="mt-3 rounded-xl bg-soft px-3 py-2.5">
+                        <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                          Recent history
+                        </div>
+                        <ul className="space-y-1">
+                          {applianceHistory.map((j) => (
+                            <li key={j.id} className="text-xs text-ink flex gap-2">
+                              <span className="text-muted tnum shrink-0 w-20">
+                                {formatDate(j.created_at)}
+                              </span>
+                              <span className="truncate">{j.what_done}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedEquipmentId && (
+                      <button
+                        type="button"
+                        onClick={() => setEditDetails((v) => !v)}
+                        className="mt-3 text-xs font-semibold text-indigo hover:underline"
+                      >
+                        {editDetails ? "Hide details" : "Correct appliance details"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {(!selectedEquipmentId || editDetails) && (
+                  <div>
+                    <div className="text-sm font-semibold text-ink mb-1.5">Nameplate</div>
                   <input
                     ref={fileRef}
                     type="file"
