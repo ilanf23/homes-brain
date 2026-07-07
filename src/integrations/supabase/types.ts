@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       customers: {
         Row: {
+          claim_invited_at: string | null
           consent_at: string | null
           consent_ref: string | null
           created_at: string
@@ -27,6 +28,7 @@ export type Database = {
           pro_id: string
         }
         Insert: {
+          claim_invited_at?: string | null
           consent_at?: string | null
           consent_ref?: string | null
           created_at?: string
@@ -38,6 +40,7 @@ export type Database = {
           pro_id: string
         }
         Update: {
+          claim_invited_at?: string | null
           consent_at?: string | null
           consent_ref?: string | null
           created_at?: string

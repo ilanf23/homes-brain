@@ -97,20 +97,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: pro } = await admin
+    const { data: pro, error: proErr } = await admin
       .from("pros")
       .select("id,business")
       .eq("id", pro_id)
       .maybeSingle();
-    if (!pro) return json({ ok: false, code: "forbidden" }, 403);
+    if (!pro) {
+      console.error("invite-claim pro lookup failed", { pro_id, proErr });
+      return json({ ok: false, code: "forbidden", stage: "pro" }, 403);
+    }
 
-    const { data: customer } = await admin
+    const { data: customer, error: custErr } = await admin
       .from("customers")
       .select("id,pro_id,home_id,email,claim_invited_at,homes(address,claimed_at)")
       .eq("id", customer_id)
       .maybeSingle();
     if (!customer || customer.pro_id !== pro.id) {
-      return json({ ok: false, code: "forbidden" }, 403);
+      console.error("invite-claim customer check failed", { customer_id, hasCustomer: !!customer, custPro: customer?.pro_id, pro: pro.id, custErr });
+      return json({ ok: false, code: "forbidden", stage: "customer" }, 403);
     }
 
     const home = Array.isArray(customer.homes) ? customer.homes[0] : customer.homes;
