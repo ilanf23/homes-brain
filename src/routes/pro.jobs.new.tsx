@@ -26,7 +26,6 @@ type ApplianceOpt = {
   type: string | null;
   make: string | null;
   model: string | null;
-  serial: string | null;
   warranty_until: string | null;
   last_job_at: string | null;
   job_count: number;
@@ -55,10 +54,10 @@ function NewJob() {
   const [eqType, setEqType] = useState("");
   const [eqMake, setEqMake] = useState("");
   const [eqModel, setEqModel] = useState("");
-  const [eqSerial, setEqSerial] = useState("");
   const [warrantyUntil, setWarrantyUntil] = useState("");
   const [whatDone, setWhatDone] = useState("");
   const [nextService, setNextService] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Appliance picker (for repeat visits to same home)
   const [homeAppliances, setHomeAppliances] = useState<ApplianceOpt[]>([]);
@@ -109,7 +108,7 @@ function NewJob() {
     (async () => {
       const { data: eq } = await supabase
         .from("equipment")
-        .select("id,type,make,model,serial,warranty_until,jobs(created_at)")
+        .select("id,type,make,model,warranty_until,jobs(created_at)")
         .eq("home_id", homeId)
         .order("created_at", { ascending: false });
       const rows = (eq ?? []).map((r) => {
@@ -123,7 +122,6 @@ function NewJob() {
           type: (r.type as string | null) ?? null,
           make: (r.make as string | null) ?? null,
           model: (r.model as string | null) ?? null,
-          serial: (r.serial as string | null) ?? null,
           warranty_until: (r.warranty_until as string | null) ?? null,
           last_job_at: last,
           job_count: jobs.length,
@@ -148,7 +146,6 @@ function NewJob() {
       setEqType(app.type ?? "");
       setEqMake(app.make ?? "");
       setEqModel(app.model ?? "");
-      setEqSerial(app.serial ?? "");
       setWarrantyUntil(app.warranty_until ?? "");
     }
     (async () => {
@@ -183,18 +180,14 @@ function NewJob() {
         setEqModel(r.model);
         filled.push("model");
       }
-      if (r.serial && !eqSerial) {
-        setEqSerial(r.serial);
-        filled.push("serial");
-      }
       if (r.warranty_until && /^\d{4}-\d{2}-\d{2}$/.test(r.warranty_until) && !warrantyUntil) {
         setWarrantyUntil(r.warranty_until);
         filled.push("warranty");
       }
-      const detectedNothing = !r.type && !r.make && !r.model && !r.serial && !r.warranty_until;
+      const detectedNothing = !r.type && !r.make && !r.model && !r.warranty_until;
       if (detectedNothing) {
         setScanState("error");
-        setScanError("Couldn't read the nameplate. Type the details in below.");
+        setScanError("Couldn't read the photo. Type the details in below.");
         return;
       }
       setScanState("done");
@@ -272,7 +265,6 @@ function NewJob() {
             type: eqType || null,
             make: eqMake || null,
             model: eqModel || null,
-            serial: eqSerial || null,
             warranty_until: warrantyUntil || null,
             recall_status: recall.status,
             recall_checked_at: recall.checked_at,
@@ -287,7 +279,6 @@ function NewJob() {
           type: eqType || null,
           make: eqMake || null,
           model: eqModel || null,
-          serial: eqSerial || null,
           warranty_until: warrantyUntil || null,
           recall_status: recall.status,
           recall_checked_at: recall.checked_at,
@@ -393,8 +384,8 @@ function NewJob() {
     setEqType("");
     setEqMake("");
     setEqModel("");
-    setEqSerial("");
     setWarrantyUntil("");
+    setDetailsOpen(false);
     setWhatDone("");
     setNextService("");
     setSelectedEquipmentId("");
@@ -546,95 +537,61 @@ function NewJob() {
             )}
 
             {stage === "work" && (
-              <Card className="space-y-4">
-                {homeAppliances.length > 0 && (
-                  <div>
-                    <div className="text-sm font-semibold text-ink mb-2">Which appliance?</div>
-                    <div className="space-y-2">
-                      {homeAppliances.map((a) => {
-                        const label = [a.type, a.make, a.model].filter(Boolean).join(" · ") || "Unnamed appliance";
-                        const meta = a.last_job_at
-                          ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
-                          : "No visits yet";
-                        const picked = selectedEquipmentId === a.id;
-                        return (
-                          <button
-                            key={a.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedEquipmentId(picked ? "" : a.id);
-                              setEditDetails(false);
-                            }}
-                            aria-pressed={picked}
-                            className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
-                              picked
-                                ? "border-indigo bg-indigobg shadow-sm"
-                                : "border-line bg-paper hover:bg-soft hover:border-ink/20"
-                            }`}
-                          >
-                            <div className="font-semibold text-sm text-ink">{label}</div>
-                            <div className="text-xs text-muted mt-0.5 tnum">
-                              {meta}
-                              {a.serial ? ` · #${a.serial}` : ""}
-                            </div>
-                          </button>
-                        );
-                      })}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedEquipmentId("");
-                          setEditDetails(false);
-                          setEqType("");
-                          setEqMake("");
-                          setEqModel("");
-                          setEqSerial("");
-                          setWarrantyUntil("");
-                        }}
-                        aria-pressed={!selectedEquipmentId}
-                        className={`pressable w-full text-left rounded-xl border border-dashed px-3 py-2.5 transition-all duration-200 ${
-                          !selectedEquipmentId
-                            ? "border-indigo bg-indigobg/50 text-indigo"
-                            : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
+              <Card className="space-y-5">
+                {/* Big voice button - the main input */}
+                <div>
+                  {dictation.supported ? (
+                    <button
+                      type="button"
+                      onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
+                      aria-pressed={dictation.listening}
+                      aria-label={dictation.listening ? "Stop recording" : "Tap and tell me what you did"}
+                      className={`pressable w-full rounded-2xl px-6 py-8 text-center transition-all duration-200 ${
+                        dictation.listening
+                          ? "bg-indigo text-white shadow-lg"
+                          : "bg-indigobg text-indigo hover:bg-indigo hover:text-white"
+                      }`}
+                    >
+                      <div
+                        className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${
+                          dictation.listening
+                            ? "bg-white/20 animate-pulse"
+                            : "bg-white/70"
                         }`}
                       >
-                        <div className="font-semibold text-sm">+ Add a new appliance</div>
-                      </button>
-                    </div>
-
-                    {selectedEquipmentId && applianceHistory.length > 0 && (
-                      <div className="mt-3 rounded-xl bg-soft px-3 py-2.5">
-                        <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
-                          Recent history
-                        </div>
-                        <ul className="space-y-1">
-                          {applianceHistory.map((j) => (
-                            <li key={j.id} className="text-xs text-ink flex gap-2">
-                              <span className="text-muted tnum shrink-0 w-20">
-                                {formatDate(j.created_at)}
-                              </span>
-                              <span className="truncate">{j.what_done}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <MicIcon size={36} />
                       </div>
-                    )}
+                      <div className="mt-4 text-lg font-bold tracking-tight">
+                        {dictation.listening ? "Listening… tap to stop" : "Tap and tell me what you did"}
+                      </div>
+                      <div className="mt-1 text-xs opacity-80">
+                        {dictation.listening ? "Talk through the job." : "Your words fill in the record."}
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
+                      Voice input isn't supported in this browser. Type below instead.
+                    </div>
+                  )}
+                  {dictation.listening && dictation.interim && (
+                    <div className="mt-2 text-xs italic text-muted truncate text-center">
+                      {dictation.interim}
+                    </div>
+                  )}
+                </div>
 
-                    {selectedEquipmentId && (
-                      <button
-                        type="button"
-                        onClick={() => setEditDetails((v) => !v)}
-                        className="mt-3 text-xs font-semibold text-indigo hover:underline"
-                      >
-                        {editDetails ? "Hide details" : "Correct appliance details"}
-                      </button>
-                    )}
-                  </div>
-                )}
+                {/* Small text box - always visible, required */}
+                <Field label="What was done">
+                  <Textarea
+                    value={whatDone}
+                    onChange={(e) => setWhatDone(e.target.value)}
+                    placeholder="Or type here…"
+                    rows={3}
+                  />
+                </Field>
 
-                {(!selectedEquipmentId || editDetails) && (
-                  <div>
-                    <div className="text-sm font-semibold text-ink mb-1.5">Nameplate</div>
+                {/* Photo (optional) */}
+                <div>
                   <input
                     ref={fileRef}
                     type="file"
@@ -651,14 +608,14 @@ function NewJob() {
                     <button
                       type="button"
                       onClick={() => fileRef.current?.click()}
-                      className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-indigobg/50 px-4 py-6 text-center hover:border-indigo transition-colors"
+                      className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
                     >
-                      <CameraIcon size={26} className="mx-auto text-indigo" />
-                      <div className="mt-2 text-sm font-semibold text-indigo">
-                        Snap the nameplate
+                      <div className="flex items-center justify-center gap-2 text-indigo">
+                        <CameraIcon size={22} />
+                        <span className="text-sm font-semibold">Take a photo of the unit (optional)</span>
                       </div>
-                      <div className="mt-0.5 text-xs text-muted">
-                        Make, model, serial and warranty fill in for you.
+                      <div className="mt-1 text-xs text-muted">
+                        We'll fill in make, model, and warranty for you.
                       </div>
                     </button>
                   ) : (
@@ -667,7 +624,7 @@ function NewJob() {
                         {scanPreview && (
                           <img
                             src={scanPreview}
-                            alt="Nameplate photo"
+                            alt="Unit photo"
                             className="h-14 w-14 rounded-lg object-cover"
                           />
                         )}
@@ -675,13 +632,12 @@ function NewJob() {
                           {scanState === "scanning" && (
                             <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
                               <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                              Reading nameplate…
+                              Reading the photo…
                             </div>
                           )}
                           {scanState === "done" && (
                             <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                              <ShieldCheck size={16} animate={false} /> Auto-detected. Check the
-                              fields below
+                              <ShieldCheck size={16} animate={false} /> Auto-filled unit details
                             </div>
                           )}
                           {scanState === "error" && (
@@ -700,96 +656,154 @@ function NewJob() {
                       </div>
                     </div>
                   )}
-                  </div>
-                )}
-
-                {(!selectedEquipmentId || editDetails) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Equipment type">
-                      <Input
-                        value={eqType}
-                        onChange={(e) => setEqType(e.target.value)}
-                        placeholder="Softener"
-                      />
-                    </Field>
-                    <Field label="Make">
-                      <Input
-                        value={eqMake}
-                        onChange={(e) => setEqMake(e.target.value)}
-                        placeholder="EcoWater"
-                      />
-                    </Field>
-                    <Field label="Model">
-                      <Input
-                        value={eqModel}
-                        onChange={(e) => setEqModel(e.target.value)}
-                        placeholder="EVR3700R30"
-                      />
-                    </Field>
-                    <Field label="Serial (optional)">
-                      <Input value={eqSerial} onChange={(e) => setEqSerial(e.target.value)} />
-                    </Field>
-                    <Field label="Warranty until">
-                      <Input
-                        type="date"
-                        value={warrantyUntil}
-                        onChange={(e) => setWarrantyUntil(e.target.value)}
-                      />
-                    </Field>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Next service">
-                    <Input
-                      type="date"
-                      value={nextService}
-                      onChange={(e) => setNextService(e.target.value)}
-                    />
-                  </Field>
                 </div>
-                <Field label="What was done">
-                  <div className="relative">
-                    <Textarea
-                      value={whatDone}
-                      onChange={(e) => setWhatDone(e.target.value)}
-                      placeholder="Annual service, resin check, replaced pre-filter."
-                      className={dictation.supported ? "pr-12" : ""}
-                    />
-                    {dictation.supported && (
-                      <button
-                        type="button"
-                        onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
-                        aria-label={
-                          dictation.listening ? "Stop dictation" : "Dictate what was done"
-                        }
-                        aria-pressed={dictation.listening}
-                        className={`pressable absolute bottom-2.5 right-2.5 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-                          dictation.listening
-                            ? "bg-indigo text-white"
-                            : "bg-soft text-muted hover:bg-indigobg hover:text-indigo"
-                        }`}
-                      >
-                        <MicIcon size={17} />
-                      </button>
-                    )}
-                  </div>
-                  {dictation.listening && (
-                    <div className="mt-1.5 flex items-center gap-2 text-xs text-indigo">
-                      <span className="h-2 w-2 rounded-full bg-indigo animate-pulse" />
-                      <span className="font-semibold">Listening. Talk through the job.</span>
-                      {dictation.interim && (
-                        <span className="truncate italic text-muted">{dictation.interim}</span>
-                      )}
-                    </div>
-                  )}
-                </Field>
 
+                {/* Recall check - always visible */}
                 <div className="rounded-xl bg-indigobg px-3 py-2 flex items-center justify-between">
                   <span className="text-sm text-indigo font-semibold flex items-center gap-2">
                     <ShieldCheck size={16} animate={false} /> Recall check
                   </span>
                   <Pill accent="indigo">{recall.label}</Pill>
+                </div>
+
+                {/* Optional unit details - collapsed by default */}
+                <div className="rounded-xl border border-line bg-paper">
+                  <button
+                    type="button"
+                    onClick={() => setDetailsOpen((v) => !v)}
+                    aria-expanded={detailsOpen}
+                    className="pressable w-full flex items-center justify-between px-4 py-3 text-left"
+                  >
+                    <span className="text-sm font-semibold text-ink">Add unit details (optional)</span>
+                    <span className={`text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}>
+                      ▾
+                    </span>
+                  </button>
+                  {detailsOpen && (
+                    <div className="border-t border-line px-4 py-4 space-y-4">
+                      {homeAppliances.length > 0 && (
+                        <div>
+                          <div className="text-sm font-semibold text-ink mb-2">Which unit?</div>
+                          <div className="space-y-2">
+                            {homeAppliances.map((a) => {
+                              const label = [a.type, a.make, a.model].filter(Boolean).join(" · ") || "Unnamed unit";
+                              const meta = a.last_job_at
+                                ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
+                                : "No visits yet";
+                              const picked = selectedEquipmentId === a.id;
+                              return (
+                                <button
+                                  key={a.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedEquipmentId(picked ? "" : a.id);
+                                    setEditDetails(false);
+                                  }}
+                                  aria-pressed={picked}
+                                  className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
+                                    picked
+                                      ? "border-indigo bg-indigobg shadow-sm"
+                                      : "border-line bg-paper hover:bg-soft hover:border-ink/20"
+                                  }`}
+                                >
+                                  <div className="font-semibold text-sm text-ink">{label}</div>
+                                  <div className="text-xs text-muted mt-0.5 tnum">{meta}</div>
+                                </button>
+                              );
+                            })}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedEquipmentId("");
+                                setEditDetails(false);
+                                setEqType("");
+                                setEqMake("");
+                                setEqModel("");
+                                setWarrantyUntil("");
+                              }}
+                              aria-pressed={!selectedEquipmentId}
+                              className={`pressable w-full text-left rounded-xl border border-dashed px-3 py-2.5 transition-all duration-200 ${
+                                !selectedEquipmentId
+                                  ? "border-indigo bg-indigobg/50 text-indigo"
+                                  : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
+                              }`}
+                            >
+                              <div className="font-semibold text-sm">+ Add a new unit</div>
+                            </button>
+                          </div>
+
+                          {selectedEquipmentId && applianceHistory.length > 0 && (
+                            <div className="mt-3 rounded-xl bg-soft px-3 py-2.5">
+                              <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                                Recent history
+                              </div>
+                              <ul className="space-y-1">
+                                {applianceHistory.map((j) => (
+                                  <li key={j.id} className="text-xs text-ink flex gap-2">
+                                    <span className="text-muted tnum shrink-0 w-20">
+                                      {formatDate(j.created_at)}
+                                    </span>
+                                    <span className="truncate">{j.what_done}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {selectedEquipmentId && (
+                            <button
+                              type="button"
+                              onClick={() => setEditDetails((v) => !v)}
+                              className="mt-3 text-xs font-semibold text-indigo hover:underline"
+                            >
+                              {editDetails ? "Hide details" : "Correct unit details"}
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {(!selectedEquipmentId || editDetails) && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <Field label="Unit type">
+                            <Input
+                              value={eqType}
+                              onChange={(e) => setEqType(e.target.value)}
+                              placeholder="Softener"
+                            />
+                          </Field>
+                          <Field label="Make">
+                            <Input
+                              value={eqMake}
+                              onChange={(e) => setEqMake(e.target.value)}
+                              placeholder="EcoWater"
+                            />
+                          </Field>
+                          <Field label="Model">
+                            <Input
+                              value={eqModel}
+                              onChange={(e) => setEqModel(e.target.value)}
+                              placeholder="EVR3700R30"
+                            />
+                          </Field>
+                          <Field label="Warranty until">
+                            <Input
+                              type="date"
+                              value={warrantyUntil}
+                              onChange={(e) => setWarrantyUntil(e.target.value)}
+                            />
+                          </Field>
+                        </div>
+                      )}
+
+                      <Field label="Next service">
+                        <Input
+                          type="date"
+                          value={nextService}
+                          onChange={(e) => setNextService(e.target.value)}
+                        />
+                      </Field>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
@@ -808,6 +822,7 @@ function NewJob() {
                 </div>
               </Card>
             )}
+
 
             {stage === "review" && (
               <Card className="space-y-5">
