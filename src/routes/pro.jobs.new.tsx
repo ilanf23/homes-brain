@@ -564,10 +564,8 @@ function NewJob() {
                             }`}
                           >
                             <div className="font-semibold text-sm text-ink">{label}</div>
-                            <div className="text-xs text-muted mt-0.5 tnum">
-                              {meta}
-                              {a.serial ? ` · #${a.serial}` : ""}
-                            </div>
+                            <div className="text-xs text-muted mt-0.5 tnum">{meta}</div>
+
                           </button>
                         );
                       })}
