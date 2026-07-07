@@ -700,39 +700,46 @@ function NewJob() {
                       </div>
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
+
+                {(!selectedEquipmentId || editDetails) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Equipment type">
+                      <Input
+                        value={eqType}
+                        onChange={(e) => setEqType(e.target.value)}
+                        placeholder="Softener"
+                      />
+                    </Field>
+                    <Field label="Make">
+                      <Input
+                        value={eqMake}
+                        onChange={(e) => setEqMake(e.target.value)}
+                        placeholder="EcoWater"
+                      />
+                    </Field>
+                    <Field label="Model">
+                      <Input
+                        value={eqModel}
+                        onChange={(e) => setEqModel(e.target.value)}
+                        placeholder="EVR3700R30"
+                      />
+                    </Field>
+                    <Field label="Serial (optional)">
+                      <Input value={eqSerial} onChange={(e) => setEqSerial(e.target.value)} />
+                    </Field>
+                    <Field label="Warranty until">
+                      <Input
+                        type="date"
+                        value={warrantyUntil}
+                        onChange={(e) => setWarrantyUntil(e.target.value)}
+                      />
+                    </Field>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Equipment type">
-                    <Input
-                      value={eqType}
-                      onChange={(e) => setEqType(e.target.value)}
-                      placeholder="Softener"
-                    />
-                  </Field>
-                  <Field label="Make">
-                    <Input
-                      value={eqMake}
-                      onChange={(e) => setEqMake(e.target.value)}
-                      placeholder="EcoWater"
-                    />
-                  </Field>
-                  <Field label="Model">
-                    <Input
-                      value={eqModel}
-                      onChange={(e) => setEqModel(e.target.value)}
-                      placeholder="EVR3700R30"
-                    />
-                  </Field>
-                  <Field label="Serial (optional)">
-                    <Input value={eqSerial} onChange={(e) => setEqSerial(e.target.value)} />
-                  </Field>
-                  <Field label="Warranty until">
-                    <Input
-                      type="date"
-                      value={warrantyUntil}
-                      onChange={(e) => setWarrantyUntil(e.target.value)}
-                    />
-                  </Field>
                   <Field label="Next service">
                     <Input
                       type="date"
