@@ -280,7 +280,6 @@ function NewJob() {
           make: eqMake || null,
           model: eqModel || null,
           warranty_until: warrantyUntil || null,
-          warranty_until: warrantyUntil || null,
           recall_status: recall.status,
           recall_checked_at: recall.checked_at,
           source: "pro",
