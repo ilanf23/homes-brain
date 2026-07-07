@@ -146,7 +146,7 @@ function NewJob() {
       setEqType(app.type ?? "");
       setEqMake(app.make ?? "");
       setEqModel(app.model ?? "");
-      setEqSerial(app.serial ?? "");
+      setWarrantyUntil(app.warranty_until ?? "");
       setWarrantyUntil(app.warranty_until ?? "");
     }
     (async () => {
