@@ -725,8 +725,12 @@ function NewJob() {
                   <Field label="Service address">
                     <AddressField
                       value={locAddress}
-                      onChange={setLocAddress}
+                      onChange={(v) => {
+                        addressTouched.current = true;
+                        setLocAddress(v);
+                      }}
                       onResolve={(r) => {
+                        addressTouched.current = true;
                         setLocAddress(r.address);
                         setResolved(r);
                       }}
@@ -734,6 +738,7 @@ function NewJob() {
                       placeholder="123 Maple St, Austin TX"
                       ariaLabel="Service address"
                     />
+
                   </Field>
 
                   <div className="flex gap-2">
