@@ -307,18 +307,27 @@ function GuidePage() {
       <div className="lg:hidden sticky top-14 z-30 bg-bg/95 backdrop-blur border-b border-line">
         <nav aria-label="On this page" className="overflow-x-auto no-scrollbar">
           <ul className="flex gap-1 px-4 py-2 whitespace-nowrap">
-            {sections.map((s) => (
-              <li key={s.id}>
-                <a
-                  href={`#${s.id}`}
-                  className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    active === s.id ? "bg-coralbg text-coraldark" : "text-muted hover:text-ink"
-                  }`}
-                >
-                  {s.label}
-                </a>
-              </li>
-            ))}
+            {sections.map((s) => {
+              const isActive = active === s.id;
+              const cls = s.teal
+                ? isActive
+                  ? "bg-tealbg text-tealdark font-bold"
+                  : "text-teal font-bold hover:text-tealdark"
+                : isActive
+                  ? "bg-coralbg text-coraldark"
+                  : "text-muted hover:text-ink";
+              return (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${cls}`}
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              );
+            })}
+
           </ul>
         </nav>
       </div>
