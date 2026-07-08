@@ -263,23 +263,47 @@ export const GUIDES: Record<string, Guide> = {
       "A dishwasher lasts about 9 to 12 years. Cleaning the filter monthly and descaling in hard water keeps it draining and cleaning well.",
     quickAnswer:
       "A dishwasher lasts about 9 to 12 years. Cleaning the filter monthly and running a descaler in hard water keeps it draining and cleaning well.",
+    overview:
+      "A dishwasher is one of the easiest appliances to keep alive. A clean filter and the occasional descale do most of the work, especially against Florida hard water. Here is how long it lasts, what protects it, and the most reliable brands.",
     neglected: 9,
     maintained: 12,
-    maintenance: [
-      { task: "Clean the filter", frequency: "Monthly", effect: "Prevents drainage and odor issues." },
-      { task: "Run a descaler or dishwasher cleaner", frequency: "Regularly, especially in hard water", effect: "Stops scale from clogging the spray arms and pump." },
-      { task: "Scrape, do not pre-rinse", frequency: "Every load", effect: "The detergent needs food to grab onto to work well." },
-      { task: "Check and clean the spray arms", frequency: "Every few months", effect: "Restores cleaning power." },
+    brands: [
+      { name: "Bosch", note: "Most reliable for over a decade, very low service rates.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "Miele", note: "Premium and long lasting.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "KitchenAid", note: "Reliable and well built.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
     ],
+    maintenance: [
+      { task: "Clean the filter", frequency: "Monthly", effect: "Prevents drainage and odor issues.", impact: "High" },
+      { task: "Run a descaler or dishwasher cleaner", frequency: "Regularly, especially in hard water", effect: "Stops scale from clogging the spray arms and pump.", impact: "High" },
+      { task: "Scrape, do not pre-rinse", frequency: "Every load", effect: "The detergent needs food to grab onto to work well.", impact: "Low" },
+      { task: "Check and clean the spray arms", frequency: "Every few months", effect: "Restores cleaning power.", impact: "Medium" },
+    ],
+    signs: [
+      "Dishes come out gritty or spotty",
+      "Standing water in the bottom",
+      "Not draining fully",
+      "An odor that will not clear",
+    ],
+    repairOrReplace:
+      "Under 9 years, most parts are worth replacing. Past 10 with a pump or control board failure, replace.",
     facts: [
       { k: "Expected life", v: "9 to 12 years" },
       { k: "Common failure", v: "Pump, drain, control board" },
+    ],
+    faqs: [
+      { q: "How often should I clean the dishwasher filter?", a: "Monthly, to prevent drainage and odor problems." },
+      { q: "Which dishwasher brand is most reliable?", a: "Bosch, followed by Miele and KitchenAid." },
+      { q: "Should I pre rinse my dishes?", a: "No, just scrape. The detergent needs some food to grab onto to work well." },
+      { q: "Why is my dishwasher not draining?", a: "Usually a clogged filter or drain hose." },
+      { q: "Should I repair or replace my dishwasher?", a: "If it is over 9 to 10 years and the repair is a large share of a new one, replace." },
     ],
     floridaNote:
       "Hard water scale builds fast here, so a regular descale is one of the highest-return chores you can do.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Consumer Reports: most reliable kitchen appliances", url: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/" },
     ],
+
   },
 
   "water-softener": {
@@ -290,23 +314,48 @@ export const GUIDES: Record<string, Guide> = {
       "A water softener lasts about 10 to 15 years. Salt and resin care get you to the top of that range and protect every other appliance in the house.",
     quickAnswer:
       "A water softener lasts about 10 to 15 years. Keeping the salt topped up and servicing the resin bed is what gets you to the top of that range, and it protects every other appliance in the house.",
+    overview:
+      "A water softener is the quiet protector of every water appliance in a Florida home. Keep salt in it and service the resin, and it lasts well past a decade while extending the life of your water heater, dishwasher, and fixtures.",
     neglected: 10,
     maintained: 15,
-    maintenance: [
-      { task: "Keep the salt topped up", frequency: "Monthly check", effect: "The whole system stops working when salt runs out." },
-      { task: "Break up any salt bridges in the tank", frequency: "As needed", effect: "Bridges look like a full tank but leave the softener starving." },
-      { task: "Service or replace the resin bed", frequency: "Every several years", effect: "Restores capacity as resin wears." },
-      { task: "Clean the brine tank", frequency: "Periodically", effect: "Prevents sludge and valve problems." },
+    brands: [
+      { name: "Culligan", note: "Consumer Reports most reliable, 85 plus years, strong support.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
+      { name: "Kinetico", note: "Non electric dual tank, often 30 plus years.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
+      { name: "Fleck", note: "Budget favorite, the 5600SXT.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
+      { name: "Pentair", note: "Solid whole home systems.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
     ],
+    maintenance: [
+      { task: "Keep the salt topped up", frequency: "Monthly check", effect: "The whole system stops working when salt runs out.", impact: "High" },
+      { task: "Break up any salt bridges in the tank", frequency: "As needed", effect: "Bridges look like a full tank but leave the softener starving.", impact: "Medium" },
+      { task: "Service or replace the resin bed", frequency: "Every several years", effect: "Restores capacity as resin wears.", impact: "Medium" },
+      { task: "Clean the brine tank", frequency: "Periodically", effect: "Prevents sludge and valve problems.", impact: "Low" },
+    ],
+    signs: [
+      "Hard water spots come back",
+      "Soap will not lather",
+      "Scale building on fixtures",
+      "The salt tank looks full but nothing softens (a salt bridge)",
+    ],
+    repairOrReplace:
+      "Resin and valves can be serviced. Replace when it is 15 plus years and repairs stop holding.",
     facts: [
       { k: "Expected life", v: "10 to 15 years" },
       { k: "Common failure", v: "Resin wear, valve" },
+    ],
+    faqs: [
+      { q: "How often do I add salt to a water softener?", a: "Check monthly and refill as needed. The system stops working when salt runs out." },
+      { q: "Which water softener brands last longest?", a: "Culligan and Kinetico, often 20 to 30 plus years." },
+      { q: "What is a salt bridge?", a: "A hardened crust that looks like a full tank but leaves the softener starving for salt." },
+      { q: "Does a softener protect my other appliances?", a: "Yes, it extends the life of your water heater, dishwasher, and fixtures." },
+      { q: "Repair or replace a softener?", a: "Service resin and valves when possible, replace at 15 plus years if it keeps failing." },
     ],
     floridaNote:
       "Hard water is the norm here, so a working softener extends the life of your water heater, dishwasher, and fixtures too.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Quality Water Treatment: top softener brands", url: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust" },
     ],
+
   },
 
   refrigerator: {
@@ -317,22 +366,46 @@ export const GUIDES: Record<string, Guide> = {
       "A refrigerator lasts about 13 years on average. Coil cleaning and tight door seals are the simplest ways to reach the longer end.",
     quickAnswer:
       "A refrigerator lasts about 13 years on average. Cleaning the condenser coils a couple of times a year and keeping the door seals tight are the simplest ways to reach the longer end.",
+    overview:
+      "A fridge runs around the clock, so the two things that quietly kill it are dirty condenser coils and worn door seals. Both are cheap to fix. Here is how long it lasts, what extends it, and the brands that break down least.",
     neglected: 13,
     maintained: 16,
-    maintenance: [
-      { task: "Clean the condenser coils", frequency: "Twice a year", effect: "Lets the compressor breathe, which is what usually kills the fridge." },
-      { task: "Check and clean the door seals", frequency: "Every few months", effect: "Keeps cold in and the compressor from over-running." },
-      { task: "Keep it level so the doors seal", frequency: "Once", effect: "Small tilts cause seal problems and drainage issues." },
-      { task: "Do not overpack the vents", frequency: "Ongoing", effect: "Blocked vents create warm spots and short-cycle the compressor." },
+    brands: [
+      { name: "Bosch", note: "Top reliability.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "Miele", note: "Premium and long lasting.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "Whirlpool", note: "Best reliability for the price, parts everywhere.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "KitchenAid", note: "Reliable value.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
     ],
+    maintenance: [
+      { task: "Clean the condenser coils", frequency: "Twice a year", effect: "Lets the compressor breathe, which is what usually kills the fridge.", impact: "High" },
+      { task: "Check and clean the door seals", frequency: "Every few months", effect: "Keeps cold in and the compressor from over-running.", impact: "High" },
+      { task: "Keep it level so the doors seal", frequency: "Once", effect: "Small tilts cause seal problems and drainage issues.", impact: "Low" },
+      { task: "Do not overpack the vents", frequency: "Ongoing", effect: "Blocked vents create warm spots and short-cycle the compressor.", impact: "Medium" },
+    ],
+    signs: [
+      "Running constantly",
+      "Warm spots or food spoiling faster",
+      "Frost or condensation building up",
+      "The motor is loud or hot",
+    ],
+    repairOrReplace:
+      "Under 13 years, usually worth repairing. Past that with a compressor failure, replace.",
     facts: [
       { k: "Expected life", v: "About 13 to 16 years" },
       { k: "Common failure", v: "Compressor, seals" },
+    ],
+    faqs: [
+      { q: "How often should I clean refrigerator coils?", a: "Twice a year. Dirty coils are the most common reason a fridge dies early." },
+      { q: "Which refrigerator brands are most reliable?", a: "Bosch and Miele for reliability, Whirlpool and KitchenAid for the best value." },
+      { q: "Why is my fridge running constantly?", a: "Usually dirty coils or worn door seals making it work too hard." },
+      { q: "How long does a refrigerator last?", a: "About 13 years, longer with coil cleaning and good seals." },
+      { q: "Repair or replace a refrigerator?", a: "If it is over 13 years and the compressor fails, replace." },
     ],
     floridaNote:
       "Heat makes the compressor work harder, so coil cleaning matters more in a warm garage or hot kitchen.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Consumer Reports: most reliable kitchen appliances", url: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/" },
     ],
   },
 
@@ -344,28 +417,52 @@ export const GUIDES: Record<string, Guide> = {
       "A pool pump typically lasts about 8 to 12 years and a heater less. Chemistry and cleaning are what keep them from dying early in Florida.",
     quickAnswer:
       "A pool pump typically lasts about 8 to 12 years, and a heater less. Steady water chemistry and regular cleaning are what keep pumps, filters, and heaters from dying early in Florida's near-year-round swim season.",
+    overview:
+      "In Florida a pool runs nearly year round, so the equipment works hard. Steady water chemistry and simple cleaning are what keep a pump, filter, and heater from dying early. Ranges vary widely, so verify for your exact gear.",
     neglected: 8,
     maintained: 12,
     barsLabel: "the pump",
-    maintenance: [
-      { task: "Keep water chemistry balanced", frequency: "Weekly", effect: "The single biggest driver of equipment life." },
-      { task: "Clean the pump basket and filter", frequency: "Regularly", effect: "Protects the motor from strain and premature failure." },
-      { task: "Do not run the pump dry", frequency: "Always", effect: "A few minutes dry can destroy the seals." },
-      { task: "Service the heater before season", frequency: "Yearly", effect: "Catches ignition and heat-exchanger issues early." },
+    brands: [
+      { name: "Pentair", note: "Efficiency leader, IntelliFlo variable speed pumps.", sourceUrl: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward", sourceLabel: "Pool Supply Depot: best variable speed pumps" },
+      { name: "Hayward", note: "Strong efficiency, TriStar VS.", sourceUrl: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward", sourceLabel: "Pool Supply Depot: best variable speed pumps" },
+      { name: "Jandy", note: "Retrofit friendly, FloPro.", sourceUrl: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward", sourceLabel: "Pool Supply Depot: best variable speed pumps" },
     ],
+    maintenance: [
+      { task: "Keep water chemistry balanced", frequency: "Weekly", effect: "The single biggest driver of equipment life.", impact: "High" },
+      { task: "Clean the pump basket and filter", frequency: "Regularly", effect: "Protects the motor from strain and premature failure.", impact: "High" },
+      { task: "Do not run the pump dry", frequency: "Always", effect: "A few minutes dry can destroy the seals.", impact: "High" },
+      { task: "Service the heater before season", frequency: "Yearly", effect: "Catches ignition and heat-exchanger issues early.", impact: "Medium" },
+    ],
+    signs: [
+      "The pump is loud, leaking, or shutting off",
+      "Cloudy water even though it runs",
+      "Weak circulation",
+      "The heater will not fire",
+    ],
+    repairOrReplace:
+      "Seals and baskets are cheap fixes. Replace a pump past 8 to 10 years, and upgrade to variable speed to cut energy cost.",
     facts: [
       { k: "Pump", v: "About 8 to 12 years" },
       { k: "Heater", v: "About 5 to 10 years" },
       { k: "Filter", v: "10+ years" },
       { k: "Common failure", v: "Pump motor, heater" },
     ],
+    faqs: [
+      { q: "How long does a pool pump last?", a: "About 8 to 12 years with good care." },
+      { q: "Which pool pump brands are best?", a: "Pentair, Hayward, and Jandy lead the market." },
+      { q: "Does a variable speed pump save money?", a: "Yes, a high efficiency pump can save hundreds of dollars a year in energy." },
+      { q: "Why did my pool pump fail early?", a: "Usually poor water chemistry or running it dry, which destroys the seals." },
+      { q: "How often should I service the pool heater?", a: "Yearly, before season." },
+    ],
     floridaNote:
       "Near-year-round use and heat mean pool equipment works harder here than in most of the country.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Pool Supply Depot: best variable speed pumps", url: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward" },
     ],
     verifyProminent: true,
   },
+
 };
 
 /* Order used for "keep going" internal links and for the browse grid. */

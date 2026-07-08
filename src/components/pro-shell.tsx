@@ -5,7 +5,6 @@ import {
   CalendarClock,
   FileText,
   Gift,
-  Home,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -82,8 +81,7 @@ export function useProGuard() {
 }
 
 export type ProNavKey =
-  | "home"
-  | "office"
+  | "dashboard"
   | "customers"
   | "records"
   | "invoices"
@@ -93,8 +91,7 @@ export type ProNavKey =
   | "settings";
 
 const NAV: { key: ProNavKey; label: string; to: string; icon: typeof LayoutDashboard }[] = [
-  { key: "home", label: "Home", to: "/pro", icon: Home },
-  { key: "office", label: "Office", to: "/pro/office", icon: LayoutDashboard },
+  { key: "dashboard", label: "Dashboard", to: "/pro", icon: LayoutDashboard },
   { key: "customers", label: "Customers", to: "/pro/customers", icon: Users },
   { key: "records", label: "Records", to: "/pro/records", icon: FileText },
   { key: "invoices", label: "Invoices", to: "/pro/invoices", icon: ReceiptText },
@@ -389,10 +386,9 @@ export function ProShell({
           {children}
         </main>
 
-        {/* Mobile: the one primary action lives in the bottom thumb zone, always reachable.
-           Hidden on the home screen, where the hero "Log a job" button is the primary action. */}
+        {/* Mobile: the one primary action lives in the bottom thumb zone, always reachable. */}
         <div
-          className={`${active === "home" ? "hidden" : "md:hidden"} fixed bottom-0 inset-x-0 z-40 px-4 pt-3 bg-gradient-to-t from-[var(--soft)] via-[var(--soft)]/90 to-transparent pointer-events-none`}
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 px-4 pt-3 bg-gradient-to-t from-[var(--soft)] via-[var(--soft)]/90 to-transparent pointer-events-none"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
         >
           <Link to="/pro/jobs/new" className="block pointer-events-auto">

@@ -109,7 +109,7 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
 }
 
 /* indigo = default brand CTA; coral = payoff CTAs (rebook, revenue) only. */
-type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "indigoSoft" | "ghost";
+type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "ghost";
 
 /* Fill text tokens instead of text-white so dark mode stays AA: ink fills
    flip light (text follows --bg), accent fills brighten (text follows
@@ -122,7 +122,6 @@ const btnStyles: Record<BtnVariant, string> = {
     "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
   indigo:
     "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
-  indigoSoft: "bg-indigobg text-indigo hover:bg-indigo/15",
   ghost: "bg-transparent text-ink hover:bg-soft",
 };
 

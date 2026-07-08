@@ -1,124 +1,123 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowRight, LayoutDashboard, MapPin, Plus, Star } from "lucide-react";
-import { Btn, Card, Pill, Skeleton, Toast } from "@/lib/ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, mockSend } from "@/lib/hb";
-import { reverseGeocode } from "@/lib/geo";
-import { ProShell, useProGuard } from "@/components/pro-shell";
+import { backfillHomeGeocodes, fetchProHomes, formatDate, type ProHome } from "@/lib/hb";
+import { isOverdue, listInvoicesForPro, type ProInvoice } from "@/lib/invoices";
+import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
+import { CoreLoopScene } from "@/components/core-loop-scene";
+import { MoneyRow } from "@/components/money-row";
+import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
+import { CustomerMap, type MapPin } from "@/components/customer-map";
+import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/")({
-  head: () => ({ meta: [{ title: "Home - HomesBrain" }] }),
-  component: ProHome,
+  head: () => ({ meta: [{ title: "Dashboard - HomesBrain" }] }),
+  component: ProDashboard,
 });
 
-const DAY = 24 * 3600 * 1000;
-const DUE_WINDOW = 14 * DAY;
-const MAX_DUE = 4;
-
-type DueJob = {
+type CustomerRow = {
   id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
   home_id: string;
-  what_done: string;
-  next_service_date: string;
-  customer: { id: string; name: string; phone: string | null; email: string | null } | null;
-  address: string | null;
+  homes: { address: string } | null;
 };
-
 type JobRow = {
   id: string;
   home_id: string;
   what_done: string;
   next_service_date: string | null;
+  created_at: string;
   customers: { id: string; name: string; phone: string | null; email: string | null } | null;
   homes: { address: string } | null;
+  records: { id: string; viewed_at: string | null; sent_sms_at: string | null }[] | null;
+};
+type RebookEvent = {
+  id: string;
+  created_at: string;
+  props: { job_id?: string; pro_id?: string; home_id?: string };
+};
+type ReviewEvent = { id: string; created_at: string; props: { customer_id?: string } };
+type Win = {
+  key: string;
+  ts: string;
+  label: string;
+  detail?: string;
+  kind: "viewed" | "claimed" | "rebooked" | "review";
 };
 
-function greetingWord() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
+const DAY = 24 * 3600 * 1000;
+const DUE_WINDOW = 14 * DAY;
+const STALE_UNCLAIMED = 7 * DAY;
 
-/* No personal name is stored on a pro (only the business), so greet with the
-   first word of the business name, minus any possessive: "Vlad's Water" -> "Vlad". */
-function firstName(business: string) {
-  const first = business.trim().split(/\s+/)[0] ?? "";
-  return first.replace(/['’]s$/i, "") || business.trim();
-}
-
-function ProHome() {
+function ProDashboard() {
   const { proId, pro } = useProGuard();
-  const [due, setDue] = useState<DueJob[]>([]);
-  const [reviewsThisWeek, setReviewsThisWeek] = useState(0);
+  const [customers, setCustomers] = useState<CustomerRow[]>([]);
+  const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [invoices, setInvoices] = useState<ProInvoice[]>([]);
+  const [homes, setHomes] = useState<ProHome[]>([]);
+  const [rebooks, setRebooks] = useState<RebookEvent[]>([]);
+  const [reviewAsks, setReviewAsks] = useState<ReviewEvent[]>([]);
+  const [geocodingCount, setGeocodingCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [place, setPlace] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [reminded, setReminded] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const backfillStarted = useRef(false);
 
-  const connected = !!pro?.google_place_id;
-
-  // Load the two things this screen shows: who's due, and the reviews win.
   useEffect(() => {
     if (!proId) return;
     (async () => {
-      const cutoff = new Date(Date.now() + DUE_WINDOW).toISOString().slice(0, 10);
-      const weekAgo = new Date(Date.now() - 7 * DAY).toISOString();
-      const [{ data: j }, { count }] = await Promise.all([
+      const [{ data: c }, { data: j }, inv, hs, { data: rb }, { data: rv }] = await Promise.all([
+        supabase
+          .from("customers")
+          .select("id,name,phone,email,home_id,homes(address)")
+          .eq("pro_id", proId)
+          .order("created_at", { ascending: false }),
         supabase
           .from("jobs")
           .select(
-            "id,home_id,what_done,next_service_date,customers(id,name,phone,email),homes(address)",
+            "id,home_id,what_done,next_service_date,created_at,customers(id,name,phone,email),homes(address),records(id,viewed_at,sent_sms_at)",
           )
           .eq("pro_id", proId)
-          .not("next_service_date", "is", null)
-          .lte("next_service_date", cutoff)
-          .order("next_service_date", { ascending: true }),
+          .order("created_at", { ascending: false }),
+        listInvoicesForPro(proId),
+        fetchProHomes(proId),
         supabase
           .from("events")
-          .select("id", { count: "exact", head: true })
+          .select("id,created_at,props")
+          .eq("type", "rebooked")
+          .eq("props->>pro_id", proId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("events")
+          .select("id,created_at,props")
           .eq("actor", `pro:${proId}`)
           .eq("type", "review_requested")
-          .gte("created_at", weekAgo),
+          .order("created_at", { ascending: false }),
       ]);
-
-      // One row per home (the soonest-due job), most urgent first, capped short.
-      const seen = new Set<string>();
-      const list: DueJob[] = [];
-      for (const row of (j ?? []) as unknown as JobRow[]) {
-        if (!row.next_service_date || seen.has(row.home_id)) continue;
-        seen.add(row.home_id);
-        list.push({
-          id: row.id,
-          home_id: row.home_id,
-          what_done: row.what_done,
-          next_service_date: row.next_service_date,
-          customer: row.customers,
-          address: row.homes?.address ?? null,
-        });
-        if (list.length >= MAX_DUE) break;
-      }
-      setDue(list);
-      setReviewsThisWeek(count ?? 0);
+      setCustomers((c ?? []) as unknown as CustomerRow[]);
+      setJobs((j ?? []) as unknown as JobRow[]);
+      setInvoices(inv);
+      setHomes(hs);
+      setRebooks((rb ?? []) as unknown as RebookEvent[]);
+      setReviewAsks((rv ?? []) as unknown as ReviewEvent[]);
       setLoading(false);
     })();
   }, [proId]);
 
-  // Location chip is best-effort and non-blocking: it fills in async, and a
-  // denied or slow lookup simply leaves the chip off.
+  // Lazy geocode backfill: up to 5 ungeocoded homes per visit, 1s apart.
   useEffect(() => {
-    if (typeof window === "undefined" || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        if (r?.address) setPlace(r.address);
-      },
-      () => {},
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
-    );
-  }, []);
+    if (loading || backfillStarted.current) return;
+    const pending = homes.filter((h) => !h.geocoded_at);
+    if (pending.length === 0) return;
+    backfillStarted.current = true;
+    setGeocodingCount(Math.min(pending.length, 5));
+    void backfillHomeGeocodes(homes, (updated) => {
+      setHomes((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
+      setGeocodingCount((n) => Math.max(0, n - 1));
+    });
+  }, [loading, homes]);
 
   useEffect(() => {
     if (!toast) return;
@@ -126,152 +125,354 @@ function ProHome() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  async function remind(job: DueJob) {
-    const c = job.customer;
-    if (!c || (!c.phone && !c.email) || !pro) return;
-    setBusy(job.id);
-    const body = `Hi ${c.name.split(" ")[0]}, it's ${pro.business}. Your ${job.what_done.toLowerCase()} is due for service around ${formatDate(job.next_service_date)}. Reply here or book a time and we'll take care of it.`;
-    await mockSend({
-      channel: c.phone ? "sms" : "email",
-      to: c.phone ?? c.email ?? "",
-      body,
-      kind: "other",
-    });
-    await logEvent(`pro:${proId}`, "rebook_nudge_sent", { job_id: job.id, customer_id: c.id });
-    setReminded((prev) => new Set(prev).add(job.id));
-    setBusy(null);
-    setToast(`Reminder sent to ${c.name}`);
-  }
+  const sentCount = jobs.length;
+  const viewedCount = jobs.filter((j) => j.records?.[0]?.viewed_at).length;
+
+  const weeklyJobs = useMemo(() => {
+    const buckets = new Array(8).fill(0);
+    const now = Date.now();
+    for (const j of jobs) {
+      const weeksAgo = Math.floor((now - new Date(j.created_at).getTime()) / (7 * DAY));
+      if (weeksAgo >= 0 && weeksAgo < 8) buckets[7 - weeksAgo] += 1;
+    }
+    return buckets;
+  }, [jobs]);
+
+  const rebooksThisMonth = useMemo(() => {
+    const now = new Date();
+    return rebooks.filter((r) => {
+      const d = new Date(r.created_at);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }).length;
+  }, [rebooks]);
+
+  // Queue source 1: jobs due within 14 days or overdue, most overdue first.
+  const dueQueue = useMemo<QueueJob[]>(
+    () =>
+      jobs
+        .filter(
+          (j) =>
+            j.next_service_date &&
+            new Date(j.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
+        )
+        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))
+        .map((j) => ({
+          id: j.id,
+          what_done: j.what_done,
+          next_service_date: j.next_service_date!,
+          customer: j.customers,
+          address: j.homes?.address ?? null,
+        })),
+    [jobs],
+  );
+
+  // Queue source 2: open invoices past due, most overdue first.
+  const overdueInvoices = useMemo(
+    () => invoices.filter((i) => isOverdue(i)).sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1)),
+    [invoices],
+  );
+
+  // Queue source 3: unclaimed homes whose latest record went out 7+ days ago.
+  const staleHomes = useMemo<QueueStaleHome[]>(() => {
+    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
+    const latestSentByHome = new Map<string, string>();
+    for (const j of jobs) {
+      const sent = j.records?.[0]?.sent_sms_at;
+      if (!sent) continue;
+      const prev = latestSentByHome.get(j.home_id);
+      if (!prev || sent > prev) latestSentByHome.set(j.home_id, sent);
+    }
+    return homes
+      .filter((h) => !h.claimed_at)
+      .flatMap((h) => {
+        const sentAt = latestSentByHome.get(h.id);
+        if (!sentAt || Date.now() - new Date(sentAt).getTime() < STALE_UNCLAIMED) return [];
+        const c = customerByHome.get(h.id);
+        return [
+          {
+            homeId: h.id,
+            address: h.address,
+            customer: c ? { id: c.id, name: c.name, phone: c.phone, email: c.email } : null,
+            sentAt,
+          },
+        ];
+      })
+      .sort((a, b) => (a.sentAt < b.sentAt ? -1 : 1));
+  }, [homes, jobs, customers]);
+
+  // Map pins: status priority owes > due > unclaimed > active.
+  const pins = useMemo<MapPin[]>(() => {
+    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
+    const owesHomes = new Set(invoices.filter((i) => i.status === "open").map((i) => i.home_id));
+    const dueHomes = new Set(
+      jobs
+        .filter(
+          (j) =>
+            j.next_service_date &&
+            new Date(j.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
+        )
+        .map((j) => j.home_id),
+    );
+    return homes
+      .filter((h) => h.lat !== null && h.lng !== null)
+      .map((h) => {
+        const c = customerByHome.get(h.id);
+        const status = owesHomes.has(h.id)
+          ? ("owes" as const)
+          : dueHomes.has(h.id)
+            ? ("due" as const)
+            : !h.claimed_at
+              ? ("unclaimed" as const)
+              : ("active" as const);
+        return {
+          homeId: h.id,
+          customerId: c?.id ?? null,
+          name: c?.name ?? "Customer",
+          address: h.address,
+          lat: h.lat!,
+          lng: h.lng!,
+          status,
+        };
+      });
+  }, [homes, customers, invoices, jobs]);
+
+  const wins = useMemo<Win[]>(() => {
+    const jobById = new Map(jobs.map((j) => [j.id, j]));
+    const customerById = new Map(customers.map((c) => [c.id, c]));
+    const list: Win[] = [];
+    for (const j of jobs) {
+      const viewedAt = j.records?.[0]?.viewed_at;
+      if (viewedAt) {
+        list.push({
+          key: `viewed-${j.id}`,
+          ts: viewedAt,
+          label: `${j.customers?.name ?? "A homeowner"} viewed their service record`,
+          detail: j.homes?.address ?? undefined,
+          kind: "viewed",
+        });
+      }
+    }
+    for (const h of homes) {
+      if (!h.claimed_at) continue;
+      list.push({
+        key: `claimed-${h.id}`,
+        ts: h.claimed_at,
+        label: `${h.address} was claimed by the homeowner`,
+        kind: "claimed",
+      });
+    }
+    for (const r of rebooks) {
+      const job = r.props.job_id ? jobById.get(r.props.job_id) : undefined;
+      list.push({
+        key: `rebooked-${r.id}`,
+        ts: r.created_at,
+        label: `${job?.customers?.name ?? "A homeowner"} rebooked from their reminder`,
+        detail: job?.what_done,
+        kind: "rebooked",
+      });
+    }
+    for (const r of reviewAsks) {
+      const cust = r.props.customer_id ? customerById.get(r.props.customer_id) : undefined;
+      list.push({
+        key: `review-${r.id}`,
+        ts: r.created_at,
+        label: `Review requested from ${cust?.name ?? "a customer"}`,
+        kind: "review",
+      });
+    }
+    return list.sort((a, b) => (a.ts < b.ts ? 1 : -1)).slice(0, 5);
+  }, [jobs, customers, homes, rebooks, reviewAsks]);
 
   if (loading || !pro) {
     return (
-      <ProShell pro={pro} active="home">
-        <div className="anim-fade-in max-w-xl mx-auto" aria-hidden="true">
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="mt-6 h-20 w-full rounded-[22px]" />
-          <Skeleton className="mt-6 h-40 w-full rounded-[22px]" />
-        </div>
-        <span className="sr-only">Loading</span>
+      <ProShell pro={pro} active="dashboard">
+        <ProPageSkeleton variant="dashboard" />
       </ProShell>
     );
   }
 
+  const empty = jobs.length === 0;
+  const viewRate = sentCount ? viewedCount / sentCount : 0;
+
+  const hour = new Date().getHours();
+  const timeOfDay =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = pro.owner_first_name?.trim();
+  const greetingName = firstName && firstName.length > 0 ? firstName : pro.business;
+
   return (
-    <ProShell pro={pro} active="home">
-      <div className="max-w-xl mx-auto">
-        {/* Greeting */}
-        <div className="anim-fade-up">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
-            {greetingWord()}, {firstName(pro.business)}.
-          </h1>
-          {place && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-indigobg px-3 py-1 text-[13px] font-semibold text-indigodark max-w-full">
-              <MapPin size={14} className="shrink-0" />
-              <span className="truncate">You're at {place}</span>
-            </div>
-          )}
-        </div>
+    <ProShell pro={pro} active="dashboard">
+      <ProPageHead
+        eyebrow="Dashboard"
+        title={`${timeOfDay}, ${greetingName}`}
+        sub={pro.google_rating ? `${pro.google_rating} ★ on Google` : undefined}
+      />
 
-        {/* Hero action: the biggest, most prominent thing on the screen. */}
-        <Link to="/pro/jobs/new" className="anim-fade-up d-1 mt-6 block">
-          <Btn
-            variant="indigo"
-            size="lg"
-            className="w-full min-h-[80px] py-5 shadow-[0_16px_36px_-12px_rgba(71,63,176,0.6)]"
-            tabIndex={-1}
-          >
-            <span className="flex flex-col items-center leading-tight">
-              <span className="flex items-center gap-2 text-xl font-bold">
-                <Plus size={22} /> Log a job
-              </span>
-              <span className="mt-1 text-sm font-medium opacity-85">
-                30 seconds. Just talk and tap.
-              </span>
-            </span>
-          </Btn>
-        </Link>
 
-        {/* Who needs you: the money list, first after the hero. */}
-        <div className="anim-fade-up d-2 mt-8">
-          <h2 className="text-lg font-bold text-ink">Who needs you</h2>
-          {due.length === 0 ? (
-            <Card className="mt-3 text-sm text-muted">
-              No one's due right now. You're all caught up.
-            </Card>
-          ) : (
-            <div className="mt-3 space-y-3">
-              {due.map((job) => {
-                const c = job.customer;
-                const overdue = new Date(job.next_service_date).getTime() < Date.now();
-                const noContact = !c || (!c.phone && !c.email);
-                const isReminded = reminded.has(job.id);
-                return (
-                  <Card key={job.id} className="!p-4 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-bold text-ink truncate">{c?.name ?? "Customer"}</div>
-                      <div className="text-sm text-muted truncate">{job.what_done}</div>
-                      <div
-                        className={`text-xs mt-0.5 ${overdue ? "text-red font-semibold" : "text-muted"}`}
-                      >
-                        {overdue
-                          ? `Overdue since ${formatDate(job.next_service_date)}`
-                          : `Due ${formatDate(job.next_service_date)}`}
-                      </div>
-                    </div>
-                    {isReminded ? (
-                      <span className="anim-scale-in shrink-0">
-                        <Pill accent="indigo">Reminded</Pill>
-                      </span>
-                    ) : (
-                      <Btn
-                        variant="indigoSoft"
-                        loading={busy === job.id}
-                        disabled={noContact}
-                        title={noContact ? "No phone or email on file" : undefined}
-                        onClick={() => remind(job)}
-                        className="shrink-0"
-                      >
-                        Remind
-                      </Btn>
-                    )}
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* One small win: rating-led, shown only when Google is connected. */}
-        {connected && (
-          <div className="anim-fade-up d-3 mt-8">
-            <Card className="flex items-center gap-4">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-bold text-ink tnum">{pro.google_rating ?? "-"}</span>
-                <Star size={20} className="text-coral fill-coralbg" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-semibold text-ink">Your rating on Google</div>
-                <div className="text-sm text-muted">
-                  {reviewsThisWeek > 0
-                    ? `Nice week: ${reviewsThisWeek} review ${reviewsThisWeek === 1 ? "ask" : "asks"} went out.`
-                    : "Every record you send asks for one."}
-                </div>
-              </div>
-            </Card>
+      {empty && (
+        <Card className="anim-fade-up mb-5 flex items-center gap-4 flex-wrap sm:flex-nowrap">
+          <CoreLoopScene variant="compact" pose="pro" className="w-28 shrink-0 opacity-90" />
+          <div className="flex-1 min-w-[200px]">
+            <Eyebrow accent="indigo">Get started</Eyebrow>
+            <div className="mt-1 font-semibold text-ink">Log your first job (about 30 seconds)</div>
+            <p className="text-sm text-muted mt-0.5">
+              We'll send a branded record to your customer and ask for a Google review.
+            </p>
           </div>
-        )}
+          <Link to="/pro/jobs/new" className="shrink-0">
+            <Btn variant="indigo">Log a job</Btn>
+          </Link>
+        </Card>
+      )}
 
-        {/* Quiet office link: the full operator dashboard, out of the way. */}
-        <Link
-          to="/pro/office"
-          className="anim-fade-up d-4 mt-8 flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm text-muted font-semibold hover:text-ink hover:bg-soft transition-colors"
-        >
-          <span className="flex items-center gap-2.5">
-            <LayoutDashboard size={17} />
-            My numbers, map and customers
-          </span>
-          <ArrowRight size={16} className="shrink-0" />
+      <MoneyRow
+        invoices={invoices}
+        rebooksThisMonth={rebooksThisMonth}
+        rebooksAllTime={rebooks.length}
+      />
+
+      <ActionQueue
+        proId={proId!}
+        proBusiness={pro.business}
+        dueJobs={dueQueue}
+        overdueInvoices={overdueInvoices}
+        staleHomes={staleHomes}
+        onInvoicePaid={(invoiceId) =>
+          setInvoices((prev) =>
+            prev.map((i) =>
+              i.id === invoiceId
+                ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
+                : i,
+            ),
+          )
+        }
+        onToast={setToast}
+      />
+
+      <CustomerMap pins={pins} geocodingCount={geocodingCount} />
+
+      <div className="mt-4 grid grid-cols-3 gap-4">
+        <Card className="anim-fade-up d-4">
+          <div className="text-xs uppercase tracking-wider text-muted font-bold">Records sent</div>
+          <div className="mt-1.5 flex items-end justify-between gap-2">
+            <div className="text-xl font-semibold font-display">
+              <CountUp value={sentCount} />
+            </div>
+            <SparkLine points={weeklyJobs} color="var(--indigo)" width={64} height={22} />
+          </div>
+        </Card>
+        <Card className="anim-fade-up d-4">
+          <div className="text-xs uppercase tracking-wider text-muted font-bold">View rate</div>
+          <div className="mt-1.5 flex items-end justify-between gap-2">
+            <ProgressRing
+              value={viewRate}
+              size={40}
+              strokeWidth={4}
+              label={`${Math.round(viewRate * 100)}% of records viewed`}
+            />
+            <div className="text-xs text-muted tnum">
+              {viewedCount} of {sentCount} viewed
+            </div>
+          </div>
+        </Card>
+        <Link to="/pro/customers" className="block">
+          <Card lift className="anim-fade-up d-4 h-full">
+            <div className="text-xs uppercase tracking-wider text-muted font-bold">Customers</div>
+            <div className="mt-1.5 text-xl font-semibold font-display">
+              <CountUp value={customers.length} />
+            </div>
+          </Card>
         </Link>
+      </div>
+
+      <div className="mt-5 grid md:grid-cols-2 gap-5 items-start">
+        <Card className="anim-fade-up d-5">
+          <div className="flex items-center justify-between">
+            <Eyebrow accent="indigo">Recent jobs</Eyebrow>
+            <Link to="/pro/records" className="text-xs font-semibold text-indigo hover:underline">
+              All records →
+            </Link>
+          </div>
+          {jobs.length === 0 && (
+            <p className="mt-3 text-sm text-muted">
+              No jobs yet. The jobs you log will show here with their record status.
+            </p>
+          )}
+          <div className="mt-3 divide-y divide-line">
+            {jobs.slice(0, 8).map((j) => {
+              const rec = j.records?.[0];
+              const inner = (
+                <>
+                  <div>
+                    <div className="font-semibold text-ink">{j.customers?.name ?? "-"}</div>
+                    <div className="text-xs text-muted">{j.homes?.address}</div>
+                    <div className="text-sm mt-0.5">{j.what_done}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xs text-muted font-mono tnum">
+                      {formatDate(j.created_at)}
+                    </div>
+                    {rec?.viewed_at ? (
+                      <Pill accent="indigo">Viewed</Pill>
+                    ) : rec?.sent_sms_at ? (
+                      <Pill accent="indigo">Sent</Pill>
+                    ) : null}
+                  </div>
+                </>
+              );
+              const rowCls =
+                "py-3 flex items-start justify-between gap-3 -mx-2 px-2 rounded-lg hover:bg-soft active:bg-line/50 transition-colors duration-150";
+              return rec ? (
+                <Link
+                  key={j.id}
+                  to="/pro/records/$recordId"
+                  params={{ recordId: rec.id }}
+                  className={rowCls}
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div key={j.id} className={rowCls}>
+                  {inner}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="anim-fade-up d-5">
+          <Eyebrow accent="indigo">Wins</Eyebrow>
+          {wins.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">
+              Wins from your records (views, claims, rebooks) will show up here.
+            </p>
+          ) : (
+            <div className="mt-3 divide-y divide-line">
+              {wins.map((w) => (
+                <div key={w.key} className="py-3 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-ink">{w.label}</div>
+                    {w.detail && <div className="text-xs text-muted">{w.detail}</div>}
+                  </div>
+                  <div className="shrink-0 flex items-center gap-3">
+                    <div className="text-xs text-muted font-mono tnum">{formatDate(w.ts)}</div>
+                    {w.kind === "rebooked" ? (
+                      <Pill accent="coral">Rebooked</Pill>
+                    ) : (
+                      <Pill accent="indigo">
+                        {w.kind === "viewed"
+                          ? "Viewed"
+                          : w.kind === "claimed"
+                            ? "Claimed"
+                            : "Review ask"}
+                      </Pill>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}

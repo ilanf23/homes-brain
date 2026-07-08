@@ -1,12 +1,28 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, ExternalLink, AlertTriangle } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  ChevronDown,
+  ExternalLink,
+  AlertTriangle,
+  FileText,
+  BarChart3,
+  Award,
+  Wrench,
+  Scale,
+  Info,
+  HelpCircle,
+  BookOpen,
+  MapPin,
+} from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { MarketingShell, SITE_URL, marketingHead } from "@/components/marketing";
 import { GUIDE_ORDER, getGuide, otherGuides, type Guide } from "@/lib/make-it-last";
 
 const UPDATED_ISO = "2026-07-01";
 const UPDATED_LABEL = "July 2026";
+const AREA_SERVED = "St. Johns County, Florida";
 
 type Section = { id: string; label: string };
 
@@ -41,6 +57,7 @@ export const Route = createFileRoute("/make-it-last/$slug")({
       title: `How long does a ${g.label.toLowerCase()} last (and how to make it last longer) | Make It Last`,
       description: g.metaDescription,
       path: `/make-it-last/${g.slug}`,
+      geo: true,
     });
     const url = `${SITE_URL}/make-it-last/${g.slug}`;
 
@@ -49,11 +66,7 @@ export const Route = createFileRoute("/make-it-last/$slug")({
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },
     }));
-    const faqLd = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faqEntities,
-    };
+    const faqLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqEntities };
     const howToLd = {
       "@context": "https://schema.org",
       "@type": "HowTo",
@@ -84,7 +97,14 @@ export const Route = createFileRoute("/make-it-last/$slug")({
       url,
       datePublished: UPDATED_ISO,
       dateModified: UPDATED_ISO,
-      author: { "@type": "Organization", name: "HomesBrain" },
+      inLanguage: "en-US",
+      areaServed: { "@type": "AdministrativeArea", name: AREA_SERVED },
+      spatialCoverage: { "@type": "State", name: "Florida" },
+      author: {
+        "@type": "Organization",
+        name: "HomesBrain",
+        areaServed: { "@type": "AdministrativeArea", name: AREA_SERVED },
+      },
       publisher: { "@type": "Organization", name: "HomesBrain" },
       mainEntityOfPage: url,
     };
@@ -123,18 +143,55 @@ function GuideNotFound() {
   );
 }
 
-function ImpactTag({ impact }: { impact?: "High" | "Medium" | "Low" }) {
+function ImpactPill({ impact }: { impact?: "High" | "Medium" | "Low" }) {
   if (!impact) return null;
   const styles =
     impact === "High"
-      ? "bg-coralbg text-coraldark"
+      ? "bg-coral text-white"
       : impact === "Medium"
-      ? "bg-soft text-muted"
+      ? "bg-soft text-muted border border-line"
       : "bg-white text-muted border border-line";
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${styles}`}>
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${styles}`}>
       {impact} impact
     </span>
+  );
+}
+
+function SectionHeading({
+  id,
+  icon: Icon,
+  children,
+}: {
+  id: string;
+  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div id={id} className="scroll-mt-32 flex items-center gap-3">
+      <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+        <Icon size={20} strokeWidth={2.25} />
+      </div>
+      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">{children}</h2>
+    </div>
+  );
+}
+
+function SectionDivider() {
+  return <div className="mt-16 h-px bg-line" aria-hidden="true" />;
+}
+
+function InlineSource({ label, url }: { label: string; url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-xs font-semibold text-coraldark hover:text-coral transition-colors"
+    >
+      Source: {label}
+      <ExternalLink size={11} />
+    </a>
   );
 }
 
@@ -160,6 +217,31 @@ function useScrollSpy(ids: string[]) {
   return active;
 }
 
+function FaqItem({ q, a, defaultOpen = false }: { q: string; a: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-line bg-paper overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-soft/40 transition-colors"
+      >
+        <h3 className="text-base font-semibold text-ink">{q}</h3>
+        <ChevronDown
+          size={20}
+          className={`text-muted shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 -mt-1">
+          <p className="text-sm text-muted leading-relaxed">{a}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GuidePage() {
   const { slug } = Route.useParams();
   const g = getGuide(slug)!;
@@ -174,6 +256,14 @@ function GuidePage() {
   const orderedMaintenance = [...g.maintenance].sort(
     (a, b) => (IMPACT_ORDER[a.impact ?? "Medium"] ?? 1) - (IMPACT_ORDER[b.impact ?? "Medium"] ?? 1)
   );
+
+  // Primary source for the lifespan facts: pick a lifespan-focused source when available.
+  const lifespanSource =
+    g.sources.find((s) => /lifespan|life expectancy|handyman|nachi/i.test(s.label)) ?? g.sources[0];
+  // Brand source (first brand shares one URL in these guides).
+  const brandSource = g.brands?.[0]
+    ? { label: g.brands[0].sourceLabel, url: g.brands[0].sourceUrl }
+    : null;
 
   return (
     <MarketingShell mobileCta={{ label: "Start free record", to: "/home/signup", variant: "coral" }}>
@@ -197,7 +287,7 @@ function GuidePage() {
         </nav>
       </div>
 
-      <div className="mx-auto max-w-6xl px-5 pt-10 pb-20 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
+      <div className="mx-auto max-w-6xl px-5 pt-10 pb-20 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
         {/* Desktop sticky TOC */}
         <aside className="hidden lg:block">
           <nav aria-label="On this page" className="sticky top-24">
@@ -240,176 +330,273 @@ function GuidePage() {
           {/* H1 + byline */}
           <header className="mt-6">
             <Eyebrow accent="coral">Make it last</Eyebrow>
-            <h1 className="mt-3 text-3xl sm:text-4xl tracking-tight text-ink leading-[1.1]">{g.h1}</h1>
-            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            <h1 className="mt-3 text-3xl sm:text-5xl tracking-tight text-ink leading-[1.05] font-semibold">
+              {g.h1}
+            </h1>
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
               <span>
                 Updated <time dateTime={UPDATED_ISO}>{UPDATED_LABEL}</time>
               </span>
               <span aria-hidden="true">·</span>
               <span>Reviewed by the HomesBrain team</span>
             </div>
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+              <MapPin size={12} className="text-coraldark" />
+              <span>Written for Florida homes, St. Johns County first</span>
+            </div>
           </header>
 
           {/* Quick answer */}
-          <section className="mt-8 rounded-2xl bg-coralbg p-5 sm:p-6 border border-coral/20">
+          <section className="mt-8 rounded-3xl bg-coralbg p-6 sm:p-8 border border-coral/20">
             <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">Quick answer</div>
-            <p className="mt-2 text-base sm:text-lg text-ink leading-relaxed">{g.quickAnswer}</p>
+            <p className="mt-2 text-lg sm:text-xl text-ink leading-relaxed">{g.quickAnswer}</p>
+          </section>
+
+          {/* VISUAL CENTERPIECE: Two lifespans */}
+          <section className="mt-10 scroll-mt-32" id="two-lifespans">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <BarChart3 size={20} strokeWidth={2.25} />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Two lifespans</h2>
+            </div>
+            <div className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+              <div className="grid sm:grid-cols-[1fr_auto] gap-6 items-start">
+                <div className="space-y-6 min-w-0">
+                  {/* Left alone */}
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-2">
+                      <div className="text-sm font-semibold uppercase tracking-wider text-muted">Left alone</div>
+                      <div className="tnum text-3xl sm:text-4xl font-bold text-muted">
+                        {g.neglected}
+                        <span className="text-base font-semibold ml-1">yrs</span>
+                      </div>
+                    </div>
+                    <div className="h-5 rounded-full bg-soft overflow-hidden">
+                      <div className="h-full rounded-full bg-line" style={{ width: `${neglectedPct}%` }} />
+                    </div>
+                  </div>
+                  {/* Maintained */}
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-2">
+                      <div className="text-sm font-semibold uppercase tracking-wider text-coraldark">
+                        Maintained
+                      </div>
+                      <div className="tnum text-3xl sm:text-4xl font-bold text-coraldark">
+                        {g.maintained}
+                        <span className="text-base font-semibold ml-1">yrs</span>
+                      </div>
+                    </div>
+                    <div className="h-5 rounded-full bg-coralbg overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-coral"
+                        style={{ width: `${maintainedPct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {/* Big +N years stat */}
+                <div className="sm:border-l sm:border-line sm:pl-6 flex sm:flex-col items-center sm:items-start justify-between gap-2">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">You gain</div>
+                  <div className="tnum text-5xl sm:text-6xl font-bold text-coral leading-none">
+                    +{gap}
+                  </div>
+                  <div className="text-sm font-semibold text-ink">years</div>
+                </div>
+              </div>
+              {g.barsLabel && (
+                <div className="mt-4 text-xs text-muted">Based on {g.barsLabel}.</div>
+              )}
+              {lifespanSource && (
+                <div className="mt-4">
+                  <InlineSource label={lifespanSource.label} url={lifespanSource.url} />
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Overview */}
           {g.overview && (
-            <section id="overview" className="mt-12 scroll-mt-32">
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">Overview</h2>
-              <p className="mt-4 text-base text-ink leading-relaxed">{g.overview}</p>
-            </section>
+            <>
+              <SectionDivider />
+              <div className="mt-16">
+                <SectionHeading id="overview" icon={FileText}>
+                  Overview
+                </SectionHeading>
+                <p className="mt-5 text-base sm:text-lg text-ink leading-relaxed">{g.overview}</p>
+              </div>
+            </>
           )}
-
-          {/* Two lifespans */}
-          <section id="two-lifespans" className="mt-12 scroll-mt-32">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">Two lifespans</h2>
-            <Card className="mt-4">
-              <div className="flex items-baseline justify-between gap-4">
-                <div className="text-sm text-muted">
-                  {g.barsLabel ? `Based on ${g.barsLabel}.` : "Left alone vs maintained."}
-                </div>
-                <Pill accent="coral">+{gap} years</Pill>
-              </div>
-              <div className="mt-5 space-y-4">
-                <div>
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-muted font-semibold">Left alone</span>
-                    <span className="tnum font-semibold text-ink">{g.neglected} years</span>
-                  </div>
-                  <div className="mt-2 h-3 rounded-full bg-soft overflow-hidden">
-                    <div className="h-full rounded-full bg-line" style={{ width: `${neglectedPct}%` }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-coraldark font-semibold">Maintained</span>
-                    <span className="tnum font-semibold text-coraldark">{g.maintained} years</span>
-                  </div>
-                  <div className="mt-2 h-3 rounded-full bg-coralbg overflow-hidden">
-                    <div className="h-full rounded-full bg-coral" style={{ width: `${maintainedPct}%` }} />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </section>
 
           {/* Top brands */}
           {g.brands?.length ? (
-            <section id="top-brands" className="mt-12 scroll-mt-32">
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">Top brands</h2>
-              <p className="mt-2 text-sm text-muted">The names pros and reviewers consistently rank at the top.</p>
-              <div className="mt-5 grid sm:grid-cols-2 gap-3">
-                {g.brands.map((b) => (
-                  <Card key={b.name} className="flex flex-col">
-                    <div className="text-base font-semibold text-ink">{b.name}</div>
-                    <p className="mt-1.5 text-sm text-muted leading-relaxed">{b.note}</p>
-                    <a
-                      href={b.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-coraldark hover:text-coral transition-colors"
+            <>
+              <SectionDivider />
+              <div className="mt-16">
+                <SectionHeading id="top-brands" icon={Award}>
+                  Top brands
+                </SectionHeading>
+                <p className="mt-3 text-sm text-muted">
+                  The names pros and reviewers consistently rank at the top.
+                </p>
+                <div className="mt-6 grid sm:grid-cols-2 gap-4">
+                  {g.brands.map((b) => (
+                    <div
+                      key={b.name}
+                      className="rounded-2xl border border-line bg-paper p-5 flex gap-4 items-start"
                     >
-                      {b.sourceLabel}
-                      <ExternalLink size={12} />
-                    </a>
-                  </Card>
-                ))}
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-coralbg text-coraldark text-lg font-bold shrink-0">
+                        {b.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-base font-semibold text-ink">{b.name}</div>
+                        <p className="mt-1 text-sm text-muted leading-relaxed">{b.note}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {brandSource && (
+                  <div className="mt-4">
+                    <InlineSource label={brandSource.label} url={brandSource.url} />
+                  </div>
+                )}
               </div>
-            </section>
+            </>
           ) : null}
 
           {/* Maintenance */}
-          <section id="maintenance" className="mt-12 scroll-mt-32">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">The maintenance that buys you the years</h2>
-            <ul className="mt-5 space-y-3">
+          <SectionDivider />
+          <div className="mt-16">
+            <SectionHeading id="maintenance" icon={Wrench}>
+              The maintenance that buys you the years
+            </SectionHeading>
+            <ul className="mt-6 space-y-3">
               {orderedMaintenance.map((m) => (
-                <li key={m.task} className="rounded-2xl border border-line bg-paper p-4 flex gap-3">
-                  <div className="mt-0.5 flex items-center justify-center w-7 h-7 rounded-full bg-coralbg text-coraldark shrink-0">
-                    <Check size={16} strokeWidth={2.5} />
+                <li
+                  key={m.task}
+                  className="rounded-2xl border border-line bg-paper p-5 flex gap-4"
+                >
+                  <div className="mt-0.5 flex items-center justify-center w-9 h-9 rounded-full bg-coralbg text-coraldark shrink-0">
+                    <Check size={18} strokeWidth={2.5} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                      <div className="text-sm font-semibold text-ink">{m.task}</div>
-                      <div className="text-xs font-semibold text-coraldark">{m.frequency}</div>
-                      <ImpactTag impact={m.impact} />
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <div className="text-base font-semibold text-ink">{m.task}</div>
+                      <ImpactPill impact={m.impact} />
                     </div>
-                    <p className="mt-1 text-sm text-muted">{m.effect}</p>
+                    <div className="mt-1 text-xs font-semibold text-coraldark uppercase tracking-wider">
+                      {m.frequency}
+                    </div>
+                    <p className="mt-2 text-sm text-muted leading-relaxed">{m.effect}</p>
                   </div>
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
 
           {/* Signs it is failing */}
           {g.signs?.length ? (
-            <section id="signs" className="mt-12 scroll-mt-32">
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">Signs it is failing</h2>
-              <ul className="mt-5 grid sm:grid-cols-2 gap-3">
-                {g.signs.map((s) => (
-                  <li key={s} className="rounded-xl border border-line bg-paper p-3 flex items-start gap-2.5">
-                    <AlertTriangle size={16} className="text-coraldark mt-0.5 shrink-0" />
-                    <span className="text-sm text-ink">{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <>
+              <SectionDivider />
+              <div className="mt-16">
+                <SectionHeading id="signs" icon={AlertTriangle}>
+                  Signs it is failing
+                </SectionHeading>
+                <div className="mt-6 rounded-3xl bg-amberbg border border-amber/25 p-5 sm:p-6">
+                  <ul className="grid sm:grid-cols-2 gap-3">
+                    {g.signs.map((s) => (
+                      <li key={s} className="flex items-start gap-2.5">
+                        <div className="mt-0.5 flex items-center justify-center w-6 h-6 rounded-full bg-white text-amberdark shrink-0">
+                          <AlertTriangle size={13} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm text-ink">{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </>
           ) : null}
 
           {/* Repair or replace */}
           {g.repairOrReplace ? (
-            <section id="repair-or-replace" className="mt-12 scroll-mt-32">
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">Repair or replace</h2>
-              <div className="mt-4 rounded-2xl bg-soft border border-line p-5 sm:p-6">
-                <p className="text-base text-ink leading-relaxed">{g.repairOrReplace}</p>
+            <>
+              <SectionDivider />
+              <div className="mt-16">
+                <SectionHeading id="repair-or-replace" icon={Scale}>
+                  Repair or replace
+                </SectionHeading>
+                <div className="mt-6 rounded-3xl bg-coralbg border border-coral/20 p-6 sm:p-8 flex gap-4 items-start">
+                  <div className="mt-1 flex items-center justify-center w-10 h-10 rounded-full bg-white text-coraldark shrink-0">
+                    <Scale size={20} strokeWidth={2.25} />
+                  </div>
+                  <p className="text-base sm:text-lg text-ink leading-relaxed">{g.repairOrReplace}</p>
+                </div>
               </div>
-            </section>
+            </>
           ) : null}
 
           {/* Facts */}
-          <section id="facts" className="mt-12 scroll-mt-32">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">The facts</h2>
-            <Card className="mt-4 py-2">
+          <SectionDivider />
+          <div className="mt-16">
+            <SectionHeading id="facts" icon={Info}>
+              The facts
+            </SectionHeading>
+            <Card className="mt-6 py-2">
               {g.facts.map((f) => (
                 <KV key={f.k} k={f.k} v={f.v} mono={false} />
               ))}
             </Card>
-          </section>
+            {lifespanSource && (
+              <div className="mt-3">
+                <InlineSource label={lifespanSource.label} url={lifespanSource.url} />
+              </div>
+            )}
+          </div>
+
+          {/* Florida note */}
+          <div className="mt-16 rounded-3xl bg-soft border border-line p-6 sm:p-7 flex gap-4 items-start">
+            <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark shrink-0">
+              <MapPin size={20} strokeWidth={2.25} />
+            </div>
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">
+                Florida note
+              </div>
+              <p className="mt-2 text-base text-ink leading-relaxed">{g.floridaNote}</p>
+            </div>
+          </div>
 
           {/* FAQ */}
           {g.faqs?.length ? (
-            <section id="faq" className="mt-12 scroll-mt-32">
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">FAQ</h2>
-              <div className="mt-5 space-y-4">
-                {g.faqs.map((f) => (
-                  <div key={f.q} className="rounded-2xl border border-line bg-paper p-5">
-                    <h3 className="text-base font-semibold text-ink">{f.q}</h3>
-                    <p className="mt-2 text-sm text-muted leading-relaxed">{f.a}</p>
-                  </div>
-                ))}
+            <>
+              <SectionDivider />
+              <div className="mt-16">
+                <SectionHeading id="faq" icon={HelpCircle}>
+                  FAQ
+                </SectionHeading>
+                <div className="mt-6 space-y-3">
+                  {g.faqs.map((f, i) => (
+                    <FaqItem key={f.q} q={f.q} a={f.a} defaultOpen={i === 0} />
+                  ))}
+                </div>
               </div>
-            </section>
+            </>
           ) : null}
 
-          {/* Florida note */}
-          <section className="mt-12 rounded-2xl bg-soft border border-line p-5 sm:p-6">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-coral">Florida note</div>
-            <p className="mt-2 text-sm sm:text-base text-ink">{g.floridaNote}</p>
-          </section>
-
           {/* Sources */}
-          <section id="sources" className="mt-12 scroll-mt-32">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">Sources</h2>
+          <SectionDivider />
+          <div className="mt-16">
+            <SectionHeading id="sources" icon={BookOpen}>
+              Sources
+            </SectionHeading>
             {g.verifyProminent && (
-              <div className="mt-4 rounded-xl bg-amberbg border border-amber/20 p-4 text-sm text-amberdark">
+              <div className="mt-6 rounded-2xl bg-amberbg border border-amber/25 p-4 text-sm text-amberdark">
                 Ranges vary widely by product and model. Verify specifics for your exact equipment before making a
                 maintenance or replacement decision.
               </div>
             )}
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-5 space-y-2">
               {g.sources.map((s) => (
                 <li key={s.url}>
                   <a
@@ -427,16 +614,18 @@ function GuidePage() {
             <p className="mt-3 text-xs text-muted">
               Sources are general public references. Verify specifics for your model.
             </p>
-          </section>
+          </div>
 
           {/* CTAs */}
-          <section className="mt-12 rounded-2xl bg-coralbg p-6 sm:p-8 text-center border border-coral/20">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">Make this one last longer</h2>
-            <p className="mt-2 text-sm text-muted max-w-md mx-auto">
+          <section className="mt-16 rounded-3xl bg-coralbg p-8 sm:p-10 text-center border border-coral/20">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
+              Make this one last longer
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-muted max-w-md mx-auto">
               Book a pro who does this work, or add this {g.label.toLowerCase()} to your free home record and get
               reminders when it needs service.
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Link to="/home/pros">
                 <Btn variant="coral">Book a pro</Btn>
               </Link>
@@ -447,9 +636,14 @@ function GuidePage() {
           </section>
 
           {/* Keep going */}
-          <section className="mt-14">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">Keep going</h2>
-            <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          <section className="mt-16">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <ChevronRight size={20} strokeWidth={2.25} />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Keep going</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
               {others.map((o) => (
                 <Link key={o.slug} to="/make-it-last/$slug" params={{ slug: o.slug }} className="group">
                   <Card lift className="flex items-center justify-between gap-3 py-5">
