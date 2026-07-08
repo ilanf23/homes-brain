@@ -546,6 +546,19 @@ function CustomerDetail() {
               />
               <PropertyRow label="Customer since" value={formatDate(customer.created_at)} />
               <PropertyRow
+                label="Next service"
+                display={
+                  nextService ? (
+                    <Pill accent={nextService.overdue ? "red" : "indigo"}>
+                      {nextService.overdue ? "Overdue · " : ""}
+                      {formatDate(nextService.date)} · {nextService.what}
+                    </Pill>
+                  ) : (
+                    <Pill accent="ink">None scheduled</Pill>
+                  )
+                }
+              />
+              <PropertyRow
                 label="Home claimed"
                 display={
                   customer.homes?.claimed_at ? (
