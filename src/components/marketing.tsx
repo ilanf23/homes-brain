@@ -109,16 +109,23 @@ export function MarketingShell({
 
           {/* Desktop nav */}
           <nav aria-label="Main" className="hidden min-[880px]:flex items-center gap-1">
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className="text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full"
-                activeProps={{ className: "text-ink" }}
-              >
-                {l.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((l) => {
+              const isMakeItLast = l.to === "/make-it-last";
+              return (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className={
+                    isMakeItLast
+                      ? "text-sm font-bold text-coral hover:text-coraldark transition-colors px-3 py-2 rounded-full"
+                      : "text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full"
+                  }
+                  activeProps={{ className: isMakeItLast ? "text-coraldark" : "text-ink" }}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="hidden min-[880px]:flex items-center gap-2">
