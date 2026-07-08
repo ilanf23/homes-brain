@@ -73,6 +73,7 @@ export type Database = {
           created_at: string
           home_id: string
           id: string
+          label: string | null
           make: string | null
           model: string | null
           recall_checked_at: string | null
@@ -80,12 +81,14 @@ export type Database = {
           serial: string | null
           source: string
           type: string | null
+          updated_at: string
           warranty_until: string | null
         }
         Insert: {
           created_at?: string
           home_id: string
           id?: string
+          label?: string | null
           make?: string | null
           model?: string | null
           recall_checked_at?: string | null
@@ -93,12 +96,14 @@ export type Database = {
           serial?: string | null
           source?: string
           type?: string | null
+          updated_at?: string
           warranty_until?: string | null
         }
         Update: {
           created_at?: string
           home_id?: string
           id?: string
+          label?: string | null
           make?: string | null
           model?: string | null
           recall_checked_at?: string | null
@@ -106,6 +111,7 @@ export type Database = {
           serial?: string | null
           source?: string
           type?: string | null
+          updated_at?: string
           warranty_until?: string | null
         }
         Relationships: [
@@ -506,17 +512,30 @@ export type Database = {
         Returns: Json
       }
       get_public_record: { Args: { p_record_id: string }; Returns: Json }
-      homeowner_add_equipment: {
-        Args: {
-          p_make: string
-          p_model: string
-          p_serial: string
-          p_source: string
-          p_type: string
-          p_warranty_until: string
-        }
-        Returns: string
-      }
+      homeowner_add_equipment:
+        | {
+            Args: {
+              p_make: string
+              p_model: string
+              p_serial: string
+              p_source: string
+              p_type: string
+              p_warranty_until: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_label?: string
+              p_make: string
+              p_model: string
+              p_serial: string
+              p_source: string
+              p_type: string
+              p_warranty_until: string
+            }
+            Returns: string
+          }
       homeowner_create_invite: {
         Args: { p_to_pro_name: string; p_to_pro_phone: string; p_trade: string }
         Returns: string
@@ -533,17 +552,30 @@ export type Database = {
         Args: { p_address?: string; p_marketing_consent?: boolean }
         Returns: string
       }
-      homeowner_update_equipment: {
-        Args: {
-          p_equipment_id: string
-          p_make?: string
-          p_model?: string
-          p_serial?: string
-          p_type?: string
-          p_warranty_until?: string
-        }
-        Returns: undefined
-      }
+      homeowner_update_equipment:
+        | {
+            Args: {
+              p_equipment_id: string
+              p_make?: string
+              p_model?: string
+              p_serial?: string
+              p_type?: string
+              p_warranty_until?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_equipment_id: string
+              p_label?: string
+              p_make?: string
+              p_model?: string
+              p_serial?: string
+              p_type?: string
+              p_warranty_until?: string
+            }
+            Returns: undefined
+          }
       homeowner_update_home: { Args: { p_address: string }; Returns: string }
       homeowner_update_profile: {
         Args: {
@@ -562,6 +594,19 @@ export type Database = {
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
+      pro_serves_home: { Args: { p_home_id: string }; Returns: boolean }
+      pro_upsert_equipment: {
+        Args: {
+          p_home_id: string
+          p_label?: string
+          p_make?: string
+          p_model?: string
+          p_serial?: string
+          p_type?: string
+          p_warranty_until?: string
+        }
+        Returns: string
+      }
       upsert_home_by_address: { Args: { p_address: string }; Returns: string }
     }
     Enums: {
