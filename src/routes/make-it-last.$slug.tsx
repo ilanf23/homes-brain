@@ -289,6 +289,12 @@ function GuidePage() {
     ? { label: g.brands[0].sourceLabel, url: g.brands[0].sourceUrl }
     : null;
 
+  // Alias so every section heading in this page picks up the category tint.
+  const Heading = (props: React.ComponentProps<typeof SectionHeading>) => (
+    <SectionHeading tintBg={cat.bg} tintFg={cat.fg} {...props} />
+  );
+
+
   return (
     <MarketingShell mobileCta={{ label: "Start free record", to: "/home/signup", variant: "coral" }}>
       {/* Mobile sticky sub-nav */}
