@@ -11,7 +11,7 @@ import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/ac
 import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
-export const Route = createFileRoute("/pro/")({
+export const Route = createFileRoute("/pro/office")({
   head: () => ({ meta: [{ title: "Dashboard - HomesBrain" }] }),
   component: ProDashboard,
 });
