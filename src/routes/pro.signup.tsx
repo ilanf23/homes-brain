@@ -36,13 +36,39 @@ function ProSignup() {
   const [trade, setTrade] = useState<string>("water_treatment");
   const [area, setArea] = useState("");
   const [googleConnected, setGoogleConnected] = useState(false);
+  const [useGoogle, setUseGoogle] = useState(false);
 
+  const basicsValid =
+    business.trim().length > 1 && ownerFirstName.trim().length > 0;
   const step1Valid =
-    business.trim().length > 1 &&
-    ownerFirstName.trim().length > 0 &&
+    basicsValid &&
     isValidEmail(email.trim()) &&
     password.length >= 8 &&
     password === confirmPw;
+
+  async function finishWithGoogle() {
+    setSubmitting(true);
+    setErr(null);
+    localStorage.setItem(
+      "hb_pending_pro_signup",
+      JSON.stringify({
+        business: business.trim(),
+        owner_first_name: ownerFirstName.trim(),
+        trade,
+        service_area: area.trim(),
+      }),
+    );
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/auth/callback`,
+    });
+    if (result.error) {
+      setErr(result.error.message ?? "Google sign-in failed");
+      setSubmitting(false);
+      return;
+    }
+    if (result.redirected) return;
+    window.location.href = "/auth/callback";
+  }
 
   async function finish() {
     setSubmitting(true);
