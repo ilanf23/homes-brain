@@ -23,6 +23,7 @@ import { Route as ForHomeownersRouteImport } from './routes/for-homeowners'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProIndexRouteImport } from './routes/pro.index'
+import { Route as MakeItLastIndexRouteImport } from './routes/make-it-last.index'
 import { Route as HomeIndexRouteImport } from './routes/home.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as RRecordIdRouteImport } from './routes/r.$recordId'
@@ -118,6 +119,11 @@ const IndexRoute = IndexRouteImport.update({
 const ProIndexRoute = ProIndexRouteImport.update({
   id: '/pro/',
   path: '/pro/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MakeItLastIndexRoute = MakeItLastIndexRouteImport.update({
+  id: '/make-it-last/',
+  path: '/make-it-last/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeIndexRoute = HomeIndexRouteImport.update({
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/r/$recordId': typeof RRecordIdRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
+  '/make-it-last/': typeof MakeItLastIndexRoute
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/r/$recordId': typeof RRecordIdRoute
   '/blog': typeof BlogIndexRoute
   '/home': typeof HomeIndexRoute
+  '/make-it-last': typeof MakeItLastIndexRoute
   '/pro': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/r/$recordId': typeof RRecordIdRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
+  '/make-it-last/': typeof MakeItLastIndexRoute
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
@@ -411,6 +420,7 @@ export interface FileRouteTypes {
     | '/r/$recordId'
     | '/blog/'
     | '/home/'
+    | '/make-it-last/'
     | '/pro/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/r/$recordId'
     | '/blog'
     | '/home'
+    | '/make-it-last'
     | '/pro'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/r/$recordId'
     | '/blog/'
     | '/home/'
+    | '/make-it-last/'
     | '/pro/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   RRecordIdRoute: typeof RRecordIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
+  MakeItLastIndexRoute: typeof MakeItLastIndexRoute
   ProIndexRoute: typeof ProIndexRoute
   HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
   ProCustomersCustomerIdRoute: typeof ProCustomersCustomerIdRoute
@@ -648,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/pro'
       fullPath: '/pro/'
       preLoaderRoute: typeof ProIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/make-it-last/': {
+      id: '/make-it-last/'
+      path: '/make-it-last'
+      fullPath: '/make-it-last/'
+      preLoaderRoute: typeof MakeItLastIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home/': {
@@ -866,6 +886,7 @@ const rootRouteChildren: RootRouteChildren = {
   RRecordIdRoute: RRecordIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
+  MakeItLastIndexRoute: MakeItLastIndexRoute,
   ProIndexRoute: ProIndexRoute,
   HomeItemsItemIdRoute: HomeItemsItemIdRoute,
   ProCustomersCustomerIdRoute: ProCustomersCustomerIdRoute,
