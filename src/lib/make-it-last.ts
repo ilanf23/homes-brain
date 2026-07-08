@@ -40,26 +40,30 @@ export const GUIDES: Record<string, Guide> = {
       "A standard tank water heater lasts about 8 to 12 years, and 15+ with a yearly flush and anode-rod replacement. Full maintenance guide.",
     quickAnswer:
       "A standard tank water heater lasts about 8 to 12 years. With a yearly flush and the anode rod replaced every 3 to 5 years, many reach 15 or more. Florida hard water is why the neglected end comes fast.",
+    overview:
+      "A tank water heater is the appliance most punished by Florida hard water. The gap between a neglected unit and a maintained one is bigger here than almost anywhere, and the maintenance is cheap and simple. Here is how long it lasts, what actually extends it, and the brands pros trust.",
     neglected: 10,
     maintained: 15,
-    maintenance: [
-      {
-        task: "Flush the tank",
-        frequency: "Yearly",
-        effect: "Clears sediment and protects efficiency.",
-      },
-      {
-        task: "Inspect and replace the anode rod",
-        frequency: "Every 3 to 5 years",
-        effect: "This is what stops the tank from rusting through.",
-      },
-      { task: "Set the temperature to 120°F", frequency: "Once", effect: "Safer and easier on the tank." },
-      {
-        task: "Consider a water softener",
-        frequency: "If you have hard water",
-        effect: "Slows scale and adds years to the tank.",
-      },
+    brands: [
+      { name: "Bradford White", note: "Pro favorite, sold only through contractors, top rated for reliability.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
+      { name: "A.O. Smith", note: "Long lasting and corrosion resistant, strong warranties.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
+      { name: "Rheem", note: "Dependable and widely available, Performance Platinum adds leak detection.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
+      { name: "Rinnai", note: "The leader if you go tankless, premium and long warranties.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
     ],
+    maintenance: [
+      { task: "Flush the tank", frequency: "Yearly", effect: "Clears sediment and protects efficiency.", impact: "High" },
+      { task: "Inspect and replace the anode rod", frequency: "Every 3 to 5 years", effect: "This is what stops the tank from rusting through.", impact: "High" },
+      { task: "Set the temperature to 120°F", frequency: "Once", effect: "Safer and easier on the tank.", impact: "Low" },
+      { task: "Consider a water softener", frequency: "If you have hard water", effect: "Slows scale and adds years to the tank.", impact: "Medium" },
+    ],
+    signs: [
+      "Rusty or discolored hot water",
+      "Popping or rumbling from the tank",
+      "Water pooling around the base",
+      "Running out of hot water sooner than it used to",
+    ],
+    repairOrReplace:
+      "Under 8 years, most issues are worth repairing. Past 10 to 12, or if the tank itself is leaking, replace it, a leaking tank cannot be fixed.",
     facts: [
       { k: "Expected life", v: "8 to 15+ years" },
       { k: "Typical warranty", v: "6 to 12 years" },
@@ -67,13 +71,22 @@ export const GUIDES: Record<string, Guide> = {
       { k: "Replacement cost", v: "~$1,200 to $2,500 installed" },
       { k: "Recall status", v: "Check by model and serial" },
     ],
+    faqs: [
+      { q: "How often should I flush my water heater?", a: "Once a year, and more often in Florida hard water, to clear the sediment that eats efficiency and life." },
+      { q: "Does a tankless water heater last longer?", a: "Yes, tankless units often last 20 years or more versus 8 to 12 for a tank, though they cost more up front." },
+      { q: "Is replacing the anode rod really worth it?", a: "Yes. The rod sacrifices itself so the tank does not rust through. Replacing it every 3 to 5 years is the cheapest way to add years." },
+      { q: "What are the signs my water heater is failing?", a: "Rusty water, popping or rumbling, leaks at the base, or not enough hot water." },
+      { q: "How much does a new water heater cost?", a: "Roughly $1,200 to $2,500 installed for a standard tank, more for tankless." },
+    ],
     floridaNote:
       "Florida hard water speeds sediment buildup and corrosion, so flushing and anode-rod care matter more here than in most of the country.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
       { label: "Bob Vila: anode rod replacement", url: "https://www.bobvila.com/articles/anode-rod-replacement/" },
       { label: "This Old House: change a water heater anode rod", url: "https://www.thisoldhouse.com/plumbing/21017262/how-to-change-a-water-heater-anode-rod" },
+      { label: "Water Heater Docs: best brands compared", url: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison" },
     ],
+
   },
 
   "central-ac": {
