@@ -16,3 +16,18 @@ verify_jwt = false
 # restricting the key to Places+Geocoding and setting a Google quota cap.
 [functions.geo]
 verify_jwt = false
+
+# Stripe Connect onboarding + connected account status refresh. Mocked v0
+# sessions mean no JWT; server-side we read pros by id via service role.
+[functions.stripe-connect]
+verify_jwt = false
+
+# Homeowner-initiated Checkout Session creation. Amount is looked up on the
+# server from the invoice; client input can only reference an invoice_id.
+[functions.stripe-checkout]
+verify_jwt = false
+
+# Stripe webhook. Cannot carry a Supabase JWT; we verify Stripe's own
+# signature against the raw body using STRIPE_WEBHOOK_SECRET.
+[functions.stripe-webhook]
+verify_jwt = false
