@@ -626,6 +626,21 @@ function NewJob() {
       .select("id")
       .single();
 
+    // Optional invoice: if the pro entered a charge amount, create an open
+    // invoice tied to this job so the homeowner can pay through /home.
+    const chargeNum = parseFloat(chargeAmount);
+    setBilledAmount(null);
+    if (job?.id && customerId && homeId && Number.isFinite(chargeNum) && chargeNum > 0) {
+      const inv = await createInvoice({
+        proId,
+        customerId,
+        homeId,
+        jobId: job.id,
+        items: [{ description: whatDone.trim() || "Service", amount: chargeNum }],
+      });
+      if (inv) setBilledAmount(chargeNum);
+    }
+
     // Record. Persist which record rows the pro excluded, scoped to rows that
     // actually have a value, so the public record can hide exactly those.
     const presentKeys = new Set<string>([FIELD_CUSTOMER, FIELD_WORK_DONE, FIELD_RECALL]);
