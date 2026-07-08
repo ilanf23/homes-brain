@@ -362,68 +362,118 @@ function GuidePage() {
             <p className="mt-2 text-lg sm:text-xl text-ink leading-relaxed">{g.quickAnswer}</p>
           </section>
 
-          {/* VISUAL CENTERPIECE: Two lifespans */}
-          <section className="mt-10 scroll-mt-32" id="two-lifespans">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
-                <BarChart3 size={20} strokeWidth={2.25} />
+          {/* VISUAL CENTERPIECE: swap by mode */}
+          {g.expectedLifeOnly ? (
+            <section className="mt-10 scroll-mt-32" id="built-to-last">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                  <Info size={20} strokeWidth={2.25} />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
+                  Built to last, here is what actually needs attention
+                </h2>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Two lifespans</h2>
-            </div>
-            <div className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
-              <div className="grid sm:grid-cols-[1fr_auto] gap-6 items-start">
-                <div className="space-y-6 min-w-0">
-                  {/* Left alone */}
-                  <div>
-                    <div className="flex items-baseline justify-between gap-3 mb-2">
-                      <div className="text-sm font-semibold uppercase tracking-wider text-muted">Left alone</div>
-                      <div className="tnum text-3xl sm:text-4xl font-bold text-muted">
-                        {g.neglected}
-                        <span className="text-base font-semibold ml-1">yrs</span>
-                      </div>
-                    </div>
-                    <div className="h-5 rounded-full bg-soft overflow-hidden">
-                      <div className="h-full rounded-full bg-line" style={{ width: `${neglectedPct}%` }} />
-                    </div>
-                  </div>
-                  {/* Maintained */}
-                  <div>
-                    <div className="flex items-baseline justify-between gap-3 mb-2">
-                      <div className="text-sm font-semibold uppercase tracking-wider text-coraldark">
-                        Maintained
-                      </div>
-                      <div className="tnum text-3xl sm:text-4xl font-bold text-coraldark">
-                        {g.maintained}
-                        <span className="text-base font-semibold ml-1">yrs</span>
-                      </div>
-                    </div>
-                    <div className="h-5 rounded-full bg-coralbg overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-coral"
-                        style={{ width: `${maintainedPct}%` }}
-                      />
-                    </div>
-                  </div>
+              <div className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">
+                  Expected life
                 </div>
-                {/* Big +N years stat */}
-                <div className="sm:border-l sm:border-line sm:pl-6 flex sm:flex-col items-center sm:items-start justify-between gap-2">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">You gain</div>
-                  <div className="tnum text-5xl sm:text-6xl font-bold text-coral leading-none">
-                    +{gap}
+                <p className="mt-3 text-lg sm:text-xl text-ink leading-relaxed">
+                  {g.expectedLife ?? g.quickAnswer}
+                </p>
+                <p className="mt-4 text-sm text-muted leading-relaxed">
+                  Because this one is built to last, the useful section for you is not a lifespan chart, it is the maintenance list below.
+                </p>
+                {lifespanSource && (
+                  <div className="mt-5">
+                    <InlineSource label={lifespanSource.label} url={lifespanSource.url} />
                   </div>
-                  <div className="text-sm font-semibold text-ink">years</div>
-                </div>
+                )}
               </div>
-              {g.barsLabel && (
-                <div className="mt-4 text-xs text-muted">Based on {g.barsLabel}.</div>
-              )}
-              {lifespanSource && (
-                <div className="mt-4">
-                  <InlineSource label={lifespanSource.label} url={lifespanSource.url} />
+            </section>
+          ) : g.cadenceOnly ? (
+            <section className="mt-10 scroll-mt-32" id="cadence">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                  <Info size={20} strokeWidth={2.25} />
                 </div>
-              )}
-            </div>
-          </section>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
+                  Maintenance cadence
+                </h2>
+              </div>
+              <div className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+                <p className="text-lg sm:text-xl text-ink leading-relaxed">
+                  This one is not a lifespan story, it is a cadence. Keep the schedule below active and you stay protected. Let it lapse and you start over.
+                </p>
+                {lifespanSource && (
+                  <div className="mt-5">
+                    <InlineSource label={lifespanSource.label} url={lifespanSource.url} />
+                  </div>
+                )}
+              </div>
+            </section>
+          ) : (
+            <section className="mt-10 scroll-mt-32" id="two-lifespans">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                  <BarChart3 size={20} strokeWidth={2.25} />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Two lifespans</h2>
+              </div>
+              <div className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+                <div className="grid sm:grid-cols-[1fr_auto] gap-6 items-start">
+                  <div className="space-y-6 min-w-0">
+                    {/* Left alone */}
+                    <div>
+                      <div className="flex items-baseline justify-between gap-3 mb-2">
+                        <div className="text-sm font-semibold uppercase tracking-wider text-muted">Left alone</div>
+                        <div className="tnum text-3xl sm:text-4xl font-bold text-muted">
+                          {g.neglected}
+                          <span className="text-base font-semibold ml-1">yrs</span>
+                        </div>
+                      </div>
+                      <div className="h-5 rounded-full bg-soft overflow-hidden">
+                        <div className="h-full rounded-full bg-line" style={{ width: `${neglectedPct}%` }} />
+                      </div>
+                    </div>
+                    {/* Maintained */}
+                    <div>
+                      <div className="flex items-baseline justify-between gap-3 mb-2">
+                        <div className="text-sm font-semibold uppercase tracking-wider text-coraldark">
+                          Maintained
+                        </div>
+                        <div className="tnum text-3xl sm:text-4xl font-bold text-coraldark">
+                          {g.maintained}
+                          <span className="text-base font-semibold ml-1">yrs</span>
+                        </div>
+                      </div>
+                      <div className="h-5 rounded-full bg-coralbg overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-coral"
+                          style={{ width: `${maintainedPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Big +N years stat */}
+                  <div className="sm:border-l sm:border-line sm:pl-6 flex sm:flex-col items-center sm:items-start justify-between gap-2">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">You gain</div>
+                    <div className="tnum text-5xl sm:text-6xl font-bold text-coral leading-none">
+                      +{gap}
+                    </div>
+                    <div className="text-sm font-semibold text-ink">years</div>
+                  </div>
+                </div>
+                {g.barsLabel && (
+                  <div className="mt-4 text-xs text-muted">Based on {g.barsLabel}.</div>
+                )}
+                {lifespanSource && (
+                  <div className="mt-4">
+                    <InlineSource label={lifespanSource.label} url={lifespanSource.url} />
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* Overview */}
           {g.overview && (
