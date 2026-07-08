@@ -824,16 +824,6 @@ function NewJob() {
                     </Field>
                   </div>
 
-                  <div className="flex items-center justify-between gap-4 rounded-xl bg-soft px-4 py-3">
-                    <div className="text-sm font-semibold text-ink">
-                      Customer is OK to get texts
-                    </div>
-                    <Toggle
-                      checked={consent}
-                      onChange={setConsent}
-                      label="Customer consents to texts"
-                    />
-                  </div>
 
                   <div className="flex gap-2">
                     <Btn variant="secondary" onClick={() => setStage("customer")}>
