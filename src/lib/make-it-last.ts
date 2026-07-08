@@ -28,6 +28,14 @@ export type Guide = {
   sources: Source[];
   /* Prominent verify-specifics note on top of the standard disclaimer. */
   verifyProminent?: boolean;
+  /* For items that don't have a simple two-lifespans story. When true, the template
+     shows a "Built to last" panel with expectedLife and leads with maintenance. */
+  expectedLifeOnly?: boolean;
+  /* For cadence-driven items (e.g. termite protection). Shows a cadence panel
+     instead of a lifespan. */
+  cadenceOnly?: boolean;
+  /* Human sentence about expected life, used when expectedLifeOnly is true. */
+  expectedLife?: string;
 };
 
 
