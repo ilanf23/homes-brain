@@ -487,9 +487,6 @@ function FooterSignup() {
     </div>
   );
 }
-    </div>
-  );
-}
 
 /* ---- Phone mockup - the brand's one product visual, shared by every
    marketing page. Real-handset proportions (screen ≈ 9:19.5), a thin uniform
