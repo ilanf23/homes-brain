@@ -13,6 +13,7 @@ import {
   SettingsNav,
   SettingsSection,
 } from "@/components/settings";
+import { refreshStripeStatus, startStripeOnboarding } from "@/lib/stripe-connect";
 import { clearSession } from "@/lib/session";
 
 export const Route = createFileRoute("/pro/settings")({
@@ -28,6 +29,9 @@ type ProPrefs = {
   notify_sms: boolean;
   review_requests_on: boolean;
   stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
+  stripe_details_submitted: boolean;
   quickbooks_connected: boolean;
   jobber_connected: boolean;
   square_connected: boolean;
@@ -76,7 +80,7 @@ function ProSettings() {
       const { data } = await supabase
         .from("pros")
         .select(
-          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,quickbooks_connected,jobber_connected,square_connected",
+          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted,quickbooks_connected,jobber_connected,square_connected",
         )
         .eq("id", proId)
         .maybeSingle();
