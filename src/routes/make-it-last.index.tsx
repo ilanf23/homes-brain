@@ -277,22 +277,60 @@ function MakeItLast() {
             eyebrow="Browse by system"
             title="Pick a system to see its maintained lifespan"
           />
-          <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {BROWSE.map(({ slug, label, Icon }) => (
-              <Link
-                key={slug}
-                to="/make-it-last/$slug"
-                params={{ slug }}
-                className="group"
-              >
-                <Card lift className="flex flex-col items-center text-center py-8 h-full">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark group-hover:scale-105 transition-transform">
-                    <Icon size={22} strokeWidth={1.75} />
-                  </div>
-                  <div className="mt-4 text-sm font-semibold text-ink">{label}</div>
-                </Card>
-              </Link>
+          <div className="mt-10 space-y-12">
+            {BROWSE_GROUPS.map((group) => (
+              <div key={group.title}>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-coraldark mb-4">
+                  {group.title}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {group.items.map(({ slug, label, Icon }) => (
+                    <Link
+                      key={slug}
+                      to="/make-it-last/$slug"
+                      params={{ slug }}
+                      className="group"
+                    >
+                      <Card lift className="flex flex-col items-center text-center py-8 h-full">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark group-hover:scale-105 transition-transform">
+                          <Icon size={22} strokeWidth={1.75} />
+                        </div>
+                        <div className="mt-4 text-sm font-semibold text-ink">{label}</div>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
+
+            {/* Catch-all card */}
+            <div>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-coraldark mb-4">
+                Do not see yours?
+              </h3>
+              <a
+                href="mailto:hello@homesbrain.com?subject=Make%20It%20Last%20guide%20request"
+                className="group block"
+              >
+                <Card lift className="flex flex-col sm:flex-row items-center gap-5 py-8 px-6 text-center sm:text-left">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark shrink-0 group-hover:scale-105 transition-transform">
+                    <Plus size={22} strokeWidth={1.75} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold text-ink">
+                      More guides are on the way
+                    </div>
+                    <p className="mt-1 text-sm text-muted">
+                      Tell us what to cover next and we will build it. Every founding pro and homeowner shapes the list.
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-coraldark group-hover:text-coral transition-colors">
+                    <Mail size={16} />
+                    Suggest a guide
+                  </div>
+                </Card>
+              </a>
+            </div>
           </div>
         </div>
       </section>
