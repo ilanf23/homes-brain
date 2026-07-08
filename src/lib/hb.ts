@@ -137,6 +137,52 @@ export async function geocodeAddress(
   }
 }
 
+/* Reverse geocode via Nominatim. Returns a compact street address string. */
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<string | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&email=ilanfridman23%40gmail.com&lat=${lat}&lon=${lng}`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      display_name?: string;
+      address?: {
+        house_number?: string;
+        road?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        state?: string;
+        postcode?: string;
+      };
+    };
+    const a = data.address;
+    if (a) {
+      const street = [a.house_number, a.road].filter(Boolean).join(" ");
+      const locality = a.city || a.town || a.village || "";
+      const parts = [street, locality, a.state].filter(Boolean);
+      if (parts.length) return parts.join(", ");
+    }
+    return data.display_name ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/* Normalize an address for loose comparison (lowercase, collapse whitespace,
+   strip punctuation). Two addresses that normalize equally are considered the
+   same home for the geolocation match. */
+export function normalizeAddress(a: string): string {
+  return a
+    .toLowerCase()
+    .replace(/[.,#]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
 /* Geocode one home and persist the result. geocoded_at is stamped even on
    failure so bad addresses are not retried every visit. Never throws. */
 export async function geocodeHome(
