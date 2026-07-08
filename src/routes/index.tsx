@@ -340,12 +340,15 @@ function Landing() {
             <Eyebrow accent="indigo">A Carfax for homes that writes itself</Eyebrow>
           </div>
           <h1 className="anim-fade-up d-1 mt-4 text-5xl sm:text-6xl tracking-tight text-ink leading-[1.04]">
-            The living record for{" "}
+            Every home{" "}
             <span className="relative inline-block">
-              every home.
+              remembers.
               <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
             </span>
           </h1>
+          <p className="anim-fade-up d-2 mt-3 text-base text-muted">
+            The living record for every home.
+          </p>
           <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-xl mx-auto lg:mx-0">
             Every repair, appliance, and warranty in one place. Built by the pros who fix your home.
             Owned by you for life.
