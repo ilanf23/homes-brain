@@ -175,16 +175,23 @@ function NewJob() {
      untouched, so it never overwrites a typed or picked address. */
   useEffect(() => {
     if (stage !== "location") return;
-    if (loc.status !== "ready" || addressTouched.current) return;
+    if (loc.status !== "ready") return;
     if (selectedCustomerId) {
-      if (locAddress) return;
+      // Existing customer: only prefill when nothing is on file AND the pro
+      // has not typed/picked anything yet, so we never clobber their edits.
+      if (locAddress || addressTouched.current) return;
       setLocAddress(loc.address);
       setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
     } else {
+      // New customer: prefill whenever the field is empty (even if they later
+      // cleared it), so the current location is always offered as a starting
+      // point. A typed/picked value stays put because the field is not empty.
       if (newCustomer.address) return;
       setNewCustomer((n) => ({ ...n, address: loc.address }));
+      addressTouched.current = false;
     }
   }, [stage, selectedCustomerId, loc, newCustomer.address, locAddress, gps]);
+
 
 
   /* When an existing customer is picked, load that home's appliances (with
