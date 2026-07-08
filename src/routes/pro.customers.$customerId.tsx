@@ -696,6 +696,11 @@ function CustomerDetail() {
                     <div key={j.id} className="py-2.5 first:pt-0 last:pb-0">
                       <div className="text-sm font-semibold text-ink truncate">{j.what_done}</div>
                       <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
+                      {j.next_service_date && (
+                        <div className="mt-1 text-xs font-semibold text-indigo tnum">
+                          Next service {formatDate(j.next_service_date)}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
