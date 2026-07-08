@@ -477,6 +477,60 @@ function GuidePage() {
             <p className="mt-2 text-lg sm:text-xl text-ink leading-relaxed">{g.quickAnswer}</p>
           </section>
 
+          {/* Pros who do this work near you */}
+          {(() => {
+            const nearbyPros = prosForCategory(meta.categoryId).slice(0, 4);
+            if (nearbyPros.length === 0) return null;
+            const primaryTrade = CATEGORY_TO_TRADES[meta.categoryId]?.[0];
+            return (
+              <section
+                id="pros"
+                className="mt-10 scroll-mt-32"
+                aria-labelledby="pros-heading"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}
+                  >
+                    <MapPin size={18} strokeWidth={2} />
+                  </div>
+                  <h2
+                    id="pros-heading"
+                    className="text-2xl sm:text-3xl font-bold tracking-tight text-ink"
+                  >
+                    Pros who do this work near you
+                  </h2>
+                </div>
+                <p className="text-muted mb-5">
+                  Local pros in St. Johns County who service {g.label.toLowerCase()}. Free to
+                  browse.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {nearbyPros.map((p) => (
+                    <ProCard
+                      key={p.slug}
+                      pro={p}
+                      compact
+                      source="guide"
+                      trade={primaryTrade}
+                    />
+                  ))}
+                </div>
+                {primaryTrade && (
+                  <div className="mt-5">
+                    <Link
+                      to="/pros"
+                      search={{ trade: primaryTrade }}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-coraldark hover:underline"
+                    >
+                      See all {TRADE_LABELS[primaryTrade]} pros in St. Johns County →
+                    </Link>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
+
           {/* VISUAL CENTERPIECE: swap by mode */}
           {g.expectedLifeOnly ? (
             <section className="mt-10 scroll-mt-32" id="built-to-last">
