@@ -28,9 +28,12 @@ function AuthCallback() {
       if (pro) {
         await logEvent(`pro:${pro.id}`, "pro_email_verified", {});
         navigate({ to: "/pro" });
-      } else {
-        navigate({ to: "/login" });
+        return;
       }
+      // Default: homeowner. Ensure a homeowner row exists (auto-created on
+      // first authenticated view via get_home_view too).
+      await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
+      navigate({ to: "/home" });
     })();
   }, [navigate]);
   return <PageLoader label="Signing you in" />;
