@@ -27,10 +27,11 @@ const UPDATED_ISO = "2026-07-01";
 const UPDATED_LABEL = "July 2026";
 const AREA_SERVED = "St. Johns County, Florida";
 
-type Section = { id: string; label: string };
+type Section = { id: string; label: string; teal?: boolean };
 
-function buildSections(g: Guide): Section[] {
+function buildSections(g: Guide, hasPros: boolean): Section[] {
   const s: Section[] = [];
+  if (hasPros) s.push({ id: "pros", label: "Pros near you", teal: true });
   if (g.overview) s.push({ id: "overview", label: "Overview" });
   if (g.expectedLifeOnly) {
     s.push({ id: "built-to-last", label: "Built to last" });
@@ -48,6 +49,7 @@ function buildSections(g: Guide): Section[] {
   s.push({ id: "sources", label: "Sources" });
   return s;
 }
+
 
 const IMPACT_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
