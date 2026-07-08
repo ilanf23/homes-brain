@@ -33,7 +33,7 @@ export type ProInvoice = Invoice & {
 };
 
 export type HomeInvoice = Invoice & {
-  pros: { business: string; trade: string } | null;
+  pros: { business: string; trade: string; stripe_charges_enabled: boolean } | null;
 };
 
 export function invoiceTotal(items: InvoiceItem[]) {
@@ -71,7 +71,7 @@ export async function listInvoicesForCustomer(
 
 export async function listInvoicesForHome(homeId: string): Promise<HomeInvoice[]> {
   const { data } = await invoices()
-    .select("*,pros(business,trade)")
+    .select("*,pros(business,trade,stripe_charges_enabled)")
     .eq("home_id", homeId)
     .neq("status", "void")
     .order("created_at", { ascending: false });

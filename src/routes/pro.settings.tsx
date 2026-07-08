@@ -13,6 +13,7 @@ import {
   SettingsNav,
   SettingsSection,
 } from "@/components/settings";
+import { refreshStripeStatus, startStripeOnboarding } from "@/lib/stripe-connect";
 import { clearSession } from "@/lib/session";
 
 export const Route = createFileRoute("/pro/settings")({
@@ -28,6 +29,9 @@ type ProPrefs = {
   notify_sms: boolean;
   review_requests_on: boolean;
   stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
+  stripe_details_submitted: boolean;
   quickbooks_connected: boolean;
   jobber_connected: boolean;
   square_connected: boolean;
@@ -76,7 +80,7 @@ function ProSettings() {
       const { data } = await supabase
         .from("pros")
         .select(
-          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,quickbooks_connected,jobber_connected,square_connected",
+          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted,quickbooks_connected,jobber_connected,square_connected",
         )
         .eq("id", proId)
         .maybeSingle();
@@ -344,13 +348,13 @@ function ProSettings() {
                 </Btn>
               </div>
             </div>
-            <div className="mt-4 border-t border-line pt-1">
-              <SettingRow
-                label="Payouts (Stripe)"
-                sub={prefs?.stripe_account_id ? "Payout account connected" : "Not connected"}
-              >
-                <Pill accent="ink">v0.5</Pill>
-              </SettingRow>
+            <div className="mt-4 border-t border-line pt-4">
+              <StripePayoutsPanel
+                proId={proId!}
+                prefs={prefs}
+                onUpdated={(patch) => setPrefs((p) => (p ? { ...p, ...patch } : p))}
+                onToast={setToast}
+              />
             </div>
           </SettingsSection>
 
@@ -481,3 +485,119 @@ function ProSettings() {
     </ProShell>
   );
 }
+
+function StripePayoutsPanel({
+  proId,
+  prefs,
+  onUpdated,
+  onToast,
+}: {
+  proId: string;
+  prefs: ProPrefs | null;
+  onUpdated: (patch: Partial<ProPrefs>) => void;
+  onToast: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState<null | "onboard" | "refresh">(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const connected = !!prefs?.stripe_account_id;
+  const ready = !!prefs?.stripe_charges_enabled;
+
+  // If Stripe redirected back with ?stripe=return or =refresh, pull the
+  // latest status once so the UI flips from "Continue setup" to "Payments on".
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search).get("stripe");
+    if (!q || !prefs?.stripe_account_id) return;
+    (async () => {
+      try {
+        const r = await refreshStripeStatus(proId);
+        onUpdated({
+          stripe_charges_enabled: r.stripe_charges_enabled,
+          stripe_payouts_enabled: r.stripe_payouts_enabled,
+          stripe_details_submitted: r.stripe_details_submitted,
+        });
+        if (r.stripe_charges_enabled) onToast("Payments on");
+      } catch {
+        /* ignore */
+      } finally {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("stripe");
+        window.history.replaceState({}, "", url.toString());
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefs?.stripe_account_id]);
+
+  async function onConnect() {
+    setBusy("onboard");
+    setErr(null);
+    try {
+      const { url } = await startStripeOnboarding(proId);
+      window.location.href = url;
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Couldn't start onboarding.");
+      setBusy(null);
+    }
+  }
+
+  async function onRefresh() {
+    setBusy("refresh");
+    setErr(null);
+    try {
+      const r = await refreshStripeStatus(proId);
+      onUpdated({
+        stripe_charges_enabled: r.stripe_charges_enabled,
+        stripe_payouts_enabled: r.stripe_payouts_enabled,
+        stripe_details_submitted: r.stripe_details_submitted,
+      });
+      onToast(r.stripe_charges_enabled ? "Payments on" : "Still pending on Stripe");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Couldn't check status.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div>
+      <SettingRow
+        label="Payouts (Stripe)"
+        sub={
+          !connected
+            ? "Get paid through HomesBrain. Test mode."
+            : ready
+              ? "Payments on. Test mode."
+              : "Onboarding in progress on Stripe."
+        }
+      >
+        {ready ? (
+          <Pill accent="indigo">Payments on</Pill>
+        ) : connected ? (
+          <div className="flex items-center gap-2">
+            <Pill accent="amber">Pending</Pill>
+            <Btn variant="secondary" size="sm" loading={busy === "refresh"} onClick={onRefresh}>
+              Check status
+            </Btn>
+            <Btn variant="indigo" size="sm" loading={busy === "onboard"} onClick={onConnect}>
+              Continue
+            </Btn>
+          </div>
+        ) : (
+          <Btn variant="indigo" size="sm" loading={busy === "onboard"} onClick={onConnect}>
+            Set up payments
+          </Btn>
+        )}
+      </SettingRow>
+      {err && (
+        <div role="alert" className="mt-2 text-xs text-red bg-redbg rounded-lg px-3 py-2">
+          {err}
+        </div>
+      )}
+      <p className="mt-2 text-xs text-muted">
+        Powered by Stripe. HomesBrain never holds funds; payouts go straight to your bank.
+      </p>
+    </div>
+  );
+}
+

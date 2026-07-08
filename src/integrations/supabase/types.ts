@@ -458,6 +458,86 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          application_fee_amount: number
+          created_at: string
+          currency: string
+          home_id: string
+          id: string
+          invoice_id: string | null
+          job_id: string | null
+          pro_id: string
+          status: string
+          stripe_account_id: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          application_fee_amount?: number
+          created_at?: string
+          currency?: string
+          home_id: string
+          id?: string
+          invoice_id?: string | null
+          job_id?: string | null
+          pro_id: string
+          status?: string
+          stripe_account_id: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          application_fee_amount?: number
+          created_at?: string
+          currency?: string
+          home_id?: string
+          id?: string
+          invoice_id?: string | null
+          job_id?: string | null
+          pro_id?: string
+          status?: string
+          stripe_account_id?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pros: {
         Row: {
           auth_user_id: string | null
@@ -480,6 +560,9 @@ export type Database = {
           service_area: string | null
           square_connected: boolean
           stripe_account_id: string | null
+          stripe_charges_enabled: boolean
+          stripe_details_submitted: boolean
+          stripe_payouts_enabled: boolean
           trade: string
         }
         Insert: {
@@ -503,6 +586,9 @@ export type Database = {
           service_area?: string | null
           square_connected?: boolean
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
+          stripe_details_submitted?: boolean
+          stripe_payouts_enabled?: boolean
           trade: string
         }
         Update: {
@@ -526,6 +612,9 @@ export type Database = {
           service_area?: string | null
           square_connected?: boolean
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
+          stripe_details_submitted?: boolean
+          stripe_payouts_enabled?: boolean
           trade?: string
         }
         Relationships: []

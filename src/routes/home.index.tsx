@@ -5,6 +5,7 @@ import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Toast } fro
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
+import { startInvoiceCheckout } from "@/lib/stripe-connect";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard, type HomeownerRow } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
@@ -233,34 +234,23 @@ function HomeOverview() {
             <Eyebrow accent="indigo">Invoices</Eyebrow>
             <div className="mt-3 divide-y divide-line">
               {invoices.map((inv) => (
-                <div key={inv.id} className="py-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-ink truncate">
-                      {inv.pros?.business ?? "Your pro"}
-                    </div>
-                    <div className="text-xs text-muted truncate">
-                      {inv.items[0]?.description ?? ""}
-                      {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="font-bold text-ink tnum">{formatMoney(Number(inv.total))}</div>
-                    {inv.status === "paid" ? (
-                      <Pill accent="indigo">Paid</Pill>
-                    ) : isOverdue(inv) ? (
-                      <Pill accent="amber">Overdue</Pill>
-                    ) : (
-                      <Pill accent="ink">Open</Pill>
-                    )}
-                  </div>
-                </div>
+                <InvoiceRow
+                  key={inv.id}
+                  inv={inv}
+                  onPaid={async () => {
+                    if (home) setInvoices(await listInvoicesForHome(home.id));
+                    setToast("Payment complete");
+                  }}
+                  onError={(msg) => setToast(msg)}
+                />
               ))}
             </div>
             <p className="mt-3 text-xs text-muted">
-              Sent by your pros. Pay them the way you always do; this is just your record.
+              Sent by your pros. Pay securely through HomesBrain when your pro has payments turned on.
             </p>
           </Card>
         )}
+
 
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
@@ -311,6 +301,68 @@ function HomeOverview() {
 
       {toast && <Toast>{toast}</Toast>}
     </HomeShell>
+  );
+}
+
+function InvoiceRow({
+  inv,
+  onPaid,
+  onError,
+}: {
+  inv: HomeInvoice;
+  onPaid: () => void | Promise<void>;
+  onError: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const canPay = inv.status === "open" && !!inv.pros?.stripe_charges_enabled;
+  async function pay() {
+    setBusy(true);
+    try {
+      const { url } = await startInvoiceCheckout(inv.id);
+      window.location.href = url;
+    } catch (e) {
+      setBusy(false);
+      onError(e instanceof Error ? e.message : "Couldn't start payment.");
+    }
+  }
+  // On return with ?paid=<invoiceId>, refresh the invoice list once.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search).get("paid");
+    if (q === inv.id) {
+      onPaid();
+      const url = new URL(window.location.href);
+      url.searchParams.delete("paid");
+      window.history.replaceState({}, "", url.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="py-3 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className="font-semibold text-ink truncate">{inv.pros?.business ?? "Your pro"}</div>
+        <div className="text-xs text-muted truncate">
+          {inv.items[0]?.description ?? ""}
+          {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="font-bold text-ink tnum">{formatMoney(Number(inv.total))}</div>
+        {inv.status === "paid" ? (
+          <Pill accent="indigo">Paid</Pill>
+        ) : isOverdue(inv) ? (
+          <Pill accent="amber">Overdue</Pill>
+        ) : (
+          <Pill accent="ink">Open</Pill>
+        )}
+        {canPay && (
+          <Btn variant="indigo" size="sm" loading={busy} onClick={pay}>
+            Pay
+          </Btn>
+        )}
+      </div>
+    </div>
   );
 }
 
