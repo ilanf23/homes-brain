@@ -1250,28 +1250,15 @@ function NewJob() {
                           </button>
                         );
                       })}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedEquipmentId("");
-                          setEditDetails(false);
-                          setEqType("");
-                          setEqMake("");
-                          setEqModel("");
-                          setWarrantyUntil("");
-                        }}
-                        aria-pressed={!selectedEquipmentId}
-                        className={`pressable w-full text-left rounded-xl border border-dashed px-4 py-3 transition-all duration-200 min-h-16 flex items-center gap-3 ${
-                          !selectedEquipmentId
-                            ? "border-indigo bg-indigobg/50 text-indigo"
-                            : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
-                        }`}
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo text-lg font-bold leading-none">
-                          +
-                        </span>
-                        <span className="font-semibold text-sm">Add a new unit</span>
-                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <div className="h-px flex-1 bg-line" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo">
+                        New
+                      </span>
+                      <div className="h-px flex-1 bg-line" />
+
                     </div>
 
                     {selectedEquipmentId && applianceHistory.length > 0 && (
