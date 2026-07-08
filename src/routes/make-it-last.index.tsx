@@ -46,59 +46,6 @@ export const Route = createFileRoute("/make-it-last/")({
 });
 
 
-type Item = {
-  slug: string;
-  label: string;
-  neglected: number;
-  maintained: number;
-  task: string;
-};
-
-const ITEMS: Item[] = [
-  {
-    slug: "water-heater",
-    label: "Water heater",
-    neglected: 10,
-    maintained: 15,
-    task: "Flush the tank yearly and replace the anode rod every 3 to 5 years. Florida hard water makes this matter more.",
-  },
-  {
-    slug: "central-ac",
-    label: "Central AC",
-    neglected: 12,
-    maintained: 18,
-    task: "Service twice a year, keep the coils clean, change filters. Florida heat and humidity are hard on it.",
-  },
-  {
-    slug: "roof",
-    label: "Roof",
-    neglected: 15,
-    maintained: 25,
-    task: "Inspect annually and after storms, and keep attic ventilation good.",
-  },
-  {
-    slug: "dryer",
-    label: "Dryer",
-    neglected: 8,
-    maintained: 13,
-    task: "Clean the full vent line yearly, not just the lint trap. It is also a fire risk.",
-  },
-  {
-    slug: "dishwasher",
-    label: "Dishwasher",
-    neglected: 9,
-    maintained: 12,
-    task: "Clean the filter monthly and run a descaler in hard water.",
-  },
-  {
-    slug: "water-softener",
-    label: "Water softener",
-    neglected: 10,
-    maintained: 15,
-    task: "Keep the salt topped up and service the resin bed.",
-  },
-];
-
 type BrowseItem = { slug: string; label: string; Icon: LucideIcon };
 type BrowseGroup = { title: string; items: BrowseItem[] };
 
