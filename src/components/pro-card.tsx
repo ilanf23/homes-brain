@@ -80,13 +80,15 @@ export function ProCard({
 
       {!compact && (
         <div className="mt-3 flex flex-col gap-1.5 text-sm">
-          <a
-            href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-            className="inline-flex items-center gap-1.5 text-ink hover:text-tealdark transition-colors w-fit"
-          >
-            <Phone size={14} strokeWidth={2} />
-            <span className="tnum">{pro.phone}</span>
-          </a>
+          {pro.phone && (
+            <a
+              href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
+              className="inline-flex items-center gap-1.5 text-ink hover:text-tealdark transition-colors w-fit"
+            >
+              <Phone size={14} strokeWidth={2} />
+              <span className="tnum">{pro.phone}</span>
+            </a>
+          )}
           {pro.website && (
             <a
               href={pro.website}
