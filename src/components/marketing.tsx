@@ -125,22 +125,30 @@ export function MarketingShell({
           <nav aria-label="Main" className="hidden min-[880px]:flex items-center gap-1">
             {NAV_LINKS.map((l) => {
               const isMakeItLast = l.to === "/make-it-last";
+              const isFindPro = l.to === "/pros";
+              const emphasis = isMakeItLast
+                ? "text-sm font-bold text-coral hover:text-coraldark transition-colors px-3 py-2 rounded-full"
+                : isFindPro
+                  ? "text-sm font-bold text-teal hover:text-tealdark transition-colors px-3 py-2 rounded-full"
+                  : "text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full";
+              const activeClass = isMakeItLast
+                ? "text-coraldark"
+                : isFindPro
+                  ? "text-tealdark"
+                  : "text-ink";
               return (
                 <Link
                   key={l.to}
                   to={l.to}
-                  className={
-                    isMakeItLast
-                      ? "text-sm font-bold text-coral hover:text-coraldark transition-colors px-3 py-2 rounded-full"
-                      : "text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full"
-                  }
-                  activeProps={{ className: isMakeItLast ? "text-coraldark" : "text-ink" }}
+                  className={emphasis}
+                  activeProps={{ className: activeClass }}
                 >
                   {l.label}
                 </Link>
               );
             })}
           </nav>
+
 
           <div className="hidden min-[880px]:flex items-center gap-2">
             <Link
