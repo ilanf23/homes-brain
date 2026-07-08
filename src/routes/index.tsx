@@ -17,7 +17,7 @@ import { MiniLifespansPicker } from "@/components/mini-lifespans";
 export const Route = createFileRoute("/")({
   head: () =>
     marketingHead({
-      title: "HomesBrain: The living record for every home.",
+      title: "HomesBrain: Every home remembers.",
       description:
         "Every repair, appliance, and warranty in one place. Built by the pros who fix your home. Owned by you for life.",
       path: "/",
