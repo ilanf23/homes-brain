@@ -292,6 +292,80 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          created_at: string
+          customer_id: string
+          due_date: string | null
+          home_id: string
+          id: string
+          items: Json
+          job_id: string | null
+          note: string | null
+          paid_at: string | null
+          pro_id: string
+          status: string
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          due_date?: string | null
+          home_id: string
+          id?: string
+          items?: Json
+          job_id?: string | null
+          note?: string | null
+          paid_at?: string | null
+          pro_id: string
+          status?: string
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          due_date?: string | null
+          home_id?: string
+          id?: string
+          items?: Json
+          job_id?: string | null
+          note?: string | null
+          paid_at?: string | null
+          pro_id?: string
+          status?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           created_at: string
@@ -544,7 +618,6 @@ export type Database = {
         Args: { p_business: string; p_trade: string }
         Returns: Json
       }
-      get_public_record: { Args: { p_record_id: string }; Returns: Json }
       homeowner_add_equipment:
         | {
             Args: {
@@ -624,7 +697,6 @@ export type Database = {
         Returns: undefined
       }
       lookup_login_method: { Args: { p_email: string }; Returns: string }
-      mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
       pro_serves_home: { Args: { p_home_id: string }; Returns: boolean }
