@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Btn, Card, Field, Input, Pill, Avatar, StepBar } from "@/lib/ui";
 import { TRADES, logEvent } from "@/lib/hb";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Logo, TradeIcon, ShieldCheck } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/signup")({
