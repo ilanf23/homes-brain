@@ -64,55 +64,61 @@ Deno.serve(async (req) => {
 
   const action = body.action ?? "onboard";
 
-  if (action === "onboard") {
-    let accountId = pro.stripe_account_id as string | null;
-    if (!accountId) {
-      // Create the Express connected account. Country is US in v0.
-      const account = await stripe.accounts.create({
-        type: "express",
-        email: pro.email ?? undefined,
-        business_type: "company",
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-        metadata: { pro_id: proId, business: pro.business ?? "" },
+  try {
+    if (action === "onboard") {
+      let accountId = pro.stripe_account_id as string | null;
+      if (!accountId) {
+        // Create the Express connected account. Country is US in v0.
+        const account = await stripe.accounts.create({
+          type: "express",
+          email: pro.email ?? undefined,
+          business_type: "company",
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          metadata: { pro_id: proId, business: pro.business ?? "" },
+        });
+        accountId = account.id;
+        const { error: updErr } = await db
+          .from("pros")
+          .update({ stripe_account_id: accountId })
+          .eq("id", proId);
+        if (updErr) return json({ error: "db_update_failed" }, 500);
+      }
+
+      const origin = body.return_url || body.refresh_url || "https://homesbrain.com";
+      const base = new URL(origin);
+      const returnUrl = `${base.origin}/pro/settings?stripe=return`;
+      const refreshUrl = `${base.origin}/pro/settings?stripe=refresh`;
+
+      const link = await stripe.accountLinks.create({
+        account: accountId,
+        return_url: returnUrl,
+        refresh_url: refreshUrl,
+        type: "account_onboarding",
       });
-      accountId = account.id;
-      const { error: updErr } = await db
-        .from("pros")
-        .update({ stripe_account_id: accountId })
-        .eq("id", proId);
-      if (updErr) return json({ error: "db_update_failed" }, 500);
+
+      return json({ url: link.url, account_id: accountId });
     }
 
-    const origin = body.return_url || body.refresh_url || "https://homesbrain.com";
-    const base = new URL(origin);
-    const returnUrl = `${base.origin}/pro/settings?stripe=return`;
-    const refreshUrl = `${base.origin}/pro/settings?stripe=refresh`;
+    if (action === "refresh") {
+      if (!pro.stripe_account_id) return json({ error: "no_account" }, 400);
+      const account = await stripe.accounts.retrieve(pro.stripe_account_id);
+      const patch = {
+        stripe_charges_enabled: !!account.charges_enabled,
+        stripe_payouts_enabled: !!account.payouts_enabled,
+        stripe_details_submitted: !!account.details_submitted,
+      };
+      const { error: updErr } = await db.from("pros").update(patch).eq("id", proId);
+      if (updErr) return json({ error: "db_update_failed" }, 500);
+      return json({ ...patch, account_id: pro.stripe_account_id });
+    }
 
-    const link = await stripe.accountLinks.create({
-      account: accountId,
-      return_url: returnUrl,
-      refresh_url: refreshUrl,
-      type: "account_onboarding",
-    });
-
-    return json({ url: link.url, account_id: accountId });
+    return json({ error: "unknown_action" }, 400);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "stripe_error";
+    console.error("stripe-connect error:", msg);
+    return json({ error: "stripe_error", detail: msg }, 500);
   }
-
-  if (action === "refresh") {
-    if (!pro.stripe_account_id) return json({ error: "no_account" }, 400);
-    const account = await stripe.accounts.retrieve(pro.stripe_account_id);
-    const patch = {
-      stripe_charges_enabled: !!account.charges_enabled,
-      stripe_payouts_enabled: !!account.payouts_enabled,
-      stripe_details_submitted: !!account.details_submitted,
-    };
-    const { error: updErr } = await db.from("pros").update(patch).eq("id", proId);
-    if (updErr) return json({ error: "db_update_failed" }, 500);
-    return json({ ...patch, account_id: pro.stripe_account_id });
-  }
-
-  return json({ error: "unknown_action" }, 400);
 });
