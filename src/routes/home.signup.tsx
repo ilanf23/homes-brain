@@ -119,6 +119,18 @@ function HomeownerSignup() {
             </div>
           ) : (
             <div className="space-y-4">
+              <GoogleAuthButton
+                busy={busy}
+                onError={setErr}
+                onBusyChange={setBusy}
+                stashPending={() => {
+                  localStorage.setItem(
+                    PENDING_KEY,
+                    JSON.stringify({ name: name.trim(), address: address.trim(), consent }),
+                  );
+                }}
+              />
+              <OrDivider />
               <Field label="Your name (optional)">
                 <Input
                   value={name}
