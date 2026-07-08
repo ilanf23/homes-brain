@@ -133,13 +133,15 @@ function ProProfile() {
             >
               Contact this pro
             </Btn>
-            <a
-              href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-soft transition-colors"
-            >
-              <Phone size={16} strokeWidth={2} />
-              <span className="tnum">{pro.phone}</span>
-            </a>
+            {pro.phone && (
+              <a
+                href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-soft transition-colors"
+              >
+                <Phone size={16} strokeWidth={2} />
+                <span className="tnum">{pro.phone}</span>
+              </a>
+            )}
           </div>
         </header>
 
@@ -154,14 +156,16 @@ function ProProfile() {
               <ContactRow icon={<MapPin size={14} strokeWidth={2} />}>
                 {pro.city}, St. Johns County, FL
               </ContactRow>
-              <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
-                <a
-                  href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-                  className="text-ink hover:text-tealdark transition-colors tnum"
-                >
-                  {pro.phone}
-                </a>
-              </ContactRow>
+              {pro.phone && (
+                <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
+                  <a
+                    href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
+                    className="text-ink hover:text-tealdark transition-colors tnum"
+                  >
+                    {pro.phone}
+                  </a>
+                </ContactRow>
+              )}
               {pro.website && (
                 <ContactRow icon={<Globe size={14} strokeWidth={2} />}>
                   <a
@@ -174,7 +178,7 @@ function ProProfile() {
                   </a>
                 </ContactRow>
               )}
-              {pro.socials?.facebook && (
+              {typeof pro.socials?.facebook === "string" && (
                 <ContactRow icon={<Facebook size={14} strokeWidth={2} />}>
                   <a
                     href={pro.socials.facebook}
@@ -186,7 +190,7 @@ function ProProfile() {
                   </a>
                 </ContactRow>
               )}
-              {pro.socials?.instagram && (
+              {typeof pro.socials?.instagram === "string" && (
                 <ContactRow icon={<Instagram size={14} strokeWidth={2} />}>
                   <a
                     href={pro.socials.instagram}
