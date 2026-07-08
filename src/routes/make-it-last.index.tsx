@@ -75,6 +75,19 @@ function MakeItLast() {
   const [query, setQuery] = useState("");
 
   const allEntries = useMemo(() => allBrowseEntries(), []);
+
+  // Total years of extra life across every two-lifespans guide. Derived so it
+  // stays honest as guides are added or numbers change in the source data.
+  const totalYearsGained = useMemo(
+    () =>
+      allEntries.reduce(
+        (sum, e) => (e.payoff.kind === "gain" ? sum + e.payoff.years : sum),
+        0,
+      ),
+    [allEntries],
+  );
+  const heroCount = useCountUp(totalYearsGained, "hero-total", 1400);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return allEntries.filter((e) => {
@@ -84,35 +97,87 @@ function MakeItLast() {
     });
   }, [allEntries, filter, query]);
 
+  function scrollToBrowse(e: React.MouseEvent) {
+    e.preventDefault();
+    document
+      .getElementById("browse")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <MarketingShell mobileCta={{ label: "Start free record", to: "/home/signup", variant: "coral" }}>
-      {/* Hero */}
-      <section className="mx-auto max-w-3xl px-5 pt-16 pb-8 text-center">
+    <MarketingShell mobileCta={null}>
+      {/* Hero: one big honest number, calm emotional hook, then the house. */}
+      <section className="mx-auto max-w-3xl px-5 pt-10 sm:pt-16 pb-6 text-center">
         <Eyebrow accent="coral">Make it last</Eyebrow>
-        <h1 className="mt-4 text-4xl sm:text-6xl tracking-tight text-ink leading-[1.06]">
+        <h1 className="mt-4 text-[2rem] leading-[1.1] sm:text-6xl sm:leading-[1.06] tracking-tight text-ink">
           Everything in your home has two lifespans.
           <span className="block text-coral">We show you the longer one.</span>
         </h1>
-        <p className="mt-6 text-lg text-muted">
-          Tap around the house. See how many years you're leaving on the table, backed by real
-          maintenance data.
+        <p className="mt-4 sm:mt-5 text-base sm:text-lg text-muted">
+          Your home is aging faster than it has to.
         </p>
+
+        {/* Big number moment */}
+        <div className="mt-8 sm:mt-10">
+          <div
+            className="relative mx-auto max-w-xl rounded-3xl bg-coralbg border border-coral/25 px-5 py-8 sm:px-8 sm:py-10 overflow-hidden"
+            aria-label={`${totalYearsGained} plus years of extra life`}
+          >
+            {/* subtle radial coral wash, decorative only */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-70"
+              style={{
+                background:
+                  "radial-gradient(80% 60% at 50% 0%, rgba(194,70,31,0.14), transparent 70%)",
+              }}
+              aria-hidden="true"
+            />
+            <div className="relative">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-coraldark">
+                <Sparkles size={13} /> Hidden in your home
+              </div>
+              <div className="mt-3 flex items-baseline justify-center gap-2 sm:gap-3">
+                <span className="tnum text-6xl sm:text-8xl font-bold text-coral leading-none tabular-nums">
+                  {heroCount}
+                </span>
+                <span className="text-3xl sm:text-5xl font-bold text-coral leading-none">
+                  +
+                </span>
+                <span className="text-lg sm:text-2xl font-semibold text-coraldark">
+                  years
+                </span>
+              </div>
+              <p className="mt-4 text-base sm:text-lg text-ink leading-snug">
+                of extra life hiding in your home right now.
+              </p>
+              <p className="mt-2 text-xs sm:text-sm text-muted">
+                Add up every system below. That is what maintenance buys you back.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 sm:mt-8 hidden sm:flex items-center justify-center gap-2 text-xs text-muted">
+          <ArrowDown size={14} />
+          <span>Tap the house to see where the years are hiding.</span>
+        </div>
       </section>
 
       {/* Interactive house */}
-      <section className="pb-16">
-        <div className="mx-auto max-w-6xl px-5">
+      <section className="pb-14 sm:pb-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-5">
           <InteractiveHouse />
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <div className="mt-8 hidden sm:flex flex-wrap justify-center gap-3">
             <Link to="/home/pros">
               <Btn variant="coral">Book a pro</Btn>
             </Link>
-            <a href="#browse">
+            <a href="#browse" onClick={scrollToBrowse}>
               <Btn variant="ghost">Browse all systems</Btn>
             </a>
           </div>
         </div>
       </section>
+
 
       {/* Browse: filterable, stat-forward grid */}
       <section id="browse" className="border-t border-line bg-soft py-20 scroll-mt-24">
