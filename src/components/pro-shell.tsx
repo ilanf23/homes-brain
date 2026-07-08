@@ -56,7 +56,7 @@ export function useProGuard() {
       }
       const { data } = await supabase
         .from("pros")
-        .select("id,business,trade,service_area,logo,google_place_id,google_rating,plan")
+        .select("id,business,owner_first_name,trade,service_area,logo,google_place_id,google_rating,plan")
         .eq("auth_user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
