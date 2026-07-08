@@ -44,7 +44,12 @@ type CustomerOpt = {
   phone: string | null;
   email: string | null;
   home_id: string;
-  homes: { address: string; lat: number | null; lng: number | null } | null;
+  homes: {
+    address: string;
+    lat: number | null;
+    lng: number | null;
+    geocoded_at: string | null;
+  } | null;
 };
 type ApplianceOpt = {
   id: string;
