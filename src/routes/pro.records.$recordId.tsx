@@ -81,7 +81,6 @@ function RecordDetail() {
 
   const job = record.jobs;
   const claimed = !!job?.homes?.claimed_at;
-  const publicUrl = buildRecordUrl(record.id);
 
   // The journey the record travels - each step lights up as it happens.
   const steps: { label: string; at: string | null }[] = [
