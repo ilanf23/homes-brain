@@ -681,7 +681,7 @@ function NewJob() {
                         {locationMatch.name}
                       </div>
                       <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
-                        At your current location
+                        This matches your address
                       </div>
                     </div>
                     <svg
