@@ -29,6 +29,7 @@ import { Logo } from "@/components/svg";
 export type ProRow = {
   id: string;
   business: string;
+  owner_first_name: string | null;
   trade: string;
   service_area: string | null;
   logo: string | null;
