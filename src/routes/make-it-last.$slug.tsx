@@ -168,15 +168,21 @@ function ImpactPill({ impact }: { impact?: "High" | "Medium" | "Low" }) {
 function SectionHeading({
   id,
   icon: Icon,
+  tintBg,
+  tintFg,
   children,
 }: {
   id: string;
   icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  tintBg?: string;
+  tintFg?: string;
   children: React.ReactNode;
 }) {
+  const bg = tintBg ?? "bg-coralbg";
+  const fg = tintFg ?? "text-coraldark";
   return (
     <div id={id} className="scroll-mt-32 flex items-center gap-3">
-      <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+      <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${bg} ${fg}`}>
         <Icon size={20} strokeWidth={2.25} />
       </div>
       <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">{children}</h2>
