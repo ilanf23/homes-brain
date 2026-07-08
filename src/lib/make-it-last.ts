@@ -263,23 +263,47 @@ export const GUIDES: Record<string, Guide> = {
       "A dishwasher lasts about 9 to 12 years. Cleaning the filter monthly and descaling in hard water keeps it draining and cleaning well.",
     quickAnswer:
       "A dishwasher lasts about 9 to 12 years. Cleaning the filter monthly and running a descaler in hard water keeps it draining and cleaning well.",
+    overview:
+      "A dishwasher is one of the easiest appliances to keep alive. A clean filter and the occasional descale do most of the work, especially against Florida hard water. Here is how long it lasts, what protects it, and the most reliable brands.",
     neglected: 9,
     maintained: 12,
-    maintenance: [
-      { task: "Clean the filter", frequency: "Monthly", effect: "Prevents drainage and odor issues." },
-      { task: "Run a descaler or dishwasher cleaner", frequency: "Regularly, especially in hard water", effect: "Stops scale from clogging the spray arms and pump." },
-      { task: "Scrape, do not pre-rinse", frequency: "Every load", effect: "The detergent needs food to grab onto to work well." },
-      { task: "Check and clean the spray arms", frequency: "Every few months", effect: "Restores cleaning power." },
+    brands: [
+      { name: "Bosch", note: "Most reliable for over a decade, very low service rates.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "Miele", note: "Premium and long lasting.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "KitchenAid", note: "Reliable and well built.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
     ],
+    maintenance: [
+      { task: "Clean the filter", frequency: "Monthly", effect: "Prevents drainage and odor issues.", impact: "High" },
+      { task: "Run a descaler or dishwasher cleaner", frequency: "Regularly, especially in hard water", effect: "Stops scale from clogging the spray arms and pump.", impact: "High" },
+      { task: "Scrape, do not pre-rinse", frequency: "Every load", effect: "The detergent needs food to grab onto to work well.", impact: "Low" },
+      { task: "Check and clean the spray arms", frequency: "Every few months", effect: "Restores cleaning power.", impact: "Medium" },
+    ],
+    signs: [
+      "Dishes come out gritty or spotty",
+      "Standing water in the bottom",
+      "Not draining fully",
+      "An odor that will not clear",
+    ],
+    repairOrReplace:
+      "Under 9 years, most parts are worth replacing. Past 10 with a pump or control board failure, replace.",
     facts: [
       { k: "Expected life", v: "9 to 12 years" },
       { k: "Common failure", v: "Pump, drain, control board" },
+    ],
+    faqs: [
+      { q: "How often should I clean the dishwasher filter?", a: "Monthly, to prevent drainage and odor problems." },
+      { q: "Which dishwasher brand is most reliable?", a: "Bosch, followed by Miele and KitchenAid." },
+      { q: "Should I pre rinse my dishes?", a: "No, just scrape. The detergent needs some food to grab onto to work well." },
+      { q: "Why is my dishwasher not draining?", a: "Usually a clogged filter or drain hose." },
+      { q: "Should I repair or replace my dishwasher?", a: "If it is over 9 to 10 years and the repair is a large share of a new one, replace." },
     ],
     floridaNote:
       "Hard water scale builds fast here, so a regular descale is one of the highest-return chores you can do.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Consumer Reports: most reliable kitchen appliances", url: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/" },
     ],
+
   },
 
   "water-softener": {
