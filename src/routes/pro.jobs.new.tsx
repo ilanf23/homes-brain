@@ -1252,14 +1252,16 @@ function NewJob() {
                       })}
                     </div>
 
-                    <div className="flex items-center gap-3 pt-1">
-                      <div className="h-px flex-1 bg-line" />
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo">
-                        New
-                      </span>
-                      <div className="h-px flex-1 bg-line" />
+                    {!selectedEquipmentId && (
+                      <div className="flex items-center gap-3 pt-1">
+                        <div className="h-px flex-1 bg-line" />
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo">
+                          New
+                        </span>
+                        <div className="h-px flex-1 bg-line" />
+                      </div>
+                    )}
 
-                    </div>
 
                     {selectedEquipmentId && applianceHistory.length > 0 && (
                       <div className="rounded-xl bg-soft px-3 py-2.5">
