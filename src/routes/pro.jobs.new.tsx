@@ -1522,6 +1522,11 @@ function NewJob() {
                 <p className="mt-2 text-sm text-muted">
                   Your customer will see it in their inbox and texts.
                 </p>
+                {billedAmount != null && (
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-sm font-semibold text-indigo">
+                    Billed {formatMoney(billedAmount)} · they can pay it from their home page
+                  </div>
+                )}
                 {recordUrl && (
                   <button
                     onClick={copyUrl}
