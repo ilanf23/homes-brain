@@ -135,15 +135,48 @@ function NewJob() {
 
   useEffect(() => {
     if (!proId) return;
+    let cancelled = false;
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
-
+        .select("id,name,phone,email,home_id,homes(address,lat,lng,geocoded_at)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
-      setExisting((c ?? []) as unknown as CustomerOpt[]);
+      const rows = (c ?? []) as unknown as CustomerOpt[];
+      if (cancelled) return;
+      setExisting(rows);
+
+      // Lazily geocode any linked homes that don't have coords yet so the
+      // GPS-based customer recommendation can start working without a reload.
+      // Paced ~1s apart to stay polite to the geocoding API.
+      const targets = rows.filter((r) => r.homes && !r.homes.geocoded_at && r.home_id);
+      for (let i = 0; i < targets.length; i++) {
+        if (cancelled) return;
+        if (i > 0) await new Promise((r) => setTimeout(r, 1000));
+        const t = targets[i];
+        if (!t.homes) continue;
+        const coords = await geocodeHome(t.home_id, t.homes.address);
+        if (cancelled) return;
+        setExisting((prev) =>
+          prev.map((p) =>
+            p.id === t.id && p.homes
+              ? {
+                  ...p,
+                  homes: {
+                    ...p.homes,
+                    lat: coords?.lat ?? null,
+                    lng: coords?.lng ?? null,
+                    geocoded_at: new Date().toISOString(),
+                  },
+                }
+              : p,
+          ),
+        );
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [proId]);
 
   /* Detect the pro's current position on mount: keep the raw coords to bias
