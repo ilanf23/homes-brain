@@ -155,6 +155,11 @@ function HomeOverview() {
       )}
 
       <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
+        This record sells as a $49 seller history report when homes change hands. Yours is free for
+        life because your pros write it.
+      </div>
+
+
 
 
       <div className="anim-fade-up d-1 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
