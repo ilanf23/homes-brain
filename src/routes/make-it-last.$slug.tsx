@@ -710,7 +710,11 @@ function GuidePage() {
                     <div>
                       <div className="text-sm font-semibold text-ink">{o.label}</div>
                       <div className="mt-0.5 text-xs text-muted">
-                        {o.neglected} vs {o.maintained} years
+                        {o.expectedLifeOnly
+                          ? "Built to last"
+                          : o.cadenceOnly
+                          ? "Ongoing cadence"
+                          : `${o.neglected} vs ${o.maintained} years`}
                       </div>
                     </div>
                     <ChevronRight size={18} className="text-muted group-hover:text-coral transition-colors" />
