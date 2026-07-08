@@ -318,17 +318,30 @@ function NewJob() {
     : existing;
   const hasExactMatch = existing.some((c) => c.name?.trim().toLowerCase() === q);
 
-  // Existing customer whose home address matches the pro's current GPS location.
-  // Used to prefill the name at the top of the customer step ("At your current
-  // location: Jane Doe"), so the pro just taps to confirm.
-  const locationMatch =
-    loc.status === "ready"
-      ? existing.find(
-          (c) =>
-            c.homes?.address &&
-            normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
-        )
-      : undefined;
+  // Existing customer whose home matches the pro's current GPS location.
+  // Prefer distance (haversine, <60m) since address strings vary in format
+  // and some homes have no address on file at all; fall back to a
+  // normalized-address match. Used to suggest the name at the top of the
+  // customer step so the pro just taps to confirm.
+  const locationMatch = (() => {
+    if (loc.status !== "ready") return undefined;
+    if (gps) {
+      let best: { c: CustomerOpt; d: number } | null = null;
+      for (const c of existing) {
+        const h = c.homes;
+        if (!h || h.lat == null || h.lng == null) continue;
+        const d = haversineMeters(gps, { lat: h.lat, lng: h.lng });
+        if (d <= 60 && (!best || d < best.d)) best = { c, d };
+      }
+      if (best) return best.c;
+    }
+    return existing.find(
+      (c) =>
+        c.homes?.address &&
+        normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
+    );
+  })();
+
 
 
   function pickExisting(c: CustomerOpt) {
