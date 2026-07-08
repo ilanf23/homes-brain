@@ -157,13 +157,16 @@ function ProProfile() {
                 {pro.city}, St. Johns County, FL
               </ContactRow>
               <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
-                <a
-                  href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-                  className="text-ink hover:text-tealdark transition-colors tnum"
-                >
-                  {pro.phone}
-                </a>
-              </ContactRow>
+              {pro.phone && (
+                <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
+                  <a
+                    href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
+                    className="text-ink hover:text-tealdark transition-colors tnum"
+                  >
+                    {pro.phone}
+                  </a>
+                </ContactRow>
+              )}
               {pro.website && (
                 <ContactRow icon={<Globe size={14} strokeWidth={2} />}>
                   <a
@@ -176,7 +179,7 @@ function ProProfile() {
                   </a>
                 </ContactRow>
               )}
-              {pro.socials?.facebook && (
+              {typeof pro.socials?.facebook === "string" && (
                 <ContactRow icon={<Facebook size={14} strokeWidth={2} />}>
                   <a
                     href={pro.socials.facebook}
@@ -188,7 +191,7 @@ function ProProfile() {
                   </a>
                 </ContactRow>
               )}
-              {pro.socials?.instagram && (
+              {typeof pro.socials?.instagram === "string" && (
                 <ContactRow icon={<Instagram size={14} strokeWidth={2} />}>
                   <a
                     href={pro.socials.instagram}
