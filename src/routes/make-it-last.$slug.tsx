@@ -370,6 +370,99 @@ function GuidePage() {
             </div>
           </header>
 
+          {/* Visual hero band: medallion + big payoff + graphic two-lifespans */}
+          <section
+            className={`mt-8 rounded-3xl border border-line ${cat.bg} p-6 sm:p-8 overflow-hidden`}
+            aria-label="At a glance"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div
+                className={`flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white ${cat.fg} shrink-0 shadow-sm`}
+              >
+                <CatIcon size={44} strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className={`text-[11px] font-bold uppercase tracking-wider ${cat.fg}`}>
+                  {cat.label}
+                </div>
+                {payoff.kind === "gain" ? (
+                  <>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="tnum text-6xl sm:text-7xl font-bold text-coral leading-none">
+                        +{heroCount}
+                      </span>
+                      <span className="text-lg font-semibold text-ink">years</span>
+                    </div>
+                    <p className="mt-2 text-sm sm:text-base text-ink/80">
+                      Maintained lasts <strong className="text-ink">{g.maintained} years</strong>,
+                      left alone about <strong className="text-ink">{g.neglected}</strong>. That
+                      gap is yours to keep.
+                    </p>
+                  </>
+                ) : payoff.kind === "life" ? (
+                  <>
+                    <div className="mt-1 text-4xl sm:text-5xl font-bold text-coral leading-tight">
+                      Built to last
+                    </div>
+                    <p className="mt-2 text-sm sm:text-base text-ink/80">
+                      {g.expectedLife ?? g.quickAnswer}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-1 text-4xl sm:text-5xl font-bold text-coral leading-tight">
+                      Protect it
+                    </div>
+                    <p className="mt-2 text-sm sm:text-base text-ink/80">
+                      This one is a cadence, not a countdown. Keep the schedule and you stay
+                      protected.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Graphic two-lifespans bars, only when meaningful */}
+            {payoff.kind === "gain" && (
+              <div className="mt-6 rounded-2xl bg-white/70 backdrop-blur p-4 sm:p-5">
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                        Left alone
+                      </div>
+                      <div className="tnum text-sm font-bold text-muted">
+                        {g.neglected} yrs
+                      </div>
+                    </div>
+                    <div className="h-3 rounded-full bg-soft overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-line transition-all duration-700"
+                        style={{ width: `${neglectedPct}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">
+                        Maintained
+                      </div>
+                      <div className="tnum text-sm font-bold text-coraldark">
+                        {g.maintained} yrs
+                      </div>
+                    </div>
+                    <div className="h-3 rounded-full bg-coralbg overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-coral transition-all duration-700"
+                        style={{ width: `${maintainedPct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* Quick answer */}
           <section className="mt-8 rounded-3xl bg-coralbg p-6 sm:p-8 border border-coral/20">
             <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">Quick answer</div>
