@@ -457,7 +457,6 @@ function NewJob() {
     setStage("customer");
   }
 
-  const canCustomer = selectedCustomerId || (newCustomer.name && newCustomer.address && consent);
   const canWork = whatDone.length > 0;
   const showPreview = stage === "work" || stage === "review";
 
