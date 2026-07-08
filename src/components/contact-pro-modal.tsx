@@ -80,7 +80,7 @@ export function ContactProModal({
           source,
         });
       if (insertError) throw insertError;
-      logEvent("service_request_submitted", {
+      logEvent(null, "service_request_submitted", {
         pro_slug: pro.slug,
         trade: trade ?? null,
         source,
