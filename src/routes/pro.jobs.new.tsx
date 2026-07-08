@@ -559,7 +559,7 @@ function NewJob() {
     }
     setSelectedCustomerId("");
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
-    setConsent(false);
+    
     setQuery("");
     setLocAddress("");
     setResolved(null);
