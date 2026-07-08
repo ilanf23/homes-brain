@@ -140,9 +140,10 @@ function FilterChip({
       aria-pressed={active}
       className={`pressable rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
         active
-          ? "bg-coral text-(--on-accent)"
+          ? "bg-teal text-(--on-accent)"
           : "bg-soft text-ink hover:bg-line"
       }`}
+
     >
       {children}
     </button>
