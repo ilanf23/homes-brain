@@ -113,10 +113,49 @@ function HomeOverview() {
         sub="Every home remembers. Your pros write the record, you own it."
       />
 
+      {justPaidInvoice && (
+        <Card className="anim-fade-up mb-6 border-indigo/30 bg-indigobg/60">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="font-semibold text-indigo">Paid ✓</div>
+              <div className="text-sm text-ink">
+                {formatMoney(Number(justPaidInvoice.total))} to{" "}
+                {justPaidInvoice.pros?.business ?? "your pro"}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {openInvoices.length > 0 && (
+        <Card className="anim-fade-up mb-6 border-indigo/30">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <Eyebrow accent="indigo">Amount due</Eyebrow>
+            {openInvoices.length > 1 && (
+              <div className="text-sm text-muted">
+                Total due{" "}
+                <span className="font-bold text-ink tnum">{formatMoney(totalDue)}</span>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 space-y-3">
+            {openInvoices.map((inv) => (
+              <AmountDueRow
+                key={inv.id}
+                inv={inv}
+                onPaid={async () => {
+                  if (home) setInvoices(await listInvoicesForHome(home.id));
+                  setToast("Payment complete");
+                }}
+                onError={(msg) => setToast(msg)}
+              />
+            ))}
+          </div>
+        </Card>
+      )}
+
       <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
-        This record sells as a $49 seller history report when homes change hands. Yours is free for
-        life because your pros write it.
-      </div>
+
 
       <div className="anim-fade-up d-1 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {(
