@@ -54,13 +54,24 @@ function NewJob() {
   const [addByHand, setAddByHand] = useState(false);
 
   // Geolocation ("You're at …")
+  type NearHome = { c: CustomerOpt; meters: number };
   type LocState =
     | { status: "idle" }
     | { status: "locating" }
-    | { status: "ready"; address: string; match: CustomerOpt | null }
+    | {
+        status: "ready";
+        address: string;
+        lat: number;
+        lng: number;
+        accuracy: number; // meters
+        match: CustomerOpt | null;
+        nearest: NearHome[];
+      }
     | { status: "denied" }
     | { status: "unavailable" };
   const [loc, setLoc] = useState<LocState>({ status: "idle" });
+  const [showNearby, setShowNearby] = useState(false);
+
 
 
   // Work
