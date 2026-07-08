@@ -398,6 +398,23 @@ function CustomerDetail() {
     return entries;
   }, [entries, tab]);
 
+  // Soonest upcoming service date across all jobs (falls back to most recent
+  // past date so a "wanted" service that slipped still surfaces).
+  const nextService = useMemo(() => {
+    const dated = jobs
+      .filter((j) => j.next_service_date)
+      .map((j) => ({ date: j.next_service_date as string, what: j.what_done }));
+    if (dated.length === 0) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = dated
+      .filter((d) => d.date >= today)
+      .sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+    if (upcoming) return { ...upcoming, overdue: false };
+    const past = dated.sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+    return { ...past, overdue: true };
+  }, [jobs]);
+
+
   if (!pro || loading) {
     return (
       <ProShell pro={pro} active="customers" wide>
@@ -528,6 +545,19 @@ function CustomerDetail() {
                 }
               />
               <PropertyRow label="Customer since" value={formatDate(customer.created_at)} />
+              <PropertyRow
+                label="Next service"
+                display={
+                  nextService ? (
+                    <Pill accent={nextService.overdue ? "red" : "indigo"}>
+                      {nextService.overdue ? "Overdue · " : ""}
+                      {formatDate(nextService.date)} · {nextService.what}
+                    </Pill>
+                  ) : (
+                    <Pill accent="ink">None scheduled</Pill>
+                  )
+                }
+              />
               <PropertyRow
                 label="Home claimed"
                 display={
@@ -666,6 +696,11 @@ function CustomerDetail() {
                     <div key={j.id} className="py-2.5 first:pt-0 last:pb-0">
                       <div className="text-sm font-semibold text-ink truncate">{j.what_done}</div>
                       <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
+                      {j.next_service_date && (
+                        <div className="mt-1 text-xs font-semibold text-indigo tnum">
+                          Next service {formatDate(j.next_service_date)}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
