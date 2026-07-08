@@ -168,16 +168,24 @@ function NewJob() {
     );
   }, []);
 
-  /* Prefill a new customer's address once GPS resolves, even if it arrives after
-     the pro reached the location slide (high-accuracy GPS can take 5-15s). Only
-     fires for a new customer, only while the field is still empty and untouched,
-     so it never overwrites a typed or picked address. */
+  /* Prefill the location field once GPS resolves, even if it arrives after
+     the pro reached the location slide (high-accuracy GPS can take 5-15s).
+     Fills a new customer's address, or an existing customer's address when
+     nothing is on file. Only fires while the field is still empty and
+     untouched, so it never overwrites a typed or picked address. */
   useEffect(() => {
-    if (stage !== "location" || selectedCustomerId) return;
+    if (stage !== "location") return;
     if (loc.status !== "ready" || addressTouched.current) return;
-    if (newCustomer.address) return;
-    setNewCustomer((n) => ({ ...n, address: loc.address }));
-  }, [stage, selectedCustomerId, loc, newCustomer.address]);
+    if (selectedCustomerId) {
+      if (locAddress) return;
+      setLocAddress(loc.address);
+      setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
+    } else {
+      if (newCustomer.address) return;
+      setNewCustomer((n) => ({ ...n, address: loc.address }));
+    }
+  }, [stage, selectedCustomerId, loc, newCustomer.address, locAddress, gps]);
+
 
   /* When an existing customer is picked, load that home's appliances (with
      last-job info) so the pro can attach this new visit to the same physical
@@ -302,11 +310,23 @@ function NewJob() {
 
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
-    setLocAddress(c.homes?.address ?? "");
-    // On-file address has no fresh coords unless the pro edits + picks a place.
-    setResolved(null);
+    const onFile = c.homes?.address ?? "";
+    addressTouched.current = false;
+    if (onFile) {
+      setLocAddress(onFile);
+      // On-file address has no fresh coords unless the pro edits + picks a place.
+      setResolved(null);
+    } else if (loc.status === "ready") {
+      // No address on file: prefill from GPS so the pro just approves or edits.
+      setLocAddress(loc.address);
+      setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
+    } else {
+      setLocAddress("");
+      setResolved(null);
+    }
     setStage("location");
   }
+
 
   function startNewCustomer(name: string) {
     setSelectedCustomerId("");
@@ -705,8 +725,12 @@ function NewJob() {
                   <Field label="Service address">
                     <AddressField
                       value={locAddress}
-                      onChange={setLocAddress}
+                      onChange={(v) => {
+                        addressTouched.current = true;
+                        setLocAddress(v);
+                      }}
                       onResolve={(r) => {
+                        addressTouched.current = true;
                         setLocAddress(r.address);
                         setResolved(r);
                       }}
@@ -714,6 +738,7 @@ function NewJob() {
                       placeholder="123 Maple St, Austin TX"
                       ariaLabel="Service address"
                     />
+
                   </Field>
 
                   <div className="flex gap-2">
