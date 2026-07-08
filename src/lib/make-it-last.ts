@@ -366,22 +366,46 @@ export const GUIDES: Record<string, Guide> = {
       "A refrigerator lasts about 13 years on average. Coil cleaning and tight door seals are the simplest ways to reach the longer end.",
     quickAnswer:
       "A refrigerator lasts about 13 years on average. Cleaning the condenser coils a couple of times a year and keeping the door seals tight are the simplest ways to reach the longer end.",
+    overview:
+      "A fridge runs around the clock, so the two things that quietly kill it are dirty condenser coils and worn door seals. Both are cheap to fix. Here is how long it lasts, what extends it, and the brands that break down least.",
     neglected: 13,
     maintained: 16,
-    maintenance: [
-      { task: "Clean the condenser coils", frequency: "Twice a year", effect: "Lets the compressor breathe, which is what usually kills the fridge." },
-      { task: "Check and clean the door seals", frequency: "Every few months", effect: "Keeps cold in and the compressor from over-running." },
-      { task: "Keep it level so the doors seal", frequency: "Once", effect: "Small tilts cause seal problems and drainage issues." },
-      { task: "Do not overpack the vents", frequency: "Ongoing", effect: "Blocked vents create warm spots and short-cycle the compressor." },
+    brands: [
+      { name: "Bosch", note: "Top reliability.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "Miele", note: "Premium and long lasting.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "Whirlpool", note: "Best reliability for the price, parts everywhere.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
+      { name: "KitchenAid", note: "Reliable value.", sourceUrl: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/", sourceLabel: "Consumer Reports: most reliable kitchen appliances" },
     ],
+    maintenance: [
+      { task: "Clean the condenser coils", frequency: "Twice a year", effect: "Lets the compressor breathe, which is what usually kills the fridge.", impact: "High" },
+      { task: "Check and clean the door seals", frequency: "Every few months", effect: "Keeps cold in and the compressor from over-running.", impact: "High" },
+      { task: "Keep it level so the doors seal", frequency: "Once", effect: "Small tilts cause seal problems and drainage issues.", impact: "Low" },
+      { task: "Do not overpack the vents", frequency: "Ongoing", effect: "Blocked vents create warm spots and short-cycle the compressor.", impact: "Medium" },
+    ],
+    signs: [
+      "Running constantly",
+      "Warm spots or food spoiling faster",
+      "Frost or condensation building up",
+      "The motor is loud or hot",
+    ],
+    repairOrReplace:
+      "Under 13 years, usually worth repairing. Past that with a compressor failure, replace.",
     facts: [
       { k: "Expected life", v: "About 13 to 16 years" },
       { k: "Common failure", v: "Compressor, seals" },
+    ],
+    faqs: [
+      { q: "How often should I clean refrigerator coils?", a: "Twice a year. Dirty coils are the most common reason a fridge dies early." },
+      { q: "Which refrigerator brands are most reliable?", a: "Bosch and Miele for reliability, Whirlpool and KitchenAid for the best value." },
+      { q: "Why is my fridge running constantly?", a: "Usually dirty coils or worn door seals making it work too hard." },
+      { q: "How long does a refrigerator last?", a: "About 13 years, longer with coil cleaning and good seals." },
+      { q: "Repair or replace a refrigerator?", a: "If it is over 13 years and the compressor fails, replace." },
     ],
     floridaNote:
       "Heat makes the compressor work harder, so coil cleaning matters more in a warm garage or hot kitchen.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Consumer Reports: most reliable kitchen appliances", url: "https://www.consumerreports.org/appliances/most-reliable-kitchen-appliances-a3000811083/" },
     ],
   },
 
@@ -393,28 +417,52 @@ export const GUIDES: Record<string, Guide> = {
       "A pool pump typically lasts about 8 to 12 years and a heater less. Chemistry and cleaning are what keep them from dying early in Florida.",
     quickAnswer:
       "A pool pump typically lasts about 8 to 12 years, and a heater less. Steady water chemistry and regular cleaning are what keep pumps, filters, and heaters from dying early in Florida's near-year-round swim season.",
+    overview:
+      "In Florida a pool runs nearly year round, so the equipment works hard. Steady water chemistry and simple cleaning are what keep a pump, filter, and heater from dying early. Ranges vary widely, so verify for your exact gear.",
     neglected: 8,
     maintained: 12,
     barsLabel: "the pump",
-    maintenance: [
-      { task: "Keep water chemistry balanced", frequency: "Weekly", effect: "The single biggest driver of equipment life." },
-      { task: "Clean the pump basket and filter", frequency: "Regularly", effect: "Protects the motor from strain and premature failure." },
-      { task: "Do not run the pump dry", frequency: "Always", effect: "A few minutes dry can destroy the seals." },
-      { task: "Service the heater before season", frequency: "Yearly", effect: "Catches ignition and heat-exchanger issues early." },
+    brands: [
+      { name: "Pentair", note: "Efficiency leader, IntelliFlo variable speed pumps.", sourceUrl: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward", sourceLabel: "Pool Supply Depot: best variable speed pumps" },
+      { name: "Hayward", note: "Strong efficiency, TriStar VS.", sourceUrl: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward", sourceLabel: "Pool Supply Depot: best variable speed pumps" },
+      { name: "Jandy", note: "Retrofit friendly, FloPro.", sourceUrl: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward", sourceLabel: "Pool Supply Depot: best variable speed pumps" },
     ],
+    maintenance: [
+      { task: "Keep water chemistry balanced", frequency: "Weekly", effect: "The single biggest driver of equipment life.", impact: "High" },
+      { task: "Clean the pump basket and filter", frequency: "Regularly", effect: "Protects the motor from strain and premature failure.", impact: "High" },
+      { task: "Do not run the pump dry", frequency: "Always", effect: "A few minutes dry can destroy the seals.", impact: "High" },
+      { task: "Service the heater before season", frequency: "Yearly", effect: "Catches ignition and heat-exchanger issues early.", impact: "Medium" },
+    ],
+    signs: [
+      "The pump is loud, leaking, or shutting off",
+      "Cloudy water even though it runs",
+      "Weak circulation",
+      "The heater will not fire",
+    ],
+    repairOrReplace:
+      "Seals and baskets are cheap fixes. Replace a pump past 8 to 10 years, and upgrade to variable speed to cut energy cost.",
     facts: [
       { k: "Pump", v: "About 8 to 12 years" },
       { k: "Heater", v: "About 5 to 10 years" },
       { k: "Filter", v: "10+ years" },
       { k: "Common failure", v: "Pump motor, heater" },
     ],
+    faqs: [
+      { q: "How long does a pool pump last?", a: "About 8 to 12 years with good care." },
+      { q: "Which pool pump brands are best?", a: "Pentair, Hayward, and Jandy lead the market." },
+      { q: "Does a variable speed pump save money?", a: "Yes, a high efficiency pump can save hundreds of dollars a year in energy." },
+      { q: "Why did my pool pump fail early?", a: "Usually poor water chemistry or running it dry, which destroys the seals." },
+      { q: "How often should I service the pool heater?", a: "Yearly, before season." },
+    ],
     floridaNote:
       "Near-year-round use and heat mean pool equipment works harder here than in most of the country.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Pool Supply Depot: best variable speed pumps", url: "https://poolsupplydepot.net/blogs/news/best-variable-speed-swimming-pool-pumps-for-2026-pentair-vs-jandy-vs-hayward" },
     ],
     verifyProminent: true,
   },
+
 };
 
 /* Order used for "keep going" internal links and for the browse grid. */
