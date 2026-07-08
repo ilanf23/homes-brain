@@ -833,7 +833,7 @@ function NewJob() {
                       variant="indigo"
                       size="lg"
                       className="flex-1"
-                      disabled={!(newCustomer.name && newCustomer.address && consent)}
+                      disabled={!(newCustomer.name && newCustomer.address)}
                       onClick={() => setStage("work")}
                     >
                       Continue
