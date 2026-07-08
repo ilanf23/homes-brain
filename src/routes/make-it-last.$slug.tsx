@@ -19,6 +19,7 @@ import {
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { MarketingShell, SITE_URL, marketingHead } from "@/components/marketing";
 import { GUIDE_ORDER, getGuide, otherGuides, type Guide } from "@/lib/make-it-last";
+import { getSlugMeta, getCategory, payoffFor, useCountUp } from "@/lib/make-it-last-visuals";
 
 const UPDATED_ISO = "2026-07-01";
 const UPDATED_LABEL = "July 2026";
