@@ -155,27 +155,52 @@ export const GUIDES: Record<string, Guide> = {
       "A Florida asphalt shingle roof typically lasts about 15 to 25 years. Inspections and attic ventilation are what push it to 25.",
     quickAnswer:
       "A Florida asphalt shingle roof typically lasts about 15 to 25 years. Regular inspections and good attic ventilation are what separate a roof that lasts 15 years from one that reaches 25.",
+    overview:
+      "A Florida asphalt roof lives a hard life of sun, heat, and hurricanes. Whether it lasts 15 years or 25 comes down to inspections, ventilation, and catching small problems early. Here is the full picture, plus the shingle brands that hold up.",
     neglected: 15,
     maintained: 25,
-    maintenance: [
-      { task: "Inspect the roof", frequency: "Yearly and after major storms", effect: "Catches lifted shingles and flashing issues while they are still cheap." },
-      { task: "Fix small leaks and lifted shingles early", frequency: "As found", effect: "Prevents decking rot underneath." },
-      { task: "Keep attic ventilation good", frequency: "Ongoing", effect: "Cuts thermal stress that ages shingles from the underside." },
-      { task: "Keep gutters clear", frequency: "Twice a year", effect: "Stops water from backing up under the edge." },
-      { task: "Log the roof age and any wind mitigation", frequency: "Once", effect: "Helps at insurance and resale time." },
+    brands: [
+      { name: "GAF", note: "About 30 percent of the US market, Timberline HDZ is the value leader.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
+      { name: "Owens Corning", note: "Best wind resistance with SureNail, Duration series runs 25 to 30 years.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
+      { name: "CertainTeed", note: "Deepest warranty via SureStart, Landmark line, 40 plus colors.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
+      { name: "IKO", note: "Budget option.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
     ],
+    maintenance: [
+      { task: "Inspect the roof", frequency: "Yearly and after major storms", effect: "Catches lifted shingles and flashing issues while they are still cheap.", impact: "High" },
+      { task: "Fix small leaks and lifted shingles early", frequency: "As found", effect: "Prevents decking rot underneath.", impact: "High" },
+      { task: "Keep attic ventilation good", frequency: "Ongoing", effect: "Cuts thermal stress that ages shingles from the underside.", impact: "High" },
+      { task: "Keep gutters clear", frequency: "Twice a year", effect: "Stops water from backing up under the edge.", impact: "Medium" },
+      { task: "Log the roof age and any wind mitigation", frequency: "Once", effect: "Helps at insurance and resale time.", impact: "Low" },
+    ],
+    signs: [
+      "Curling, cracked, or missing shingles",
+      "Granules collecting in the gutters",
+      "Water stains on ceilings",
+      "Daylight visible in the attic",
+    ],
+    repairOrReplace:
+      "Isolated damage and small leaks are repairable. If shingles are failing across the roof or it is near the end of its range, replace, and get a wind mitigation inspection either way.",
     facts: [
       { k: "Asphalt shingle", v: "15 to 25 years" },
       { k: "Metal", v: "40 to 70 years" },
       { k: "Tile", v: "50+ years" },
       { k: "Common issue", v: "Sun, heat, and storm wear" },
     ],
+    faqs: [
+      { q: "How long does a shingle roof last in Florida?", a: "About 15 to 25 years, depending on maintenance, ventilation, and storm exposure." },
+      { q: "What is the best shingle brand?", a: "GAF, Owens Corning, and CertainTeed lead. Choose based on wind rating and warranty depth." },
+      { q: "Does a wind mitigation inspection help?", a: "Yes, it can lower your Florida insurance and documents your roof's storm resistance." },
+      { q: "What are the signs I need a new roof?", a: "Curling or missing shingles, granules in the gutters, leaks, or daylight in the attic." },
+      { q: "How often should I inspect my roof?", a: "Yearly, and after every major storm." },
+    ],
     floridaNote:
       "UV, heat, humidity, and hurricanes are all hard on shingles. A wind-mitigation inspection can lower your insurance and extend the roof's useful life.",
     sources: [
       { label: "Trust Roofing: shingle roof lifespan in Florida", url: "https://trustroofing.com/blog/shingle-roof-lifespan-in-florida/" },
       { label: "InterNACHI: Florida component life expectancy", url: "https://www.nachi.org/florida-life-expectancy.htm" },
+      { label: "RoofVista: asphalt shingle brands compared", url: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared" },
     ],
+
   },
 
   dryer: {
