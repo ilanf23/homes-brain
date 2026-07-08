@@ -112,6 +112,7 @@ function ProSettings() {
 
   const dirty =
     business !== pro.business ||
+    ownerFirstName !== (pro.owner_first_name ?? "") ||
     trade !== pro.trade ||
     area !== (pro.service_area ?? "") ||
     email !== (prefs?.email ?? "") ||
@@ -122,6 +123,7 @@ function ProSettings() {
     setProfileErr(null);
     const patch = {
       business,
+      owner_first_name: ownerFirstName.trim() || null,
       trade,
       service_area: area,
       email: email.trim() || null,
@@ -131,7 +133,7 @@ function ProSettings() {
     if (error || !data?.length) {
       setProfileErr(error?.message ?? "Couldn't save. Try again.");
     } else {
-      setPro({ ...pro!, business, trade, service_area: area });
+      setPro({ ...pro!, business, owner_first_name: patch.owner_first_name, trade, service_area: area });
       if (prefs) setPrefs({ ...prefs, email: patch.email, phone: patch.phone });
       setToast("Saved");
     }
