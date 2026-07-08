@@ -1,49 +1,27 @@
-# Fix inaccurate geolocation on "Who is this for?"
+## Goal
 
-## Problem
+On the Customer step of `/pro/jobs/new`, when the pro's current GPS location matches an existing customer's home, highlight that customer in the list with a purple treatment and a "Matches your address" label, instead of pinning a separate card at the top and hiding the row from the list.
 
-Two things stack up to make the detected address wrong:
+Also make sure the match actually fires: today it relies on `homes.lat/lng`, and most existing homes have never been geocoded, so the recommendation silently never appears.
 
-1. `navigator.geolocation.getCurrentPosition()` runs with default options, so the browser can return a cached, low-accuracy fix (Wi-Fi/IP based, often hundreds of meters off — kilometers on desktop).
-2. Nominatim reverse geocode then snaps that coarse point to the nearest OSM-known address, which in residential areas can be a neighbor or just the street.
+## Changes (all in `src/routes/pro.jobs.new.tsx`)
 
-The pro then sees one confidently-wrong address and no way to pick the right house.
+1. **Backfill geocodes on page load.** After loading `existing` customers, call `backfillHomeGeocodes` (already in `src/lib/hb.ts`) for any linked homes that have `geocoded_at == null`. Update local state as each home resolves so `locationMatch` can start matching without a reload.
 
-## Fix (frontend only, no schema changes)
+2. **Keep the matched customer inside the main list, lit purple.**
+   - Remove the pinned "This matches your address" card above the search input.
+   - Remove the `.filter((c) => !(locationMatch && ... ))` that hides the matched row from the list.
+   - In the customer row render, when `c.id === locationMatch?.id`, swap the neutral card styles for the indigo treatment: `border-indigo/40 bg-indigobg`, indigo name text, and a small "Matches your address" caption (indigo, uppercase, tracking-wider) under the address.
+   - Sort the matched customer to the top of `filteredCustomers` so it's the first thing the pro sees.
 
-### 1. Request a real GPS fix
+3. **Match logic stays as-is** (GPS haversine < 60m, address-normalize fallback). No changes to how `locationMatch` is computed.
 
-In the geolocation call inside `src/routes/pro.jobs.new.tsx`:
+## Out of scope
 
-- Pass `{ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }` to force a fresh, GPS-preferred fix on mobile.
-- Keep the existing `denied` / `unavailable` fallbacks.
+- No changes to the address step, the DB schema, or any other route.
+- No new match heuristics (still 60m radius + normalized-address fallback).
 
-### 2. Show accuracy and let the pro confirm, don't auto-decide
+## Technical notes
 
-- Read `position.coords.accuracy` (meters) and display it under the detected address, e.g. "within ~15 m" (green under 25 m, amber 25–100 m, red over 100 m).
-- Add a "Not this house?" button on the location card that expands to show the **3 nearest existing customers** (computed by haversine distance from `homes.lat/lng` we already store), each as a big tap card with distance ("28 m away"). One tap selects that customer.
-- Also expose a "None of these — enter address" action that opens the manual form pre-filled with the reverse-geocoded street.
-
-### 3. Loosen the auto-match
-
-Today we auto-select a customer when the reverse-geocoded string equals an existing address via `normalizeAddress`. Change to:
-
-- Auto-select **only** when there is exactly one existing home within 30 m of the GPS point (distance beats string match — Nominatim's string is unreliable).
-- Otherwise show the nearest-customers list described above; never silently pick the wrong one.
-
-### 4. Small UX polish
-
-- While locating, show "Getting a precise location… this takes a few seconds on first use" instead of a bare spinner.
-- Add a "Try again" link if accuracy comes back worse than 100 m, which re-invokes `getCurrentPosition` (a second call often gets a much better fix once GPS warms up).
-
-## Out of scope (call out, don't build)
-
-- Swapping Nominatim for Google/Mapbox reverse geocoding — bigger change, needs an API key and billing decision. Happy to plan separately if the above isn't enough.
-- Google Places autocomplete on the manual address field — same reason.
-
-## Files touched
-
-- `src/routes/pro.jobs.new.tsx` — geolocation options, accuracy display, nearest-customers picker, auto-match rule.
-- `src/lib/hb.ts` — add a small `haversineMeters(a, b)` helper (pure function, no deps).
-
-No backend, migration, or edge function changes. `homes.lat/lng` already exist and are backfilled by `backfillHomeGeocodes`.
+- `backfillHomeGeocodes` already paces requests ~1s apart and stamps `geocoded_at` even on failure, so it won't hammer the geocode function or retry bad addresses.
+- The matched-row purple style reuses the existing `border-indigo/40 bg-indigobg` tokens already used by the pinned card, so no new design tokens.
