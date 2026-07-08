@@ -27,10 +27,11 @@ const UPDATED_ISO = "2026-07-01";
 const UPDATED_LABEL = "July 2026";
 const AREA_SERVED = "St. Johns County, Florida";
 
-type Section = { id: string; label: string };
+type Section = { id: string; label: string; teal?: boolean };
 
-function buildSections(g: Guide): Section[] {
+function buildSections(g: Guide, hasPros: boolean): Section[] {
   const s: Section[] = [];
+  if (hasPros) s.push({ id: "pros", label: "Pros near you", teal: true });
   if (g.overview) s.push({ id: "overview", label: "Overview" });
   if (g.expectedLifeOnly) {
     s.push({ id: "built-to-last", label: "Built to last" });
@@ -48,6 +49,7 @@ function buildSections(g: Guide): Section[] {
   s.push({ id: "sources", label: "Sources" });
   return s;
 }
+
 
 const IMPACT_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
@@ -273,7 +275,9 @@ function GuidePage() {
   const neglectedPct = (g.neglected / maxYears) * 100;
   const maintainedPct = (g.maintained / maxYears) * 100;
   const others = otherGuides(g.slug, 4);
-  const sections = buildSections(g);
+  const hasPros = prosForCategory(meta.categoryId).length > 0;
+  const sections = buildSections(g, hasPros);
+
   const active = useScrollSpy(sections.map((s) => s.id));
 
   // Animated payoff number for the hero.
@@ -303,18 +307,27 @@ function GuidePage() {
       <div className="lg:hidden sticky top-14 z-30 bg-bg/95 backdrop-blur border-b border-line">
         <nav aria-label="On this page" className="overflow-x-auto no-scrollbar">
           <ul className="flex gap-1 px-4 py-2 whitespace-nowrap">
-            {sections.map((s) => (
-              <li key={s.id}>
-                <a
-                  href={`#${s.id}`}
-                  className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    active === s.id ? "bg-coralbg text-coraldark" : "text-muted hover:text-ink"
-                  }`}
-                >
-                  {s.label}
-                </a>
-              </li>
-            ))}
+            {sections.map((s) => {
+              const isActive = active === s.id;
+              const cls = s.teal
+                ? isActive
+                  ? "bg-tealbg text-tealdark font-bold"
+                  : "text-teal font-bold hover:text-tealdark"
+                : isActive
+                  ? "bg-coralbg text-coraldark"
+                  : "text-muted hover:text-ink";
+              return (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${cls}`}
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              );
+            })}
+
           </ul>
         </nav>
       </div>
@@ -325,20 +338,27 @@ function GuidePage() {
           <nav aria-label="On this page" className="sticky top-24">
             <div className="text-[11px] font-bold uppercase tracking-wider text-muted mb-3">On this page</div>
             <ul className="space-y-1 border-l border-line">
-              {sections.map((s) => (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    className={`block -ml-px pl-3 py-1.5 text-sm border-l-2 transition-colors ${
-                      active === s.id
-                        ? "border-coral text-coraldark font-semibold"
-                        : "border-transparent text-muted hover:text-ink"
-                    }`}
-                  >
-                    {s.label}
-                  </a>
-                </li>
-              ))}
+              {sections.map((s) => {
+                const isActive = active === s.id;
+                const cls = s.teal
+                  ? isActive
+                    ? "border-teal text-tealdark font-bold"
+                    : "border-transparent text-teal font-bold hover:text-tealdark"
+                  : isActive
+                    ? "border-coral text-coraldark font-semibold"
+                    : "border-transparent text-muted hover:text-ink";
+                return (
+                  <li key={s.id}>
+                    <a
+                      href={`#${s.id}`}
+                      className={`block -ml-px pl-3 py-1.5 text-sm border-l-2 transition-colors ${cls}`}
+                    >
+                      {s.label}
+                    </a>
+                  </li>
+                );
+              })}
+
             </ul>
           </nav>
         </aside>
