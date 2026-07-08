@@ -258,6 +258,10 @@ function FaqItem({ q, a, defaultOpen = false }: { q: string; a: string; defaultO
 function GuidePage() {
   const { slug } = Route.useParams();
   const g = getGuide(slug)!;
+  const meta = getSlugMeta(slug);
+  const cat = getCategory(meta.categoryId);
+  const CatIcon = meta.Icon;
+  const payoff = payoffFor(g);
   const gap = g.maintained - g.neglected;
   const maxYears = Math.max(
     ...GUIDE_ORDER.map((s) => getGuide(s)!)
@@ -269,6 +273,9 @@ function GuidePage() {
   const others = otherGuides(g.slug, 4);
   const sections = buildSections(g);
   const active = useScrollSpy(sections.map((s) => s.id));
+
+  // Animated payoff number for the hero.
+  const heroCount = useCountUp(payoff.kind === "gain" ? payoff.years : 0, g.slug);
 
   const orderedMaintenance = [...g.maintenance].sort(
     (a, b) => (IMPACT_ORDER[a.impact ?? "Medium"] ?? 1) - (IMPACT_ORDER[b.impact ?? "Medium"] ?? 1)
