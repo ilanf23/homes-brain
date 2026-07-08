@@ -1444,6 +1444,40 @@ function NewJob() {
                   </div>
 
 
+                  {/* Optional "bill this customer" amount. Leave blank to skip;
+                      any positive number creates an open invoice tied to the job
+                      so the homeowner can pay it from /home. */}
+                  <div className="mt-5 border-t border-line pt-4">
+                    <label
+                      htmlFor="charge-amount"
+                      className="block text-sm font-semibold text-ink"
+                    >
+                      Charge for this job (optional)
+                    </label>
+                    <div className="mt-2 relative">
+                      <span
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted"
+                        aria-hidden
+                      >
+                        $
+                      </span>
+                      <input
+                        id="charge-amount"
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={chargeAmount}
+                        onChange={(e) => setChargeAmount(e.target.value)}
+                        className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-2xl font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted">
+                      Leave blank if you're not billing through the app.
+                    </p>
+                  </div>
+
                   {/* Google review ask: a checkmark in the same box, styled as an
                       action rather than a record row. */}
                   <div className="mt-5 border-t border-line pt-4">
