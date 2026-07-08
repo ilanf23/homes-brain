@@ -57,6 +57,7 @@ function ProSettings() {
   const [prefs, setPrefs] = useState<ProPrefs | null>(null);
 
   const [business, setBusiness] = useState("");
+  const [ownerFirstName, setOwnerFirstName] = useState("");
   const [trade, setTrade] = useState("");
   const [area, setArea] = useState("");
   const [email, setEmail] = useState("");
@@ -90,6 +91,7 @@ function ProSettings() {
   useEffect(() => {
     if (!pro) return;
     setBusiness(pro.business);
+    setOwnerFirstName(pro.owner_first_name ?? "");
     setTrade(pro.trade);
     setArea(pro.service_area ?? "");
   }, [pro]);
@@ -110,6 +112,7 @@ function ProSettings() {
 
   const dirty =
     business !== pro.business ||
+    ownerFirstName !== (pro.owner_first_name ?? "") ||
     trade !== pro.trade ||
     area !== (pro.service_area ?? "") ||
     email !== (prefs?.email ?? "") ||
@@ -120,6 +123,7 @@ function ProSettings() {
     setProfileErr(null);
     const patch = {
       business,
+      owner_first_name: ownerFirstName.trim() || null,
       trade,
       service_area: area,
       email: email.trim() || null,
@@ -129,7 +133,7 @@ function ProSettings() {
     if (error || !data?.length) {
       setProfileErr(error?.message ?? "Couldn't save. Try again.");
     } else {
-      setPro({ ...pro!, business, trade, service_area: area });
+      setPro({ ...pro!, business, owner_first_name: patch.owner_first_name, trade, service_area: area });
       if (prefs) setPrefs({ ...prefs, email: patch.email, phone: patch.phone });
       setToast("Saved");
     }
@@ -223,6 +227,15 @@ function ProSettings() {
             <div className="mt-4 space-y-4">
               <Field label="Business name">
                 <Input value={business} onChange={(e) => setBusiness(e.target.value)} />
+              </Field>
+              <Field label="Your first name" hint="How we greet you on the dashboard.">
+                <Input
+                  value={ownerFirstName}
+                  onChange={(e) => setOwnerFirstName(e.target.value)}
+                  placeholder="Alex"
+                  autoComplete="given-name"
+                  maxLength={40}
+                />
               </Field>
               <div>
                 <div className="text-sm font-semibold text-ink mb-2">Trade</div>

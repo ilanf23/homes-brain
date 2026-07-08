@@ -294,13 +294,20 @@ function ProDashboard() {
   const empty = jobs.length === 0;
   const viewRate = sentCount ? viewedCount / sentCount : 0;
 
+  const hour = new Date().getHours();
+  const timeOfDay =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = pro.owner_first_name?.trim();
+  const greetingName = firstName && firstName.length > 0 ? firstName : pro.business;
+
   return (
     <ProShell pro={pro} active="dashboard">
       <ProPageHead
         eyebrow="Dashboard"
-        title={pro.business}
+        title={`${timeOfDay}, ${greetingName}`}
         sub={pro.google_rating ? `${pro.google_rating} ★ on Google` : undefined}
       />
+
 
       {empty && (
         <Card className="anim-fade-up mb-5 flex items-center gap-4 flex-wrap sm:flex-nowrap">

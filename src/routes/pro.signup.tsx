@@ -27,6 +27,7 @@ function ProSignup() {
   const [sentTo, setSentTo] = useState<string | null>(null);
 
   const [business, setBusiness] = useState("");
+  const [ownerFirstName, setOwnerFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -37,6 +38,7 @@ function ProSignup() {
 
   const step1Valid =
     business.trim().length > 1 &&
+    ownerFirstName.trim().length > 0 &&
     isValidEmail(email.trim()) &&
     password.length >= 8 &&
     password === confirmPw;
@@ -53,6 +55,7 @@ function ProSignup() {
         data: {
           role: "pro",
           business: business.trim(),
+          owner_first_name: ownerFirstName.trim(),
           trade,
           service_area: area.trim(),
           phone: null,
@@ -161,6 +164,15 @@ function ProSignup() {
                     onChange={(e) => setBusiness(e.target.value)}
                     placeholder="Aqua Works"
                     autoFocus
+                  />
+                </Field>
+                <Field label="Your first name" hint="We'll use this to greet you.">
+                  <Input
+                    value={ownerFirstName}
+                    onChange={(e) => setOwnerFirstName(e.target.value)}
+                    placeholder="Alex"
+                    autoComplete="given-name"
+                    maxLength={40}
                   />
                 </Field>
                 <Field label="Email" hint="You'll use this to log in.">
