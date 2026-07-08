@@ -2,8 +2,11 @@
    here so the route file stays a pure template. */
 
 export type Fact = { k: string; v: string };
-export type MaintenanceStep = { task: string; frequency: string; effect: string };
+export type Impact = "High" | "Medium" | "Low";
+export type MaintenanceStep = { task: string; frequency: string; effect: string; impact?: Impact };
 export type Source = { label: string; url: string };
+export type Brand = { name: string; note: string; sourceUrl: string; sourceLabel: string };
+export type Faq = { q: string; a: string };
 
 export type Guide = {
   slug: string;
@@ -11,16 +14,22 @@ export type Guide = {
   h1: string;
   metaDescription: string;
   quickAnswer: string;
+  overview?: string;
   neglected: number; // years, "left alone"
   maintained: number; // years, "maintained"
   barsLabel?: string; // optional label shown on bars (e.g. "the pump" for pool)
+  brands?: Brand[];
   maintenance: MaintenanceStep[];
+  signs?: string[];
+  repairOrReplace?: string;
   facts: Fact[];
+  faqs?: Faq[];
   floridaNote: string;
   sources: Source[];
   /* Prominent verify-specifics note on top of the standard disclaimer. */
   verifyProminent?: boolean;
 };
+
 
 export const GUIDES: Record<string, Guide> = {
   "water-heater": {
@@ -31,26 +40,30 @@ export const GUIDES: Record<string, Guide> = {
       "A standard tank water heater lasts about 8 to 12 years, and 15+ with a yearly flush and anode-rod replacement. Full maintenance guide.",
     quickAnswer:
       "A standard tank water heater lasts about 8 to 12 years. With a yearly flush and the anode rod replaced every 3 to 5 years, many reach 15 or more. Florida hard water is why the neglected end comes fast.",
+    overview:
+      "A tank water heater is the appliance most punished by Florida hard water. The gap between a neglected unit and a maintained one is bigger here than almost anywhere, and the maintenance is cheap and simple. Here is how long it lasts, what actually extends it, and the brands pros trust.",
     neglected: 10,
     maintained: 15,
-    maintenance: [
-      {
-        task: "Flush the tank",
-        frequency: "Yearly",
-        effect: "Clears sediment and protects efficiency.",
-      },
-      {
-        task: "Inspect and replace the anode rod",
-        frequency: "Every 3 to 5 years",
-        effect: "This is what stops the tank from rusting through.",
-      },
-      { task: "Set the temperature to 120°F", frequency: "Once", effect: "Safer and easier on the tank." },
-      {
-        task: "Consider a water softener",
-        frequency: "If you have hard water",
-        effect: "Slows scale and adds years to the tank.",
-      },
+    brands: [
+      { name: "Bradford White", note: "Pro favorite, sold only through contractors, top rated for reliability.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
+      { name: "A.O. Smith", note: "Long lasting and corrosion resistant, strong warranties.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
+      { name: "Rheem", note: "Dependable and widely available, Performance Platinum adds leak detection.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
+      { name: "Rinnai", note: "The leader if you go tankless, premium and long warranties.", sourceUrl: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison", sourceLabel: "Water Heater Docs: best brands compared" },
     ],
+    maintenance: [
+      { task: "Flush the tank", frequency: "Yearly", effect: "Clears sediment and protects efficiency.", impact: "High" },
+      { task: "Inspect and replace the anode rod", frequency: "Every 3 to 5 years", effect: "This is what stops the tank from rusting through.", impact: "High" },
+      { task: "Set the temperature to 120°F", frequency: "Once", effect: "Safer and easier on the tank.", impact: "Low" },
+      { task: "Consider a water softener", frequency: "If you have hard water", effect: "Slows scale and adds years to the tank.", impact: "Medium" },
+    ],
+    signs: [
+      "Rusty or discolored hot water",
+      "Popping or rumbling from the tank",
+      "Water pooling around the base",
+      "Running out of hot water sooner than it used to",
+    ],
+    repairOrReplace:
+      "Under 8 years, most issues are worth repairing. Past 10 to 12, or if the tank itself is leaking, replace it, a leaking tank cannot be fixed.",
     facts: [
       { k: "Expected life", v: "8 to 15+ years" },
       { k: "Typical warranty", v: "6 to 12 years" },
@@ -58,13 +71,22 @@ export const GUIDES: Record<string, Guide> = {
       { k: "Replacement cost", v: "~$1,200 to $2,500 installed" },
       { k: "Recall status", v: "Check by model and serial" },
     ],
+    faqs: [
+      { q: "How often should I flush my water heater?", a: "Once a year, and more often in Florida hard water, to clear the sediment that eats efficiency and life." },
+      { q: "Does a tankless water heater last longer?", a: "Yes, tankless units often last 20 years or more versus 8 to 12 for a tank, though they cost more up front." },
+      { q: "Is replacing the anode rod really worth it?", a: "Yes. The rod sacrifices itself so the tank does not rust through. Replacing it every 3 to 5 years is the cheapest way to add years." },
+      { q: "What are the signs my water heater is failing?", a: "Rusty water, popping or rumbling, leaks at the base, or not enough hot water." },
+      { q: "How much does a new water heater cost?", a: "Roughly $1,200 to $2,500 installed for a standard tank, more for tankless." },
+    ],
     floridaNote:
       "Florida hard water speeds sediment buildup and corrosion, so flushing and anode-rod care matter more here than in most of the country.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
       { label: "Bob Vila: anode rod replacement", url: "https://www.bobvila.com/articles/anode-rod-replacement/" },
       { label: "This Old House: change a water heater anode rod", url: "https://www.thisoldhouse.com/plumbing/21017262/how-to-change-a-water-heater-anode-rod" },
+      { label: "Water Heater Docs: best brands compared", url: "https://waterheaterdocs.com/blog/best-water-heater-brands-comparison" },
     ],
+
   },
 
   "central-ac": {
@@ -75,30 +97,54 @@ export const GUIDES: Record<string, Guide> = {
       "In Florida a central AC typically lasts about 10 to 15 years, shorter than the national 15 to 20. Here's how to push yours to the top of the range.",
     quickAnswer:
       "In Florida a central AC typically lasts about 10 to 15 years, shorter than the national 15 to 20, because of constant heat, humidity, and near-year-round use. Regular service and airflow care push it to the top of that range.",
+    overview:
+      "In Florida your AC runs most of the year against heat and humidity, so it wears out faster than the national average. The good news, most of what shortens its life is preventable, and the biggest factor is not even the brand.",
     neglected: 12,
     maintained: 18,
-    maintenance: [
-      { task: "Change the filters", frequency: "On schedule (monthly to quarterly)", effect: "Keeps airflow up and the blower easy." },
-      {
-        task: "Keep the coils clean",
-        frequency: "At every service",
-        effect: "Humidity breeds mold on coils and in ducts, which chokes airflow.",
-      },
-      { task: "Have it serviced", frequency: "Twice a year", effect: "Catches capacitor and refrigerant issues before they kill the compressor." },
-      { task: "Confirm the unit is correctly sized", frequency: "At install", effect: "Oversized units short-cycle and wear out early." },
-      { task: "Keep the condensate drain clear", frequency: "Yearly", effect: "Prevents shutoffs and water damage." },
+    brands: [
+      { name: "Trane", note: "Top rated reliability, the hard to stop a Trane reputation is earned.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Carrier", note: "Efficiency and technology leader.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Lennox", note: "Among the most reliable in owner surveys, high efficiency.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "American Standard", note: "Built by Trane, same reliability for less.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Rheem", note: "Well balanced value.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Goodman", note: "Budget friendly.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
     ],
+    maintenance: [
+      { task: "Change the filters", frequency: "On schedule (monthly to quarterly)", effect: "Keeps airflow up and the blower easy.", impact: "High" },
+      { task: "Keep the coils clean", frequency: "At every service", effect: "Humidity breeds mold on coils and in ducts, which chokes airflow.", impact: "High" },
+      { task: "Have it serviced", frequency: "Twice a year", effect: "Catches capacitor and refrigerant issues before they kill the compressor.", impact: "High" },
+      { task: "Confirm the unit is correctly sized", frequency: "At install", effect: "Oversized units short-cycle and wear out early.", impact: "High" },
+      { task: "Keep the condensate drain clear", frequency: "Yearly", effect: "Prevents shutoffs and water damage.", impact: "Medium" },
+    ],
+    signs: [
+      "Weak or warm airflow",
+      "Short cycling on and off",
+      "Rising energy bills",
+      "Strange noises or smells",
+      "Water or ice around the unit",
+    ],
+    repairOrReplace:
+      "If it is over 12 to 15 years, uses old R22 refrigerant, or the repair is a big share of a new system, replace. Otherwise repair.",
     facts: [
       { k: "Expected life in FL", v: "10 to 15 years" },
       { k: "Common failure", v: "Compressor, coil, capacitor" },
       { k: "Recall status", v: "Check by model" },
+    ],
+    faqs: [
+      { q: "Why does my AC not last as long in Florida?", a: "Constant heat, humidity, and near year round use, plus salt air near the coast, all wear it faster than milder climates." },
+      { q: "How often should I service my AC?", a: "Twice a year, before the cooling and heating seasons." },
+      { q: "Does the AC brand matter most?", a: "No. About 80 percent of an AC's lifespan comes from install quality and correct sizing, and only about 20 percent from the brand." },
+      { q: "When should I replace instead of repair?", a: "When it is over 12 to 15 years, uses R22 refrigerant, or a repair costs a large share of a new unit." },
+      { q: "What are the signs my AC is failing?", a: "Weak or warm airflow, short cycling, rising bills, and strange noises." },
     ],
     floridaNote:
       "Heat, humidity, and coastal salt air all shorten AC life here. Maintenance is what separates 10 years from 15.",
     sources: [
       { label: "Florida Airflow: HVAC life expectancy in Florida", url: "https://floridaairflow.com/hvac-life-expectancy-florida/" },
       { label: "InterNACHI: Florida component life expectancy", url: "https://www.nachi.org/florida-life-expectancy.htm" },
+      { label: "Modernize: best AC brands", url: "https://modernize.com/hvac/best-air-conditioner-brands" },
     ],
+
   },
 
   roof: {
@@ -109,27 +155,52 @@ export const GUIDES: Record<string, Guide> = {
       "A Florida asphalt shingle roof typically lasts about 15 to 25 years. Inspections and attic ventilation are what push it to 25.",
     quickAnswer:
       "A Florida asphalt shingle roof typically lasts about 15 to 25 years. Regular inspections and good attic ventilation are what separate a roof that lasts 15 years from one that reaches 25.",
+    overview:
+      "A Florida asphalt roof lives a hard life of sun, heat, and hurricanes. Whether it lasts 15 years or 25 comes down to inspections, ventilation, and catching small problems early. Here is the full picture, plus the shingle brands that hold up.",
     neglected: 15,
     maintained: 25,
-    maintenance: [
-      { task: "Inspect the roof", frequency: "Yearly and after major storms", effect: "Catches lifted shingles and flashing issues while they are still cheap." },
-      { task: "Fix small leaks and lifted shingles early", frequency: "As found", effect: "Prevents decking rot underneath." },
-      { task: "Keep attic ventilation good", frequency: "Ongoing", effect: "Cuts thermal stress that ages shingles from the underside." },
-      { task: "Keep gutters clear", frequency: "Twice a year", effect: "Stops water from backing up under the edge." },
-      { task: "Log the roof age and any wind mitigation", frequency: "Once", effect: "Helps at insurance and resale time." },
+    brands: [
+      { name: "GAF", note: "About 30 percent of the US market, Timberline HDZ is the value leader.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
+      { name: "Owens Corning", note: "Best wind resistance with SureNail, Duration series runs 25 to 30 years.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
+      { name: "CertainTeed", note: "Deepest warranty via SureStart, Landmark line, 40 plus colors.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
+      { name: "IKO", note: "Budget option.", sourceUrl: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared", sourceLabel: "RoofVista: asphalt shingle brands compared" },
     ],
+    maintenance: [
+      { task: "Inspect the roof", frequency: "Yearly and after major storms", effect: "Catches lifted shingles and flashing issues while they are still cheap.", impact: "High" },
+      { task: "Fix small leaks and lifted shingles early", frequency: "As found", effect: "Prevents decking rot underneath.", impact: "High" },
+      { task: "Keep attic ventilation good", frequency: "Ongoing", effect: "Cuts thermal stress that ages shingles from the underside.", impact: "High" },
+      { task: "Keep gutters clear", frequency: "Twice a year", effect: "Stops water from backing up under the edge.", impact: "Medium" },
+      { task: "Log the roof age and any wind mitigation", frequency: "Once", effect: "Helps at insurance and resale time.", impact: "Low" },
+    ],
+    signs: [
+      "Curling, cracked, or missing shingles",
+      "Granules collecting in the gutters",
+      "Water stains on ceilings",
+      "Daylight visible in the attic",
+    ],
+    repairOrReplace:
+      "Isolated damage and small leaks are repairable. If shingles are failing across the roof or it is near the end of its range, replace, and get a wind mitigation inspection either way.",
     facts: [
       { k: "Asphalt shingle", v: "15 to 25 years" },
       { k: "Metal", v: "40 to 70 years" },
       { k: "Tile", v: "50+ years" },
       { k: "Common issue", v: "Sun, heat, and storm wear" },
     ],
+    faqs: [
+      { q: "How long does a shingle roof last in Florida?", a: "About 15 to 25 years, depending on maintenance, ventilation, and storm exposure." },
+      { q: "What is the best shingle brand?", a: "GAF, Owens Corning, and CertainTeed lead. Choose based on wind rating and warranty depth." },
+      { q: "Does a wind mitigation inspection help?", a: "Yes, it can lower your Florida insurance and documents your roof's storm resistance." },
+      { q: "What are the signs I need a new roof?", a: "Curling or missing shingles, granules in the gutters, leaks, or daylight in the attic." },
+      { q: "How often should I inspect my roof?", a: "Yearly, and after every major storm." },
+    ],
     floridaNote:
       "UV, heat, humidity, and hurricanes are all hard on shingles. A wind-mitigation inspection can lower your insurance and extend the roof's useful life.",
     sources: [
       { label: "Trust Roofing: shingle roof lifespan in Florida", url: "https://trustroofing.com/blog/shingle-roof-lifespan-in-florida/" },
       { label: "InterNACHI: Florida component life expectancy", url: "https://www.nachi.org/florida-life-expectancy.htm" },
+      { label: "RoofVista: asphalt shingle brands compared", url: "https://roofvista.com/resources/guides/asphalt-shingle-brands-compared" },
     ],
+
   },
 
   dryer: {
@@ -140,24 +211,48 @@ export const GUIDES: Record<string, Guide> = {
       "A clothes dryer lasts about 8 to 13 years. Cleaning the full vent line yearly keeps it efficient and cuts a real fire risk.",
     quickAnswer:
       "A clothes dryer lasts about 8 to 13 years. Cleaning the full vent line yearly, not just the lint trap, keeps it efficient and cuts a real fire risk.",
+    overview:
+      "A dryer is simple, but a neglected vent quietly steals years and creates a real fire risk. Cleaning the full line, not just the lint trap, is the single highest return chore in the laundry room.",
     neglected: 8,
     maintained: 13,
-    maintenance: [
-      { task: "Clean the lint trap", frequency: "Every load", effect: "Keeps airflow up and dry times down." },
-      { task: "Clean the full vent line", frequency: "At least yearly", effect: "Fixes the real fire risk, not just the visible lint." },
-      { task: "Do not overload the drum", frequency: "Every load", effect: "Prevents motor and belt strain." },
-      { task: "Check the exterior vent flap", frequency: "Yearly", effect: "Blocked flaps trap moisture and reduce efficiency." },
+    brands: [
+      { name: "LG", note: "Top rated reliability, low service rates.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
+      { name: "Whirlpool", note: "Reliable and parts are easy to find anywhere.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
+      { name: "Maytag", note: "Built for durability.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
+      { name: "Samsung", note: "Feature rich.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
     ],
+    maintenance: [
+      { task: "Clean the full vent line", frequency: "At least yearly", effect: "Fixes the real fire risk, not just the visible lint.", impact: "High" },
+      { task: "Clean the lint trap", frequency: "Every load", effect: "Keeps airflow up and dry times down.", impact: "Medium" },
+      { task: "Do not overload the drum", frequency: "Every load", effect: "Prevents motor and belt strain.", impact: "Medium" },
+      { task: "Check the exterior vent flap", frequency: "Yearly", effect: "Blocked flaps trap moisture and reduce efficiency.", impact: "Low" },
+    ],
+    signs: [
+      "Clothes take two cycles to dry",
+      "The dryer or clothes are hot to the touch",
+      "A burning smell",
+      "The exterior vent flap does not open",
+    ],
+    repairOrReplace:
+      "Cheap fixes like a thermal fuse are worth it. Past 10 years with an expensive repair, replace.",
     facts: [
       { k: "Expected life", v: "7 to 13 years" },
       { k: "Common failure", v: "Heating element, thermal fuse" },
       { k: "Safety note", v: "Clogged vents are a leading cause of dryer fires" },
+    ],
+    faqs: [
+      { q: "How often should I clean the dryer vent?", a: "At least once a year, the full line, not just the lint trap." },
+      { q: "Are clogged dryer vents really a fire risk?", a: "Yes, they are a leading cause of home dryer fires." },
+      { q: "Which dryer brands are most reliable?", a: "LG and Whirlpool rate highest for reliability." },
+      { q: "Why does my dryer take two cycles to dry?", a: "Almost always a clogged vent restricting airflow." },
+      { q: "Should I repair or replace my dryer?", a: "If it is over 10 years old and the repair is expensive, replace it." },
     ],
     floridaNote:
       "Florida humidity means longer dry times, so a clear vent matters even more here.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
     ],
+
   },
 
   dishwasher: {
