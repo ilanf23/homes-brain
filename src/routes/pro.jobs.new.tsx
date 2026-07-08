@@ -32,7 +32,12 @@ type CustomerOpt = {
   phone: string | null;
   email: string | null;
   home_id: string;
-  homes: { address: string; lat: number | null; lng: number | null } | null;
+  homes: {
+    address: string;
+    lat: number | null;
+    lng: number | null;
+    geocoded_at: string | null;
+  } | null;
 };
 type ApplianceOpt = {
   id: string;
@@ -208,15 +213,48 @@ function NewJob() {
 
   useEffect(() => {
     if (!proId) return;
+    let cancelled = false;
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
-
+        .select("id,name,phone,email,home_id,homes(address,lat,lng,geocoded_at)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
-      setExisting((c ?? []) as unknown as CustomerOpt[]);
+      const rows = (c ?? []) as unknown as CustomerOpt[];
+      if (cancelled) return;
+      setExisting(rows);
+
+      // Lazily geocode any linked homes that don't have coords yet so the
+      // GPS-based customer recommendation can start working without a reload.
+      // Paced ~1s apart to stay polite to the geocoding API.
+      const targets = rows.filter((r) => r.homes && !r.homes.geocoded_at && r.home_id);
+      for (let i = 0; i < targets.length; i++) {
+        if (cancelled) return;
+        if (i > 0) await new Promise((r) => setTimeout(r, 1000));
+        const t = targets[i];
+        if (!t.homes) continue;
+        const coords = await geocodeHome(t.home_id, t.homes.address);
+        if (cancelled) return;
+        setExisting((prev) =>
+          prev.map((p) =>
+            p.id === t.id && p.homes
+              ? {
+                  ...p,
+                  homes: {
+                    ...p.homes,
+                    lat: coords?.lat ?? null,
+                    lng: coords?.lng ?? null,
+                    geocoded_at: new Date().toISOString(),
+                  },
+                }
+              : p,
+          ),
+        );
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [proId]);
 
   /* Detect the pro's current position on mount: keep the raw coords to bias
@@ -387,7 +425,7 @@ function NewJob() {
 
   // Slide-1 combobox: filter existing by name/address, offer create-new inline.
   const q = query.trim().toLowerCase();
-  const filteredCustomers = q
+  const baseFiltered = q
     ? existing.filter(
         (c) => c.name?.toLowerCase().includes(q) || c.homes?.address?.toLowerCase().includes(q),
       )
@@ -416,6 +454,16 @@ function NewJob() {
         c.homes?.address && normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
     );
   })();
+
+  // Sort the location-matched customer to the top so the purple row is the first thing the pro sees.
+  const filteredCustomers = locationMatch
+    ? [
+        ...baseFiltered.filter((c) => c.id === locationMatch.id),
+        ...baseFiltered.filter((c) => c.id !== locationMatch.id),
+      ]
+    : baseFiltered;
+
+
 
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
@@ -792,40 +840,6 @@ function NewJob() {
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
               <Card className="space-y-3">
-                {locationMatch && !q && (
-                  <button
-                    type="button"
-                    onClick={() => pickExisting(locationMatch)}
-                    className="pressable flex w-full items-center gap-3 rounded-2xl border border-indigo/40 bg-indigobg px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/80"
-                  >
-                    <Avatar name={locationMatch.name || "?"} accent="indigo" size={40} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-semibold text-indigo">
-                        {locationMatch.name}
-                      </div>
-                      <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
-                        This matches your address
-                      </div>
-                    </div>
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                      className="shrink-0 text-indigo"
-                    >
-                      <path
-                        d="M9 6l6 6-6 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                )}
-
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -854,23 +868,37 @@ function NewJob() {
                       </button>
                     )}
 
-                    {filteredCustomers
-                      .filter((c) => !(locationMatch && !q && c.id === locationMatch.id))
-                      .map((c) => (
+                    {filteredCustomers.map((c) => {
+                      const isMatch = !!locationMatch && c.id === locationMatch.id;
+                      return (
                         <button
                           key={c.id}
                           type="button"
                           onClick={() => pickExisting(c)}
-                          className="group pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:border-indigo/30 hover:bg-indigobg/40"
+                          className={`group pressable flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
+                            isMatch
+                              ? "border-indigo/40 bg-indigobg hover:bg-indigobg/80"
+                              : "border-line bg-paper hover:border-indigo/30 hover:bg-indigobg/40"
+                          }`}
                         >
                           <Avatar name={c.name || "?"} accent="indigo" size={40} />
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-base font-semibold text-ink">
+                            <div
+                              className={`truncate text-base font-semibold ${
+                                isMatch ? "text-indigo" : "text-ink"
+                              }`}
+                            >
                               {c.name}
                             </div>
-                            <div className="mt-0.5 truncate text-sm text-muted">
-                              {c.homes?.address}
-                            </div>
+                            {isMatch ? (
+                              <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
+                                Matches your address
+                              </div>
+                            ) : (
+                              <div className="mt-0.5 truncate text-sm text-muted">
+                                {c.homes?.address}
+                              </div>
+                            )}
                           </div>
                           <svg
                             width="18"
@@ -878,7 +906,9 @@ function NewJob() {
                             viewBox="0 0 24 24"
                             fill="none"
                             aria-hidden="true"
-                            className="shrink-0 text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-indigo"
+                            className={`shrink-0 transition-all duration-200 group-hover:translate-x-0.5 ${
+                              isMatch ? "text-indigo" : "text-muted group-hover:text-indigo"
+                            }`}
                           >
                             <path
                               d="M9 6l6 6-6 6"
@@ -889,7 +919,8 @@ function NewJob() {
                             />
                           </svg>
                         </button>
-                      ))}
+                      );
+                    })}
                   </div>
 
                   {!q && existing.length === 0 && (
@@ -1346,11 +1377,13 @@ function NewJob() {
             {stage === "review" && (
               <div className="space-y-4">
                 <p className="px-2 text-center text-sm text-muted">
-                  This is exactly what your customer gets. Uncheck any line you'd rather leave off.
+                  Here's your customer's record. Uncheck any line you'd rather leave off.
                 </p>
 
-                {/* The live record IS the control surface: each optional row is a
-                    checkmark. Customer and work done are always included. */}
+                {/* One card: the live record IS the control surface (each optional
+                    row is a checkmark, customer + work done always included), and
+                    the send actions live below a divider, distinct from the field
+                    checks. */}
                 <Card className="shadow-[0_24px_60px_-30px_rgba(22,22,15,0.18)]">
                   <div className="flex items-center gap-3">
                     <Avatar name={proName || "?"} accent="indigo" size={44} />
@@ -1409,48 +1442,45 @@ function NewJob() {
                   <div className="mt-4 rounded-full bg-indigo py-2.5 text-center text-sm font-semibold text-(--on-accent) opacity-90">
                     Claim your home, free
                   </div>
-                </Card>
 
-                {/* Send actions, kept visually distinct from the field checks. */}
-                <Card className="space-y-3">
-                  <div className="text-xs font-bold uppercase tracking-wider text-muted">
-                    When you send
-                  </div>
-                  <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
-                    <span>Send branded record to customer</span>
-                    <input
-                      type="checkbox"
-                      checked={sendRecord}
-                      onChange={(e) => setSendRecord(e.target.checked)}
-                      className="accent-[var(--indigo)] scale-125"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
-                    <span>Ask customer for a Google review</span>
-                    <input
-                      type="checkbox"
-                      checked={askReview}
-                      onChange={(e) => setAskReview(e.target.checked)}
-                      className="accent-[var(--indigo)] scale-125"
-                    />
-                  </label>
+                  {/* Send actions */}
+                  <div className="mt-5 space-y-3 border-t border-line pt-5">
+                    <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
+                      <span>Send branded record to customer</span>
+                      <input
+                        type="checkbox"
+                        checked={sendRecord}
+                        onChange={(e) => setSendRecord(e.target.checked)}
+                        className="accent-[var(--indigo)] scale-125"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
+                      <span>Ask customer for a Google review</span>
+                      <input
+                        type="checkbox"
+                        checked={askReview}
+                        onChange={(e) => setAskReview(e.target.checked)}
+                        className="accent-[var(--indigo)] scale-125"
+                      />
+                    </label>
 
-                  <div className="flex gap-2 pt-1">
-                    <Btn variant="secondary" onClick={() => setStage("work")}>
-                      Back
-                    </Btn>
-                    <Btn
-                      variant="indigo"
-                      size="lg"
-                      className="flex-1"
-                      loading={submitting}
-                      onClick={submit}
-                    >
-                      Send record
-                    </Btn>
-                  </div>
-                  <div className="text-xs text-muted">
-                    {tradeLabel(proTrade)} · {proName}
+                    <div className="flex gap-2 pt-1">
+                      <Btn variant="secondary" onClick={() => setStage("work")}>
+                        Back
+                      </Btn>
+                      <Btn
+                        variant="indigo"
+                        size="lg"
+                        className="flex-1"
+                        loading={submitting}
+                        onClick={submit}
+                      >
+                        Send record
+                      </Btn>
+                    </div>
+                    <div className="text-xs text-muted">
+                      {tradeLabel(proTrade)} · {proName}
+                    </div>
                   </div>
                 </Card>
               </div>

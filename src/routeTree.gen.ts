@@ -23,6 +23,7 @@ import { Route as ForHomeownersRouteImport } from './routes/for-homeowners'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProIndexRouteImport } from './routes/pro.index'
+import { Route as MakeItLastIndexRouteImport } from './routes/make-it-last.index'
 import { Route as HomeIndexRouteImport } from './routes/home.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as RRecordIdRouteImport } from './routes/r.$recordId'
@@ -32,6 +33,7 @@ import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
+import { Route as MakeItLastSlugRouteImport } from './routes/make-it-last.$slug'
 import { Route as HomeSignupRouteImport } from './routes/home.signup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
 import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
@@ -121,6 +123,11 @@ const ProIndexRoute = ProIndexRouteImport.update({
   path: '/pro/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MakeItLastIndexRoute = MakeItLastIndexRouteImport.update({
+  id: '/make-it-last/',
+  path: '/make-it-last/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeIndexRoute = HomeIndexRouteImport.update({
   id: '/home/',
   path: '/home/',
@@ -164,6 +171,11 @@ const ProOfficeRoute = ProOfficeRouteImport.update({
 const ProDueRoute = ProDueRouteImport.update({
   id: '/pro/due',
   path: '/pro/due',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MakeItLastSlugRoute = MakeItLastSlugRouteImport.update({
+  id: '/make-it-last/$slug',
+  path: '/make-it-last/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeSignupRoute = HomeSignupRouteImport.update({
@@ -280,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
+  '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -289,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/r/$recordId': typeof RRecordIdRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
+  '/make-it-last/': typeof MakeItLastIndexRoute
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
@@ -323,6 +337,7 @@ export interface FileRoutesByTo {
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
+  '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -332,6 +347,7 @@ export interface FileRoutesByTo {
   '/r/$recordId': typeof RRecordIdRoute
   '/blog': typeof BlogIndexRoute
   '/home': typeof HomeIndexRoute
+  '/make-it-last': typeof MakeItLastIndexRoute
   '/pro': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
@@ -367,6 +383,7 @@ export interface FileRoutesById {
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
+  '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -376,6 +393,7 @@ export interface FileRoutesById {
   '/r/$recordId': typeof RRecordIdRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
+  '/make-it-last/': typeof MakeItLastIndexRoute
   '/pro/': typeof ProIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
@@ -412,6 +430,7 @@ export interface FileRouteTypes {
     | '/home/reminders'
     | '/home/settings'
     | '/home/signup'
+    | '/make-it-last/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -421,6 +440,7 @@ export interface FileRouteTypes {
     | '/r/$recordId'
     | '/blog/'
     | '/home/'
+    | '/make-it-last/'
     | '/pro/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
@@ -455,6 +475,7 @@ export interface FileRouteTypes {
     | '/home/reminders'
     | '/home/settings'
     | '/home/signup'
+    | '/make-it-last/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -464,6 +485,7 @@ export interface FileRouteTypes {
     | '/r/$recordId'
     | '/blog'
     | '/home'
+    | '/make-it-last'
     | '/pro'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
@@ -498,6 +520,7 @@ export interface FileRouteTypes {
     | '/home/reminders'
     | '/home/settings'
     | '/home/signup'
+    | '/make-it-last/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -507,6 +530,7 @@ export interface FileRouteTypes {
     | '/r/$recordId'
     | '/blog/'
     | '/home/'
+    | '/make-it-last/'
     | '/pro/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
@@ -542,6 +566,7 @@ export interface RootRouteChildren {
   HomeRemindersRoute: typeof HomeRemindersRoute
   HomeSettingsRoute: typeof HomeSettingsRoute
   HomeSignupRoute: typeof HomeSignupRoute
+  MakeItLastSlugRoute: typeof MakeItLastSlugRoute
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
   ProReferralRoute: typeof ProReferralRoute
@@ -551,6 +576,7 @@ export interface RootRouteChildren {
   RRecordIdRoute: typeof RRecordIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
+  MakeItLastIndexRoute: typeof MakeItLastIndexRoute
   ProIndexRoute: typeof ProIndexRoute
   HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
   ProCustomersCustomerIdRoute: typeof ProCustomersCustomerIdRoute
@@ -663,6 +689,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/make-it-last/': {
+      id: '/make-it-last/'
+      path: '/make-it-last'
+      fullPath: '/make-it-last/'
+      preLoaderRoute: typeof MakeItLastIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home/': {
       id: '/home/'
       path: '/home'
@@ -724,6 +757,13 @@ declare module '@tanstack/react-router' {
       path: '/pro/due'
       fullPath: '/pro/due'
       preLoaderRoute: typeof ProDueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/make-it-last/$slug': {
+      id: '/make-it-last/$slug'
+      path: '/make-it-last/$slug'
+      fullPath: '/make-it-last/$slug'
+      preLoaderRoute: typeof MakeItLastSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home/signup': {
@@ -878,6 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRemindersRoute: HomeRemindersRoute,
   HomeSettingsRoute: HomeSettingsRoute,
   HomeSignupRoute: HomeSignupRoute,
+  MakeItLastSlugRoute: MakeItLastSlugRoute,
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
   ProReferralRoute: ProReferralRoute,
@@ -887,6 +928,7 @@ const rootRouteChildren: RootRouteChildren = {
   RRecordIdRoute: RRecordIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
+  MakeItLastIndexRoute: MakeItLastIndexRoute,
   ProIndexRoute: ProIndexRoute,
   HomeItemsItemIdRoute: HomeItemsItemIdRoute,
   ProCustomersCustomerIdRoute: ProCustomersCustomerIdRoute,
