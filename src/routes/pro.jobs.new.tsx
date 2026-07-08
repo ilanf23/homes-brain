@@ -54,8 +54,8 @@ const STAGES: Stage[] = ["customer", "location", "work", "review"];
 const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
 
 /* Canonical keys for the optional record rows the pro can hide from the
-   customer. Stored on records.hidden_fields and honored by the public record
-   at /r/:id. Keep these strings in sync with r.$recordId.tsx. */
+   customer. Stored on records.hidden_fields; the homeowner-side dashboard
+   uses these to hide the corresponding rows in the equipment/job view. */
 const FIELD_CUSTOMER = "customer";
 const FIELD_EQUIPMENT = "equipment";
 const FIELD_MAKE_MODEL = "make_model";
