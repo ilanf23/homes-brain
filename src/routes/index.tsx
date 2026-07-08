@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Sparkles } from "lucide-react";
 import { Btn, Eyebrow, SectionHead } from "@/lib/ui";
 import {
   CountUp,
@@ -13,6 +14,7 @@ import { CoreLoopScene } from "@/components/core-loop-scene";
 import { ForgettingScene } from "@/components/forgetting-scene";
 import { MarketingShell, marketingHead, Phone, PhoneRow } from "@/components/marketing";
 import { MiniLifespansPicker } from "@/components/mini-lifespans";
+import { allBrowseEntries, useCountUp } from "@/lib/make-it-last-visuals";
 
 export const Route = createFileRoute("/")({
   head: () =>
