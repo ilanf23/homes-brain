@@ -50,9 +50,13 @@
   --color-coral: var(--coral);
   --color-coralbg: var(--coralbg);
   --color-coraldark: var(--coral-dark);
+  --color-teal: var(--teal);
+  --color-tealbg: var(--tealbg);
+  --color-tealdark: var(--teal-dark);
   --color-amber: var(--amber);
   --color-amberbg: var(--amberbg);
   --color-amberdark: var(--amber-dark);
+
   --color-red: var(--red);
   --color-redbg: var(--redbg);
 
