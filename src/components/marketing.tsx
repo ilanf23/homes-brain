@@ -15,8 +15,18 @@ export function marketingHead(opts: {
   description: string;
   path: string;
   noindex?: boolean;
+  geo?: boolean; // add St. Johns County, FL geo meta
 }) {
   const url = `${SITE_URL}${opts.path}`;
+  const geoMeta = opts.geo
+    ? [
+        { name: "geo.region", content: "US-FL" },
+        { name: "geo.placename", content: "St. Johns County, Florida" },
+        { name: "geo.position", content: "29.90;-81.40" },
+        { name: "ICBM", content: "29.90, -81.40" },
+        { property: "og:locale", content: "en_US" },
+      ]
+    : [];
   return {
     meta: [
       { title: opts.title },
@@ -27,11 +37,13 @@ export function marketingHead(opts: {
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: opts.title },
       { name: "twitter:description", content: opts.description },
+      ...geoMeta,
       ...(opts.noindex ? [{ name: "robots", content: "noindex" }] : []),
     ],
     links: [{ rel: "canonical", href: url }],
   };
 }
+
 
 const NAV_LINKS = [
   { to: "/how-it-works", label: "How it works" },
