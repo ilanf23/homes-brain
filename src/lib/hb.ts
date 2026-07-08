@@ -212,12 +212,10 @@ export async function mockSend(args: {
   body: string;
   kind: "record" | "review_request" | "invite" | "other";
 }) {
-  await supabase.from("messages").insert({
-    channel: args.channel,
-    to_contact: args.to,
-    body: args.body,
-    kind: args.kind,
-  });
+  // Real sends go through the invite-claim edge function (service role).
+  // The messages table is server-only now, so this client-side log is a
+  // no-op preserved for legacy callers.
+  console.log("[mockSend]", args.channel, args.kind, args.to);
 }
 
 /* Accepts a pasted Google Maps / business link and returns a normalized https URL,
