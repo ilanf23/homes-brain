@@ -71,7 +71,7 @@ function NewJob() {
   const [existing, setExisting] = useState<CustomerOpt[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [newCustomer, setNewCustomer] = useState({ name: "", address: "", phone: "", email: "" });
-  const [consent, setConsent] = useState(false);
+  
   const [query, setQuery] = useState("");
 
   // Location slide: the address for an existing customer (prefilled from file,
