@@ -30,6 +30,7 @@ import { Route as ProSignupRouteImport } from './routes/pro.signup'
 import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
+import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
 import { Route as HomeSignupRouteImport } from './routes/home.signup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
@@ -155,6 +156,11 @@ const ProReferralRoute = ProReferralRouteImport.update({
   path: '/pro/referral',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProOfficeRoute = ProOfficeRouteImport.update({
+  id: '/pro/office',
+  path: '/pro/office',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProDueRoute = ProDueRouteImport.update({
   id: '/pro/due',
   path: '/pro/due',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/pro/due': typeof ProDueRoute
+  '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/pro/due': typeof ProDueRoute
+  '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/pro/due': typeof ProDueRoute
+  '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/pro/due'
+    | '/pro/office'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/pro/due'
+    | '/pro/office'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -488,6 +499,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/pro/due'
+    | '/pro/office'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   HomeSettingsRoute: typeof HomeSettingsRoute
   HomeSignupRoute: typeof HomeSignupRoute
   ProDueRoute: typeof ProDueRoute
+  ProOfficeRoute: typeof ProOfficeRoute
   ProReferralRoute: typeof ProReferralRoute
   ProReviewsRoute: typeof ProReviewsRoute
   ProSettingsRoute: typeof ProSettingsRoute
@@ -699,6 +712,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProReferralRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/office': {
+      id: '/pro/office'
+      path: '/pro/office'
+      fullPath: '/pro/office'
+      preLoaderRoute: typeof ProOfficeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/due': {
       id: '/pro/due'
       path: '/pro/due'
@@ -859,6 +879,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeSettingsRoute: HomeSettingsRoute,
   HomeSignupRoute: HomeSignupRoute,
   ProDueRoute: ProDueRoute,
+  ProOfficeRoute: ProOfficeRoute,
   ProReferralRoute: ProReferralRoute,
   ProReviewsRoute: ProReviewsRoute,
   ProSettingsRoute: ProSettingsRoute,
@@ -880,3 +901,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -1,18 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import {
-  Avatar,
-  Btn,
-  Card,
-  Field,
-  Input,
-  KV,
-  Pill,
-  StepBar,
-  Textarea,
-  Toast,
-  
-} from "@/lib/ui";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Avatar, Btn, Card, Field, Input, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
 import {
@@ -60,6 +48,86 @@ type JobHistoryRow = { id: string; what_done: string; created_at: string };
 const STAGES: Stage[] = ["customer", "location", "work", "review"];
 const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
 
+/* Canonical keys for the optional record rows the pro can hide from the
+   customer. Stored on records.hidden_fields and honored by the public record
+   at /r/:id. Keep these strings in sync with r.$recordId.tsx. */
+const FIELD_EQUIPMENT = "equipment";
+const FIELD_MAKE_MODEL = "make_model";
+const FIELD_NEXT_SERVICE = "next_service";
+const FIELD_RECALL = "recall";
+
+/* Small square checkmark used as the "include this row" control. */
+function CheckSquare({ on }: { on: boolean }) {
+  return (
+    <span
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+        on ? "border-indigo bg-indigo" : "border-line bg-paper"
+      }`}
+      aria-hidden="true"
+    >
+      {on && (
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M3.5 8.5l3 3 6-7"
+            stroke="var(--on-accent)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </span>
+  );
+}
+
+/* One row of the live record. `locked` rows (customer, work done) are the
+   point of the record and are always included. Toggleable rows dim and strike
+   through when excluded, so the pro sees exactly what the customer won't. */
+function RecordRow({
+  label,
+  value,
+  included,
+  locked,
+  onToggle,
+}: {
+  label: string;
+  value: ReactNode;
+  included: boolean;
+  locked?: boolean;
+  onToggle?: () => void;
+}) {
+  const dim = !included;
+  const inner = (
+    <>
+      <div className="flex items-center gap-2.5 shrink-0">
+        <CheckSquare on={included} />
+        <span className={`text-sm text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
+      </div>
+      <span
+        className={`text-sm font-semibold text-ink text-right font-mono text-[13px] tnum min-w-0 ${
+          dim ? "opacity-50 line-through" : ""
+        }`}
+      >
+        {value}
+      </span>
+    </>
+  );
+  const cls =
+    "flex w-full items-start justify-between gap-3 border-b border-line py-3 text-left last:border-b-0";
+  if (locked) {
+    return (
+      <div className={cls} title="Always included">
+        {inner}
+      </div>
+    );
+  }
+  return (
+    <button type="button" onClick={onToggle} aria-pressed={included} className={`${cls} pressable`}>
+      {inner}
+    </button>
+  );
+}
+
 function NewJob() {
   const navigate = useNavigate();
   const { proId, pro } = useProGuard();
@@ -73,7 +141,7 @@ function NewJob() {
   const [existing, setExisting] = useState<CustomerOpt[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [newCustomer, setNewCustomer] = useState({ name: "", address: "", phone: "", email: "" });
-  
+
   const [query, setQuery] = useState("");
 
   // Location slide: the address for an existing customer (prefilled from file,
@@ -127,6 +195,16 @@ function NewJob() {
   const [askReview, setAskReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [recordUrl, setRecordUrl] = useState<string | null>(null);
+  // Optional record rows the pro has unchecked (excluded from the customer's
+  // record). Keyed by FIELD_* constants; empty rows never enter this set.
+  const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
+  const toggleField = (key: string) =>
+    setHiddenFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
 
   useEffect(() => {
     if (!proId) return;
@@ -194,8 +272,6 @@ function NewJob() {
       addressTouched.current = false;
     }
   }, [stage, selectedCustomerId, loc, newCustomer.address, locAddress, gps]);
-
-
 
   /* When an existing customer is picked, load that home's appliances (with
      last-job info) so the pro can attach this new visit to the same physical
@@ -337,12 +413,9 @@ function NewJob() {
     }
     return existing.find(
       (c) =>
-        c.homes?.address &&
-        normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
+        c.homes?.address && normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
     );
   })();
-
-
 
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
@@ -362,7 +435,6 @@ function NewJob() {
     }
     setStage("location");
   }
-
 
   function startNewCustomer(name: string) {
     setSelectedCustomerId("");
@@ -511,16 +583,29 @@ function NewJob() {
       .select("id")
       .single();
 
-    // Record
+    // Record. Persist which optional rows the pro excluded, scoped to rows that
+    // actually have a value, so the public record can hide exactly those.
+    const presentKeys = new Set<string>([FIELD_RECALL]);
+    if (eqType) presentKeys.add(FIELD_EQUIPMENT);
+    if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
+    if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
+    const hidden = Array.from(hiddenFields).filter((k) => presentKeys.has(k));
+
     const tempUrl = buildRecordUrl("pending");
+    // Only reference hidden_fields when the pro actually excluded a row, so a
+    // normal send never touches the new column before the migration syncs.
+    const recordPayload = {
+      job_id: job!.id,
+      public_url: tempUrl,
+      sent_sms_at: sendRecord ? new Date().toISOString() : null,
+      sent_email_at: sendRecord ? new Date().toISOString() : null,
+      ...(hidden.length ? { hidden_fields: hidden } : {}),
+    };
     const { data: rec } = await supabase
       .from("records")
-      .insert({
-        job_id: job!.id,
-        public_url: tempUrl,
-        sent_sms_at: sendRecord ? new Date().toISOString() : null,
-        sent_email_at: sendRecord ? new Date().toISOString() : null,
-      })
+      // hidden_fields added in migration 20260708120000_record_hidden_fields;
+      // cast until Lovable regenerates supabase types.ts from the migration.
+      .insert(recordPayload as never)
       .select("id")
       .single();
     const finalUrl = buildRecordUrl(rec!.id);
@@ -588,7 +673,7 @@ function NewJob() {
     }
     setSelectedCustomerId("");
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
-    
+
     setQuery("");
     setLocAddress("");
     setResolved(null);
@@ -611,13 +696,55 @@ function NewJob() {
     dictation.stop();
     setSendRecord(true);
     setAskReview(true);
+    setHiddenFields(new Set());
     setRecordUrl(null);
     setCopied(false);
     setStage("customer");
   }
 
   const canWork = whatDone.length > 0;
-  const showPreview = stage === "work" || stage === "review";
+
+  // While listening, show the in-progress (interim) words live in the notes box
+  // so text appears the instant it's spoken. Finalized words are already
+  // committed to `whatDone` via the dictation callback, so this collapses to
+  // just `whatDone` the moment speech finalizes or recording stops.
+  const liveWhatDone =
+    dictation.listening && dictation.interim
+      ? (whatDone ? whatDone.replace(/\s+$/, "") + " " : "") + dictation.interim
+      : whatDone;
+
+  // Manual unit fields, shared by the repeat-home picker (shown when adding a
+  // new unit or correcting one) and the new-home drawer (always shown there,
+  // since a first-visit home has no unit on file yet to pick).
+  const unitFieldsGrid = (
+    <div className="grid grid-cols-2 gap-3">
+      <Field label="Unit type">
+        <Input value={eqType} onChange={(e) => setEqType(e.target.value)} placeholder="Softener" />
+      </Field>
+      <Field label="Make">
+        <Input value={eqMake} onChange={(e) => setEqMake(e.target.value)} placeholder="EcoWater" />
+      </Field>
+      <Field label="Model">
+        <Input
+          value={eqModel}
+          onChange={(e) => setEqModel(e.target.value)}
+          placeholder="EVR3700R30"
+        />
+      </Field>
+      <Field label="Warranty until">
+        <Input
+          type="date"
+          value={warrantyUntil}
+          onChange={(e) => setWarrantyUntil(e.target.value)}
+        />
+      </Field>
+    </div>
+  );
+  const nextServiceField = (
+    <Field label="Next service">
+      <Input type="date" value={nextService} onChange={(e) => setNextService(e.target.value)} />
+    </Field>
+  );
 
   if (!proId) {
     return (
@@ -638,11 +765,7 @@ function NewJob() {
         </div>
       </header>
 
-      <div
-        className={`mx-auto px-5 py-10 ${
-          showPreview ? "max-w-5xl" : stage === "customer" ? "max-w-4xl" : "max-w-xl"
-        }`}
-      >
+      <div className={`mx-auto px-5 py-10 ${stage === "customer" ? "max-w-4xl" : "max-w-xl"}`}>
         {stage !== "done" && (
           <div className="anim-fade-up max-w-xl mx-auto mb-8">
             <Link
@@ -665,7 +788,7 @@ function NewJob() {
           </div>
         )}
 
-        <div className={showPreview ? "grid lg:grid-cols-[1fr_380px] gap-6 items-start" : ""}>
+        <div>
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
               <Card className="space-y-3">
@@ -711,7 +834,6 @@ function NewJob() {
                   aria-label="Search customers or type a new name"
                 />
 
-
                 <div className="max-h-[560px] overflow-auto -mx-1 px-1">
                   <div className="grid gap-2 sm:grid-cols-2">
                     {q && !hasExactMatch && (
@@ -735,38 +857,39 @@ function NewJob() {
                     {filteredCustomers
                       .filter((c) => !(locationMatch && !q && c.id === locationMatch.id))
                       .map((c) => (
-
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => pickExisting(c)}
-                        className="group pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:border-indigo/30 hover:bg-indigobg/40"
-                      >
-                        <Avatar name={c.name || "?"} accent="indigo" size={40} />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-base font-semibold text-ink">{c.name}</div>
-                          <div className="mt-0.5 truncate text-sm text-muted">
-                            {c.homes?.address}
-                          </div>
-                        </div>
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          aria-hidden="true"
-                          className="shrink-0 text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-indigo"
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => pickExisting(c)}
+                          className="group pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:border-indigo/30 hover:bg-indigobg/40"
                         >
-                          <path
-                            d="M9 6l6 6-6 6"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    ))}
+                          <Avatar name={c.name || "?"} accent="indigo" size={40} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-base font-semibold text-ink">
+                              {c.name}
+                            </div>
+                            <div className="mt-0.5 truncate text-sm text-muted">
+                              {c.homes?.address}
+                            </div>
+                          </div>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                            className="shrink-0 text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-indigo"
+                          >
+                            <path
+                              d="M9 6l6 6-6 6"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      ))}
                   </div>
 
                   {!q && existing.length === 0 && (
@@ -812,7 +935,6 @@ function NewJob() {
                       placeholder="123 Maple St, Austin TX"
                       ariaLabel="Service address"
                     />
-
                   </Field>
 
                   <div className="flex gap-2">
@@ -891,7 +1013,6 @@ function NewJob() {
                     </Field>
                   </div>
 
-
                   <div className="flex gap-2">
                     <Btn variant="secondary" onClick={() => setStage("customer")}>
                       Back
@@ -950,18 +1071,16 @@ function NewJob() {
                       Voice input isn't supported in this browser. Type below instead.
                     </div>
                   )}
-                  {dictation.listening && dictation.interim && (
-                    <div className="mt-2 text-xs italic text-muted truncate text-center">
-                      {dictation.interim}
-                    </div>
-                  )}
                 </div>
 
-                {/* Small text box - always visible, required */}
+                {/* Small text box - always visible, required. While listening it
+                    shows live interim words; typing is disabled mid-dictation so
+                    the interim suffix can't collide with a manual edit. */}
                 <Field label="What was done">
                   <Textarea
-                    value={whatDone}
+                    value={liveWhatDone}
                     onChange={(e) => setWhatDone(e.target.value)}
+                    readOnly={dictation.listening}
                     placeholder="Or type here…"
                     rows={3}
                   />
@@ -1037,159 +1156,175 @@ function NewJob() {
                   )}
                 </div>
 
-                {/* Recall check - always visible */}
-                <div className="rounded-xl bg-indigobg px-3 py-2 flex items-center justify-between">
-                  <span className="text-sm text-indigo font-semibold flex items-center gap-2">
-                    <ShieldCheck size={16} animate={false} /> Recall check
-                  </span>
-                  <Pill accent="indigo">{recall.label}</Pill>
-                </div>
-
-                {/* Optional unit details - collapsed by default */}
-                <div className="rounded-xl border border-line bg-paper">
-                  <button
-                    type="button"
-                    onClick={() => setDetailsOpen((v) => !v)}
-                    aria-expanded={detailsOpen}
-                    className="pressable w-full flex items-center justify-between px-4 py-3 text-left"
-                  >
-                    <span className="text-sm font-semibold text-ink">
-                      Add unit details (optional)
+                {/* Recall alert - only when there's an actual recall. No recall
+                    is the norm, so we don't surface it as noise. */}
+                {recall.status !== "none" && (
+                  <div className="rounded-xl bg-redbg px-3 py-2 flex items-center justify-between">
+                    <span className="text-sm text-red font-semibold flex items-center gap-2">
+                      <ShieldCheck size={16} animate={false} /> Recall found
                     </span>
-                    <span
-                      className={`text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}
-                    >
-                      ▾
-                    </span>
-                  </button>
-                  {detailsOpen && (
-                    <div className="border-t border-line px-4 py-4 space-y-4">
-                      {homeAppliances.length > 0 && (
-                        <div>
-                          <div className="text-sm font-semibold text-ink mb-2">Which unit?</div>
-                          <div className="space-y-2">
-                            {homeAppliances.map((a) => {
-                              const label =
-                                [a.type, a.make, a.model].filter(Boolean).join(" · ") ||
-                                "Unnamed unit";
-                              const meta = a.last_job_at
-                                ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
-                                : "No visits yet";
-                              const picked = selectedEquipmentId === a.id;
-                              return (
-                                <button
-                                  key={a.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedEquipmentId(picked ? "" : a.id);
-                                    setEditDetails(false);
-                                  }}
-                                  aria-pressed={picked}
-                                  className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
-                                    picked
-                                      ? "border-indigo bg-indigobg shadow-sm"
-                                      : "border-line bg-paper hover:bg-soft hover:border-ink/20"
-                                  }`}
-                                >
-                                  <div className="font-semibold text-sm text-ink">{label}</div>
-                                  <div className="text-xs text-muted mt-0.5 tnum">{meta}</div>
-                                </button>
-                              );
-                            })}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedEquipmentId("");
-                                setEditDetails(false);
-                                setEqType("");
-                                setEqMake("");
-                                setEqModel("");
-                                setWarrantyUntil("");
-                              }}
-                              aria-pressed={!selectedEquipmentId}
-                              className={`pressable w-full text-left rounded-xl border border-dashed px-3 py-2.5 transition-all duration-200 ${
-                                !selectedEquipmentId
-                                  ? "border-indigo bg-indigobg/50 text-indigo"
-                                  : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
-                              }`}
-                            >
-                              <div className="font-semibold text-sm">+ Add a new unit</div>
-                            </button>
-                          </div>
+                    <Pill accent="red">{recall.label}</Pill>
+                  </div>
+                )}
 
-                          {selectedEquipmentId && applianceHistory.length > 0 && (
-                            <div className="mt-3 rounded-xl bg-soft px-3 py-2.5">
-                              <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
-                                Recent history
-                              </div>
-                              <ul className="space-y-1">
-                                {applianceHistory.map((j) => (
-                                  <li key={j.id} className="text-xs text-ink flex gap-2">
-                                    <span className="text-muted tnum shrink-0 w-20">
-                                      {formatDate(j.created_at)}
-                                    </span>
-                                    <span className="truncate">{j.what_done}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {selectedEquipmentId && (
-                            <button
-                              type="button"
-                              onClick={() => setEditDetails((v) => !v)}
-                              className="mt-3 text-xs font-semibold text-indigo hover:underline"
-                            >
-                              {editDetails ? "Hide details" : "Correct unit details"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {(!selectedEquipmentId || editDetails) && (
-                        <div className="grid grid-cols-2 gap-3">
-                          <Field label="Unit type">
-                            <Input
-                              value={eqType}
-                              onChange={(e) => setEqType(e.target.value)}
-                              placeholder="Softener"
-                            />
-                          </Field>
-                          <Field label="Make">
-                            <Input
-                              value={eqMake}
-                              onChange={(e) => setEqMake(e.target.value)}
-                              placeholder="EcoWater"
-                            />
-                          </Field>
-                          <Field label="Model">
-                            <Input
-                              value={eqModel}
-                              onChange={(e) => setEqModel(e.target.value)}
-                              placeholder="EVR3700R30"
-                            />
-                          </Field>
-                          <Field label="Warranty until">
-                            <Input
-                              type="date"
-                              value={warrantyUntil}
-                              onChange={(e) => setWarrantyUntil(e.target.value)}
-                            />
-                          </Field>
-                        </div>
-                      )}
-
-                      <Field label="Next service">
-                        <Input
-                          type="date"
-                          value={nextService}
-                          onChange={(e) => setNextService(e.target.value)}
-                        />
-                      </Field>
+                {homeAppliances.length > 0 ? (
+                  /* REPEAT HOME - the pro has serviced this address before, so we
+                     know its units. Surface them as the primary action: tap the
+                     unit you serviced and its details + history come with it, no
+                     retyping. This job attaches to that unit's equipment_id. */
+                  <div className="rounded-2xl border border-line bg-paper px-4 py-4 space-y-3">
+                    <div>
+                      <div className="text-base font-semibold text-ink">
+                        Which unit did you service?
+                      </div>
+                      <div className="text-sm text-muted">
+                        Tap a unit to pull up its details and history.
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    <div className="space-y-2">
+                      {homeAppliances.map((a) => {
+                        const label =
+                          [a.type, a.make, a.model].filter(Boolean).join(" · ") || "Unnamed unit";
+                        const meta = a.last_job_at
+                          ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
+                          : "No visits yet";
+                        const picked = selectedEquipmentId === a.id;
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedEquipmentId(picked ? "" : a.id);
+                              setEditDetails(false);
+                            }}
+                            aria-pressed={picked}
+                            className={`pressable flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all duration-200 min-h-16 ${
+                              picked
+                                ? "border-indigo bg-indigobg shadow-sm"
+                                : "border-line bg-paper hover:bg-soft hover:border-ink/20"
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-sm text-ink">{label}</div>
+                              <div className="text-xs text-muted mt-0.5 tnum">{meta}</div>
+                            </div>
+                            {picked && (
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo text-white">
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  aria-hidden
+                                >
+                                  <path
+                                    d="M5 12l5 5L20 7"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedEquipmentId("");
+                          setEditDetails(false);
+                          setEqType("");
+                          setEqMake("");
+                          setEqModel("");
+                          setWarrantyUntil("");
+                        }}
+                        aria-pressed={!selectedEquipmentId}
+                        className={`pressable w-full text-left rounded-xl border border-dashed px-4 py-3 transition-all duration-200 min-h-16 flex items-center gap-3 ${
+                          !selectedEquipmentId
+                            ? "border-indigo bg-indigobg/50 text-indigo"
+                            : "border-line bg-paper hover:bg-soft text-muted hover:text-ink"
+                        }`}
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo text-lg font-bold leading-none">
+                          +
+                        </span>
+                        <span className="font-semibold text-sm">Add a new unit</span>
+                      </button>
+                    </div>
+
+                    {selectedEquipmentId && applianceHistory.length > 0 && (
+                      <div className="rounded-xl bg-soft px-3 py-2.5">
+                        <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                          Recent history
+                        </div>
+                        <ul className="space-y-1">
+                          {applianceHistory.map((j) => (
+                            <li key={j.id} className="text-xs text-ink flex gap-2">
+                              <span className="text-muted tnum shrink-0 w-20">
+                                {formatDate(j.created_at)}
+                              </span>
+                              <span className="truncate">{j.what_done}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedEquipmentId && (
+                      <button
+                        type="button"
+                        onClick={() => setEditDetails((v) => !v)}
+                        className="text-xs font-semibold text-indigo hover:underline"
+                      >
+                        {editDetails ? "Hide details" : "Correct unit details"}
+                      </button>
+                    )}
+
+                    {(!selectedEquipmentId || editDetails) && unitFieldsGrid}
+                    {nextServiceField}
+                  </div>
+                ) : (
+                  /* NEW / FIRST-VISIT HOME - no units on file yet, so unit details
+                     are optional and tucked into a collapsed drawer. */
+                  <div
+                    className={`rounded-2xl border bg-paper transition-colors ${
+                      detailsOpen ? "border-indigo/30" : "border-line"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setDetailsOpen((v) => !v)}
+                      aria-expanded={detailsOpen}
+                      className="pressable w-full flex items-center gap-3 px-5 py-4 text-left min-h-16 hover:bg-indigobg/40 rounded-2xl transition-colors"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
+                        <span className="text-xl leading-none font-bold">+</span>
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-base font-semibold text-ink">
+                          Add unit details
+                        </span>
+                        <span className="block text-sm text-muted">
+                          Make, model, warranty, next service (optional)
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 text-lg text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}
+                      >
+                        ▾
+                      </span>
+                    </button>
+                    {detailsOpen && (
+                      <div className="border-t border-line px-4 py-4 space-y-4">
+                        {unitFieldsGrid}
+                        {nextServiceField}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <Btn variant="secondary" onClick={() => setStage("location")}>
@@ -1209,44 +1344,116 @@ function NewJob() {
             )}
 
             {stage === "review" && (
-              <Card className="space-y-5">
-                <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
-                  <span>Send branded record to customer</span>
-                  <input
-                    type="checkbox"
-                    checked={sendRecord}
-                    onChange={(e) => setSendRecord(e.target.checked)}
-                    className="accent-[var(--indigo)] scale-125"
-                  />
-                </label>
-                <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
-                  <span>Ask customer for a Google review</span>
-                  <input
-                    type="checkbox"
-                    checked={askReview}
-                    onChange={(e) => setAskReview(e.target.checked)}
-                    className="accent-[var(--indigo)] scale-125"
-                  />
-                </label>
+              <div className="space-y-4">
+                <p className="px-2 text-center text-sm text-muted">
+                  This is exactly what your customer gets. Uncheck any line you'd rather leave off.
+                </p>
 
-                <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStage("work")}>
-                    Back
-                  </Btn>
-                  <Btn
-                    variant="indigo"
-                    size="lg"
-                    className="flex-1"
-                    loading={submitting}
-                    onClick={submit}
-                  >
-                    Send record
-                  </Btn>
-                </div>
-                <div className="text-xs text-muted">
-                  {tradeLabel(proTrade)} · {proName}
-                </div>
-              </Card>
+                {/* The live record IS the control surface: each optional row is a
+                    checkmark. Customer and work done are always included. */}
+                <Card className="shadow-[0_24px_60px_-30px_rgba(22,22,15,0.18)]">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={proName || "?"} accent="indigo" size={44} />
+                    <div className="min-w-0">
+                      <div className="truncate font-extrabold text-ink">
+                        {proName || "Your business"}
+                      </div>
+                      <div className="text-xs text-muted">{tradeLabel(proTrade)}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold tracking-tight">Service record</h3>
+                    <div className="text-xs text-muted">{previewAddress || "Service address"}</div>
+                  </div>
+
+                  <div className="mt-3">
+                    <RecordRow locked label="Customer" value={previewName || "-"} included />
+                    {eqType && (
+                      <RecordRow
+                        label="Equipment"
+                        value={eqType}
+                        included={!hiddenFields.has(FIELD_EQUIPMENT)}
+                        onToggle={() => toggleField(FIELD_EQUIPMENT)}
+                      />
+                    )}
+                    {(eqMake || eqModel) && (
+                      <RecordRow
+                        label="Make / Model"
+                        value={[eqMake, eqModel].filter(Boolean).join(" · ")}
+                        included={!hiddenFields.has(FIELD_MAKE_MODEL)}
+                        onToggle={() => toggleField(FIELD_MAKE_MODEL)}
+                      />
+                    )}
+                    <RecordRow locked label="Work done" value={whatDone || "-"} included />
+                    {nextService && (
+                      <RecordRow
+                        label="Next service"
+                        value={formatDate(nextService)}
+                        included={!hiddenFields.has(FIELD_NEXT_SERVICE)}
+                        onToggle={() => toggleField(FIELD_NEXT_SERVICE)}
+                      />
+                    )}
+                    <RecordRow
+                      label="Recall status"
+                      value={
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-indigo">
+                          <ShieldCheck size={14} animate={false} /> None known
+                        </span>
+                      }
+                      included={!hiddenFields.has(FIELD_RECALL)}
+                      onToggle={() => toggleField(FIELD_RECALL)}
+                    />
+                  </div>
+
+                  <div className="mt-4 rounded-full bg-indigo py-2.5 text-center text-sm font-semibold text-(--on-accent) opacity-90">
+                    Claim your home, free
+                  </div>
+                </Card>
+
+                {/* Send actions, kept visually distinct from the field checks. */}
+                <Card className="space-y-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-muted">
+                    When you send
+                  </div>
+                  <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
+                    <span>Send branded record to customer</span>
+                    <input
+                      type="checkbox"
+                      checked={sendRecord}
+                      onChange={(e) => setSendRecord(e.target.checked)}
+                      className="accent-[var(--indigo)] scale-125"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm cursor-pointer hover:bg-line/50 transition-colors">
+                    <span>Ask customer for a Google review</span>
+                    <input
+                      type="checkbox"
+                      checked={askReview}
+                      onChange={(e) => setAskReview(e.target.checked)}
+                      className="accent-[var(--indigo)] scale-125"
+                    />
+                  </label>
+
+                  <div className="flex gap-2 pt-1">
+                    <Btn variant="secondary" onClick={() => setStage("work")}>
+                      Back
+                    </Btn>
+                    <Btn
+                      variant="indigo"
+                      size="lg"
+                      className="flex-1"
+                      loading={submitting}
+                      onClick={submit}
+                    >
+                      Send record
+                    </Btn>
+                  </div>
+                  <div className="text-xs text-muted">
+                    {tradeLabel(proTrade)} · {proName}
+                  </div>
+                </Card>
+              </div>
             )}
 
             {stage === "done" && (
@@ -1275,50 +1482,6 @@ function NewJob() {
               </Card>
             )}
           </div>
-
-          {/* Live record preview, updates as the pro types */}
-          {showPreview && (
-            <div className="anim-fade-up d-2 lg:sticky lg:top-24 hidden lg:block">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted mb-2 text-center">
-                Live preview · what your customer gets
-              </div>
-              <Card className="shadow-[0_24px_60px_-30px_rgba(22,22,15,0.3)]">
-                <div className="flex items-center gap-3">
-                  <Avatar name={proName || "?"} accent="indigo" size={40} />
-                  <div>
-                    <div className="font-extrabold text-ink text-sm">
-                      {proName || "Your business"}
-                    </div>
-                    <div className="text-xs text-muted">{tradeLabel(proTrade)}</div>
-                  </div>
-                </div>
-                <h3 className="mt-4 text-lg font-semibold tracking-tight font-display">
-                  Service record
-                </h3>
-                <div className="text-xs text-muted">{previewAddress || "Service address"}</div>
-                <div className="mt-2">
-                  <KV k="Customer" v={previewName || "-"} />
-                  <KV k="Equipment" v={eqType || "-"} />
-                  <KV k="Make / Model" v={[eqMake, eqModel].filter(Boolean).join(" · ") || "-"} />
-                  <KV k="Work done" v={whatDone || "-"} />
-                  <KV k="Next service" v={nextService || "-"} />
-                  <KV
-                    k="Recall status"
-                    v={
-                      <span className="inline-flex items-center gap-1.5 text-indigo font-semibold">
-                        <ShieldCheck size={14} animate={false} /> None known
-                      </span>
-                    }
-                  />
-                </div>
-                <div className="mt-4">
-                  <div className="rounded-full bg-indigo text-white text-center text-sm font-semibold py-2.5 opacity-90">
-                    Claim your home, free
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
 
