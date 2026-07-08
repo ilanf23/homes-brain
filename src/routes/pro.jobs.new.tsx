@@ -100,7 +100,7 @@ function NewJob() {
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address)")
+        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
@@ -426,7 +426,7 @@ function NewJob() {
     if (proId) {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address)")
+        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
