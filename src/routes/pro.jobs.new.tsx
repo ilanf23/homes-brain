@@ -122,45 +122,71 @@ function NewJob() {
   }, [proId]);
 
 
-  /* Detect the pro's current address on mount. If it matches an existing
-     customer, offer one-tap select. Otherwise, offer prefill. */
-  useEffect(() => {
+  /* Detect the pro's current address. Distance beats string matching -
+     Nominatim rounds to whichever address it knows, which is often a
+     neighbor. We prefer to auto-select only when a stored home sits within
+     ~30 m of the GPS point. */
+  const runLocate = useCallback(() => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       setLoc({ status: "unavailable" });
       return;
     }
     setLoc({ status: "locating" });
+    setShowNearby(false);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const address = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        if (!address) {
-          setLoc({ status: "unavailable" });
-          return;
-        }
-        setLoc({ status: "ready", address, match: null });
+        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+        const address = (await reverseGeocode(lat, lng)) ?? "";
+        setLoc({
+          status: "ready",
+          address,
+          lat,
+          lng,
+          accuracy: Number.isFinite(accuracy) ? accuracy : 9999,
+          match: null,
+          nearest: [],
+        });
       },
       (err) => {
         setLoc({ status: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" });
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
+      // maximumAge: 0 forces a fresh fix; enableHighAccuracy asks for GPS on mobile.
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   }, []);
 
-  /* Re-match the detected address whenever the customer list arrives/changes. */
+  useEffect(() => {
+    runLocate();
+  }, [runLocate]);
+
+  /* Compute nearest customers + auto-match whenever location or the customer
+     list changes. Ignore homes without coordinates (not yet geocoded). */
   useEffect(() => {
     if (loc.status !== "ready") return;
-    const norm = normalizeAddress(loc.address);
-    const match =
-      existing.find((c) => {
-        const a = c.homes?.address;
-        if (!a) return false;
-        const na = normalizeAddress(a);
-        return na === norm || na.startsWith(norm) || norm.startsWith(na);
-      }) ?? null;
-    if ((match?.id ?? null) !== (loc.match?.id ?? null)) {
-      setLoc({ status: "ready", address: loc.address, match });
+    const here = { lat: loc.lat, lng: loc.lng };
+    const withDistance: NearHome[] = existing
+      .map((c) => {
+        const h = c.homes;
+        if (!h || h.lat == null || h.lng == null) return null;
+        return { c, meters: haversineMeters(here, { lat: h.lat, lng: h.lng }) };
+      })
+      .filter((x): x is NearHome => x !== null)
+      .sort((a, b) => a.meters - b.meters);
+    const nearest = withDistance.slice(0, 3);
+    // Auto-match: closest home within 30 m, and clearly closer than #2.
+    const autoMatch =
+      nearest[0] && nearest[0].meters <= 30 && (!nearest[1] || nearest[1].meters > 50)
+        ? nearest[0].c
+        : null;
+    const sameMatch = (autoMatch?.id ?? null) === (loc.match?.id ?? null);
+    const sameList =
+      nearest.length === loc.nearest.length &&
+      nearest.every((n, i) => n.c.id === loc.nearest[i].c.id);
+    if (!sameMatch || !sameList) {
+      setLoc({ ...loc, match: autoMatch, nearest });
     }
   }, [existing, loc]);
+
 
   /* When an existing customer is picked, load that home's appliances (with
      last-job info) so the pro can attach this new visit to the same physical
