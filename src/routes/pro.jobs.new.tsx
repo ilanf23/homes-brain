@@ -428,13 +428,15 @@ function NewJob() {
      one just added is selectable on the next pass. */
   async function logAnother() {
     if (proId) {
-      const { data: c } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: c } = await (supabase as any)
         .from("customers")
         .select("id,name,phone,email,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     }
+
     setSelectedCustomerId("");
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
     setConsent(false);
