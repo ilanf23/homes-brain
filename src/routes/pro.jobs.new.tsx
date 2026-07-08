@@ -1424,21 +1424,8 @@ function NewJob() {
                         onToggle={() => toggleField(FIELD_NEXT_SERVICE)}
                       />
                     )}
-                    <RecordRow
-                      label="Recall status"
-                      value={
-                        <span className="inline-flex items-center gap-1.5 font-semibold text-indigo">
-                          <ShieldCheck size={14} animate={false} /> None known
-                        </span>
-                      }
-                      included={!hiddenFields.has(FIELD_RECALL)}
-                      onToggle={() => toggleField(FIELD_RECALL)}
-                    />
                   </div>
 
-                  <div className="mt-4 rounded-full bg-indigo py-2.5 text-center text-sm font-semibold text-(--on-accent) opacity-90">
-                    Claim your home, free
-                  </div>
 
                   {/* Google review ask: a checkmark in the same box, styled as an
                       action rather than a record row. */}
