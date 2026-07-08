@@ -457,14 +457,15 @@ function NewJob() {
     setSelectedCustomerId(c.id);
     const onFile = c.homes?.address ?? "";
     addressTouched.current = false;
-    if (onFile) {
-      setLocAddress(onFile);
-      // On-file address has no fresh coords unless the pro edits + picks a place.
-      setResolved(null);
-    } else if (loc.status === "ready") {
-      // No address on file: prefill from GPS so the pro just approves or edits.
+    // Prefer the pro's current GPS location as the editable prefill: most jobs
+    // happen where the truck is parked. Fall back to the on-file address, then
+    // empty. The pro can always edit or pick a different place.
+    if (loc.status === "ready") {
       setLocAddress(loc.address);
       setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
+    } else if (onFile) {
+      setLocAddress(onFile);
+      setResolved(null);
     } else {
       setLocAddress("");
       setResolved(null);
