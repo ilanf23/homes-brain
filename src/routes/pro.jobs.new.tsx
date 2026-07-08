@@ -715,40 +715,6 @@ function NewJob() {
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
               <Card className="space-y-3">
-                {locationMatch && !q && (
-                  <button
-                    type="button"
-                    onClick={() => pickExisting(locationMatch)}
-                    className="pressable flex w-full items-center gap-3 rounded-2xl border border-indigo/40 bg-indigobg px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/80"
-                  >
-                    <Avatar name={locationMatch.name || "?"} accent="indigo" size={40} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-semibold text-indigo">
-                        {locationMatch.name}
-                      </div>
-                      <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
-                        This matches your address
-                      </div>
-                    </div>
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                      className="shrink-0 text-indigo"
-                    >
-                      <path
-                        d="M9 6l6 6-6 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                )}
-
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -778,41 +744,59 @@ function NewJob() {
                       </button>
                     )}
 
-                    {filteredCustomers
-                      .filter((c) => !(locationMatch && !q && c.id === locationMatch.id))
-                      .map((c) => (
-
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => pickExisting(c)}
-                        className="group pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:border-indigo/30 hover:bg-indigobg/40"
-                      >
-                        <Avatar name={c.name || "?"} accent="indigo" size={40} />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-base font-semibold text-ink">{c.name}</div>
-                          <div className="mt-0.5 truncate text-sm text-muted">
-                            {c.homes?.address}
-                          </div>
-                        </div>
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          aria-hidden="true"
-                          className="shrink-0 text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-indigo"
+                    {filteredCustomers.map((c) => {
+                      const isMatch = !!locationMatch && c.id === locationMatch.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => pickExisting(c)}
+                          className={`group pressable flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
+                            isMatch
+                              ? "border-indigo/40 bg-indigobg hover:bg-indigobg/80"
+                              : "border-line bg-paper hover:border-indigo/30 hover:bg-indigobg/40"
+                          }`}
                         >
-                          <path
-                            d="M9 6l6 6-6 6"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    ))}
+                          <Avatar name={c.name || "?"} accent="indigo" size={40} />
+                          <div className="min-w-0 flex-1">
+                            <div
+                              className={`truncate text-base font-semibold ${
+                                isMatch ? "text-indigo" : "text-ink"
+                              }`}
+                            >
+                              {c.name}
+                            </div>
+                            {isMatch ? (
+                              <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
+                                Matches your address
+                              </div>
+                            ) : (
+                              <div className="mt-0.5 truncate text-sm text-muted">
+                                {c.homes?.address}
+                              </div>
+                            )}
+                          </div>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                            className={`shrink-0 transition-all duration-200 group-hover:translate-x-0.5 ${
+                              isMatch ? "text-indigo" : "text-muted group-hover:text-indigo"
+                            }`}
+                          >
+                            <path
+                              d="M9 6l6 6-6 6"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {!q && existing.length === 0 && (
