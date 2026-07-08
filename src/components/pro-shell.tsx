@@ -81,23 +81,25 @@ export function useProGuard() {
 }
 
 export type ProNavKey =
-  | "dashboard"
+  | "home"
   | "customers"
   | "records"
   | "invoices"
   | "due"
   | "reviews"
   | "referral"
+  | "office"
   | "settings";
 
 const NAV: { key: ProNavKey; label: string; to: string; icon: typeof LayoutDashboard }[] = [
-  { key: "dashboard", label: "Dashboard", to: "/pro", icon: LayoutDashboard },
+  { key: "home", label: "Home", to: "/pro", icon: LayoutDashboard },
   { key: "customers", label: "Customers", to: "/pro/customers", icon: Users },
   { key: "records", label: "Records", to: "/pro/records", icon: FileText },
   { key: "invoices", label: "Invoices", to: "/pro/invoices", icon: ReceiptText },
   { key: "due", label: "Due for service", to: "/pro/due", icon: CalendarClock },
   { key: "reviews", label: "Reviews", to: "/pro/reviews", icon: Star },
   { key: "referral", label: "Referral", to: "/pro/referral", icon: Gift },
+  { key: "office", label: "Office", to: "/pro/office", icon: LayoutDashboard },
   { key: "settings", label: "Settings", to: "/pro/settings", icon: Settings },
 ];
 
