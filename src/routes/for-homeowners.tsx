@@ -1144,7 +1144,7 @@ function ForHomeowners() {
                 <PhotoChip className="left-4 top-4" float>
                   <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo">
                     <LinkIcon size={14} className="shrink-0" />
-                    homesbrain.com/r/maple-st-142
+                    homesbrain.com/home
                   </div>
                 </PhotoChip>
                 <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">

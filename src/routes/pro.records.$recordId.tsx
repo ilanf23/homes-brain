@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { buildRecordUrl, formatDate } from "@/lib/hb";
+import { formatDate } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/records/$recordId")({
@@ -81,7 +81,6 @@ function RecordDetail() {
 
   const job = record.jobs;
   const claimed = !!job?.homes?.claimed_at;
-  const publicUrl = buildRecordUrl(record.id);
 
   // The journey the record travels - each step lights up as it happens.
   const steps: { label: string; at: string | null }[] = [
@@ -114,11 +113,6 @@ function RecordDetail() {
               <Btn variant="secondary">Create invoice</Btn>
             </Link>
           )}
-          <a href={publicUrl} target="_blank" rel="noreferrer">
-            <Btn variant="indigo">
-              View public record <ExternalLink size={15} />
-            </Btn>
-          </a>
         </div>
       </div>
 
