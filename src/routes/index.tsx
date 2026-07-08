@@ -317,6 +317,85 @@ function StepBadge({ n, accent }: { n: number; accent: "indigo" | "coral" }) {
 
 /* ---- Page ---- */
 
+function MakeItLastTeaser() {
+  const totalYearsGained = useMemo(
+    () =>
+      allBrowseEntries().reduce(
+        (sum, e) => (e.payoff.kind === "gain" ? sum + e.payoff.years : sum),
+        0,
+      ),
+    [],
+  );
+  const count = useCountUp(totalYearsGained, "home-mil-total", 1400);
+
+  return (
+    <section className="bg-soft border-t border-line py-20 sm:py-24">
+      <InView className="mx-auto max-w-5xl px-5">
+        <div className="grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+          <div className="reveal text-center lg:text-left">
+            <Eyebrow accent="coral">For homeowners</Eyebrow>
+
+            {/* Big honest number, derived from guide data */}
+            <div
+              className="relative mt-5 mx-auto lg:mx-0 max-w-md rounded-3xl bg-coralbg border border-coral/25 px-5 py-7 sm:px-7 sm:py-8 overflow-hidden"
+              aria-label={`${totalYearsGained} plus years of extra life`}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-70"
+                style={{
+                  background:
+                    "radial-gradient(80% 60% at 50% 0%, rgba(194,70,31,0.14), transparent 70%)",
+                }}
+                aria-hidden="true"
+              />
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-coraldark">
+                  <Sparkles size={13} /> Hidden in your home
+                </div>
+                <div className="mt-2 flex items-baseline justify-center lg:justify-start gap-2">
+                  <span className="tnum text-5xl sm:text-7xl font-bold text-coral leading-none tabular-nums">
+                    {count}
+                  </span>
+                  <span className="text-2xl sm:text-4xl font-bold text-coral leading-none">
+                    +
+                  </span>
+                  <span className="text-base sm:text-xl font-semibold text-coraldark">
+                    years
+                  </span>
+                </div>
+                <p className="mt-3 text-base sm:text-lg text-ink leading-snug">
+                  of extra life hiding in your home right now.
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-base sm:text-lg text-muted max-w-md mx-auto lg:mx-0">
+              See how long everything in your home should last, and how to get there.
+            </p>
+
+            <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4">
+              <Link to="/make-it-last" className="w-full sm:w-auto">
+                <Btn variant="coral" size="lg" className="w-full sm:w-auto">
+                  Explore Make It Last
+                </Btn>
+              </Link>
+              <Link
+                to="/home/signup"
+                className="text-sm font-semibold text-coraldark hover:text-coral transition-colors text-center"
+              >
+                Start your free record
+              </Link>
+            </div>
+          </div>
+          <div className="reveal rd-2">
+            <MiniLifespansPicker />
+          </div>
+        </div>
+      </InView>
+    </section>
+  );
+}
+
 function Landing() {
   const [heroStep, setHeroStep] = useState(0);
 
