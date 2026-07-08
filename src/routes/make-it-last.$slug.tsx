@@ -275,7 +275,9 @@ function GuidePage() {
   const neglectedPct = (g.neglected / maxYears) * 100;
   const maintainedPct = (g.maintained / maxYears) * 100;
   const others = otherGuides(g.slug, 4);
-  const sections = buildSections(g);
+  const hasPros = prosForCategory(meta.categoryId).length > 0;
+  const sections = buildSections(g, hasPros);
+
   const active = useScrollSpy(sections.map((s) => s.id));
 
   // Animated payoff number for the hero.
