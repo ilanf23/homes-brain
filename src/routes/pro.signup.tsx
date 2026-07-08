@@ -202,6 +202,35 @@ function ProSignup() {
                     maxLength={40}
                   />
                 </Field>
+                <GoogleSignupButton
+                  disabled={!basicsValid || submitting}
+                  onClick={() => {
+                    setUseGoogle(true);
+                    setStep(2);
+                  }}
+                />
+                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-muted">
+                  <div className="h-px flex-1 bg-line" />
+                  or continue with email
+                  <div className="h-px flex-1 bg-line" />
+                </div>
+                <Field label="Business name">
+                  <Input
+                    value={business}
+                    onChange={(e) => setBusiness(e.target.value)}
+                    placeholder="Aqua Works"
+                    autoFocus
+                  />
+                </Field>
+                <Field label="Your first name" hint="We'll use this to greet you.">
+                  <Input
+                    value={ownerFirstName}
+                    onChange={(e) => setOwnerFirstName(e.target.value)}
+                    placeholder="Alex"
+                    autoComplete="given-name"
+                    maxLength={40}
+                  />
+                </Field>
                 <Field label="Email" hint="You'll use this to log in.">
                   <Input
                     type="email"
