@@ -166,6 +166,15 @@ function ProSignup() {
                     autoFocus
                   />
                 </Field>
+                <Field label="Your first name" hint="We'll use this to greet you.">
+                  <Input
+                    value={ownerFirstName}
+                    onChange={(e) => setOwnerFirstName(e.target.value)}
+                    placeholder="Alex"
+                    autoComplete="given-name"
+                    maxLength={40}
+                  />
+                </Field>
                 <Field label="Email" hint="You'll use this to log in.">
                   <Input
                     type="email"
