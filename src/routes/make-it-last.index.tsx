@@ -271,8 +271,8 @@ function MakeItLast() {
         </div>
       </section>
 
-      {/* Closing CTA */}
-      <section className="border-t border-line bg-soft">
+      {/* Closing CTA. Extra bottom padding on mobile so the sticky bar never covers it. */}
+      <section className="border-t border-line bg-soft pb-28 min-[880px]:pb-0">
         <div className="mx-auto max-w-3xl px-5 py-20 text-center">
           <Eyebrow accent="coral">Start free</Eyebrow>
           <h2 className="mt-3 text-3xl sm:text-4xl tracking-tight text-ink">
@@ -294,9 +294,31 @@ function MakeItLast() {
           </p>
         </div>
       </section>
+
+      {/* Sticky bottom action bar, mobile only. Primary always one thumb away. */}
+      <div
+        className="min-[880px]:hidden fixed bottom-0 inset-x-0 z-30 border-t border-line bg-background/95 backdrop-blur-md px-4 pt-3"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+      >
+        <Link to="/home/signup" className="block">
+          <Btn variant="coral" size="lg" className="w-full">
+            Start your free record
+          </Btn>
+        </Link>
+        <div className="mt-1.5 text-center">
+          <a
+            href="#browse"
+            onClick={scrollToBrowse}
+            className="inline-block px-3 py-1.5 text-xs font-semibold text-coraldark hover:text-coral transition-colors"
+          >
+            Explore systems
+          </a>
+        </div>
+      </div>
     </MarketingShell>
   );
 }
+
 
 function FilterChip({
   active,
