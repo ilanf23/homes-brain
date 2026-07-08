@@ -14,6 +14,7 @@ import {
   normalizeAddress,
   tradeLabel,
 } from "@/lib/hb";
+import { createInvoice, formatMoney } from "@/lib/invoices";
 
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
@@ -190,6 +191,11 @@ function NewJob() {
   const [askReview, setAskReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [recordUrl, setRecordUrl] = useState<string | null>(null);
+  // Optional "bill this customer" amount entered on the review slide. String so
+  // the input can be empty; parsed to a number at submit time. When >0 we also
+  // create an open invoice so the homeowner can pay it via the existing flow.
+  const [chargeAmount, setChargeAmount] = useState("");
+  const [billedAmount, setBilledAmount] = useState<number | null>(null);
   // Optional record rows the pro has unchecked (excluded from the customer's
   // record). Keyed by FIELD_* constants; empty rows never enter this set.
   const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
@@ -620,6 +626,21 @@ function NewJob() {
       .select("id")
       .single();
 
+    // Optional invoice: if the pro entered a charge amount, create an open
+    // invoice tied to this job so the homeowner can pay through /home.
+    const chargeNum = parseFloat(chargeAmount);
+    setBilledAmount(null);
+    if (job?.id && customerId && homeId && Number.isFinite(chargeNum) && chargeNum > 0) {
+      const inv = await createInvoice({
+        proId,
+        customerId,
+        homeId,
+        jobId: job.id,
+        items: [{ description: whatDone.trim() || "Service", amount: chargeNum }],
+      });
+      if (inv) setBilledAmount(chargeNum);
+    }
+
     // Record. Persist which record rows the pro excluded, scoped to rows that
     // actually have a value, so the public record can hide exactly those.
     const presentKeys = new Set<string>([FIELD_CUSTOMER, FIELD_WORK_DONE, FIELD_RECALL]);
@@ -740,6 +761,8 @@ function NewJob() {
     setHiddenFields(new Set());
     setRecordUrl(null);
     setCopied(false);
+    setChargeAmount("");
+    setBilledAmount(null);
     setStage("customer");
   }
 
@@ -1421,6 +1444,40 @@ function NewJob() {
                   </div>
 
 
+                  {/* Optional "bill this customer" amount. Leave blank to skip;
+                      any positive number creates an open invoice tied to the job
+                      so the homeowner can pay it from /home. */}
+                  <div className="mt-5 border-t border-line pt-4">
+                    <label
+                      htmlFor="charge-amount"
+                      className="block text-sm font-semibold text-ink"
+                    >
+                      Charge for this job (optional)
+                    </label>
+                    <div className="mt-2 relative">
+                      <span
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted"
+                        aria-hidden
+                      >
+                        $
+                      </span>
+                      <input
+                        id="charge-amount"
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={chargeAmount}
+                        onChange={(e) => setChargeAmount(e.target.value)}
+                        className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-2xl font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted">
+                      Leave blank if you're not billing through the app.
+                    </p>
+                  </div>
+
                   {/* Google review ask: a checkmark in the same box, styled as an
                       action rather than a record row. */}
                   <div className="mt-5 border-t border-line pt-4">
@@ -1465,6 +1522,11 @@ function NewJob() {
                 <p className="mt-2 text-sm text-muted">
                   Your customer will see it in their inbox and texts.
                 </p>
+                {billedAmount != null && (
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-sm font-semibold text-indigo">
+                    Billed {formatMoney(billedAmount)} · they can pay it from their home page
+                  </div>
+                )}
                 {recordUrl && (
                   <button
                     onClick={copyUrl}
