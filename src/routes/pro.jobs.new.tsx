@@ -761,6 +761,8 @@ function NewJob() {
     setHiddenFields(new Set());
     setRecordUrl(null);
     setCopied(false);
+    setChargeAmount("");
+    setBilledAmount(null);
     setStage("customer");
   }
 
