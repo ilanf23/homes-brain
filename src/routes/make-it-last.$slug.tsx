@@ -479,7 +479,7 @@ function GuidePage() {
           {g.expectedLifeOnly ? (
             <section className="mt-10 scroll-mt-32" id="built-to-last">
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                   <Info size={20} strokeWidth={2.25} />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
@@ -506,7 +506,7 @@ function GuidePage() {
           ) : g.cadenceOnly ? (
             <section className="mt-10 scroll-mt-32" id="cadence">
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                   <Info size={20} strokeWidth={2.25} />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
@@ -527,7 +527,7 @@ function GuidePage() {
           ) : (
             <section className="mt-10 scroll-mt-32" id="two-lifespans">
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                   <BarChart3 size={20} strokeWidth={2.25} />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Two lifespans</h2>
@@ -811,7 +811,7 @@ function GuidePage() {
           {/* Keep going */}
           <section className="mt-16">
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+              <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                 <ChevronRight size={20} strokeWidth={2.25} />
               </div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Keep going</h2>
