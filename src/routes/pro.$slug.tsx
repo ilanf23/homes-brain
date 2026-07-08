@@ -133,13 +133,15 @@ function ProProfile() {
             >
               Contact this pro
             </Btn>
-            <a
-              href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-soft transition-colors"
-            >
-              <Phone size={16} strokeWidth={2} />
-              <span className="tnum">{pro.phone}</span>
-            </a>
+            {pro.phone && (
+              <a
+                href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-soft transition-colors"
+              >
+                <Phone size={16} strokeWidth={2} />
+                <span className="tnum">{pro.phone}</span>
+              </a>
+            )}
           </div>
         </header>
 
