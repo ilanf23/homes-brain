@@ -380,6 +380,14 @@ function NewJob() {
     );
   })();
 
+  // Sort the location-matched customer to the top so the purple row is the first thing the pro sees.
+  const filteredCustomers = locationMatch
+    ? [
+        ...baseFiltered.filter((c) => c.id === locationMatch.id),
+        ...baseFiltered.filter((c) => c.id !== locationMatch.id),
+      ]
+    : baseFiltered;
+
 
 
   function pickExisting(c: CustomerOpt) {
