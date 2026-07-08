@@ -22,6 +22,7 @@ import { Route as ForProsRouteImport } from './routes/for-pros'
 import { Route as ForHomeownersRouteImport } from './routes/for-homeowners'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProsIndexRouteImport } from './routes/pros.index'
 import { Route as ProIndexRouteImport } from './routes/pro.index'
 import { Route as MakeItLastIndexRouteImport } from './routes/make-it-last.index'
 import { Route as HomeIndexRouteImport } from './routes/home.index'
@@ -33,6 +34,7 @@ import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
+import { Route as ProSlugRouteImport } from './routes/pro.$slug'
 import { Route as MakeItLastSlugRouteImport } from './routes/make-it-last.$slug'
 import { Route as HomeSignupRouteImport } from './routes/home.signup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
@@ -118,6 +120,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProsIndexRoute = ProsIndexRouteImport.update({
+  id: '/pros/',
+  path: '/pros/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProIndexRoute = ProIndexRouteImport.update({
   id: '/pro/',
   path: '/pro/',
@@ -171,6 +178,11 @@ const ProOfficeRoute = ProOfficeRouteImport.update({
 const ProDueRoute = ProDueRouteImport.update({
   id: '/pro/due',
   path: '/pro/due',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProSlugRoute = ProSlugRouteImport.update({
+  id: '/pro/$slug',
+  path: '/pro/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MakeItLastSlugRoute = MakeItLastSlugRouteImport.update({
@@ -293,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
+  '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -304,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/home/': typeof HomeIndexRoute
   '/make-it-last/': typeof MakeItLastIndexRoute
   '/pro/': typeof ProIndexRoute
+  '/pros/': typeof ProsIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/invoices/new': typeof ProInvoicesNewRoute
@@ -338,6 +352,7 @@ export interface FileRoutesByTo {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
+  '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -349,6 +364,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeIndexRoute
   '/make-it-last': typeof MakeItLastIndexRoute
   '/pro': typeof ProIndexRoute
+  '/pros': typeof ProsIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/invoices/new': typeof ProInvoicesNewRoute
@@ -384,6 +400,7 @@ export interface FileRoutesById {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
+  '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -395,6 +412,7 @@ export interface FileRoutesById {
   '/home/': typeof HomeIndexRoute
   '/make-it-last/': typeof MakeItLastIndexRoute
   '/pro/': typeof ProIndexRoute
+  '/pros/': typeof ProsIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/invoices/new': typeof ProInvoicesNewRoute
@@ -431,6 +449,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/make-it-last/$slug'
+    | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -442,6 +461,7 @@ export interface FileRouteTypes {
     | '/home/'
     | '/make-it-last/'
     | '/pro/'
+    | '/pros/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
     | '/pro/invoices/new'
@@ -476,6 +496,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/make-it-last/$slug'
+    | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -487,6 +508,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/make-it-last'
     | '/pro'
+    | '/pros'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
     | '/pro/invoices/new'
@@ -521,6 +543,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/make-it-last/$slug'
+    | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -532,6 +555,7 @@ export interface FileRouteTypes {
     | '/home/'
     | '/make-it-last/'
     | '/pro/'
+    | '/pros/'
     | '/home/items/$itemId'
     | '/pro/customers/$customerId'
     | '/pro/invoices/new'
@@ -567,6 +591,7 @@ export interface RootRouteChildren {
   HomeSettingsRoute: typeof HomeSettingsRoute
   HomeSignupRoute: typeof HomeSignupRoute
   MakeItLastSlugRoute: typeof MakeItLastSlugRoute
+  ProSlugRoute: typeof ProSlugRoute
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
   ProReferralRoute: typeof ProReferralRoute
@@ -578,6 +603,7 @@ export interface RootRouteChildren {
   HomeIndexRoute: typeof HomeIndexRoute
   MakeItLastIndexRoute: typeof MakeItLastIndexRoute
   ProIndexRoute: typeof ProIndexRoute
+  ProsIndexRoute: typeof ProsIndexRoute
   HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
   ProCustomersCustomerIdRoute: typeof ProCustomersCustomerIdRoute
   ProInvoicesNewRoute: typeof ProInvoicesNewRoute
@@ -682,6 +708,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pros/': {
+      id: '/pros/'
+      path: '/pros'
+      fullPath: '/pros/'
+      preLoaderRoute: typeof ProsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/': {
       id: '/pro/'
       path: '/pro'
@@ -757,6 +790,13 @@ declare module '@tanstack/react-router' {
       path: '/pro/due'
       fullPath: '/pro/due'
       preLoaderRoute: typeof ProDueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/$slug': {
+      id: '/pro/$slug'
+      path: '/pro/$slug'
+      fullPath: '/pro/$slug'
+      preLoaderRoute: typeof ProSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/make-it-last/$slug': {
@@ -919,6 +959,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeSettingsRoute: HomeSettingsRoute,
   HomeSignupRoute: HomeSignupRoute,
   MakeItLastSlugRoute: MakeItLastSlugRoute,
+  ProSlugRoute: ProSlugRoute,
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
   ProReferralRoute: ProReferralRoute,
@@ -930,6 +971,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeIndexRoute: HomeIndexRoute,
   MakeItLastIndexRoute: MakeItLastIndexRoute,
   ProIndexRoute: ProIndexRoute,
+  ProsIndexRoute: ProsIndexRoute,
   HomeItemsItemIdRoute: HomeItemsItemIdRoute,
   ProCustomersCustomerIdRoute: ProCustomersCustomerIdRoute,
   ProInvoicesNewRoute: ProInvoicesNewRoute,

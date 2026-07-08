@@ -168,8 +168,8 @@ function MakeItLast() {
         <div className="mx-auto max-w-6xl px-4 sm:px-5">
           <InteractiveHouse />
           <div className="mt-8 hidden sm:flex flex-wrap justify-center gap-3">
-            <Link to="/home/pros">
-              <Btn variant="coral">Book a pro</Btn>
+            <Link to="/pros">
+              <Btn variant="coral">Find a local pro</Btn>
             </Link>
             <a href="#browse" onClick={scrollToBrowse}>
               <Btn variant="ghost">Browse all systems</Btn>
