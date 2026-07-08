@@ -314,23 +314,48 @@ export const GUIDES: Record<string, Guide> = {
       "A water softener lasts about 10 to 15 years. Salt and resin care get you to the top of that range and protect every other appliance in the house.",
     quickAnswer:
       "A water softener lasts about 10 to 15 years. Keeping the salt topped up and servicing the resin bed is what gets you to the top of that range, and it protects every other appliance in the house.",
+    overview:
+      "A water softener is the quiet protector of every water appliance in a Florida home. Keep salt in it and service the resin, and it lasts well past a decade while extending the life of your water heater, dishwasher, and fixtures.",
     neglected: 10,
     maintained: 15,
-    maintenance: [
-      { task: "Keep the salt topped up", frequency: "Monthly check", effect: "The whole system stops working when salt runs out." },
-      { task: "Break up any salt bridges in the tank", frequency: "As needed", effect: "Bridges look like a full tank but leave the softener starving." },
-      { task: "Service or replace the resin bed", frequency: "Every several years", effect: "Restores capacity as resin wears." },
-      { task: "Clean the brine tank", frequency: "Periodically", effect: "Prevents sludge and valve problems." },
+    brands: [
+      { name: "Culligan", note: "Consumer Reports most reliable, 85 plus years, strong support.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
+      { name: "Kinetico", note: "Non electric dual tank, often 30 plus years.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
+      { name: "Fleck", note: "Budget favorite, the 5600SXT.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
+      { name: "Pentair", note: "Solid whole home systems.", sourceUrl: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust", sourceLabel: "Quality Water Treatment: top softener brands" },
     ],
+    maintenance: [
+      { task: "Keep the salt topped up", frequency: "Monthly check", effect: "The whole system stops working when salt runs out.", impact: "High" },
+      { task: "Break up any salt bridges in the tank", frequency: "As needed", effect: "Bridges look like a full tank but leave the softener starving.", impact: "Medium" },
+      { task: "Service or replace the resin bed", frequency: "Every several years", effect: "Restores capacity as resin wears.", impact: "Medium" },
+      { task: "Clean the brine tank", frequency: "Periodically", effect: "Prevents sludge and valve problems.", impact: "Low" },
+    ],
+    signs: [
+      "Hard water spots come back",
+      "Soap will not lather",
+      "Scale building on fixtures",
+      "The salt tank looks full but nothing softens (a salt bridge)",
+    ],
+    repairOrReplace:
+      "Resin and valves can be serviced. Replace when it is 15 plus years and repairs stop holding.",
     facts: [
       { k: "Expected life", v: "10 to 15 years" },
       { k: "Common failure", v: "Resin wear, valve" },
+    ],
+    faqs: [
+      { q: "How often do I add salt to a water softener?", a: "Check monthly and refill as needed. The system stops working when salt runs out." },
+      { q: "Which water softener brands last longest?", a: "Culligan and Kinetico, often 20 to 30 plus years." },
+      { q: "What is a salt bridge?", a: "A hardened crust that looks like a full tank but leaves the softener starving for salt." },
+      { q: "Does a softener protect my other appliances?", a: "Yes, it extends the life of your water heater, dishwasher, and fixtures." },
+      { q: "Repair or replace a softener?", a: "Service resin and valves when possible, replace at 15 plus years if it keeps failing." },
     ],
     floridaNote:
       "Hard water is the norm here, so a working softener extends the life of your water heater, dishwasher, and fixtures too.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
+      { label: "Quality Water Treatment: top softener brands", url: "https://qualitywatertreatment.com/pages/which-top-brands-of-water-softeners-should-you-trust" },
     ],
+
   },
 
   refrigerator: {
