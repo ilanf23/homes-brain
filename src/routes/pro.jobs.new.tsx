@@ -496,97 +496,184 @@ function NewJob() {
         <div className={showPreview ? "grid lg:grid-cols-[1fr_380px] gap-6 items-start" : ""}>
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
-              <Card className="space-y-5">
-                {existing.length > 0 && (
-                  <div>
-                    <div className="text-sm font-semibold text-ink mb-2">Existing customer</div>
-                    <div className="space-y-2 max-h-48 overflow-auto">
+              <div className="space-y-5">
+                {/* 1. USE MY LOCATION - hero at the top */}
+                {loc.status === "locating" && (
+                  <Card className="text-center py-8">
+                    <div className="text-sm text-muted">Finding your location…</div>
+                  </Card>
+                )}
+
+                {loc.status === "ready" && loc.match && (
+                  <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
+                    <div>
+                      <Pill accent="indigo">You're here</Pill>
+                      <div className="mt-3 text-xl font-semibold text-ink tracking-tight">
+                        {loc.match.name}
+                      </div>
+                      <div className="mt-1 text-sm text-muted">{loc.match.homes?.address}</div>
+                    </div>
+                    <Btn
+                      variant="indigo"
+                      size="lg"
+                      className="w-full"
+                      onClick={() => {
+                        setSelectedCustomerId(loc.match!.id);
+                        setStage("work");
+                      }}
+                    >
+                      Yes, this is the job
+                    </Btn>
+                  </Card>
+                )}
+
+                {loc.status === "ready" && !loc.match && (
+                  <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
+                    <div>
+                      <Pill accent="indigo">You're here</Pill>
+                      <div className="mt-3 text-lg font-semibold text-ink tracking-tight leading-snug">
+                        {loc.address}
+                      </div>
+                      <div className="mt-1 text-sm text-muted">Is this the job?</div>
+                    </div>
+                    <Btn
+                      variant="indigo"
+                      size="lg"
+                      className="w-full"
+                      onClick={() => {
+                        setNewCustomer((n) => ({ ...n, address: loc.address }));
+                        setAddByHand(true);
+                      }}
+                    >
+                      Yes, this is it
+                    </Btn>
+                  </Card>
+                )}
+
+                {/* 2. RECENT CUSTOMERS - big tappable cards */}
+                {existing.length > 0 && !addByHand && (
+                  <Card className="space-y-3">
+                    <div className="text-sm font-semibold text-ink">Recent customers</div>
+                    <div className="space-y-2 max-h-[360px] overflow-auto -mx-1 px-1">
                       {existing.map((c) => (
                         <button
                           key={c.id}
                           type="button"
-                          onClick={() =>
-                            setSelectedCustomerId(c.id === selectedCustomerId ? "" : c.id)
-                          }
-                          aria-pressed={selectedCustomerId === c.id}
-                          className={`pressable w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200 ${
-                            selectedCustomerId === c.id
-                              ? "border-indigo bg-indigobg shadow-sm"
-                              : "border-line bg-paper hover:bg-soft hover:border-ink/20"
-                          }`}
+                          onClick={() => {
+                            setSelectedCustomerId(c.id);
+                            setStage("work");
+                          }}
+                          className="pressable w-full text-left rounded-2xl border border-line bg-paper px-4 py-4 hover:bg-soft hover:border-ink/20 transition-all duration-200 min-h-16"
                         >
-                          <div className="font-semibold text-sm">{c.name}</div>
-                          <div className="text-xs text-muted">{c.homes?.address}</div>
+                          <div className="font-semibold text-base text-ink">{c.name}</div>
+                          <div className="text-sm text-muted mt-0.5 truncate">
+                            {c.homes?.address}
+                          </div>
                         </button>
                       ))}
                     </div>
-                    <div className="text-center text-xs text-muted my-3">- or add new -</div>
-                  </div>
+                  </Card>
                 )}
 
-                <Field label="Customer name">
-                  <Input
-                    value={newCustomer.name}
-                    disabled={!!selectedCustomerId}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                    placeholder="Jane Doe"
-                  />
-                </Field>
-                <Field label="Service address">
-                  <Input
-                    value={newCustomer.address}
-                    disabled={!!selectedCustomerId}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                    placeholder="123 Maple St, Austin TX"
-                  />
-                </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Phone">
-                    <Input
-                      value={newCustomer.phone}
-                      disabled={!!selectedCustomerId}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                      placeholder="555-555-1234"
-                      type="tel"
-                    />
-                  </Field>
-                  <Field label="Email">
-                    <Input
-                      value={newCustomer.email}
-                      disabled={!!selectedCustomerId}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                      placeholder="jane@email.com"
-                      type="email"
-                    />
-                  </Field>
-                </div>
+                {/* 3. ADD BY HAND - collapsed by default */}
+                {!addByHand ? (
+                  <Btn
+                    variant="secondary"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedCustomerId("");
+                      setAddByHand(true);
+                      if (loc.status === "ready" && !newCustomer.address) {
+                        setNewCustomer((n) => ({ ...n, address: loc.address }));
+                      }
+                    }}
+                  >
+                    Add a new customer
+                  </Btn>
+                ) : (
+                  <Card className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold text-ink">New customer</div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAddByHand(false);
+                          setNewCustomer({ name: "", address: "", phone: "", email: "" });
+                          setConsent(false);
+                        }}
+                        className="text-xs text-muted hover:text-ink"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <Field label="Customer name">
+                      <Input
+                        value={newCustomer.name}
+                        onChange={(e) =>
+                          setNewCustomer({ ...newCustomer, name: e.target.value })
+                        }
+                        placeholder="Jane Doe"
+                        autoFocus
+                      />
+                    </Field>
+                    <Field label="Service address">
+                      <Input
+                        value={newCustomer.address}
+                        onChange={(e) =>
+                          setNewCustomer({ ...newCustomer, address: e.target.value })
+                        }
+                        placeholder="123 Maple St, Austin TX"
+                      />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Phone (optional)">
+                        <Input
+                          value={newCustomer.phone}
+                          onChange={(e) =>
+                            setNewCustomer({ ...newCustomer, phone: e.target.value })
+                          }
+                          placeholder="555-555-1234"
+                          type="tel"
+                        />
+                      </Field>
+                      <Field label="Email (optional)">
+                        <Input
+                          value={newCustomer.email}
+                          onChange={(e) =>
+                            setNewCustomer({ ...newCustomer, email: e.target.value })
+                          }
+                          placeholder="jane@email.com"
+                          type="email"
+                        />
+                      </Field>
+                    </div>
 
-                {!selectedCustomerId && (
-                  <label className="flex items-start gap-2 text-sm text-ink rounded-xl bg-soft p-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={consent}
-                      onChange={(e) => setConsent(e.target.checked)}
-                      className="mt-0.5 accent-[var(--indigo)]"
-                    />
-                    <span>
-                      By adding this customer you confirm they agreed to receive a service record
-                      and updates by text.
-                    </span>
-                  </label>
+                    <div className="flex items-center justify-between gap-4 rounded-xl bg-soft px-4 py-3">
+                      <div className="text-sm font-semibold text-ink">
+                        Customer is OK to get texts
+                      </div>
+                      <Toggle
+                        checked={consent}
+                        onChange={setConsent}
+                        label="Customer consents to texts"
+                      />
+                    </div>
+
+                    <Btn
+                      variant="indigo"
+                      size="lg"
+                      className="w-full"
+                      disabled={!(newCustomer.name && newCustomer.address && consent)}
+                      onClick={() => setStage("work")}
+                    >
+                      Continue
+                    </Btn>
+                  </Card>
                 )}
-
-                <Btn
-                  variant="indigo"
-                  size="lg"
-                  className="w-full"
-                  disabled={!canCustomer}
-                  onClick={() => setStage("work")}
-                >
-                  Continue
-                </Btn>
-              </Card>
+              </div>
             )}
+
 
             {stage === "work" && (
               <Card className="space-y-5">
