@@ -22,6 +22,7 @@ function HomeOverview() {
     equipment,
     jobs,
     pros,
+    records,
     loading: guardLoading,
     refresh,
   } = useHomeownerGuard();
@@ -49,6 +50,16 @@ function HomeOverview() {
         .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))[0] ?? null,
     [jobs],
   );
+  const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
+  const newRecords = useMemo(
+    () =>
+      records
+        .filter((r) => !r.viewed_at)
+        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+        .slice(0, 5),
+    [records],
+  );
+
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
 
