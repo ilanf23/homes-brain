@@ -30,7 +30,7 @@ import {
   Mail,
   type LucideIcon,
 } from "lucide-react";
-import { Btn, Card, Eyebrow, Pill, SectionHead } from "@/lib/ui";
+import { Btn, Card, Eyebrow, SectionHead } from "@/lib/ui";
 import { MarketingShell, marketingHead } from "@/components/marketing";
 
 export const Route = createFileRoute("/make-it-last/")({
