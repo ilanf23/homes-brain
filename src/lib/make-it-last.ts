@@ -211,24 +211,48 @@ export const GUIDES: Record<string, Guide> = {
       "A clothes dryer lasts about 8 to 13 years. Cleaning the full vent line yearly keeps it efficient and cuts a real fire risk.",
     quickAnswer:
       "A clothes dryer lasts about 8 to 13 years. Cleaning the full vent line yearly, not just the lint trap, keeps it efficient and cuts a real fire risk.",
+    overview:
+      "A dryer is simple, but a neglected vent quietly steals years and creates a real fire risk. Cleaning the full line, not just the lint trap, is the single highest return chore in the laundry room.",
     neglected: 8,
     maintained: 13,
-    maintenance: [
-      { task: "Clean the lint trap", frequency: "Every load", effect: "Keeps airflow up and dry times down." },
-      { task: "Clean the full vent line", frequency: "At least yearly", effect: "Fixes the real fire risk, not just the visible lint." },
-      { task: "Do not overload the drum", frequency: "Every load", effect: "Prevents motor and belt strain." },
-      { task: "Check the exterior vent flap", frequency: "Yearly", effect: "Blocked flaps trap moisture and reduce efficiency." },
+    brands: [
+      { name: "LG", note: "Top rated reliability, low service rates.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
+      { name: "Whirlpool", note: "Reliable and parts are easy to find anywhere.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
+      { name: "Maytag", note: "Built for durability.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
+      { name: "Samsung", note: "Feature rich.", sourceUrl: "https://www.familyhandyman.com/article/home-appliances-lifespan/", sourceLabel: "Family Handyman: appliance lifespans" },
     ],
+    maintenance: [
+      { task: "Clean the full vent line", frequency: "At least yearly", effect: "Fixes the real fire risk, not just the visible lint.", impact: "High" },
+      { task: "Clean the lint trap", frequency: "Every load", effect: "Keeps airflow up and dry times down.", impact: "Medium" },
+      { task: "Do not overload the drum", frequency: "Every load", effect: "Prevents motor and belt strain.", impact: "Medium" },
+      { task: "Check the exterior vent flap", frequency: "Yearly", effect: "Blocked flaps trap moisture and reduce efficiency.", impact: "Low" },
+    ],
+    signs: [
+      "Clothes take two cycles to dry",
+      "The dryer or clothes are hot to the touch",
+      "A burning smell",
+      "The exterior vent flap does not open",
+    ],
+    repairOrReplace:
+      "Cheap fixes like a thermal fuse are worth it. Past 10 years with an expensive repair, replace.",
     facts: [
       { k: "Expected life", v: "7 to 13 years" },
       { k: "Common failure", v: "Heating element, thermal fuse" },
       { k: "Safety note", v: "Clogged vents are a leading cause of dryer fires" },
+    ],
+    faqs: [
+      { q: "How often should I clean the dryer vent?", a: "At least once a year, the full line, not just the lint trap." },
+      { q: "Are clogged dryer vents really a fire risk?", a: "Yes, they are a leading cause of home dryer fires." },
+      { q: "Which dryer brands are most reliable?", a: "LG and Whirlpool rate highest for reliability." },
+      { q: "Why does my dryer take two cycles to dry?", a: "Almost always a clogged vent restricting airflow." },
+      { q: "Should I repair or replace my dryer?", a: "If it is over 10 years old and the repair is expensive, replace it." },
     ],
     floridaNote:
       "Florida humidity means longer dry times, so a clear vent matters even more here.",
     sources: [
       { label: "Family Handyman: home appliance lifespans", url: "https://www.familyhandyman.com/article/home-appliances-lifespan/" },
     ],
+
   },
 
   dishwasher: {
