@@ -806,8 +806,42 @@ function Landing() {
         </InView>
       </section>
 
+      {/* 5.5 · Make It Last teaser - homeowner mission moment */}
+      <section className="bg-soft border-t border-line py-24">
+        <InView className="mx-auto max-w-5xl px-5">
+          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+            <div className="reveal">
+              <Eyebrow accent="coral">For homeowners</Eyebrow>
+              <h2 className="mt-3 text-3xl sm:text-5xl tracking-tight text-ink leading-[1.06]">
+                Every home remembers.
+              </h2>
+              <p className="mt-4 text-lg text-muted max-w-md">
+                And we help everything in it last longer, for free.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link to="/make-it-last">
+                  <Btn variant="coral" size="lg">
+                    Explore Make It Last
+                  </Btn>
+                </Link>
+                <Link
+                  to="/home/signup"
+                  className="text-sm font-semibold text-coraldark hover:text-coral transition-colors"
+                >
+                  Start your free record
+                </Link>
+              </div>
+            </div>
+            <div className="reveal rd-2">
+              <MiniLifespansPicker />
+            </div>
+          </div>
+        </InView>
+      </section>
+
       {/* 6 · FAQ */}
       <section className="bg-soft border-t border-line py-24">
+
         <InView className="mx-auto max-w-4xl px-5">
           <div className="reveal">
             <SectionHead accent="indigo" eyebrow="FAQ" title="Short answers, straight." />
