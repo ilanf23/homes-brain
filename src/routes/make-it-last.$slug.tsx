@@ -29,7 +29,13 @@ type Section = { id: string; label: string };
 function buildSections(g: Guide): Section[] {
   const s: Section[] = [];
   if (g.overview) s.push({ id: "overview", label: "Overview" });
-  s.push({ id: "two-lifespans", label: "Two lifespans" });
+  if (g.expectedLifeOnly) {
+    s.push({ id: "built-to-last", label: "Built to last" });
+  } else if (g.cadenceOnly) {
+    s.push({ id: "cadence", label: "Maintenance cadence" });
+  } else {
+    s.push({ id: "two-lifespans", label: "Two lifespans" });
+  }
   if (g.brands?.length) s.push({ id: "top-brands", label: "Top brands" });
   s.push({ id: "maintenance", label: "Maintenance" });
   if (g.signs?.length) s.push({ id: "signs", label: "Signs it is failing" });
