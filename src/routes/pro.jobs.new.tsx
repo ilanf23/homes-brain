@@ -349,7 +349,7 @@ function NewJob() {
 
   // Slide-1 combobox: filter existing by name/address, offer create-new inline.
   const q = query.trim().toLowerCase();
-  const filteredCustomers = q
+  const baseFiltered = q
     ? existing.filter(
         (c) => c.name?.toLowerCase().includes(q) || c.homes?.address?.toLowerCase().includes(q),
       )
