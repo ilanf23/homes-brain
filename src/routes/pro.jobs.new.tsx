@@ -732,7 +732,10 @@ function NewJob() {
                       </button>
                     )}
 
-                    {filteredCustomers.map((c) => (
+                    {filteredCustomers
+                      .filter((c) => !(locationMatch && !q && c.id === locationMatch.id))
+                      .map((c) => (
+
                       <button
                         key={c.id}
                         type="button"
