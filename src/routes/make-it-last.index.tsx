@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Mail, Search } from "lucide-react";
+import { Plus, Mail, Search, Sparkles, ArrowDown } from "lucide-react";
 import { InteractiveHouse } from "@/components/interactive-house";
 import { Btn, Card, Eyebrow, SectionHead } from "@/lib/ui";
 import { MarketingShell, marketingHead } from "@/components/marketing";
 import {
   CATEGORIES,
   allBrowseEntries,
+  useCountUp,
   type BrowseEntry,
   type CategoryId,
 } from "@/lib/make-it-last-visuals";
