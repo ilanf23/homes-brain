@@ -55,6 +55,7 @@ function ProSignup() {
         data: {
           role: "pro",
           business: business.trim(),
+          owner_first_name: ownerFirstName.trim(),
           trade,
           service_area: area.trim(),
           phone: null,
