@@ -1,37 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { Plus, Mail, Search } from "lucide-react";
 import { InteractiveHouse } from "@/components/interactive-house";
-import {
-  Flame,
-  Wind,
-  Home as HomeIcon,
-  Shirt,
-  Utensils,
-  Droplets,
-  Droplet,
-  Refrigerator,
-  Waves,
-  Zap,
-  Thermometer,
-  ArrowDownToLine,
-  Trash2,
-  Wrench,
-  Bath,
-  ChefHat,
-  Microwave,
-  WashingMachine,
-  PlugZap,
-  Power,
-  CloudRain,
-  DoorOpen,
-  PanelsTopLeft,
-  Sprout,
-  Bug,
-  Plus,
-  Mail,
-  type LucideIcon,
-} from "lucide-react";
 import { Btn, Card, Eyebrow, SectionHead } from "@/lib/ui";
 import { MarketingShell, marketingHead } from "@/components/marketing";
+import {
+  CATEGORIES,
+  allBrowseEntries,
+  type BrowseEntry,
+  type CategoryId,
+} from "@/lib/make-it-last-visuals";
 
 export const Route = createFileRoute("/make-it-last/")({
   head: () =>
@@ -45,75 +23,66 @@ export const Route = createFileRoute("/make-it-last/")({
   component: MakeItLast,
 });
 
+type FilterId = "all" | CategoryId;
 
-type BrowseItem = { slug: string; label: string; Icon: LucideIcon };
-type BrowseGroup = { title: string; items: BrowseItem[] };
+function PayoffBadge({ entry }: { entry: BrowseEntry }) {
+  const p = entry.payoff;
+  if (p.kind === "gain") {
+    return (
+      <div className="mt-4 flex items-baseline gap-1">
+        <span className="tnum text-3xl sm:text-4xl font-bold text-coral leading-none">
+          +{p.years}
+        </span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-coraldark">
+          years
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 inline-flex items-center rounded-full bg-coralbg text-coraldark px-3 py-1 text-xs font-bold uppercase tracking-wider">
+      {p.label}
+    </div>
+  );
+}
 
-const BROWSE_GROUPS: BrowseGroup[] = [
-  {
-    title: "Cooling and heating",
-    items: [
-      { slug: "central-ac", label: "Central AC", Icon: Wind },
-      { slug: "heat-pump", label: "Heat pump", Icon: Thermometer },
-      { slug: "furnace", label: "Furnace", Icon: Flame },
-    ],
-  },
-  {
-    title: "Water heating",
-    items: [
-      { slug: "water-heater", label: "Water heater", Icon: Flame },
-      { slug: "tankless-water-heater", label: "Tankless water heater", Icon: Zap },
-    ],
-  },
-  {
-    title: "Plumbing and water",
-    items: [
-      { slug: "water-softener", label: "Water softener", Icon: Droplets },
-      { slug: "well-pump", label: "Well pump", Icon: Droplet },
-      { slug: "sump-pump", label: "Sump pump", Icon: ArrowDownToLine },
-      { slug: "garbage-disposal", label: "Garbage disposal", Icon: Trash2 },
-      { slug: "faucets", label: "Faucets and fixtures", Icon: Wrench },
-      { slug: "toilet", label: "Toilet", Icon: Bath },
-    ],
-  },
-  {
-    title: "Kitchen and laundry",
-    items: [
-      { slug: "refrigerator", label: "Refrigerator", Icon: Refrigerator },
-      { slug: "dishwasher", label: "Dishwasher", Icon: Utensils },
-      { slug: "range-oven", label: "Range or oven", Icon: ChefHat },
-      { slug: "microwave", label: "Microwave", Icon: Microwave },
-      { slug: "washer", label: "Washing machine", Icon: WashingMachine },
-      { slug: "dryer", label: "Dryer", Icon: Shirt },
-    ],
-  },
-  {
-    title: "Electrical",
-    items: [
-      { slug: "electrical-panel", label: "Electrical panel", Icon: PlugZap },
-      { slug: "standby-generator", label: "Standby generator", Icon: Power },
-    ],
-  },
-  {
-    title: "Structure and exterior",
-    items: [
-      { slug: "roof", label: "Roof", Icon: HomeIcon },
-      { slug: "gutters", label: "Gutters", Icon: CloudRain },
-      { slug: "garage-door", label: "Garage door", Icon: DoorOpen },
-      { slug: "windows", label: "Windows", Icon: PanelsTopLeft },
-    ],
-  },
-  {
-    title: "Outdoor",
-    items: [
-      { slug: "pool-equipment", label: "Pool equipment", Icon: Waves },
-      { slug: "irrigation", label: "Irrigation and sprinklers", Icon: Sprout },
-      { slug: "pest-termite", label: "Pest and termite protection", Icon: Bug },
-    ],
-  },
-];
+function BrowseCard({ entry }: { entry: BrowseEntry }) {
+  const { slug, label, Icon, category } = entry;
+  return (
+    <Link to="/make-it-last/$slug" params={{ slug }} className="group">
+      <Card
+        lift
+        className="flex flex-col items-start text-left p-6 h-full transition-transform"
+      >
+        <div
+          className={`flex items-center justify-center w-12 h-12 rounded-full ${category.bg} ${category.fg} group-hover:scale-105 transition-transform`}
+        >
+          <Icon size={22} strokeWidth={1.75} />
+        </div>
+        <div className="mt-4 text-base font-semibold text-ink leading-snug">{label}</div>
+        <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          {category.label}
+        </div>
+        <PayoffBadge entry={entry} />
+      </Card>
+    </Link>
+  );
+}
 
 function MakeItLast() {
+  const [filter, setFilter] = useState<FilterId>("all");
+  const [query, setQuery] = useState("");
+
+  const allEntries = useMemo(() => allBrowseEntries(), []);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return allEntries.filter((e) => {
+      if (filter !== "all" && e.category.id !== filter) return false;
+      if (q && !e.label.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [allEntries, filter, query]);
+
   return (
     <MarketingShell mobileCta={{ label: "Start free record", to: "/home/signup", variant: "coral" }}>
       {/* Hero */}
@@ -144,70 +113,85 @@ function MakeItLast() {
         </div>
       </section>
 
-      {/* Browse by system */}
+      {/* Browse: filterable, stat-forward grid */}
       <section id="browse" className="border-t border-line bg-soft py-20 scroll-mt-24">
-
         <div className="mx-auto max-w-6xl px-5">
           <SectionHead
             accent="coral"
-            eyebrow="Browse by system"
-            title="Pick a system to see its maintained lifespan"
+            eyebrow="Browse the wins"
+            title="Spot the years you can add"
           />
-          <div className="mt-10 space-y-12">
-            {BROWSE_GROUPS.map((group) => (
-              <div key={group.title}>
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-coraldark mb-4">
-                  {group.title}
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {group.items.map(({ slug, label, Icon }) => (
-                    <Link
-                      key={slug}
-                      to="/make-it-last/$slug"
-                      params={{ slug }}
-                      className="group"
-                    >
-                      <Card lift className="flex flex-col items-center text-center py-8 h-full">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark group-hover:scale-105 transition-transform">
-                          <Icon size={22} strokeWidth={1.75} />
-                        </div>
-                        <div className="mt-4 text-sm font-semibold text-ink">{label}</div>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
 
-            {/* Catch-all card */}
-            <div>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-coraldark mb-4">
-                Do not see yours?
-              </h3>
-              <a
-                href="mailto:hello@homesbrain.com?subject=Make%20It%20Last%20guide%20request"
-                className="group block"
-              >
-                <Card lift className="flex flex-col sm:flex-row items-center gap-5 py-8 px-6 text-center sm:text-left">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark shrink-0 group-hover:scale-105 transition-transform">
-                    <Plus size={22} strokeWidth={1.75} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-base font-semibold text-ink">
-                      More guides are on the way
-                    </div>
-                    <p className="mt-1 text-sm text-muted">
-                      Tell us what to cover next and we will build it. Every founding pro and homeowner shapes the list.
-                    </p>
-                  </div>
-                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-coraldark group-hover:text-coral transition-colors">
-                    <Mail size={16} />
-                    Suggest a guide
-                  </div>
-                </Card>
-              </a>
+          {/* Filter chips + search */}
+          <div className="mt-8 flex flex-col gap-4">
+            <div className="flex flex-wrap gap-2">
+              <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
+                All
+              </FilterChip>
+              {CATEGORIES.map((c) => (
+                <FilterChip
+                  key={c.id}
+                  active={filter === c.id}
+                  onClick={() => setFilter(c.id)}
+                >
+                  {c.label}
+                </FilterChip>
+              ))}
+            </div>
+            <div className="relative max-w-md">
+              <Search
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Find your appliance"
+                aria-label="Find your appliance"
+                className="w-full rounded-full border border-line bg-white pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-coral/40 focus:border-coral transition"
+              />
             </div>
           </div>
+
+          {/* Grid */}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filtered.map((entry) => (
+              <BrowseCard key={entry.slug} entry={entry} />
+            ))}
+
+            {/* Catch-all card, always shown at the end */}
+            <a
+              href="mailto:hello@homesbrain.com?subject=Make%20It%20Last%20guide%20request"
+              className="group"
+            >
+              <Card
+                lift
+                className="flex flex-col items-start text-left p-6 h-full border-dashed"
+              >
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-coralbg text-coraldark group-hover:scale-105 transition-transform">
+                  <Plus size={22} strokeWidth={1.75} />
+                </div>
+                <div className="mt-4 text-base font-semibold text-ink leading-snug">
+                  Do not see yours?
+                </div>
+                <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  More coming
+                </div>
+                <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-coraldark">
+                  <Mail size={13} /> Suggest a guide
+                </div>
+              </Card>
+            </a>
+          </div>
+
+          {filtered.length === 0 && (
+            <div className="mt-10 rounded-2xl border border-dashed border-line bg-white p-8 text-center">
+              <p className="text-sm text-muted">
+                No matches. Try a different filter or check the spelling.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -245,5 +229,30 @@ function MakeItLast() {
         </div>
       </section>
     </MarketingShell>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+        active
+          ? "bg-coral text-white"
+          : "bg-white text-muted border border-line hover:text-ink hover:border-coral/40"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
