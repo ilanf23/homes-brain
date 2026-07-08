@@ -410,10 +410,12 @@ export function OtpBoxes({
   const accentBorder: Record<Accent, string> = {
     indigo: "border-indigo",
     coral: "border-coral",
+    teal: "border-teal",
     amber: "border-amber",
     red: "border-red",
     ink: "border-ink",
   };
+
   return (
     <div className="relative">
       <div className="flex gap-2.5 justify-center" aria-hidden="true">
