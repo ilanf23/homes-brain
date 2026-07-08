@@ -34,6 +34,7 @@ import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
+import { Route as ProSlugRouteImport } from './routes/pro.$slug'
 import { Route as MakeItLastSlugRouteImport } from './routes/make-it-last.$slug'
 import { Route as HomeSignupRouteImport } from './routes/home.signup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
@@ -179,6 +180,11 @@ const ProDueRoute = ProDueRouteImport.update({
   path: '/pro/due',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProSlugRoute = ProSlugRouteImport.update({
+  id: '/pro/$slug',
+  path: '/pro/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MakeItLastSlugRoute = MakeItLastSlugRouteImport.update({
   id: '/make-it-last/$slug',
   path: '/make-it-last/$slug',
@@ -299,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
+  '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
+  '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -392,6 +400,7 @@ export interface FileRoutesById {
   '/home/settings': typeof HomeSettingsRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
+  '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/referral': typeof ProReferralRoute
@@ -440,6 +449,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/make-it-last/$slug'
+    | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/make-it-last/$slug'
+    | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/signup'
     | '/make-it-last/$slug'
+    | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
     | '/pro/referral'
@@ -579,6 +591,7 @@ export interface RootRouteChildren {
   HomeSettingsRoute: typeof HomeSettingsRoute
   HomeSignupRoute: typeof HomeSignupRoute
   MakeItLastSlugRoute: typeof MakeItLastSlugRoute
+  ProSlugRoute: typeof ProSlugRoute
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
   ProReferralRoute: typeof ProReferralRoute
@@ -779,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProDueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/$slug': {
+      id: '/pro/$slug'
+      path: '/pro/$slug'
+      fullPath: '/pro/$slug'
+      preLoaderRoute: typeof ProSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/make-it-last/$slug': {
       id: '/make-it-last/$slug'
       path: '/make-it-last/$slug'
@@ -939,6 +959,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeSettingsRoute: HomeSettingsRoute,
   HomeSignupRoute: HomeSignupRoute,
   MakeItLastSlugRoute: MakeItLastSlugRoute,
+  ProSlugRoute: ProSlugRoute,
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
   ProReferralRoute: ProReferralRoute,

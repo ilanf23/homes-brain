@@ -38,9 +38,7 @@ const RESERVED_SLUGS = new Set([
 export const Route = createFileRoute("/pro/$slug")({
   beforeLoad: ({ params }) => {
     if (RESERVED_SLUGS.has(params.slug)) throw notFound();
-    const pro = getPro(params.slug);
-    if (!pro) throw notFound();
-    return { pro };
+    if (!getPro(params.slug)) throw notFound();
   },
   head: ({ params }) => {
     const pro = getPro(params.slug);
