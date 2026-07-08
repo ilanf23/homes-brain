@@ -97,30 +97,54 @@ export const GUIDES: Record<string, Guide> = {
       "In Florida a central AC typically lasts about 10 to 15 years, shorter than the national 15 to 20. Here's how to push yours to the top of the range.",
     quickAnswer:
       "In Florida a central AC typically lasts about 10 to 15 years, shorter than the national 15 to 20, because of constant heat, humidity, and near-year-round use. Regular service and airflow care push it to the top of that range.",
+    overview:
+      "In Florida your AC runs most of the year against heat and humidity, so it wears out faster than the national average. The good news, most of what shortens its life is preventable, and the biggest factor is not even the brand.",
     neglected: 12,
     maintained: 18,
-    maintenance: [
-      { task: "Change the filters", frequency: "On schedule (monthly to quarterly)", effect: "Keeps airflow up and the blower easy." },
-      {
-        task: "Keep the coils clean",
-        frequency: "At every service",
-        effect: "Humidity breeds mold on coils and in ducts, which chokes airflow.",
-      },
-      { task: "Have it serviced", frequency: "Twice a year", effect: "Catches capacitor and refrigerant issues before they kill the compressor." },
-      { task: "Confirm the unit is correctly sized", frequency: "At install", effect: "Oversized units short-cycle and wear out early." },
-      { task: "Keep the condensate drain clear", frequency: "Yearly", effect: "Prevents shutoffs and water damage." },
+    brands: [
+      { name: "Trane", note: "Top rated reliability, the hard to stop a Trane reputation is earned.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Carrier", note: "Efficiency and technology leader.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Lennox", note: "Among the most reliable in owner surveys, high efficiency.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "American Standard", note: "Built by Trane, same reliability for less.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Rheem", note: "Well balanced value.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
+      { name: "Goodman", note: "Budget friendly.", sourceUrl: "https://modernize.com/hvac/best-air-conditioner-brands", sourceLabel: "Modernize: best AC brands" },
     ],
+    maintenance: [
+      { task: "Change the filters", frequency: "On schedule (monthly to quarterly)", effect: "Keeps airflow up and the blower easy.", impact: "High" },
+      { task: "Keep the coils clean", frequency: "At every service", effect: "Humidity breeds mold on coils and in ducts, which chokes airflow.", impact: "High" },
+      { task: "Have it serviced", frequency: "Twice a year", effect: "Catches capacitor and refrigerant issues before they kill the compressor.", impact: "High" },
+      { task: "Confirm the unit is correctly sized", frequency: "At install", effect: "Oversized units short-cycle and wear out early.", impact: "High" },
+      { task: "Keep the condensate drain clear", frequency: "Yearly", effect: "Prevents shutoffs and water damage.", impact: "Medium" },
+    ],
+    signs: [
+      "Weak or warm airflow",
+      "Short cycling on and off",
+      "Rising energy bills",
+      "Strange noises or smells",
+      "Water or ice around the unit",
+    ],
+    repairOrReplace:
+      "If it is over 12 to 15 years, uses old R22 refrigerant, or the repair is a big share of a new system, replace. Otherwise repair.",
     facts: [
       { k: "Expected life in FL", v: "10 to 15 years" },
       { k: "Common failure", v: "Compressor, coil, capacitor" },
       { k: "Recall status", v: "Check by model" },
+    ],
+    faqs: [
+      { q: "Why does my AC not last as long in Florida?", a: "Constant heat, humidity, and near year round use, plus salt air near the coast, all wear it faster than milder climates." },
+      { q: "How often should I service my AC?", a: "Twice a year, before the cooling and heating seasons." },
+      { q: "Does the AC brand matter most?", a: "No. About 80 percent of an AC's lifespan comes from install quality and correct sizing, and only about 20 percent from the brand." },
+      { q: "When should I replace instead of repair?", a: "When it is over 12 to 15 years, uses R22 refrigerant, or a repair costs a large share of a new unit." },
+      { q: "What are the signs my AC is failing?", a: "Weak or warm airflow, short cycling, rising bills, and strange noises." },
     ],
     floridaNote:
       "Heat, humidity, and coastal salt air all shorten AC life here. Maintenance is what separates 10 years from 15.",
     sources: [
       { label: "Florida Airflow: HVAC life expectancy in Florida", url: "https://floridaairflow.com/hvac-life-expectancy-florida/" },
       { label: "InterNACHI: Florida component life expectancy", url: "https://www.nachi.org/florida-life-expectancy.htm" },
+      { label: "Modernize: best AC brands", url: "https://modernize.com/hvac/best-air-conditioner-brands" },
     ],
+
   },
 
   roof: {
