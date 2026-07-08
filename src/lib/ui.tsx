@@ -6,13 +6,15 @@ import type {
 } from "react";
 import { initials } from "./hb";
 
-/* indigo = brand (default), coral = payoff moments only,
+/* indigo = brand (default), coral = homeowner + payoff moments,
+   teal = pro-world subbrand (pros directory, pro profiles, pros-near-you),
    amber = functional warning/status, red = errors/compliance. */
-type Accent = "indigo" | "coral" | "amber" | "red" | "ink";
+type Accent = "indigo" | "coral" | "teal" | "amber" | "red" | "ink";
 
 const accentText: Record<Accent, string> = {
   indigo: "text-indigo",
   coral: "text-coral",
+  teal: "text-teal",
   amber: "text-amber",
   red: "text-red",
   ink: "text-ink",
@@ -20,6 +22,7 @@ const accentText: Record<Accent, string> = {
 const accentBg: Record<Accent, string> = {
   indigo: "bg-indigobg",
   coral: "bg-coralbg",
+  teal: "bg-tealbg",
   amber: "bg-amberbg",
   red: "bg-redbg",
   ink: "bg-soft",
@@ -27,6 +30,7 @@ const accentBg: Record<Accent, string> = {
 const accentSolid: Record<Accent, string> = {
   indigo: "bg-indigo",
   coral: "bg-coral",
+  teal: "bg-teal",
   amber: "bg-amber",
   red: "bg-red",
   ink: "bg-ink",
@@ -36,10 +40,12 @@ const accentSolid: Record<Accent, string> = {
 const accentTextOnTint: Record<Accent, string> = {
   indigo: "text-indigodark",
   coral: "text-coraldark",
+  teal: "text-tealdark",
   amber: "text-amberdark",
   red: "text-red",
   ink: "text-ink",
 };
+
 
 export function Eyebrow({ accent = "indigo", children }: { accent?: Accent; children: ReactNode }) {
   return <div className={`eyebrow ${accentText[accent]}`}>{children}</div>;
