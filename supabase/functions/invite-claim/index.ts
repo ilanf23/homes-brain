@@ -1,11 +1,12 @@
-/* Per-record homeowner notification. Fires on every new job:
-   - If the home has not been claimed yet: send the "claim your home record"
-     invite (magic-link style entry point at /claim/:id).
-   - If the home is already claimed: send a lighter "new record added" notice
-     that links straight to the record at /r/:id (and to their dashboard).
+/* Per-record homeowner notification. Every new job triggers one email
+   telling the homeowner a new service record was added to their home.
+   The link always drops them into their HomesBrain dashboard (/home);
+   if they don't have an account yet, that route routes them through the
+   normal login / signup path. There is no standalone public record page
+   anymore.
 
-   No cooldown, no once-per-customer gate. Volume is bounded by a per-pro
-   daily cap so a hostile account cannot torch the sending domain.
+   Volume is bounded by a per-pro daily cap so a hostile account can't
+   torch the sending domain.
 
    verify_jwt stays off (see supabase/config.toml) because the browser
    session is still mocked in v0; server-side we resolve the pro from the
@@ -47,56 +48,21 @@ function esc(s: string) {
     .replace(/"/g, "&quot;");
 }
 
-/* Pre-claim: invite the homeowner to claim the home. */
-function claimEmail(business: string, address: string, url: string) {
-  const text = [
-    `${business} just logged a service visit at ${address} and started your HomesBrain home record.`,
-    "",
-    "Every job they log builds a verified history for your home: what was done, when, and what's due next. Claim it free and it's yours for life.",
-    "",
-    `Claim your home record: ${url}`,
-    "",
-    `You're receiving this because ${business} logged a service visit at ${address}.`,
-  ].join("\n");
-  const b = esc(business);
-  const a = esc(address);
-  const html = `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:520px;margin:0 auto;padding:32px 20px;">
-    <div style="font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">HomesBrain</div>
-    <div style="margin-top:16px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">${b} started a home record for ${a}</h1>
-      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#73706a;">Every job they log builds a verified history for your home: what was done, when, and what's due next. Claim it free and it's yours for life.</p>
-      <div style="margin-top:22px;">
-        <a href="${url}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">Claim your home record</a>
-      </div>
-    </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} logged a service visit at ${a}.</p>
-  </div>
-</body></html>`;
-  return {
-    subject: `${business} started a home record for ${address}`,
-    text,
-    html,
-  };
-}
-
-/* Post-claim: notify that a new record has been added. */
-function newRecordEmail(
+function recordEmail(
   business: string,
   address: string,
   what: string | null,
-  recordUrl: string,
-  dashboardUrl: string,
+  homeUrl: string,
+  claimed: boolean,
 ) {
   const summary = what?.trim() ? `: ${what.trim()}` : "";
+  const cta = claimed ? "Open my home" : "See it in HomesBrain";
   const text = [
     `${business} added a new service record to your home at ${address}${summary}.`,
     "",
-    `View the record: ${recordUrl}`,
-    `Your home dashboard: ${dashboardUrl}`,
+    `${cta}: ${homeUrl}`,
     "",
-    "Every visit builds your home's living record.",
+    "Every visit builds your home's living record. Free for life.",
   ].join("\n");
   const b = esc(business);
   const a = esc(address);
@@ -107,10 +73,9 @@ function newRecordEmail(
     <div style="font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">HomesBrain</div>
     <div style="margin-top:16px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
       <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">New service record added</h1>
-      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${b} added a new record to your home at ${a}${s}.</p>
-      <div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="${recordUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 22px;">View the record</a>
-        <a href="${dashboardUrl}" style="display:inline-block;background:#ffffff;border:1px solid #e7e5de;color:#16160f;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:11px 22px;">Open my home</a>
+      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${b} added a new record to your home at ${a}${s}. Every visit builds your home's living record. Free for life.</p>
+      <div style="margin-top:22px;">
+        <a href="${homeUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${cta}</a>
       </div>
     </div>
     <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} services your home at ${a}.</p>
@@ -127,7 +92,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { customer_id, pro_id, origin, record_id } = await req.json();
+    const { customer_id, pro_id, origin } = await req.json();
     if (typeof customer_id !== "string" || !customer_id) {
       return json({ ok: false, code: "bad_request" }, 400);
     }
@@ -174,36 +139,20 @@ Deno.serve(async (req) => {
     const { count: sentToday } = await admin
       .from("messages")
       .select("id", { count: "exact", head: true })
-      .eq("kind", "record")
+      .eq("kind", "record_notice")
       .eq("channel", "email")
       .gt("created_at", since);
     if ((sentToday ?? 0) >= DAILY_LIMIT) return json({ ok: false, code: "daily_limit" });
 
-    // Resolve the record: prefer the one the caller sent, otherwise latest for this home+pro.
-    let record: { id: string; jobs?: { what_done: string | null } | { what_done: string | null }[] } | null = null;
-    if (typeof record_id === "string" && record_id) {
-      const { data: r } = await admin
-        .from("records")
-        .select("id,jobs!inner(what_done,home_id,pro_id)")
-        .eq("id", record_id)
-        .maybeSingle();
-      const j = r ? (Array.isArray(r.jobs) ? r.jobs[0] : r.jobs) : null;
-      if (r && j && j.home_id === customer.home_id && j.pro_id === pro.id) {
-        record = { id: r.id as string, jobs: { what_done: j.what_done ?? null } };
-      }
-    }
-    if (!record) {
-      const { data: jobRows } = await admin
-        .from("jobs")
-        .select("id,created_at,what_done,records(id)")
-        .eq("home_id", customer.home_id)
-        .eq("pro_id", pro.id)
-        .order("created_at", { ascending: false });
-      const latestJob = (jobRows ?? []).find((j) => (j.records ?? []).length > 0);
-      const rec = latestJob?.records?.[0];
-      if (!rec) return json({ ok: false, code: "no_record" });
-      record = { id: rec.id, jobs: { what_done: latestJob?.what_done ?? null } };
-    }
+    // Latest job for this home + pro gives us the "what was done" summary.
+    const { data: jobRows } = await admin
+      .from("jobs")
+      .select("id,created_at,what_done")
+      .eq("home_id", customer.home_id)
+      .eq("pro_id", pro.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const latestJob = jobRows?.[0] ?? null;
 
     const key = Deno.env.get("RESEND_API_KEY");
     if (!key) return json({ ok: false, code: "not_configured" });
@@ -212,15 +161,13 @@ Deno.serve(async (req) => {
     const address = home?.address ?? "your home";
     const claimed = !!home?.claimed_at;
 
-    const email = claimed
-      ? newRecordEmail(
-          pro.business,
-          address,
-          Array.isArray(record.jobs) ? record.jobs[0]?.what_done ?? null : record.jobs?.what_done ?? null,
-          `${originUrl}/r/${record.id}`,
-          `${originUrl}/home`,
-        )
-      : claimEmail(pro.business, address, `${originUrl}/claim/${record.id}`);
+    const email = recordEmail(
+      pro.business,
+      address,
+      latestJob?.what_done ?? null,
+      `${originUrl}/home`,
+      claimed,
+    );
 
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -239,9 +186,7 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date().toISOString();
-    // Stamp the first invite so the CRM shows "invited". Later notifications
-    // don't move the stamp; they're not claim invites.
-    if (!claimed && !customer.claim_invited_at) {
+    if (!customer.claim_invited_at) {
       const { error: stampError } = await admin
         .from("customers")
         .update({ claim_invited_at: now })
@@ -252,11 +197,11 @@ Deno.serve(async (req) => {
       channel: "email",
       to_contact: customer.email,
       body: email.text,
-      kind: claimed ? "record_notice" : "invite",
+      kind: "record_notice",
     });
     if (messageError) console.error("invite-claim message log failed", messageError);
 
-    return json({ ok: true, kind: claimed ? "notice" : "invite", sent_at: now });
+    return json({ ok: true, sent_at: now });
   } catch (e) {
     console.error("invite-claim error", e);
     return json({ ok: false, code: "error" }, 500);
