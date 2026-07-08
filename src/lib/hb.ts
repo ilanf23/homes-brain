@@ -35,7 +35,15 @@ export async function logEvent(
   props: Record<string, unknown> = {},
 ) {
   console.log("[event]", type, { actor, ...props });
-  await supabase.from("events").insert({ actor: actor ?? undefined, type, props: props as never });
+  // Events insert is authenticated-only (RLS); anonymous callers get a silent
+  // 401 that we swallow so analytics never breaks a user flow.
+  try {
+    await supabase
+      .from("events")
+      .insert({ actor: actor ?? undefined, type, props: props as never });
+  } catch {
+    /* swallow */
+  }
 }
 
 export type NotificationType =
@@ -204,12 +212,10 @@ export async function mockSend(args: {
   body: string;
   kind: "record" | "review_request" | "invite" | "other";
 }) {
-  await supabase.from("messages").insert({
-    channel: args.channel,
-    to_contact: args.to,
-    body: args.body,
-    kind: args.kind,
-  });
+  // Real sends go through the invite-claim edge function (service role).
+  // The messages table is server-only now, so this client-side log is a
+  // no-op preserved for legacy callers.
+  console.log("[mockSend]", args.channel, args.kind, args.to);
 }
 
 /* Accepts a pasted Google Maps / business link and returns a normalized https URL,
