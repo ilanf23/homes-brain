@@ -1,123 +1,115 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
+import { useEffect, useMemo, useState } from "react";
+import { MapPin, ChevronRight, Plus } from "lucide-react";
+import { Btn, Card, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { backfillHomeGeocodes, fetchProHomes, formatDate, type ProHome } from "@/lib/hb";
-import { isOverdue, listInvoicesForPro, type ProInvoice } from "@/lib/invoices";
-import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
-import { CoreLoopScene } from "@/components/core-loop-scene";
-import { MoneyRow } from "@/components/money-row";
-import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
-import { CustomerMap, type MapPin } from "@/components/customer-map";
-import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { formatDate, isGoogleUrl, logEvent, mockSend } from "@/lib/hb";
+import { reverseGeocode } from "@/lib/geo";
+import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/")({
-  head: () => ({ meta: [{ title: "Dashboard - HomesBrain" }] }),
-  component: ProDashboard,
+  head: () => ({ meta: [{ title: "HomesBrain" }] }),
+  component: ProHome,
 });
-
-type CustomerRow = {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  home_id: string;
-  homes: { address: string } | null;
-};
-type JobRow = {
-  id: string;
-  home_id: string;
-  what_done: string;
-  next_service_date: string | null;
-  created_at: string;
-  customers: { id: string; name: string; phone: string | null; email: string | null } | null;
-  homes: { address: string } | null;
-  records: { id: string; viewed_at: string | null; sent_sms_at: string | null }[] | null;
-};
-type RebookEvent = {
-  id: string;
-  created_at: string;
-  props: { job_id?: string; pro_id?: string; home_id?: string };
-};
-type ReviewEvent = { id: string; created_at: string; props: { customer_id?: string } };
-type Win = {
-  key: string;
-  ts: string;
-  label: string;
-  detail?: string;
-  kind: "viewed" | "claimed" | "rebooked" | "review";
-};
 
 const DAY = 24 * 3600 * 1000;
 const DUE_WINDOW = 14 * DAY;
-const STALE_UNCLAIMED = 7 * DAY;
+const MAX_NEEDS = 4;
 
-function ProDashboard() {
+type DueRow = {
+  id: string;
+  what_done: string;
+  next_service_date: string;
+  customer: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+  } | null;
+  address: string | null;
+};
+
+function timeOfDayGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function ProHome() {
   const { proId, pro } = useProGuard();
-  const [customers, setCustomers] = useState<CustomerRow[]>([]);
-  const [jobs, setJobs] = useState<JobRow[]>([]);
-  const [invoices, setInvoices] = useState<ProInvoice[]>([]);
-  const [homes, setHomes] = useState<ProHome[]>([]);
-  const [rebooks, setRebooks] = useState<RebookEvent[]>([]);
-  const [reviewAsks, setReviewAsks] = useState<ReviewEvent[]>([]);
-  const [geocodingCount, setGeocodingCount] = useState(0);
+  const [due, setDue] = useState<DueRow[]>([]);
+  const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [locationText, setLocationText] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const backfillStarted = useRef(false);
+  const [reminded, setReminded] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState<string | null>(null);
 
+  // Load only what this screen needs: upcoming/overdue jobs and a review count.
   useEffect(() => {
     if (!proId) return;
+    let cancelled = false;
     (async () => {
-      const [{ data: c }, { data: j }, inv, hs, { data: rb }, { data: rv }] = await Promise.all([
-        supabase
-          .from("customers")
-          .select("id,name,phone,email,home_id,homes(address)")
-          .eq("pro_id", proId)
-          .order("created_at", { ascending: false }),
+      const [{ data: j }, { data: rv }] = await Promise.all([
         supabase
           .from("jobs")
           .select(
-            "id,home_id,what_done,next_service_date,created_at,customers(id,name,phone,email),homes(address),records(id,viewed_at,sent_sms_at)",
+            "id,what_done,next_service_date,customers(id,name,phone,email),homes(address)",
           )
           .eq("pro_id", proId)
-          .order("created_at", { ascending: false }),
-        listInvoicesForPro(proId),
-        fetchProHomes(proId),
+          .not("next_service_date", "is", null)
+          .order("next_service_date", { ascending: true }),
         supabase
           .from("events")
-          .select("id,created_at,props")
-          .eq("type", "rebooked")
-          .eq("props->>pro_id", proId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("events")
-          .select("id,created_at,props")
+          .select("id", { count: "exact", head: false })
           .eq("actor", `pro:${proId}`)
           .eq("type", "review_requested")
-          .order("created_at", { ascending: false }),
+          .gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
       ]);
-      setCustomers((c ?? []) as unknown as CustomerRow[]);
-      setJobs((j ?? []) as unknown as JobRow[]);
-      setInvoices(inv);
-      setHomes(hs);
-      setRebooks((rb ?? []) as unknown as RebookEvent[]);
-      setReviewAsks((rv ?? []) as unknown as ReviewEvent[]);
+      if (cancelled) return;
+      const rows: DueRow[] = ((j ?? []) as unknown as Array<{
+        id: string;
+        what_done: string;
+        next_service_date: string | null;
+        customers: DueRow["customer"];
+        homes: { address: string } | null;
+      }>)
+        .filter(
+          (row) =>
+            row.next_service_date &&
+            new Date(row.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
+        )
+        .map((row) => ({
+          id: row.id,
+          what_done: row.what_done,
+          next_service_date: row.next_service_date!,
+          customer: row.customers,
+          address: row.homes?.address ?? null,
+        }));
+      setDue(rows);
+      setReviewAsks7d(rv?.length ?? 0);
       setLoading(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [proId]);
 
-  // Lazy geocode backfill: up to 5 ungeocoded homes per visit, 1s apart.
+  // Location chip: silent if permission denied or geocode fails.
   useEffect(() => {
-    if (loading || backfillStarted.current) return;
-    const pending = homes.filter((h) => !h.geocoded_at);
-    if (pending.length === 0) return;
-    backfillStarted.current = true;
-    setGeocodingCount(Math.min(pending.length, 5));
-    void backfillHomeGeocodes(homes, (updated) => {
-      setHomes((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
-      setGeocodingCount((n) => Math.max(0, n - 1));
-    });
-  }, [loading, homes]);
+    if (typeof window === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        if (r?.address) setLocationText(r.address);
+      },
+      () => {
+        /* denied or unavailable — omit chip */
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 },
+    );
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -125,354 +117,171 @@ function ProDashboard() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const sentCount = jobs.length;
-  const viewedCount = jobs.filter((j) => j.records?.[0]?.viewed_at).length;
+  const needs = useMemo(() => due.slice(0, MAX_NEEDS), [due]);
 
-  const weeklyJobs = useMemo(() => {
-    const buckets = new Array(8).fill(0);
-    const now = Date.now();
-    for (const j of jobs) {
-      const weeksAgo = Math.floor((now - new Date(j.created_at).getTime()) / (7 * DAY));
-      if (weeksAgo >= 0 && weeksAgo < 8) buckets[7 - weeksAgo] += 1;
-    }
-    return buckets;
-  }, [jobs]);
-
-  const rebooksThisMonth = useMemo(() => {
-    const now = new Date();
-    return rebooks.filter((r) => {
-      const d = new Date(r.created_at);
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-    }).length;
-  }, [rebooks]);
-
-  // Queue source 1: jobs due within 14 days or overdue, most overdue first.
-  const dueQueue = useMemo<QueueJob[]>(
-    () =>
-      jobs
-        .filter(
-          (j) =>
-            j.next_service_date &&
-            new Date(j.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
-        )
-        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))
-        .map((j) => ({
-          id: j.id,
-          what_done: j.what_done,
-          next_service_date: j.next_service_date!,
-          customer: j.customers,
-          address: j.homes?.address ?? null,
-        })),
-    [jobs],
-  );
-
-  // Queue source 2: open invoices past due, most overdue first.
-  const overdueInvoices = useMemo(
-    () => invoices.filter((i) => isOverdue(i)).sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1)),
-    [invoices],
-  );
-
-  // Queue source 3: unclaimed homes whose latest record went out 7+ days ago.
-  const staleHomes = useMemo<QueueStaleHome[]>(() => {
-    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
-    const latestSentByHome = new Map<string, string>();
-    for (const j of jobs) {
-      const sent = j.records?.[0]?.sent_sms_at;
-      if (!sent) continue;
-      const prev = latestSentByHome.get(j.home_id);
-      if (!prev || sent > prev) latestSentByHome.set(j.home_id, sent);
-    }
-    return homes
-      .filter((h) => !h.claimed_at)
-      .flatMap((h) => {
-        const sentAt = latestSentByHome.get(h.id);
-        if (!sentAt || Date.now() - new Date(sentAt).getTime() < STALE_UNCLAIMED) return [];
-        const c = customerByHome.get(h.id);
-        return [
-          {
-            homeId: h.id,
-            address: h.address,
-            customer: c ? { id: c.id, name: c.name, phone: c.phone, email: c.email } : null,
-            sentAt,
-          },
-        ];
-      })
-      .sort((a, b) => (a.sentAt < b.sentAt ? -1 : 1));
-  }, [homes, jobs, customers]);
-
-  // Map pins: status priority owes > due > unclaimed > active.
-  const pins = useMemo<MapPin[]>(() => {
-    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
-    const owesHomes = new Set(invoices.filter((i) => i.status === "open").map((i) => i.home_id));
-    const dueHomes = new Set(
-      jobs
-        .filter(
-          (j) =>
-            j.next_service_date &&
-            new Date(j.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
-        )
-        .map((j) => j.home_id),
-    );
-    return homes
-      .filter((h) => h.lat !== null && h.lng !== null)
-      .map((h) => {
-        const c = customerByHome.get(h.id);
-        const status = owesHomes.has(h.id)
-          ? ("owes" as const)
-          : dueHomes.has(h.id)
-            ? ("due" as const)
-            : !h.claimed_at
-              ? ("unclaimed" as const)
-              : ("active" as const);
-        return {
-          homeId: h.id,
-          customerId: c?.id ?? null,
-          name: c?.name ?? "Customer",
-          address: h.address,
-          lat: h.lat!,
-          lng: h.lng!,
-          status,
-        };
-      });
-  }, [homes, customers, invoices, jobs]);
-
-  const wins = useMemo<Win[]>(() => {
-    const jobById = new Map(jobs.map((j) => [j.id, j]));
-    const customerById = new Map(customers.map((c) => [c.id, c]));
-    const list: Win[] = [];
-    for (const j of jobs) {
-      const viewedAt = j.records?.[0]?.viewed_at;
-      if (viewedAt) {
-        list.push({
-          key: `viewed-${j.id}`,
-          ts: viewedAt,
-          label: `${j.customers?.name ?? "A homeowner"} viewed their service record`,
-          detail: j.homes?.address ?? undefined,
-          kind: "viewed",
-        });
-      }
-    }
-    for (const h of homes) {
-      if (!h.claimed_at) continue;
-      list.push({
-        key: `claimed-${h.id}`,
-        ts: h.claimed_at,
-        label: `${h.address} was claimed by the homeowner`,
-        kind: "claimed",
-      });
-    }
-    for (const r of rebooks) {
-      const job = r.props.job_id ? jobById.get(r.props.job_id) : undefined;
-      list.push({
-        key: `rebooked-${r.id}`,
-        ts: r.created_at,
-        label: `${job?.customers?.name ?? "A homeowner"} rebooked from their reminder`,
-        detail: job?.what_done,
-        kind: "rebooked",
-      });
-    }
-    for (const r of reviewAsks) {
-      const cust = r.props.customer_id ? customerById.get(r.props.customer_id) : undefined;
-      list.push({
-        key: `review-${r.id}`,
-        ts: r.created_at,
-        label: `Review requested from ${cust?.name ?? "a customer"}`,
-        kind: "review",
-      });
-    }
-    return list.sort((a, b) => (a.ts < b.ts ? 1 : -1)).slice(0, 5);
-  }, [jobs, customers, homes, rebooks, reviewAsks]);
+  async function remind(row: DueRow) {
+    const c = row.customer;
+    if (!c || (!c.phone && !c.email) || !pro) return;
+    setBusy(row.id);
+    const body = `Hi ${c.name.split(" ")[0]}, it's ${pro.business}. Your ${row.what_done.toLowerCase()} is due for service around ${formatDate(row.next_service_date)}. Reply here and we'll get you on the schedule.`;
+    await mockSend({
+      channel: c.phone ? "sms" : "email",
+      to: c.phone ?? c.email ?? "",
+      body,
+      kind: "other",
+    });
+    await logEvent(`pro:${proId}`, "rebook_nudge_sent", {
+      job_id: row.id,
+      customer_id: c.id,
+    });
+    setReminded((prev) => new Set(prev).add(row.id));
+    setBusy(null);
+    setToast(`Reminder sent to ${c.name.split(" ")[0]}`);
+  }
 
   if (loading || !pro) {
     return (
-      <ProShell pro={pro} active="dashboard">
-        <ProPageSkeleton variant="dashboard" />
+      <ProShell pro={pro} active="home">
+        <ProPageSkeleton variant="list" />
       </ProShell>
     );
   }
 
-  const empty = jobs.length === 0;
-  const viewRate = sentCount ? viewedCount / sentCount : 0;
+  const firstName =
+    (pro.owner_first_name?.trim() || pro.business.split(" ")[0] || "").trim();
+  const greeting = firstName
+    ? `${timeOfDayGreeting()}, ${firstName}.`
+    : `${timeOfDayGreeting()}.`;
 
-  const hour = new Date().getHours();
-  const timeOfDay =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const firstName = pro.owner_first_name?.trim();
-  const greetingName = firstName && firstName.length > 0 ? firstName : pro.business;
+  const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
 
   return (
-    <ProShell pro={pro} active="dashboard">
-      <ProPageHead
-        eyebrow="Dashboard"
-        title={`${timeOfDay}, ${greetingName}`}
-        sub={pro.google_rating ? `${pro.google_rating} ★ on Google` : undefined}
-      />
-
-
-      {empty && (
-        <Card className="anim-fade-up mb-5 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-          <CoreLoopScene variant="compact" pose="pro" className="w-28 shrink-0 opacity-90" />
-          <div className="flex-1 min-w-[200px]">
-            <Eyebrow accent="indigo">Get started</Eyebrow>
-            <div className="mt-1 font-semibold text-ink">Log your first job (about 30 seconds)</div>
-            <p className="text-sm text-muted mt-0.5">
-              We'll send a branded record to your customer and ask for a Google review.
-            </p>
+    <ProShell pro={pro} active="home">
+      {/* Greeting */}
+      <div className="anim-fade-up mb-2">
+        <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{greeting}</h1>
+        {locationText && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-paper border border-line px-3 py-1.5 text-xs text-muted">
+            <MapPin size={13} className="text-indigo" />
+            <span>
+              You're at <span className="text-ink font-semibold">{locationText}</span>
+            </span>
           </div>
-          <Link to="/pro/jobs/new" className="shrink-0">
-            <Btn variant="indigo">Log a job</Btn>
-          </Link>
-        </Card>
-      )}
-
-      <MoneyRow
-        invoices={invoices}
-        rebooksThisMonth={rebooksThisMonth}
-        rebooksAllTime={rebooks.length}
-      />
-
-      <ActionQueue
-        proId={proId!}
-        proBusiness={pro.business}
-        dueJobs={dueQueue}
-        overdueInvoices={overdueInvoices}
-        staleHomes={staleHomes}
-        onInvoicePaid={(invoiceId) =>
-          setInvoices((prev) =>
-            prev.map((i) =>
-              i.id === invoiceId
-                ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
-                : i,
-            ),
-          )
-        }
-        onToast={setToast}
-      />
-
-      <CustomerMap pins={pins} geocodingCount={geocodingCount} />
-
-      <div className="mt-4 grid grid-cols-3 gap-4">
-        <Card className="anim-fade-up d-4">
-          <div className="text-xs uppercase tracking-wider text-muted font-bold">Records sent</div>
-          <div className="mt-1.5 flex items-end justify-between gap-2">
-            <div className="text-xl font-semibold font-display">
-              <CountUp value={sentCount} />
-            </div>
-            <SparkLine points={weeklyJobs} color="var(--indigo)" width={64} height={22} />
-          </div>
-        </Card>
-        <Card className="anim-fade-up d-4">
-          <div className="text-xs uppercase tracking-wider text-muted font-bold">View rate</div>
-          <div className="mt-1.5 flex items-end justify-between gap-2">
-            <ProgressRing
-              value={viewRate}
-              size={40}
-              strokeWidth={4}
-              label={`${Math.round(viewRate * 100)}% of records viewed`}
-            />
-            <div className="text-xs text-muted tnum">
-              {viewedCount} of {sentCount} viewed
-            </div>
-          </div>
-        </Card>
-        <Link to="/pro/customers" className="block">
-          <Card lift className="anim-fade-up d-4 h-full">
-            <div className="text-xs uppercase tracking-wider text-muted font-bold">Customers</div>
-            <div className="mt-1.5 text-xl font-semibold font-display">
-              <CountUp value={customers.length} />
-            </div>
-          </Card>
-        </Link>
+        )}
       </div>
 
-      <div className="mt-5 grid md:grid-cols-2 gap-5 items-start">
-        <Card className="anim-fade-up d-5">
-          <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">Recent jobs</Eyebrow>
-            <Link to="/pro/records" className="text-xs font-semibold text-indigo hover:underline">
-              All records →
-            </Link>
+      {/* Hero action: the one thing this screen exists to make easy. */}
+      <Link to="/pro/jobs/new" className="anim-fade-up d-1 block mt-6">
+        <button
+          type="button"
+          className="pressable w-full rounded-3xl bg-indigo text-white text-left px-6 py-7 sm:px-8 sm:py-9 shadow-[0_18px_40px_-14px_rgba(71,63,176,0.55)] hover:shadow-[0_22px_48px_-14px_rgba(71,63,176,0.65)] transition-shadow"
+        >
+          <div className="flex items-center gap-5">
+            <div className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/15 shrink-0">
+              <Plus size={32} strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-2xl sm:text-3xl font-bold leading-tight">Log a job</div>
+              <div className="mt-1 text-sm sm:text-base text-white/85">
+                30 seconds. Just talk and tap.
+              </div>
+            </div>
           </div>
-          {jobs.length === 0 && (
-            <p className="mt-3 text-sm text-muted">
-              No jobs yet. The jobs you log will show here with their record status.
-            </p>
-          )}
-          <div className="mt-3 divide-y divide-line">
-            {jobs.slice(0, 8).map((j) => {
-              const rec = j.records?.[0];
-              const inner = (
-                <>
-                  <div>
-                    <div className="font-semibold text-ink">{j.customers?.name ?? "-"}</div>
-                    <div className="text-xs text-muted">{j.homes?.address}</div>
-                    <div className="text-sm mt-0.5">{j.what_done}</div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xs text-muted font-mono tnum">
-                      {formatDate(j.created_at)}
+        </button>
+      </Link>
+
+      {/* Who needs you */}
+      <section className="anim-fade-up d-2 mt-8">
+        <h2 className="text-lg font-semibold text-ink mb-3">Who needs you</h2>
+        {needs.length === 0 ? (
+          <Card className="text-sm text-muted">
+            No one's due right now. When a job's next service date comes up, it'll show here.
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {needs.map((row) => {
+              const overdue = new Date(row.next_service_date).getTime() < Date.now();
+              const c = row.customer;
+              const canRemind = !!(c && (c.phone || c.email));
+              const isReminded = reminded.has(row.id);
+              return (
+                <Card key={row.id} className="!p-4 sm:!p-5">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-base sm:text-lg font-semibold text-ink truncate">
+                        {c?.name ?? "Customer"}
+                      </div>
+                      <div className="mt-0.5 text-sm text-ink/80">{row.what_done}</div>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <Pill accent={overdue ? "coral" : "indigo"}>
+                          {overdue
+                            ? `Overdue since ${formatDate(row.next_service_date)}`
+                            : `Due ${formatDate(row.next_service_date)}`}
+                        </Pill>
+                        {row.address && (
+                          <span className="text-xs text-muted truncate">{row.address}</span>
+                        )}
+                      </div>
                     </div>
-                    {rec?.viewed_at ? (
-                      <Pill accent="indigo">Viewed</Pill>
-                    ) : rec?.sent_sms_at ? (
-                      <Pill accent="indigo">Sent</Pill>
-                    ) : null}
+                    <div className="shrink-0">
+                      {isReminded ? (
+                        <Pill accent="indigo">Reminded</Pill>
+                      ) : (
+                        <Btn
+                          variant="indigo"
+                          size="md"
+                          loading={busy === row.id}
+                          disabled={!canRemind}
+                          onClick={() => remind(row)}
+                          aria-label={`Send reminder to ${c?.name ?? "customer"}`}
+                        >
+                          Remind
+                        </Btn>
+                      )}
+                    </div>
                   </div>
-                </>
-              );
-              const rowCls =
-                "py-3 flex items-start justify-between gap-3 -mx-2 px-2 rounded-lg hover:bg-soft active:bg-line/50 transition-colors duration-150";
-              return rec ? (
-                <Link
-                  key={j.id}
-                  to="/pro/records/$recordId"
-                  params={{ recordId: rec.id }}
-                  className={rowCls}
-                >
-                  {inner}
-                </Link>
-              ) : (
-                <div key={j.id} className={rowCls}>
-                  {inner}
-                </div>
+                </Card>
               );
             })}
           </div>
-        </Card>
+        )}
+      </section>
 
-        <Card className="anim-fade-up d-5">
-          <Eyebrow accent="indigo">Wins</Eyebrow>
-          {wins.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">
-              Wins from your records (views, claims, rebooks) will show up here.
-            </p>
-          ) : (
-            <div className="mt-3 divide-y divide-line">
-              {wins.map((w) => (
-                <div key={w.key} className="py-3 flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold text-ink">{w.label}</div>
-                    {w.detail && <div className="text-xs text-muted">{w.detail}</div>}
-                  </div>
-                  <div className="shrink-0 flex items-center gap-3">
-                    <div className="text-xs text-muted font-mono tnum">{formatDate(w.ts)}</div>
-                    {w.kind === "rebooked" ? (
-                      <Pill accent="coral">Rebooked</Pill>
-                    ) : (
-                      <Pill accent="indigo">
-                        {w.kind === "viewed"
-                          ? "Viewed"
-                          : w.kind === "claimed"
-                            ? "Claimed"
-                            : "Review ask"}
-                      </Pill>
-                    )}
-                  </div>
+      {/* One small win: rating on Google (only if connected) */}
+      {googleConnected && (
+        <section className="anim-fade-up d-3 mt-8">
+          <Card className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm text-muted">
+                {reviewAsks7d > 0 ? "Nice week" : "This week"}
+              </div>
+              <div className="mt-0.5 text-xl font-semibold text-ink">
+                {pro.google_rating} ★ on Google
+              </div>
+              {reviewAsks7d > 0 && (
+                <div className="mt-0.5 text-sm text-muted">
+                  {reviewAsks7d} review {reviewAsks7d === 1 ? "ask" : "asks"} sent in the last 7 days
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </Card>
+            <Link to="/pro/reviews" className="shrink-0">
+              <Btn variant="ghost" size="sm">
+                Reviews
+              </Btn>
+            </Link>
+          </Card>
+        </section>
+      )}
+
+      {/* Quiet office link */}
+      <div className="anim-fade-up d-4 mt-10 mb-4">
+        <Link
+          to="/pro/office"
+          className="pressable flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper/60 px-4 py-3 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
+        >
+          <span>My numbers, map and customers</span>
+          <ChevronRight size={16} />
+        </Link>
       </div>
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
