@@ -12,6 +12,7 @@ import {
 import { CoreLoopScene } from "@/components/core-loop-scene";
 import { ForgettingScene } from "@/components/forgetting-scene";
 import { MarketingShell, marketingHead, Phone, PhoneRow } from "@/components/marketing";
+import { MiniLifespansPicker } from "@/components/mini-lifespans";
 
 export const Route = createFileRoute("/")({
   head: () =>
