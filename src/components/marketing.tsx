@@ -54,6 +54,7 @@ const FOOTER_GROUPS: { title: string; links: { to: string; label: string }[] }[]
     links: [
       { to: "/for-pros", label: "For pros" },
       { to: "/for-homeowners", label: "For homeowners" },
+      { to: "/make-it-last", label: "Make it last" },
       { to: "/partners", label: "Partners" },
     ],
   },
