@@ -1,68 +1,49 @@
-## The gap
+# Fix inaccurate geolocation on "Who is this for?"
 
-Right now, every time you log a job you type appliance details (type/make/model/serial) and we create a **brand-new `equipment` row**, even if it's the same water heater you serviced three months ago. So the same physical unit ends up as three separate rows with three isolated one-visit histories. There's no "this softener's life story."
+## Problem
 
-The schema already supports what you want — `jobs.equipment_id` links every job to one appliance, and `equipment.home_id` groups them per home. The fix is UX + one detail view. No new tables.
+Two things stack up to make the detected address wrong:
 
-## What changes
+1. `navigator.geolocation.getCurrentPosition()` runs with default options, so the browser can return a cached, low-accuracy fix (Wi-Fi/IP based, often hundreds of meters off — kilometers on desktop).
+2. Nominatim reverse geocode then snaps that coarse point to the nearest OSM-known address, which in residential areas can be a neighbor or just the street.
 
-### 1. Log-a-job → "The work" step
+The pro then sees one confidently-wrong address and no way to pick the right house.
 
-When the pro has picked an **existing customer** (or typed an address that matches an existing home), load that home's appliances and show them first:
+## Fix (frontend only, no schema changes)
 
-```text
-Which appliance?
-┌──────────────────────────────────────────┐
-│ ◉  Water heater · Rheem XE50 · #4471    │
-│    Last serviced Mar 12 · 2 jobs         │
-├──────────────────────────────────────────┤
-│ ○  Softener · Culligan HE · #22A         │
-│    Last serviced Jun 3 · 1 job           │
-├──────────────────────────────────────────┤
-│ ○  + Add a new appliance                 │
-└──────────────────────────────────────────┘
-```
+### 1. Request a real GPS fix
 
-- Pick an existing one → new job attaches to that `equipment_id`. Type/make/model/serial fields hide (already known) but stay editable behind a "correct details" toggle.
-- Pick "Add new" → current flow (type/make/model/serial + optional scan).
-- Brand-new customer/home → skip the picker, go straight to "Add new" (nothing to pick from yet).
+In the geolocation call inside `src/routes/pro.jobs.new.tsx`:
 
-### 2. Show the appliance's history inline while logging
+- Pass `{ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }` to force a fresh, GPS-preferred fix on mobile.
+- Keep the existing `denied` / `unavailable` fallbacks.
 
-Under the picker, once an existing appliance is selected, show a compact timeline so the pro can see what was done last time before writing the new job:
+### 2. Show accuracy and let the pro confirm, don't auto-decide
 
-```text
-Rheem XE50 · installed unknown · warranty until 2027-04
-  Jun 12 2026  Flushed tank, replaced anode rod        (you)
-  Mar 12 2026  Annual inspection, replaced T&P valve   (you)
-```
+- Read `position.coords.accuracy` (meters) and display it under the detected address, e.g. "within ~15 m" (green under 25 m, amber 25–100 m, red over 100 m).
+- Add a "Not this house?" button on the location card that expands to show the **3 nearest existing customers** (computed by haversine distance from `homes.lat/lng` we already store), each as a big tap card with distance ("28 m away"). One tap selects that customer.
+- Also expose a "None of these — enter address" action that opens the manual form pre-filled with the reverse-geocoded street.
 
-### 3. Appliance detail = life story
+### 3. Loosen the auto-match
 
-- **Pro side** (`/pro/customers/:customerId`, and a new `/pro/appliances/:equipmentId`): each appliance shows its own timeline of every job across every visit, plus install date, warranty, recall status, next-service due.
-- **Homeowner side**: `/home/items/:itemId` already exists — wire it to show the full job history for that appliance (not just the most recent record). Same timeline component.
+Today we auto-select a customer when the reverse-geocoded string equals an existing address via `normalizeAddress`. Change to:
 
-### 4. Data model — no new tables
+- Auto-select **only** when there is exactly one existing home within 30 m of the GPS point (distance beats string match — Nominatim's string is unreliable).
+- Otherwise show the nearest-customers list described above; never silently pick the wrong one.
 
-We reuse what's there:
-- `equipment` = the appliance (one row per physical unit, keyed by home).
-- `jobs.equipment_id` = every visit that touched it.
-- The "usage record for the next life" = ordered list of `jobs` filtered by `equipment_id`.
+### 4. Small UX polish
 
-Small additions:
-- Deduping helper: when the pro types serial/model on an existing home, if a matching `equipment` row already exists we suggest reusing it instead of creating a duplicate.
-- Optional `install_date` column on `equipment` (nullable, edit later) so the timeline can show age. Not required to ship.
+- While locating, show "Getting a precise location… this takes a few seconds on first use" instead of a bare spinner.
+- Add a "Try again" link if accuracy comes back worse than 100 m, which re-invokes `getCurrentPosition` (a second call often gets a much better fix once GPS warms up).
 
-## Technical notes
+## Out of scope (call out, don't build)
 
-- `src/routes/pro.jobs.new.tsx`: after `existing` customers load, when a customer/home is selected fetch `equipment` for that `home_id` and render the picker above the current appliance fields. Store `selectedEquipmentId | "new"` in state; only insert into `equipment` when `"new"`.
-- New tiny query helper `getHomeAppliancesWithLastJob(homeId)` returning `{id, type, make, model, serial, warranty_until, last_job_at, job_count}`.
-- New route `src/routes/pro.appliances.$equipmentId.tsx` for the pro-side appliance detail (list of jobs, edit metadata, mark decommissioned).
-- Update `src/routes/home.items.$itemId.tsx` to render the full job list for that equipment (data path already exists via `get_home_view` — add jobs-per-equipment there or a dedicated query).
-- No migration required to ship the picker + histories. `install_date` column can be added later as an incremental migration.
+- Swapping Nominatim for Google/Mapbox reverse geocoding — bigger change, needs an API key and billing decision. Happy to plan separately if the above isn't enough.
+- Google Places autocomplete on the manual address field — same reason.
 
-## What this does not touch
+## Files touched
 
-- Send-to-homeowner flow, Resend wiring, claim page — unchanged.
-- The mocked-session posture — unchanged.
-- Homeowner-added appliances (`source: "homeowner"`) — same table, they show in the picker too if the address matches.
+- `src/routes/pro.jobs.new.tsx` — geolocation options, accuracy display, nearest-customers picker, auto-match rule.
+- `src/lib/hb.ts` — add a small `haversineMeters(a, b)` helper (pure function, no deps).
+
+No backend, migration, or edge function changes. `homes.lat/lng` already exist and are backfilled by `backfillHomeGeocodes`.
