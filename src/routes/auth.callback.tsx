@@ -20,13 +20,55 @@ function AuthCallback() {
         navigate({ to: "/login" });
         return;
       }
-      const { data: pro } = await supabase
+
+      // If Google signup path stashed pro-signup intent, create the pros row.
+      let pending: {
+        business?: string;
+        owner_first_name?: string;
+        trade?: string;
+        service_area?: string;
+      } | null = null;
+      try {
+        const raw = localStorage.getItem("hb_pending_pro_signup");
+        if (raw) pending = JSON.parse(raw);
+      } catch {
+        // ignore
+      }
+
+      const { data: existingPro } = await supabase
         .from("pros")
         .select("id")
         .eq("auth_user_id", user.id)
         .maybeSingle();
-      if (pro) {
-        await logEvent(`pro:${pro.id}`, "pro_email_verified", {});
+
+      if (!existingPro && pending?.business && pending?.trade) {
+        const { data: inserted, error: insertErr } = await supabase
+          .from("pros")
+          .insert({
+            auth_user_id: user.id,
+            business: pending.business,
+            trade: pending.trade,
+            service_area: pending.service_area ?? null,
+            email: user.email ?? null,
+            plan: "free",
+            owner_first_name: pending.owner_first_name ?? null,
+          })
+          .select("id")
+          .single();
+        localStorage.removeItem("hb_pending_pro_signup");
+        if (!insertErr && inserted) {
+          await logEvent(`pro:${inserted.id}`, "pro_signed_up", {
+            trade: pending.trade,
+            business: pending.business,
+            via: "google",
+          });
+          navigate({ to: "/pro" });
+          return;
+        }
+      }
+
+      if (existingPro) {
+        await logEvent(`pro:${existingPro.id}`, "pro_email_verified", {});
         navigate({ to: "/pro" });
         return;
       }
