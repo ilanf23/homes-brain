@@ -143,6 +143,25 @@ function Login() {
       <div className="space-y-4">
         {step === "email" && (
           <>
+            <GoogleButton
+              busy={busy}
+              onClick={async () => {
+                setBusy(true);
+                setErr(null);
+                const result = await lovable.auth.signInWithOAuth("google", {
+                  redirect_uri: `${window.location.origin}/auth/callback`,
+                });
+                if (result.error) {
+                  setErr(result.error.message ?? "Google sign-in failed");
+                  setBusy(false);
+                  return;
+                }
+                if (result.redirected) return;
+                // Popup flow completed in-preview; session is set.
+                navigate({ to: "/auth/callback" });
+              }}
+            />
+            <OrDivider />
             <Field label="Email">
               <Input
                 type="email"
