@@ -79,7 +79,8 @@ export const Route = createFileRoute("/pro/$slug")({
 });
 
 function ProProfile() {
-  const { pro } = Route.useRouteContext();
+  const { slug } = Route.useParams();
+  const pro = getPro(slug)!;
   const [contactOpen, setContactOpen] = useState(false);
 
   return (
