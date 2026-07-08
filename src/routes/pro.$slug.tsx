@@ -156,7 +156,6 @@ function ProProfile() {
               <ContactRow icon={<MapPin size={14} strokeWidth={2} />}>
                 {pro.city}, St. Johns County, FL
               </ContactRow>
-              <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
               {pro.phone && (
                 <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
                   <a
