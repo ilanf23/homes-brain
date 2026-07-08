@@ -98,6 +98,7 @@ export function MarketingShell({
   mobileCta?: { label: string; to: string; variant: "indigo" | "coral" } | null;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Close the menu on navigation and keep the page from scrolling behind it.
@@ -109,9 +110,39 @@ export function MarketingShell({
     };
   }, [menuOpen]);
 
+  // Frosted-on-scroll: transparent at the very top, translucent glass once
+  // the user has scrolled even a little. Passive listener + rAF-throttled
+  // read so this never fights the scroll thread.
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 8);
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Marketing nav items minus the two "hero" destinations, which get their
+  // own promoted slot in the mobile overlay.
+  const quietMobileLinks = NAV_LINKS.filter(
+    (l) => l.to !== "/make-it-last" && l.to !== "/pros",
+  );
+
   return (
     <div className="min-h-dvh bg-background flex flex-col">
-      <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
+      <header
+        className={`sticky top-0 z-40 transition-[background-color,backdrop-filter,border-color,box-shadow] duration-300 ${
+          scrolled
+            ? "bg-background/70 supports-[backdrop-filter]:bg-background/55 backdrop-blur-xl border-b border-line/70 shadow-[0_1px_0_rgba(22,22,15,0.02)]"
+            : "bg-transparent border-b border-transparent"
+        }`}
+      >
         <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-3">
           <Link
             to="/"
@@ -149,16 +180,16 @@ export function MarketingShell({
             })}
           </nav>
 
-
-          <div className="hidden min-[880px]:flex items-center gap-2">
+          {/* Desktop actions: one primary (coral), one quiet text link */}
+          <div className="hidden min-[880px]:flex items-center gap-3">
             <Link
               to="/login"
-              className="text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2"
+              className="text-sm font-medium text-muted hover:text-ink transition-colors"
             >
               Log in
             </Link>
             <Link to="/start">
-              <Btn variant="indigo" size="sm">
+              <Btn variant="coral" size="sm">
                 Start free
               </Btn>
             </Link>
@@ -171,7 +202,7 @@ export function MarketingShell({
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="pressable min-[880px]:hidden flex items-center justify-center w-11 h-11 rounded-full hover:bg-soft transition-colors"
+            className="pressable min-[880px]:hidden flex items-center justify-center w-11 h-11 rounded-full hover:bg-soft/70 transition-colors"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
               <g
@@ -180,45 +211,94 @@ export function MarketingShell({
                 strokeLinecap="round"
                 className="transition-transform duration-200"
               >
-                {menuOpen ? (
-                  <>
-                    <path d="M5 5l10 10" />
-                    <path d="M15 5L5 15" />
-                  </>
-                ) : (
-                  <>
-                    <path d="M3 6h14" />
-                    <path d="M3 10h14" />
-                    <path d="M3 14h14" />
-                  </>
-                )}
+                <path d="M3 6h14" />
+                <path d="M3 10h14" />
+                <path d="M3 14h14" />
               </g>
             </svg>
           </button>
         </div>
+      </header>
 
-        {/* Mobile menu panel */}
-        {menuOpen && (
-          <div
-            id="mobile-menu"
-            className="min-[880px]:hidden anim-fade-in fixed inset-x-0 top-16 bottom-0 z-40 bg-background flex flex-col"
-          >
-            <nav aria-label="Main" className="anim-fade-up flex-1 overflow-y-auto px-5 py-4">
-              {NAV_LINKS.map((l) => (
+      {/* Full-screen mobile overlay. Lives outside <header> so it can cover
+          the whole viewport (including the top bar) with a single close X. */}
+      {menuOpen && (
+        <div
+          id="mobile-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          className="min-[880px]:hidden fixed inset-0 z-50 flex flex-col bg-background anim-fade-in"
+        >
+          {/* Overlay header: logo + close */}
+          <div className="h-16 px-5 flex items-center justify-between border-b border-line/70">
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              aria-label="HomesBrain home"
+              className="flex items-center gap-2.5 shrink-0"
+            >
+              <Logo />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close menu"
+              className="pressable flex items-center justify-center w-11 h-11 rounded-full hover:bg-soft transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+                <g stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+                  <path d="M5 5l10 10" />
+                  <path d="M15 5L5 15" />
+                </g>
+              </svg>
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4">
+            {/* Hero destinations */}
+            <div className="space-y-3 anim-fade-up">
+              <Link
+                to="/make-it-last"
+                onClick={() => setMenuOpen(false)}
+                className="pressable block rounded-3xl bg-coralbg/70 px-5 py-5 hover:bg-coralbg transition-colors"
+              >
+                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-coraldark">
+                  Make it last
+                </div>
+                <div className="mt-1 text-sm text-ink/70">
+                  Make everything in your home last longer.
+                </div>
+              </Link>
+              <Link
+                to="/pros"
+                onClick={() => setMenuOpen(false)}
+                className="pressable block rounded-3xl bg-tealbg/70 px-5 py-5 hover:bg-tealbg transition-colors"
+              >
+                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-tealdark">
+                  Find a pro
+                </div>
+                <div className="mt-1 text-sm text-ink/70">
+                  Find a local pro in St. Johns County.
+                </div>
+              </Link>
+            </div>
+
+            {/* Divider */}
+            <div className="my-6 h-px bg-line" />
+
+            {/* Quiet items */}
+            <nav aria-label="More" className="anim-fade-up flex flex-col">
+              {quietMobileLinks.map((l) => (
                 <Link
                   key={l.to}
                   to={l.to}
-                  className="flex items-center justify-between min-h-12 px-3 rounded-xl text-base font-semibold text-ink hover:bg-soft transition-colors"
-                  activeProps={{ className: "text-indigo" }}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-between min-h-12 py-2 text-base font-medium text-muted hover:text-ink transition-colors"
                 >
                   {l.label}
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    aria-hidden="true"
-                    className="text-muted"
-                  >
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="opacity-60">
                     <path
                       d="M5 3l4 4-4 4"
                       fill="none"
@@ -230,26 +310,44 @@ export function MarketingShell({
                   </svg>
                 </Link>
               ))}
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between min-h-12 py-2 text-base font-medium text-muted hover:text-ink transition-colors"
+              >
+                Log in
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="opacity-60">
+                  <path
+                    d="M5 3l4 4-4 4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </Link>
             </nav>
-            {/* Thumb-zone actions pinned to the bottom of the menu */}
-            <div
-              className="border-t border-line px-5 py-4 flex flex-col gap-2"
-              style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-            >
-              <Link to="/start" className="w-full">
-                <Btn variant="indigo" size="lg" className="w-full">
-                  Start free, no card
-                </Btn>
-              </Link>
-              <Link to="/login" className="w-full">
-                <Btn variant="secondary" size="lg" className="w-full">
-                  Log in
-                </Btn>
-              </Link>
-            </div>
           </div>
-        )}
-      </header>
+
+          {/* Pinned bottom CTA */}
+          <div
+            className="border-t border-line px-5 py-4 bg-background"
+            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+          >
+            <Link
+              to="/start"
+              onClick={() => setMenuOpen(false)}
+              className="block w-full"
+            >
+              <Btn variant="coral" size="lg" className="w-full">
+                Start your free record
+              </Btn>
+            </Link>
+          </div>
+        </div>
+      )}
+
 
       <main className="flex-1">{children}</main>
 
