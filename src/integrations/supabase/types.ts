@@ -391,6 +391,7 @@ export type Database = {
           logo: string | null
           notify_email: boolean
           notify_sms: boolean
+          owner_first_name: string | null
           phone: string | null
           plan: string
           quickbooks_connected: boolean
@@ -413,6 +414,7 @@ export type Database = {
           logo?: string | null
           notify_email?: boolean
           notify_sms?: boolean
+          owner_first_name?: string | null
           phone?: string | null
           plan?: string
           quickbooks_connected?: boolean
@@ -435,6 +437,7 @@ export type Database = {
           logo?: string | null
           notify_email?: boolean
           notify_sms?: boolean
+          owner_first_name?: string | null
           phone?: string | null
           plan?: string
           quickbooks_connected?: boolean
