@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
+import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast, Toggle } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
-import { buildRecordUrl, checkRecall, formatDate, geocodeHome, logEvent, mockSend, tradeLabel } from "@/lib/hb";
+import { buildRecordUrl, checkRecall, formatDate, geocodeHome, logEvent, mockSend, normalizeAddress, reverseGeocode, tradeLabel } from "@/lib/hb";
 import { scanNameplate, useDictation } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
+
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
