@@ -117,12 +117,13 @@ function HomeOverview() {
               {newRecords.map((r) => {
                 const j = jobById.get(r.job_id);
                 const pro = j ? pros.find((p) => p.id === j.pro_id) : undefined;
-                return (
-                  <a
-                    key={r.id}
-                    href={`/r/${r.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-background border border-line px-3 py-2.5 hover:border-coral/40 transition-colors"
-                  >
+                const eqId = j?.equipment_id ?? null;
+                const markViewed = async () => {
+                  await supabase.rpc("mark_record_viewed", { p_record_id: r.id });
+                  refresh();
+                };
+                const inner = (
+                  <>
                     <div className="min-w-0">
                       <div className="font-semibold text-ink truncate">
                         {pro?.business ?? "Your pro"}
@@ -132,9 +133,26 @@ function HomeOverview() {
                       </div>
                     </div>
                     <Btn variant="coral" size="sm">
-                      View
+                      {eqId ? "View" : "Got it"}
                     </Btn>
-                  </a>
+                  </>
+                );
+                const className =
+                  "flex items-center justify-between gap-3 rounded-xl bg-background border border-line px-3 py-2.5 hover:border-coral/40 transition-colors text-left w-full";
+                return eqId ? (
+                  <Link
+                    key={r.id}
+                    to="/home/items/$itemId"
+                    params={{ itemId: eqId }}
+                    onClick={markViewed}
+                    className={className}
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <button key={r.id} type="button" onClick={markViewed} className={className}>
+                    {inner}
+                  </button>
                 );
               })}
             </div>
