@@ -20,11 +20,13 @@ import {
   checkRecall,
   formatDate,
   geocodeHome,
+  haversineMeters,
   logEvent,
   mockSend,
   normalizeAddress,
   tradeLabel,
 } from "@/lib/hb";
+
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
 import { scanNameplate, useDictation } from "@/lib/capture";
