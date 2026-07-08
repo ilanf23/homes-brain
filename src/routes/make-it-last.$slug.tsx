@@ -252,7 +252,11 @@ function GuidePage() {
   const { slug } = Route.useParams();
   const g = getGuide(slug)!;
   const gap = g.maintained - g.neglected;
-  const maxYears = Math.max(...GUIDE_ORDER.map((s) => getGuide(s)!.maintained));
+  const maxYears = Math.max(
+    ...GUIDE_ORDER.map((s) => getGuide(s)!)
+      .filter((x) => !x.expectedLifeOnly && !x.cadenceOnly)
+      .map((x) => x.maintained)
+  );
   const neglectedPct = (g.neglected / maxYears) * 100;
   const maintainedPct = (g.maintained / maxYears) * 100;
   const others = otherGuides(g.slug, 4);
