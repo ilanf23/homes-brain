@@ -22,6 +22,7 @@ function HomeOverview() {
     equipment,
     jobs,
     pros,
+    records,
     loading: guardLoading,
     refresh,
   } = useHomeownerGuard();
@@ -49,6 +50,16 @@ function HomeOverview() {
         .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))[0] ?? null,
     [jobs],
   );
+  const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
+  const newRecords = useMemo(
+    () =>
+      records
+        .filter((r) => !r.viewed_at)
+        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+        .slice(0, 5),
+    [records],
+  );
+
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
 
@@ -94,6 +105,43 @@ function HomeOverview() {
       </div>
 
       <div className="space-y-6">
+        {newRecords.length > 0 && (
+          <Card className="anim-fade-up d-1 border-coral/30 bg-coralbg/40">
+            <div className="flex items-center justify-between">
+              <Eyebrow accent="coral">New from your pros</Eyebrow>
+              <Pill accent="coral">
+                {newRecords.length} new
+              </Pill>
+            </div>
+            <div className="mt-3 space-y-2">
+              {newRecords.map((r) => {
+                const j = jobById.get(r.job_id);
+                const pro = j ? pros.find((p) => p.id === j.pro_id) : undefined;
+                return (
+                  <a
+                    key={r.id}
+                    href={`/r/${r.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-background border border-line px-3 py-2.5 hover:border-coral/40 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-semibold text-ink truncate">
+                        {pro?.business ?? "Your pro"}
+                      </div>
+                      <div className="text-xs text-muted truncate">
+                        {j?.what_done ?? "New service record"} · {formatDate(r.created_at)}
+                      </div>
+                    </div>
+                    <Btn variant="coral" size="sm">
+                      View
+                    </Btn>
+                  </a>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
+
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between">
             <Eyebrow accent="indigo">On file</Eyebrow>
