@@ -50,6 +50,17 @@ function NewJob() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [newCustomer, setNewCustomer] = useState({ name: "", address: "", phone: "", email: "" });
   const [consent, setConsent] = useState(false);
+  const [addByHand, setAddByHand] = useState(false);
+
+  // Geolocation ("You're at …")
+  type LocState =
+    | { status: "idle" }
+    | { status: "locating" }
+    | { status: "ready"; address: string; match: CustomerOpt | null }
+    | { status: "denied" }
+    | { status: "unavailable" };
+  const [loc, setLoc] = useState<LocState>({ status: "idle" });
+
 
   // Work
   const [eqType, setEqType] = useState("");
