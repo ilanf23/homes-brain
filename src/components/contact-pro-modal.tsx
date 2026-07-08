@@ -112,7 +112,7 @@ export function ContactProModal({
       <DialogContent className="sm:max-w-md">
         {submitted ? (
           <div className="py-4 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-coralbg text-coraldark">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-tealbg text-tealdark">
               <CheckCircle2 size={28} strokeWidth={2} />
             </div>
             <DialogHeader className="mt-4">
@@ -123,7 +123,7 @@ export function ContactProModal({
               </DialogDescription>
             </DialogHeader>
             <div className="mt-6">
-              <Btn variant="coral" onClick={() => handleClose(false)} className="w-full">
+              <Btn variant="teal" onClick={() => handleClose(false)} className="w-full">
                 Close
               </Btn>
             </div>
@@ -190,7 +190,7 @@ export function ContactProModal({
               </div>
               <Btn
                 type="submit"
-                variant="coral"
+                variant="teal"
                 loading={submitting}
                 className="w-full"
                 size="lg"

@@ -7,7 +7,7 @@ import { TRADE_LABELS } from "@/lib/pros";
 import { ContactProModal } from "@/components/contact-pro-modal";
 
 /* Shared pro card used by /pros directory and the guide "Pros who do this work
-   near you" section. Coral highlights are reserved for verified badge + primary
+   near you" section. Teal highlights (the pro subbrand) are reserved for verified badge + primary
    CTA - listing pros stay neutral so we do not visually endorse them. */
 
 export function ProCard({
@@ -34,7 +34,7 @@ export function ProCard({
           <Link
             to="/pro/$slug"
             params={{ slug: pro.slug }}
-            className="text-lg font-bold text-ink leading-tight hover:text-coraldark transition-colors block truncate"
+            className="text-lg font-bold text-ink leading-tight hover:text-tealdark transition-colors block truncate"
           >
             {pro.name}
           </Link>
@@ -44,7 +44,7 @@ export function ProCard({
           </div>
         </div>
         {pro.verified && (
-          <Pill accent="coral">
+          <Pill accent="teal">
             <ShieldCheck size={11} strokeWidth={2.5} />
             <span className="ml-0.5">Verified</span>
           </Pill>
@@ -67,7 +67,7 @@ export function ProCard({
           href={pro.googlePlaceUrl ?? "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm text-ink hover:text-coraldark transition-colors w-fit"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm text-ink hover:text-tealdark transition-colors w-fit"
         >
           <Star size={14} strokeWidth={2} className="fill-amber text-amber" />
           <span className="font-semibold tnum">{pro.googleRating.toFixed(1)}</span>
@@ -82,7 +82,7 @@ export function ProCard({
         <div className="mt-3 flex flex-col gap-1.5 text-sm">
           <a
             href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-            className="inline-flex items-center gap-1.5 text-ink hover:text-coraldark transition-colors w-fit"
+            className="inline-flex items-center gap-1.5 text-ink hover:text-tealdark transition-colors w-fit"
           >
             <Phone size={14} strokeWidth={2} />
             <span className="tnum">{pro.phone}</span>
@@ -92,7 +92,7 @@ export function ProCard({
               href={pro.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-ink hover:text-coraldark transition-colors w-fit"
+              className="inline-flex items-center gap-1.5 text-ink hover:text-tealdark transition-colors w-fit"
             >
               <Globe size={14} strokeWidth={2} />
               <span>Website</span>
@@ -103,7 +103,7 @@ export function ProCard({
 
       <div className="mt-4 flex items-center gap-2 pt-4 border-t border-line mt-auto">
         <Btn
-          variant="coral"
+          variant="teal"
           size="sm"
           onClick={() => setContactOpen(true)}
           className="flex-1"

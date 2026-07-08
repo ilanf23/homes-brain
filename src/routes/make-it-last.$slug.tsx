@@ -521,7 +521,7 @@ function GuidePage() {
                     <Link
                       to="/pros"
                       search={{ trade: primaryTrade }}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-coraldark hover:underline"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-tealdark hover:underline"
                     >
                       See all {TRADE_LABELS[primaryTrade]} pros in St. Johns County →
                     </Link>

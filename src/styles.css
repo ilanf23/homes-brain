@@ -11,9 +11,10 @@
 /* HomesBrain design tokens.
    Color carries meaning. Never mix the roles.
    indigo = the brand (buttons, links, accents, chips - everywhere, all audiences),
-   coral = payoff highlights only (rebooks, revenue, wins - used sparingly, ~10%),
-   amber = functional warning/status (due soon, pending), red = errors/destructive.
-   teal is retired - do not reintroduce role-per-audience colors. */
+   coral = homeowner content + payoff highlights (rebooks, revenue, wins),
+   teal = the pro world subbrand (pros directory, pro profiles, pros-near-you),
+   amber = functional warning/status (due soon, pending), red = errors/destructive. */
+
 
 @theme inline {
   --color-background: var(--bg);
@@ -49,9 +50,13 @@
   --color-coral: var(--coral);
   --color-coralbg: var(--coralbg);
   --color-coraldark: var(--coral-dark);
+  --color-teal: var(--teal);
+  --color-tealbg: var(--tealbg);
+  --color-tealdark: var(--teal-dark);
   --color-amber: var(--amber);
   --color-amberbg: var(--amberbg);
   --color-amberdark: var(--amber-dark);
+
   --color-red: var(--red);
   --color-redbg: var(--redbg);
 
@@ -92,6 +97,10 @@
   --coral: #c2461f;
   --coralbg: #fbeae2;
   --coral-dark: #9c3a18;
+  --teal: #0f6e56;
+  --tealbg: #e6f5ee;
+  --teal-dark: #0a4f3d;
+
   --amber: #8a5208;
   --amberbg: #faf0db;
   --amber-dark: #6f4206;
@@ -127,6 +136,10 @@
   --coral: #e87a4a;
   --coralbg: #3f2118;
   --coral-dark: #f2a184;
+  --teal: #5cc4a3;
+  --tealbg: #16332a;
+  --teal-dark: #86dcc0;
+
   --amber: #d9a04a;
   --amberbg: #3a2f16;
   --amber-dark: #ecc687;
