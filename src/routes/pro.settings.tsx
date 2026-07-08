@@ -348,13 +348,13 @@ function ProSettings() {
                 </Btn>
               </div>
             </div>
-            <div className="mt-4 border-t border-line pt-1">
-              <SettingRow
-                label="Payouts (Stripe)"
-                sub={prefs?.stripe_account_id ? "Payout account connected" : "Not connected"}
-              >
-                <Pill accent="ink">v0.5</Pill>
-              </SettingRow>
+            <div className="mt-4 border-t border-line pt-4">
+              <StripePayoutsPanel
+                proId={proId!}
+                prefs={prefs}
+                onUpdated={(patch) => setPrefs((p) => (p ? { ...p, ...patch } : p))}
+                onToast={setToast}
+              />
             </div>
           </SettingsSection>
 
