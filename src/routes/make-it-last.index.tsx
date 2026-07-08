@@ -99,16 +99,72 @@ const ITEMS: Item[] = [
   },
 ];
 
-const BROWSE = [
-  { slug: "water-heater", label: "Water heater", Icon: Flame },
-  { slug: "central-ac", label: "Central AC", Icon: Wind },
-  { slug: "roof", label: "Roof", Icon: HomeIcon },
-  { slug: "dryer", label: "Dryer", Icon: Shirt },
-  { slug: "dishwasher", label: "Dishwasher", Icon: Utensils },
-  { slug: "water-softener", label: "Water softener", Icon: Droplets },
-  { slug: "refrigerator", label: "Refrigerator", Icon: Refrigerator },
-  { slug: "pool-equipment", label: "Pool equipment", Icon: Waves },
-] as const;
+type BrowseItem = { slug: string; label: string; Icon: LucideIcon };
+type BrowseGroup = { title: string; items: BrowseItem[] };
+
+const BROWSE_GROUPS: BrowseGroup[] = [
+  {
+    title: "Cooling and heating",
+    items: [
+      { slug: "central-ac", label: "Central AC", Icon: Wind },
+      { slug: "heat-pump", label: "Heat pump", Icon: Thermometer },
+      { slug: "furnace", label: "Furnace", Icon: Flame },
+    ],
+  },
+  {
+    title: "Water heating",
+    items: [
+      { slug: "water-heater", label: "Water heater", Icon: Flame },
+      { slug: "tankless-water-heater", label: "Tankless water heater", Icon: Zap },
+    ],
+  },
+  {
+    title: "Plumbing and water",
+    items: [
+      { slug: "water-softener", label: "Water softener", Icon: Droplets },
+      { slug: "well-pump", label: "Well pump", Icon: Droplet },
+      { slug: "sump-pump", label: "Sump pump", Icon: ArrowDownToLine },
+      { slug: "garbage-disposal", label: "Garbage disposal", Icon: Trash2 },
+      { slug: "faucets", label: "Faucets and fixtures", Icon: Wrench },
+      { slug: "toilet", label: "Toilet", Icon: Bath },
+    ],
+  },
+  {
+    title: "Kitchen and laundry",
+    items: [
+      { slug: "refrigerator", label: "Refrigerator", Icon: Refrigerator },
+      { slug: "dishwasher", label: "Dishwasher", Icon: Utensils },
+      { slug: "range-oven", label: "Range or oven", Icon: ChefHat },
+      { slug: "microwave", label: "Microwave", Icon: Microwave },
+      { slug: "washer", label: "Washing machine", Icon: WashingMachine },
+      { slug: "dryer", label: "Dryer", Icon: Shirt },
+    ],
+  },
+  {
+    title: "Electrical",
+    items: [
+      { slug: "electrical-panel", label: "Electrical panel", Icon: PlugZap },
+      { slug: "standby-generator", label: "Standby generator", Icon: Power },
+    ],
+  },
+  {
+    title: "Structure and exterior",
+    items: [
+      { slug: "roof", label: "Roof", Icon: HomeIcon },
+      { slug: "gutters", label: "Gutters", Icon: CloudRain },
+      { slug: "garage-door", label: "Garage door", Icon: DoorOpen },
+      { slug: "windows", label: "Windows", Icon: PanelsTopLeft },
+    ],
+  },
+  {
+    title: "Outdoor",
+    items: [
+      { slug: "pool-equipment", label: "Pool equipment", Icon: Waves },
+      { slug: "irrigation", label: "Irrigation and sprinklers", Icon: Sprout },
+      { slug: "pest-termite", label: "Pest and termite protection", Icon: Bug },
+    ],
+  },
+];
 
 function MakeItLast() {
   const [selected, setSelected] = useState<Item>(ITEMS[0]);
