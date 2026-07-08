@@ -228,6 +228,15 @@ function ProSettings() {
               <Field label="Business name">
                 <Input value={business} onChange={(e) => setBusiness(e.target.value)} />
               </Field>
+              <Field label="Your first name" hint="How we greet you on the dashboard.">
+                <Input
+                  value={ownerFirstName}
+                  onChange={(e) => setOwnerFirstName(e.target.value)}
+                  placeholder="Alex"
+                  autoComplete="given-name"
+                  maxLength={40}
+                />
+              </Field>
               <div>
                 <div className="text-sm font-semibold text-ink mb-2">Trade</div>
                 <div className="grid grid-cols-2 gap-2">
