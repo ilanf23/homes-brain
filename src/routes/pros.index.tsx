@@ -95,7 +95,7 @@ function ProsDirectory() {
           </p>
         )}
 
-        {verified.length > 0 && (
+        {verified.length > 0 ? (
           <div>
             <SectionHeading label="Verified pros" count={verified.length} />
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -104,6 +104,19 @@ function ProsDirectory() {
               ))}
             </div>
           </div>
+        ) : (
+          filtered.length > 0 && (
+            <div>
+              <SectionHeading label="Verified pros" count={0} />
+              <div className="mt-3 rounded-2xl border border-dashed border-teal/40 bg-tealbg/40 p-5 text-sm text-tealdark">
+                Be the first verified pro on HomesBrain.{" "}
+                <a href="/pro/signup" className="font-semibold underline underline-offset-2">
+                  Claim your profile
+                </a>{" "}
+                in about a minute.
+              </div>
+            </div>
+          )
         )}
 
         {listing.length > 0 && (
