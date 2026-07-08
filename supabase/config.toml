@@ -10,3 +10,9 @@ verify_jwt = false
 # the customer belongs to that pro before sending.
 [functions.invite-claim]
 verify_jwt = false
+
+# geo proxies the Google Maps key for address autocomplete/geocoding. Runs
+# unauthenticated like scan-nameplate (same log-a-job page): abuse is bounded by
+# restricting the key to Places+Geocoding and setting a Google quota cap.
+[functions.geo]
+verify_jwt = false

@@ -1,29 +1,49 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast, Toggle } from "@/lib/ui";
+import { useEffect, useRef, useState } from "react";
+import {
+  Avatar,
+  Btn,
+  Card,
+  Field,
+  Input,
+  KV,
+  Pill,
+  StepBar,
+  Textarea,
+  Toast,
+  Toggle,
+} from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
-import { buildRecordUrl, checkRecall, formatDate, geocodeHome, haversineMeters, logEvent, mockSend, reverseGeocode, tradeLabel } from "@/lib/hb";
-
+import {
+  buildRecordUrl,
+  checkRecall,
+  formatDate,
+  geocodeHome,
+  logEvent,
+  mockSend,
+  normalizeAddress,
+  tradeLabel,
+} from "@/lib/hb";
+import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
+import { AddressField } from "@/components/address-field";
 import { scanNameplate, useDictation } from "@/lib/capture";
-import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
-
+import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
   component: NewJob,
 });
 
-type Stage = "customer" | "work" | "review" | "done";
+type Stage = "customer" | "location" | "work" | "review" | "done";
 type CustomerOpt = {
   id: string;
   name: string;
   phone: string | null;
   email: string | null;
   home_id: string;
-  homes: { address: string; lat: number | null; lng: number | null } | null;
+  homes: { address: string } | null;
 };
-
 type ApplianceOpt = {
   id: string;
   type: string | null;
@@ -35,8 +55,8 @@ type ApplianceOpt = {
 };
 type JobHistoryRow = { id: string; what_done: string; created_at: string };
 
-const STAGES: Stage[] = ["customer", "work", "review"];
-const STAGE_LABELS = ["Customer", "The work", "Send"];
+const STAGES: Stage[] = ["customer", "location", "work", "review"];
+const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
 
 function NewJob() {
   const navigate = useNavigate();
@@ -52,28 +72,27 @@ function NewJob() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [newCustomer, setNewCustomer] = useState({ name: "", address: "", phone: "", email: "" });
   const [consent, setConsent] = useState(false);
-  const [addByHand, setAddByHand] = useState(false);
+  const [query, setQuery] = useState("");
 
-  // Geolocation ("You're at …")
-  type NearHome = { c: CustomerOpt; meters: number };
+  // Location slide: the address for an existing customer (prefilled from file,
+  // editable). `resolved` holds the last address we have coordinates for (from
+  // GPS reverse-geocode or a Places pick); used to store the home's lat/lng.
+  const [locAddress, setLocAddress] = useState("");
+  const [resolved, setResolved] = useState<ResolvedAddress | null>(null);
+  // True once the pro types or picks in the new-customer address field, so a
+  // late-arriving GPS prefill never clobbers what they entered.
+  const addressTouched = useRef(false);
+
+  // Geolocation: raw device coords bias autocomplete; the reverse-geocoded
+  // address prefills a new customer's location field.
   type LocState =
     | { status: "idle" }
     | { status: "locating" }
-    | {
-        status: "ready";
-        address: string;
-        lat: number;
-        lng: number;
-        accuracy: number; // meters
-        match: CustomerOpt | null;
-        nearest: NearHome[];
-      }
+    | { status: "ready"; address: string }
     | { status: "denied" }
     | { status: "unavailable" };
   const [loc, setLoc] = useState<LocState>({ status: "idle" });
-  const [showNearby, setShowNearby] = useState(false);
-
-
+  const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
 
   // Work
   const [eqType, setEqType] = useState("");
@@ -110,84 +129,55 @@ function NewJob() {
   useEffect(() => {
     if (!proId) return;
     (async () => {
-      // Cast: homes.lat/lng exist in the DB but the generated types haven't
-      // regenerated to include them yet.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: c } = await (supabase as any)
+      const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
+        .select("id,name,phone,email,home_id,homes(address)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     })();
   }, [proId]);
 
-
-  /* Detect the pro's current address. Distance beats string matching -
-     Nominatim rounds to whichever address it knows, which is often a
-     neighbor. We prefer to auto-select only when a stored home sits within
-     ~30 m of the GPS point. */
-  const runLocate = useCallback(() => {
+  /* Detect the pro's current position on mount: keep the raw coords to bias
+     autocomplete, and reverse-geocode them into a best-guess address that
+     prefills the location field for a new customer. */
+  useEffect(() => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       setLoc({ status: "unavailable" });
       return;
     }
     setLoc({ status: "locating" });
-    setShowNearby(false);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-        const address = (await reverseGeocode(lat, lng)) ?? "";
-        setLoc({
-          status: "ready",
-          address,
-          lat,
-          lng,
-          accuracy: Number.isFinite(accuracy) ? accuracy : 9999,
-          match: null,
-          nearest: [],
-        });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setGps({ lat, lng });
+        const r = await reverseGeocode(lat, lng);
+        if (!r?.address) {
+          setLoc({ status: "unavailable" });
+          return;
+        }
+        setLoc({ status: "ready", address: r.address });
+        // Seed the coords a new home will be stored with (a Places pick overrides).
+        setResolved({ address: r.address, lat: r.lat ?? lat, lng: r.lng ?? lng });
       },
       (err) => {
         setLoc({ status: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" });
       },
-      // maximumAge: 0 forces a fresh fix; enableHighAccuracy asks for GPS on mobile.
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
     );
   }, []);
 
+  /* Prefill a new customer's address once GPS resolves, even if it arrives after
+     the pro reached the location slide (high-accuracy GPS can take 5-15s). Only
+     fires for a new customer, only while the field is still empty and untouched,
+     so it never overwrites a typed or picked address. */
   useEffect(() => {
-    runLocate();
-  }, [runLocate]);
-
-  /* Compute nearest customers + auto-match whenever location or the customer
-     list changes. Ignore homes without coordinates (not yet geocoded). */
-  useEffect(() => {
-    if (loc.status !== "ready") return;
-    const here = { lat: loc.lat, lng: loc.lng };
-    const withDistance: NearHome[] = existing
-      .map((c) => {
-        const h = c.homes;
-        if (!h || h.lat == null || h.lng == null) return null;
-        return { c, meters: haversineMeters(here, { lat: h.lat, lng: h.lng }) };
-      })
-      .filter((x): x is NearHome => x !== null)
-      .sort((a, b) => a.meters - b.meters);
-    const nearest = withDistance.slice(0, 3);
-    // Auto-match: closest home within 30 m, and clearly closer than #2.
-    const autoMatch =
-      nearest[0] && nearest[0].meters <= 30 && (!nearest[1] || nearest[1].meters > 50)
-        ? nearest[0].c
-        : null;
-    const sameMatch = (autoMatch?.id ?? null) === (loc.match?.id ?? null);
-    const sameList =
-      nearest.length === loc.nearest.length &&
-      nearest.every((n, i) => n.c.id === loc.nearest[i].c.id);
-    if (!sameMatch || !sameList) {
-      setLoc({ ...loc, match: autoMatch, nearest });
-    }
-  }, [existing, loc]);
-
+    if (stage !== "location" || selectedCustomerId) return;
+    if (loc.status !== "ready" || addressTouched.current) return;
+    if (newCustomer.address) return;
+    setNewCustomer((n) => ({ ...n, address: loc.address }));
+  }, [stage, selectedCustomerId, loc, newCustomer.address]);
 
   /* When an existing customer is picked, load that home's appliances (with
      last-job info) so the pro can attach this new visit to the same physical
@@ -208,10 +198,11 @@ function NewJob() {
         .order("created_at", { ascending: false });
       const rows = (eq ?? []).map((r) => {
         const jobs = (r as { jobs?: { created_at: string }[] }).jobs ?? [];
-        const last = jobs
-          .map((j) => j.created_at)
-          .sort()
-          .at(-1) ?? null;
+        const last =
+          jobs
+            .map((j) => j.created_at)
+            .sort()
+            .at(-1) ?? null;
         return {
           id: r.id as string,
           type: (r.type as string | null) ?? null,
@@ -296,7 +287,52 @@ function NewJob() {
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
   const previewName = selectedCustomer?.name || newCustomer.name;
-  const previewAddress = selectedCustomer?.homes?.address || newCustomer.address;
+  const previewAddress = selectedCustomerId
+    ? locAddress || selectedCustomer?.homes?.address || ""
+    : newCustomer.address;
+
+  // Slide-1 combobox: filter existing by name/address, offer create-new inline.
+  const q = query.trim().toLowerCase();
+  const filteredCustomers = q
+    ? existing.filter(
+        (c) => c.name?.toLowerCase().includes(q) || c.homes?.address?.toLowerCase().includes(q),
+      )
+    : existing;
+  const hasExactMatch = existing.some((c) => c.name?.trim().toLowerCase() === q);
+
+  function pickExisting(c: CustomerOpt) {
+    setSelectedCustomerId(c.id);
+    setLocAddress(c.homes?.address ?? "");
+    // On-file address has no fresh coords unless the pro edits + picks a place.
+    setResolved(null);
+    setStage("location");
+  }
+
+  function startNewCustomer(name: string) {
+    setSelectedCustomerId("");
+    addressTouched.current = false;
+    setNewCustomer((n) => ({
+      ...n,
+      name,
+      address: n.address || (loc.status === "ready" ? loc.address : ""),
+    }));
+    setStage("location");
+  }
+
+  /* Coords to store for a home, but only when we actually have them for THIS
+     exact address (GPS reverse-geocode or a Places pick). Otherwise null, so
+     geocodeHome forward-geocodes the typed string instead. */
+  function coordsFor(addr: string): { lat: number; lng: number } | null {
+    if (
+      resolved &&
+      resolved.lat != null &&
+      resolved.lng != null &&
+      normalizeAddress(resolved.address) === normalizeAddress(addr)
+    ) {
+      return { lat: resolved.lat, lng: resolved.lng };
+    }
+    return null;
+  }
 
   async function submit() {
     if (!proId) return;
@@ -312,6 +348,27 @@ function NewJob() {
       homeId = c.home_id;
       toName = c.name;
       toContact = c.phone || c.email || "";
+      // Pro confirmed the address on the location slide; if they changed it
+      // (moved, corrected a typo), update the home in place.
+      const onFile = c.homes?.address ?? "";
+      const confirmed = locAddress.trim();
+      if (confirmed && normalizeAddress(confirmed) !== normalizeAddress(onFile)) {
+        const { error: addrErr } = await supabase
+          .from("homes")
+          .update({ address: confirmed })
+          .eq("id", homeId);
+        if (addrErr) {
+          setSubmitting(false);
+          setToast(
+            addrErr.message.toLowerCase().includes("duplicate")
+              ? "That address is already on file for another home."
+              : "Could not update the address.",
+          );
+          setTimeout(() => setToast(null), 3500);
+          return;
+        }
+        void geocodeHome(homeId, confirmed, coordsFor(confirmed));
+      }
     } else {
       // Upsert home by address via RPC so a second pro serving the same
       // address does not hit the unique-address 409.
@@ -326,9 +383,9 @@ function NewJob() {
         return;
       }
       homeId = upsertedHomeId as string;
-      // Fire-and-forget geocode; safe to call even if home already existed
-      // (geocoded_at gate prevents double work).
-      void geocodeHome(homeId, newCustomer.address);
+      // Fire-and-forget geocode; reuse coords from the Places pick / GPS when we
+      // have them for this exact address, else forward-geocode the string.
+      void geocodeHome(homeId, newCustomer.address, coordsFor(newCustomer.address));
 
       const { data: newC } = await supabase
         .from("customers")
@@ -466,21 +523,20 @@ function NewJob() {
      one just added is selectable on the next pass. */
   async function logAnother() {
     if (proId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: c } = await (supabase as any)
+      const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
+        .select("id,name,phone,email,home_id,homes(address)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     }
-
     setSelectedCustomerId("");
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
     setConsent(false);
-    setAddByHand(false);
-    setShowNearby(false);
-
+    setQuery("");
+    setLocAddress("");
+    setResolved(null);
+    addressTouched.current = false;
     setEqType("");
     setEqMake("");
     setEqModel("");
@@ -526,16 +582,29 @@ function NewJob() {
         </div>
       </header>
 
-      <div className={`mx-auto px-5 py-10 ${showPreview ? "max-w-5xl" : "max-w-xl"}`}>
+      <div
+        className={`mx-auto px-5 py-10 ${
+          showPreview ? "max-w-5xl" : stage === "customer" ? "max-w-4xl" : "max-w-xl"
+        }`}
+      >
         {stage !== "done" && (
           <div className="anim-fade-up max-w-xl mx-auto mb-8">
+            <Link
+              to="/pro"
+              className="mb-6 inline-flex items-center gap-2 text-xl font-extrabold tracking-tight text-indigo transition-colors hover:text-indigodark"
+            >
+              <span aria-hidden>&larr;</span>
+              Back to dashboard
+            </Link>
             <StepBar steps={STAGE_LABELS} current={STAGES.indexOf(stage)} accent="indigo" />
             <h1 className="mt-6 text-2xl tracking-tight text-center">
               {stage === "customer"
                 ? "Who is this for?"
-                : stage === "work"
-                  ? "What did you do?"
-                  : "Review and send"}
+                : stage === "location"
+                  ? "Where's the job?"
+                  : stage === "work"
+                    ? "What did you do?"
+                    : "Review and send"}
             </h1>
           </div>
         )}
@@ -543,274 +612,213 @@ function NewJob() {
         <div className={showPreview ? "grid lg:grid-cols-[1fr_380px] gap-6 items-start" : ""}>
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
-              <div className="space-y-5">
-                {/* 1. USE MY LOCATION - hero at the top */}
-                {loc.status === "locating" && (
-                  <Card className="text-center py-8 space-y-1">
-                    <div className="text-sm font-semibold text-ink">Getting a precise location…</div>
-                    <div className="text-xs text-muted">
-                      Takes a few seconds on first use. Best outdoors.
-                    </div>
-                  </Card>
-                )}
+              <Card className="space-y-3">
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search a customer by name or address, or type a new name…"
+                  autoFocus
+                  aria-label="Search customers or type a new name"
+                />
 
-                {loc.status === "ready" && (() => {
-                  const acc = Math.round(loc.accuracy);
-                  const accAccent: "indigo" | "amber" | "red" =
-                    acc <= 25 ? "indigo" : acc <= 100 ? "amber" : "red";
-                  const accLabel =
-                    acc <= 25
-                      ? `Within ~${acc} m`
-                      : acc <= 100
-                        ? `Approximate (~${acc} m)`
-                        : `Rough only (~${acc} m)`;
-                  const others = loc.match
-                    ? loc.nearest.filter((n) => n.c.id !== loc.match!.id)
-                    : loc.nearest;
-                  return (
-                    <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Pill accent="indigo">You're here</Pill>
-                          <Pill accent={accAccent}>{accLabel}</Pill>
-                        </div>
-                        {loc.match ? (
-                          <>
-                            <div className="mt-3 text-xl font-semibold text-ink tracking-tight">
-                              {loc.match.name}
-                            </div>
-                            <div className="mt-1 text-sm text-muted">
-                              {loc.match.homes?.address}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="mt-3 text-lg font-semibold text-ink tracking-tight leading-snug">
-                              {loc.address || "Location detected"}
-                            </div>
-                            <div className="mt-1 text-sm text-muted">
-                              {loc.nearest.length > 0
-                                ? "Pick the right house below, or add a new one."
-                                : "Is this the job?"}
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      {loc.match && (
-                        <Btn
-                          variant="indigo"
-                          size="lg"
-                          className="w-full"
-                          onClick={() => {
-                            setSelectedCustomerId(loc.match!.id);
-                            setStage("work");
-                          }}
-                        >
-                          Yes, this is the job
-                        </Btn>
-                      )}
-
-                      {!loc.match && loc.address && (
-                        <Btn
-                          variant="indigo"
-                          size="lg"
-                          className="w-full"
-                          onClick={() => {
-                            setNewCustomer((n) => ({ ...n, address: loc.address }));
-                            setAddByHand(true);
-                          }}
-                        >
-                          Yes, this is it
-                        </Btn>
-                      )}
-
-                      {others.length > 0 && (
-                        <div className="space-y-2">
-                          {(loc.match || showNearby) ? (
-                            <>
-                              <div className="text-xs font-semibold text-muted uppercase tracking-wider">
-                                {loc.match ? "Or one of these" : "Nearest customers"}
-                              </div>
-                              {others.map((n) => (
-                                <button
-                                  key={n.c.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedCustomerId(n.c.id);
-                                    setStage("work");
-                                  }}
-                                  className="pressable w-full text-left rounded-2xl border border-line bg-paper px-4 py-3 hover:border-ink/20 transition-all"
-                                >
-                                  <div className="flex items-center justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <div className="font-semibold text-ink truncate">
-                                        {n.c.name}
-                                      </div>
-                                      <div className="text-xs text-muted truncate">
-                                        {n.c.homes?.address}
-                                      </div>
-                                    </div>
-                                    <div className="text-xs font-semibold text-muted whitespace-nowrap">
-                                      {n.meters < 1000
-                                        ? `${Math.round(n.meters)} m`
-                                        : `${(n.meters / 1000).toFixed(1)} km`}
-                                    </div>
-                                  </div>
-                                </button>
-                              ))}
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setShowNearby(true)}
-                              className="text-sm font-semibold text-indigo hover:text-indigo-dark"
-                            >
-                              Not this house?
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {acc > 100 && (
-                        <button
-                          type="button"
-                          onClick={runLocate}
-                          className="text-sm font-semibold text-indigo hover:text-indigo-dark"
-                        >
-                          Try again for a better fix
-                        </button>
-                      )}
-                    </Card>
-                  );
-                })()}
-
-
-
-                {/* 2. RECENT CUSTOMERS - big tappable cards */}
-                {existing.length > 0 && !addByHand && (
-                  <Card className="space-y-3">
-                    <div className="text-sm font-semibold text-ink">Recent customers</div>
-                    <div className="space-y-2 max-h-[360px] overflow-auto -mx-1 px-1">
-                      {existing.map((c) => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCustomerId(c.id);
-                            setStage("work");
-                          }}
-                          className="pressable w-full text-left rounded-2xl border border-line bg-paper px-4 py-4 hover:bg-soft hover:border-ink/20 transition-all duration-200 min-h-16"
-                        >
-                          <div className="font-semibold text-base text-ink">{c.name}</div>
-                          <div className="text-sm text-muted mt-0.5 truncate">
-                            {c.homes?.address}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-
-                {/* 3. ADD BY HAND - collapsed by default */}
-                {!addByHand ? (
-                  <Btn
-                    variant="secondary"
-                    size="lg"
-                    className="w-full"
-                    onClick={() => {
-                      setSelectedCustomerId("");
-                      setAddByHand(true);
-                      if (loc.status === "ready" && !newCustomer.address) {
-                        setNewCustomer((n) => ({ ...n, address: loc.address }));
-                      }
-                    }}
-                  >
-                    Add a new customer
-                  </Btn>
-                ) : (
-                  <Card className="space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-semibold text-ink">New customer</div>
+                <div className="max-h-[560px] overflow-auto -mx-1 px-1">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {q && !hasExactMatch && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setAddByHand(false);
-                          setNewCustomer({ name: "", address: "", phone: "", email: "" });
-                          setConsent(false);
-                        }}
-                        className="text-xs text-muted hover:text-ink"
+                        onClick={() => startNewCustomer(query.trim())}
+                        className="pressable flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/60 sm:col-span-2"
                       >
-                        Cancel
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
+                          <UserPlusIcon size={18} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-base font-semibold text-indigo">
+                            Add "{query.trim()}"
+                          </div>
+                          <div className="mt-0.5 text-sm text-muted">New customer</div>
+                        </div>
                       </button>
-                    </div>
-                    <Field label="Customer name">
-                      <Input
-                        value={newCustomer.name}
-                        onChange={(e) =>
-                          setNewCustomer({ ...newCustomer, name: e.target.value })
-                        }
-                        placeholder="Jane Doe"
-                        autoFocus
-                      />
-                    </Field>
-                    <Field label="Service address">
-                      <Input
-                        value={newCustomer.address}
-                        onChange={(e) =>
-                          setNewCustomer({ ...newCustomer, address: e.target.value })
-                        }
-                        placeholder="123 Maple St, Austin TX"
-                      />
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Phone (optional)">
-                        <Input
-                          value={newCustomer.phone}
-                          onChange={(e) =>
-                            setNewCustomer({ ...newCustomer, phone: e.target.value })
-                          }
-                          placeholder="555-555-1234"
-                          type="tel"
-                        />
-                      </Field>
-                      <Field label="Email (optional)">
-                        <Input
-                          value={newCustomer.email}
-                          onChange={(e) =>
-                            setNewCustomer({ ...newCustomer, email: e.target.value })
-                          }
-                          placeholder="jane@email.com"
-                          type="email"
-                        />
-                      </Field>
-                    </div>
+                    )}
 
-                    <div className="flex items-center justify-between gap-4 rounded-xl bg-soft px-4 py-3">
-                      <div className="text-sm font-semibold text-ink">
-                        Customer is OK to get texts
+                    {filteredCustomers.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => pickExisting(c)}
+                        className="group pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:border-indigo/30 hover:bg-indigobg/40"
+                      >
+                        <Avatar name={c.name || "?"} accent="indigo" size={40} />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-base font-semibold text-ink">{c.name}</div>
+                          <div className="mt-0.5 truncate text-sm text-muted">
+                            {c.homes?.address}
+                          </div>
+                        </div>
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                          className="shrink-0 text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-indigo"
+                        >
+                          <path
+                            d="M9 6l6 6-6 6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+
+                  {!q && existing.length === 0 && (
+                    <div className="px-1 py-3 text-sm text-muted">
+                      No customers yet. Type a name to add your first.
+                    </div>
+                  )}
+
+                  {q && filteredCustomers.length === 0 && hasExactMatch && (
+                    <div className="px-1 py-3 text-sm text-muted">No other matches.</div>
+                  )}
+                </div>
+              </Card>
+            )}
+
+            {stage === "location" &&
+              (selectedCustomerId ? (
+                /* PREVIOUS CLIENT - address on file, prefilled and editable */
+                <Card className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={selectedCustomer?.name || "?"} accent="indigo" size={44} />
+                    <div className="min-w-0">
+                      <div className="truncate text-lg font-semibold text-ink tracking-tight">
+                        {selectedCustomer?.name}
                       </div>
-                      <Toggle
-                        checked={consent}
-                        onChange={setConsent}
-                        label="Customer consents to texts"
-                      />
+                      <div className="text-sm text-muted">Confirm the service address</div>
                     </div>
+                  </div>
 
+                  <Field label="Service address">
+                    <AddressField
+                      value={locAddress}
+                      onChange={setLocAddress}
+                      onResolve={(r) => {
+                        setLocAddress(r.address);
+                        setResolved(r);
+                      }}
+                      bias={gps}
+                      placeholder="123 Maple St, Austin TX"
+                      ariaLabel="Service address"
+                    />
+                  </Field>
+
+                  <div className="flex gap-2">
+                    <Btn variant="secondary" onClick={() => setStage("customer")}>
+                      Back
+                    </Btn>
                     <Btn
                       variant="indigo"
                       size="lg"
-                      className="w-full"
+                      className="flex-1"
+                      disabled={!locAddress.trim()}
+                      onClick={() => setStage("work")}
+                    >
+                      Continue
+                    </Btn>
+                  </div>
+                </Card>
+              ) : (
+                /* NEW CUSTOMER - address prefilled from GPS, editable with autocomplete */
+                <Card className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={newCustomer.name || "?"} accent="indigo" size={44} />
+                    <div className="min-w-0">
+                      <div className="truncate text-lg font-semibold text-ink tracking-tight">
+                        {newCustomer.name || "New customer"}
+                      </div>
+                      <div className="text-sm text-muted">
+                        {loc.status === "locating"
+                          ? "Finding your location…"
+                          : "Confirm the service address"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Field
+                    label="Service address"
+                    hint={
+                      loc.status === "ready" && newCustomer.address === loc.address
+                        ? "From your current location. Edit if it's not exact."
+                        : undefined
+                    }
+                  >
+                    <AddressField
+                      value={newCustomer.address}
+                      onChange={(v) => {
+                        addressTouched.current = true;
+                        setNewCustomer((n) => ({ ...n, address: v }));
+                      }}
+                      onResolve={(r) => {
+                        addressTouched.current = true;
+                        setNewCustomer((n) => ({ ...n, address: r.address }));
+                        setResolved(r);
+                      }}
+                      bias={gps}
+                      placeholder="Start typing the address…"
+                      ariaLabel="Service address"
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Phone (optional)">
+                      <Input
+                        value={newCustomer.phone}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                        placeholder="555-555-1234"
+                        type="tel"
+                      />
+                    </Field>
+                    <Field label="Email (optional)">
+                      <Input
+                        value={newCustomer.email}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                        placeholder="jane@email.com"
+                        type="email"
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 rounded-xl bg-soft px-4 py-3">
+                    <div className="text-sm font-semibold text-ink">
+                      Customer is OK to get texts
+                    </div>
+                    <Toggle
+                      checked={consent}
+                      onChange={setConsent}
+                      label="Customer consents to texts"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Btn variant="secondary" onClick={() => setStage("customer")}>
+                      Back
+                    </Btn>
+                    <Btn
+                      variant="indigo"
+                      size="lg"
+                      className="flex-1"
                       disabled={!(newCustomer.name && newCustomer.address && consent)}
                       onClick={() => setStage("work")}
                     >
                       Continue
                     </Btn>
-                  </Card>
-                )}
-              </div>
-            )}
-
+                  </div>
+                </Card>
+              ))}
 
             {stage === "work" && (
               <Card className="space-y-5">
@@ -821,7 +829,9 @@ function NewJob() {
                       type="button"
                       onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
                       aria-pressed={dictation.listening}
-                      aria-label={dictation.listening ? "Stop recording" : "Tap and tell me what you did"}
+                      aria-label={
+                        dictation.listening ? "Stop recording" : "Tap and tell me what you did"
+                      }
                       className={`pressable w-full rounded-2xl px-6 py-8 text-center transition-all duration-200 ${
                         dictation.listening
                           ? "bg-indigo text-white shadow-lg"
@@ -830,18 +840,20 @@ function NewJob() {
                     >
                       <div
                         className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${
-                          dictation.listening
-                            ? "bg-white/20 animate-pulse"
-                            : "bg-white/70"
+                          dictation.listening ? "bg-white/20 animate-pulse" : "bg-white/70"
                         }`}
                       >
                         <MicIcon size={36} />
                       </div>
                       <div className="mt-4 text-lg font-bold tracking-tight">
-                        {dictation.listening ? "Listening… tap to stop" : "Tap and tell me what you did"}
+                        {dictation.listening
+                          ? "Listening… tap to stop"
+                          : "Tap and tell me what you did"}
                       </div>
                       <div className="mt-1 text-xs opacity-80">
-                        {dictation.listening ? "Talk through the job." : "Your words fill in the record."}
+                        {dictation.listening
+                          ? "Talk through the job."
+                          : "Your words fill in the record."}
                       </div>
                     </button>
                   ) : (
@@ -888,7 +900,9 @@ function NewJob() {
                     >
                       <div className="flex items-center justify-center gap-2 text-indigo">
                         <CameraIcon size={22} />
-                        <span className="text-sm font-semibold">Take a photo of the unit (optional)</span>
+                        <span className="text-sm font-semibold">
+                          Take a photo of the unit (optional)
+                        </span>
                       </div>
                       <div className="mt-1 text-xs text-muted">
                         We'll fill in make, model, and warranty for you.
@@ -950,8 +964,12 @@ function NewJob() {
                     aria-expanded={detailsOpen}
                     className="pressable w-full flex items-center justify-between px-4 py-3 text-left"
                   >
-                    <span className="text-sm font-semibold text-ink">Add unit details (optional)</span>
-                    <span className={`text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}>
+                    <span className="text-sm font-semibold text-ink">
+                      Add unit details (optional)
+                    </span>
+                    <span
+                      className={`text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}
+                    >
                       ▾
                     </span>
                   </button>
@@ -962,7 +980,9 @@ function NewJob() {
                           <div className="text-sm font-semibold text-ink mb-2">Which unit?</div>
                           <div className="space-y-2">
                             {homeAppliances.map((a) => {
-                              const label = [a.type, a.make, a.model].filter(Boolean).join(" · ") || "Unnamed unit";
+                              const label =
+                                [a.type, a.make, a.model].filter(Boolean).join(" · ") ||
+                                "Unnamed unit";
                               const meta = a.last_job_at
                                 ? `Last serviced ${formatDate(a.last_job_at)} · ${a.job_count} job${a.job_count === 1 ? "" : "s"}`
                                 : "No visits yet";
@@ -1083,7 +1103,7 @@ function NewJob() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStage("customer")}>
+                  <Btn variant="secondary" onClick={() => setStage("location")}>
                     Back
                   </Btn>
                   <Btn
@@ -1098,7 +1118,6 @@ function NewJob() {
                 </div>
               </Card>
             )}
-
 
             {stage === "review" && (
               <Card className="space-y-5">

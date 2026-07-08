@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { forwardGeocode } from "@/lib/geo";
 
 export const TRADES = [
   { id: "water_treatment", label: "Water treatment" },
@@ -115,71 +116,11 @@ export type ProHome = {
   geocoded_at: string | null;
 };
 
-/* Free Nominatim geocoding. Policy: identify the app (email param, since a
-   browser fetch cannot set User-Agent) and stay at or under 1 request/second.
-   Callers are responsible for sequencing; this never throws. */
-export async function geocodeAddress(
-  address: string,
-): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&email=ilanfridman23%40gmail.com&q=${encodeURIComponent(address)}`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) return null;
-    const rows = (await res.json()) as { lat: string; lon: string }[];
-    const hit = rows?.[0];
-    if (!hit) return null;
-    const lat = Number.parseFloat(hit.lat);
-    const lng = Number.parseFloat(hit.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-    return { lat, lng };
-  } catch {
-    return null;
-  }
-}
-
-/* Reverse geocode via Nominatim. Returns a compact street address string. */
-export async function reverseGeocode(
-  lat: number,
-  lng: number,
-): Promise<string | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&email=ilanfridman23%40gmail.com&lat=${lat}&lon=${lng}`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      display_name?: string;
-      address?: {
-        house_number?: string;
-        road?: string;
-        city?: string;
-        town?: string;
-        village?: string;
-        state?: string;
-        postcode?: string;
-      };
-    };
-    const a = data.address;
-    if (a) {
-      const street = [a.house_number, a.road].filter(Boolean).join(" ");
-      const locality = a.city || a.town || a.village || "";
-      const parts = [street, locality, a.state].filter(Boolean);
-      if (parts.length) return parts.join(", ");
-    }
-    return data.display_name ?? null;
-  } catch {
-    return null;
-  }
-}
-
 /* Normalize an address for loose comparison (lowercase, collapse whitespace,
    strip punctuation). Two addresses that normalize equally are considered the
    same home for the geolocation match. */
 export function normalizeAddress(a: string): string {
-  return a
-    .toLowerCase()
-    .replace(/[.,#]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return a.toLowerCase().replace(/[.,#]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /* Great-circle distance between two lat/lng points, in meters. */
@@ -197,15 +138,16 @@ export function haversineMeters(
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
-
-
-/* Geocode one home and persist the result. geocoded_at is stamped even on
-   failure so bad addresses are not retried every visit. Never throws. */
+/* Geocode one home and persist the result. Pass `known` coords (e.g. from a
+   Places details lookup the user already made) to skip the geocode call.
+   geocoded_at is stamped even on failure so bad addresses are not retried every
+   visit. Never throws. */
 export async function geocodeHome(
   homeId: string,
   address: string,
+  known?: { lat: number; lng: number } | null,
 ): Promise<{ lat: number; lng: number } | null> {
-  const coords = await geocodeAddress(address);
+  const coords = known ?? (await forwardGeocode(address));
   try {
     await untyped
       .from("homes")
@@ -235,8 +177,8 @@ export async function fetchProHomes(proId: string): Promise<ProHome[]> {
 }
 
 /* Lazy backfill: geocode up to `limit` ungeocoded homes, sequentially,
-   1 second apart (Nominatim rate limit). Calls onUpdate after each home
-   so pins can appear without a reload. */
+   ~1 second apart to stay polite to the geocoding API. Calls onUpdate after
+   each home so pins can appear without a reload. */
 export async function backfillHomeGeocodes(
   homes: ProHome[],
   onUpdate: (home: ProHome) => void,
