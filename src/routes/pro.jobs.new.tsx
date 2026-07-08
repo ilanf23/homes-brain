@@ -479,6 +479,8 @@ function NewJob() {
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
     setConsent(false);
     setAddByHand(false);
+    setShowNearby(false);
+
     setEqType("");
     setEqMake("");
     setEqModel("");
