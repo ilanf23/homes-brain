@@ -20,9 +20,11 @@ export const Route = createFileRoute("/make-it-last/")({
       description:
         "Everything in your home has two lifespans, the neglected one and the maintained one. See how many years you're leaving on the table, backed by real maintenance data.",
       path: "/make-it-last",
+      geo: true,
     }),
   component: MakeItLast,
 });
+
 
 type Item = {
   slug: string;
