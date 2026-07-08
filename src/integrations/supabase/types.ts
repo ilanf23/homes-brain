@@ -194,7 +194,10 @@ export type Database = {
           claimed_by_homeowner: string | null
           created_at: string
           created_by_pro: string | null
+          geocoded_at: string | null
           id: string
+          lat: number | null
+          lng: number | null
         }
         Insert: {
           address: string
@@ -202,7 +205,10 @@ export type Database = {
           claimed_by_homeowner?: string | null
           created_at?: string
           created_by_pro?: string | null
+          geocoded_at?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
         }
         Update: {
           address?: string
@@ -210,7 +216,10 @@ export type Database = {
           claimed_by_homeowner?: string | null
           created_at?: string
           created_by_pro?: string | null
+          geocoded_at?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
         }
         Relationships: [
           {
