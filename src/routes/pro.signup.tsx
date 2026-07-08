@@ -27,6 +27,7 @@ function ProSignup() {
   const [sentTo, setSentTo] = useState<string | null>(null);
 
   const [business, setBusiness] = useState("");
+  const [ownerFirstName, setOwnerFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -37,6 +38,7 @@ function ProSignup() {
 
   const step1Valid =
     business.trim().length > 1 &&
+    ownerFirstName.trim().length > 0 &&
     isValidEmail(email.trim()) &&
     password.length >= 8 &&
     password === confirmPw;
