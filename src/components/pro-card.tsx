@@ -7,7 +7,7 @@ import { TRADE_LABELS } from "@/lib/pros";
 import { ContactProModal } from "@/components/contact-pro-modal";
 
 /* Shared pro card used by /pros directory and the guide "Pros who do this work
-   near you" section. Coral highlights are reserved for verified badge + primary
+   near you" section. Teal highlights (the pro subbrand) are reserved for verified badge + primary
    CTA - listing pros stay neutral so we do not visually endorse them. */
 
 export function ProCard({
