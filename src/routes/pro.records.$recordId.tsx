@@ -113,11 +113,6 @@ function RecordDetail() {
               <Btn variant="secondary">Create invoice</Btn>
             </Link>
           )}
-          <a href={publicUrl} target="_blank" rel="noreferrer">
-            <Btn variant="indigo">
-              View public record <ExternalLink size={15} />
-            </Btn>
-          </a>
         </div>
       </div>
 
