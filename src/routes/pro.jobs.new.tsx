@@ -20,8 +20,9 @@ type CustomerOpt = {
   phone: string | null;
   email: string | null;
   home_id: string;
-  homes: { address: string } | null;
+  homes: { address: string; lat: number | null; lng: number | null } | null;
 };
+
 type ApplianceOpt = {
   id: string;
   type: string | null;
