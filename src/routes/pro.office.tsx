@@ -12,7 +12,7 @@ import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/office")({
-  head: () => ({ meta: [{ title: "Dashboard - HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Office - HomesBrain" }] }),
   component: ProDashboard,
 });
 
@@ -285,7 +285,7 @@ function ProDashboard() {
 
   if (loading || !pro) {
     return (
-      <ProShell pro={pro} active="dashboard">
+      <ProShell pro={pro} active="office">
         <ProPageSkeleton variant="dashboard" />
       </ProShell>
     );
@@ -301,7 +301,7 @@ function ProDashboard() {
   const greetingName = firstName && firstName.length > 0 ? firstName : pro.business;
 
   return (
-    <ProShell pro={pro} active="dashboard">
+    <ProShell pro={pro} active="office">
       <ProPageHead
         eyebrow="Dashboard"
         title={`${timeOfDay}, ${greetingName}`}
