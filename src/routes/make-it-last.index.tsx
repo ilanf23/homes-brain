@@ -7,8 +7,28 @@ import {
   Shirt,
   Utensils,
   Droplets,
+  Droplet,
   Refrigerator,
   Waves,
+  Zap,
+  Thermometer,
+  ArrowDownToLine,
+  Trash2,
+  Wrench,
+  Bath,
+  ChefHat,
+  Microwave,
+  WashingMachine,
+  PlugZap,
+  Power,
+  CloudRain,
+  DoorOpen,
+  PanelsTopLeft,
+  Sprout,
+  Bug,
+  Plus,
+  Mail,
+  type LucideIcon,
 } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill, SectionHead } from "@/lib/ui";
 import { MarketingShell, marketingHead } from "@/components/marketing";
@@ -79,16 +99,72 @@ const ITEMS: Item[] = [
   },
 ];
 
-const BROWSE = [
-  { slug: "water-heater", label: "Water heater", Icon: Flame },
-  { slug: "central-ac", label: "Central AC", Icon: Wind },
-  { slug: "roof", label: "Roof", Icon: HomeIcon },
-  { slug: "dryer", label: "Dryer", Icon: Shirt },
-  { slug: "dishwasher", label: "Dishwasher", Icon: Utensils },
-  { slug: "water-softener", label: "Water softener", Icon: Droplets },
-  { slug: "refrigerator", label: "Refrigerator", Icon: Refrigerator },
-  { slug: "pool-equipment", label: "Pool equipment", Icon: Waves },
-] as const;
+type BrowseItem = { slug: string; label: string; Icon: LucideIcon };
+type BrowseGroup = { title: string; items: BrowseItem[] };
+
+const BROWSE_GROUPS: BrowseGroup[] = [
+  {
+    title: "Cooling and heating",
+    items: [
+      { slug: "central-ac", label: "Central AC", Icon: Wind },
+      { slug: "heat-pump", label: "Heat pump", Icon: Thermometer },
+      { slug: "furnace", label: "Furnace", Icon: Flame },
+    ],
+  },
+  {
+    title: "Water heating",
+    items: [
+      { slug: "water-heater", label: "Water heater", Icon: Flame },
+      { slug: "tankless-water-heater", label: "Tankless water heater", Icon: Zap },
+    ],
+  },
+  {
+    title: "Plumbing and water",
+    items: [
+      { slug: "water-softener", label: "Water softener", Icon: Droplets },
+      { slug: "well-pump", label: "Well pump", Icon: Droplet },
+      { slug: "sump-pump", label: "Sump pump", Icon: ArrowDownToLine },
+      { slug: "garbage-disposal", label: "Garbage disposal", Icon: Trash2 },
+      { slug: "faucets", label: "Faucets and fixtures", Icon: Wrench },
+      { slug: "toilet", label: "Toilet", Icon: Bath },
+    ],
+  },
+  {
+    title: "Kitchen and laundry",
+    items: [
+      { slug: "refrigerator", label: "Refrigerator", Icon: Refrigerator },
+      { slug: "dishwasher", label: "Dishwasher", Icon: Utensils },
+      { slug: "range-oven", label: "Range or oven", Icon: ChefHat },
+      { slug: "microwave", label: "Microwave", Icon: Microwave },
+      { slug: "washer", label: "Washing machine", Icon: WashingMachine },
+      { slug: "dryer", label: "Dryer", Icon: Shirt },
+    ],
+  },
+  {
+    title: "Electrical",
+    items: [
+      { slug: "electrical-panel", label: "Electrical panel", Icon: PlugZap },
+      { slug: "standby-generator", label: "Standby generator", Icon: Power },
+    ],
+  },
+  {
+    title: "Structure and exterior",
+    items: [
+      { slug: "roof", label: "Roof", Icon: HomeIcon },
+      { slug: "gutters", label: "Gutters", Icon: CloudRain },
+      { slug: "garage-door", label: "Garage door", Icon: DoorOpen },
+      { slug: "windows", label: "Windows", Icon: PanelsTopLeft },
+    ],
+  },
+  {
+    title: "Outdoor",
+    items: [
+      { slug: "pool-equipment", label: "Pool equipment", Icon: Waves },
+      { slug: "irrigation", label: "Irrigation and sprinklers", Icon: Sprout },
+      { slug: "pest-termite", label: "Pest and termite protection", Icon: Bug },
+    ],
+  },
+];
 
 function MakeItLast() {
   const [selected, setSelected] = useState<Item>(ITEMS[0]);
@@ -201,22 +277,60 @@ function MakeItLast() {
             eyebrow="Browse by system"
             title="Pick a system to see its maintained lifespan"
           />
-          <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {BROWSE.map(({ slug, label, Icon }) => (
-              <Link
-                key={slug}
-                to="/make-it-last/$slug"
-                params={{ slug }}
-                className="group"
-              >
-                <Card lift className="flex flex-col items-center text-center py-8 h-full">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark group-hover:scale-105 transition-transform">
-                    <Icon size={22} strokeWidth={1.75} />
-                  </div>
-                  <div className="mt-4 text-sm font-semibold text-ink">{label}</div>
-                </Card>
-              </Link>
+          <div className="mt-10 space-y-12">
+            {BROWSE_GROUPS.map((group) => (
+              <div key={group.title}>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-coraldark mb-4">
+                  {group.title}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {group.items.map(({ slug, label, Icon }) => (
+                    <Link
+                      key={slug}
+                      to="/make-it-last/$slug"
+                      params={{ slug }}
+                      className="group"
+                    >
+                      <Card lift className="flex flex-col items-center text-center py-8 h-full">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark group-hover:scale-105 transition-transform">
+                          <Icon size={22} strokeWidth={1.75} />
+                        </div>
+                        <div className="mt-4 text-sm font-semibold text-ink">{label}</div>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
+
+            {/* Catch-all card */}
+            <div>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-coraldark mb-4">
+                Do not see yours?
+              </h3>
+              <a
+                href="mailto:hello@homesbrain.com?subject=Make%20It%20Last%20guide%20request"
+                className="group block"
+              >
+                <Card lift className="flex flex-col sm:flex-row items-center gap-5 py-8 px-6 text-center sm:text-left">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coralbg text-coraldark shrink-0 group-hover:scale-105 transition-transform">
+                    <Plus size={22} strokeWidth={1.75} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold text-ink">
+                      More guides are on the way
+                    </div>
+                    <p className="mt-1 text-sm text-muted">
+                      Tell us what to cover next and we will build it. Every founding pro and homeowner shapes the list.
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-coraldark group-hover:text-coral transition-colors">
+                    <Mail size={16} />
+                    Suggest a guide
+                  </div>
+                </Card>
+              </a>
+            </div>
           </div>
         </div>
       </section>
