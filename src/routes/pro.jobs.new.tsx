@@ -310,11 +310,23 @@ function NewJob() {
 
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
-    setLocAddress(c.homes?.address ?? "");
-    // On-file address has no fresh coords unless the pro edits + picks a place.
-    setResolved(null);
+    const onFile = c.homes?.address ?? "";
+    addressTouched.current = false;
+    if (onFile) {
+      setLocAddress(onFile);
+      // On-file address has no fresh coords unless the pro edits + picks a place.
+      setResolved(null);
+    } else if (loc.status === "ready") {
+      // No address on file: prefill from GPS so the pro just approves or edits.
+      setLocAddress(loc.address);
+      setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
+    } else {
+      setLocAddress("");
+      setResolved(null);
+    }
     setStage("location");
   }
+
 
   function startNewCustomer(name: string) {
     setSelectedCustomerId("");
