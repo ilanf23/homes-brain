@@ -11,9 +11,10 @@
 /* HomesBrain design tokens.
    Color carries meaning. Never mix the roles.
    indigo = the brand (buttons, links, accents, chips - everywhere, all audiences),
-   coral = payoff highlights only (rebooks, revenue, wins - used sparingly, ~10%),
-   amber = functional warning/status (due soon, pending), red = errors/destructive.
-   teal is retired - do not reintroduce role-per-audience colors. */
+   coral = homeowner content + payoff highlights (rebooks, revenue, wins),
+   teal = the pro world subbrand (pros directory, pro profiles, pros-near-you),
+   amber = functional warning/status (due soon, pending), red = errors/destructive. */
+
 
 @theme inline {
   --color-background: var(--bg);
