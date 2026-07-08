@@ -315,6 +315,19 @@ function NewJob() {
     : existing;
   const hasExactMatch = existing.some((c) => c.name?.trim().toLowerCase() === q);
 
+  // Existing customer whose home address matches the pro's current GPS location.
+  // Used to prefill the name at the top of the customer step ("At your current
+  // location: Jane Doe"), so the pro just taps to confirm.
+  const locationMatch =
+    loc.status === "ready"
+      ? existing.find(
+          (c) =>
+            c.homes?.address &&
+            normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
+        )
+      : undefined;
+
+
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
     const onFile = c.homes?.address ?? "";
@@ -640,6 +653,40 @@ function NewJob() {
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
               <Card className="space-y-3">
+                {locationMatch && !q && (
+                  <button
+                    type="button"
+                    onClick={() => pickExisting(locationMatch)}
+                    className="pressable flex w-full items-center gap-3 rounded-2xl border border-indigo/40 bg-indigobg px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/80"
+                  >
+                    <Avatar name={locationMatch.name || "?"} accent="indigo" size={40} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-base font-semibold text-indigo">
+                        {locationMatch.name}
+                      </div>
+                      <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
+                        At your current location
+                      </div>
+                    </div>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                      className="shrink-0 text-indigo"
+                    >
+                      <path
+                        d="M9 6l6 6-6 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                )}
+
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -647,6 +694,7 @@ function NewJob() {
                   autoFocus
                   aria-label="Search customers or type a new name"
                 />
+
 
                 <div className="max-h-[560px] overflow-auto -mx-1 px-1">
                   <div className="grid gap-2 sm:grid-cols-2">
