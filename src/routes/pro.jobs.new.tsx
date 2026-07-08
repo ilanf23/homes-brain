@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, Btn, Card, Field, Input, KV, Pill, StepBar, Textarea, Toast, Toggle } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
-import { buildRecordUrl, checkRecall, formatDate, geocodeHome, logEvent, mockSend, normalizeAddress, reverseGeocode, tradeLabel } from "@/lib/hb";
+import { buildRecordUrl, checkRecall, formatDate, geocodeHome, haversineMeters, logEvent, mockSend, reverseGeocode, tradeLabel } from "@/lib/hb";
+
 import { scanNameplate, useDictation } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck } from "@/components/svg";
 
@@ -20,8 +21,9 @@ type CustomerOpt = {
   phone: string | null;
   email: string | null;
   home_id: string;
-  homes: { address: string } | null;
+  homes: { address: string; lat: number | null; lng: number | null } | null;
 };
+
 type ApplianceOpt = {
   id: string;
   type: string | null;
@@ -53,13 +55,24 @@ function NewJob() {
   const [addByHand, setAddByHand] = useState(false);
 
   // Geolocation ("You're at …")
+  type NearHome = { c: CustomerOpt; meters: number };
   type LocState =
     | { status: "idle" }
     | { status: "locating" }
-    | { status: "ready"; address: string; match: CustomerOpt | null }
+    | {
+        status: "ready";
+        address: string;
+        lat: number;
+        lng: number;
+        accuracy: number; // meters
+        match: CustomerOpt | null;
+        nearest: NearHome[];
+      }
     | { status: "denied" }
     | { status: "unavailable" };
   const [loc, setLoc] = useState<LocState>({ status: "idle" });
+  const [showNearby, setShowNearby] = useState(false);
+
 
 
   // Work
@@ -97,54 +110,84 @@ function NewJob() {
   useEffect(() => {
     if (!proId) return;
     (async () => {
-      const { data: c } = await supabase
+      // Cast: homes.lat/lng exist in the DB but the generated types haven't
+      // regenerated to include them yet.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: c } = await (supabase as any)
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address)")
+        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     })();
   }, [proId]);
 
-  /* Detect the pro's current address on mount. If it matches an existing
-     customer, offer one-tap select. Otherwise, offer prefill. */
-  useEffect(() => {
+
+  /* Detect the pro's current address. Distance beats string matching -
+     Nominatim rounds to whichever address it knows, which is often a
+     neighbor. We prefer to auto-select only when a stored home sits within
+     ~30 m of the GPS point. */
+  const runLocate = useCallback(() => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       setLoc({ status: "unavailable" });
       return;
     }
     setLoc({ status: "locating" });
+    setShowNearby(false);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const address = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        if (!address) {
-          setLoc({ status: "unavailable" });
-          return;
-        }
-        setLoc({ status: "ready", address, match: null });
+        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+        const address = (await reverseGeocode(lat, lng)) ?? "";
+        setLoc({
+          status: "ready",
+          address,
+          lat,
+          lng,
+          accuracy: Number.isFinite(accuracy) ? accuracy : 9999,
+          match: null,
+          nearest: [],
+        });
       },
       (err) => {
         setLoc({ status: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" });
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
+      // maximumAge: 0 forces a fresh fix; enableHighAccuracy asks for GPS on mobile.
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   }, []);
 
-  /* Re-match the detected address whenever the customer list arrives/changes. */
+  useEffect(() => {
+    runLocate();
+  }, [runLocate]);
+
+  /* Compute nearest customers + auto-match whenever location or the customer
+     list changes. Ignore homes without coordinates (not yet geocoded). */
   useEffect(() => {
     if (loc.status !== "ready") return;
-    const norm = normalizeAddress(loc.address);
-    const match =
-      existing.find((c) => {
-        const a = c.homes?.address;
-        if (!a) return false;
-        const na = normalizeAddress(a);
-        return na === norm || na.startsWith(norm) || norm.startsWith(na);
-      }) ?? null;
-    if ((match?.id ?? null) !== (loc.match?.id ?? null)) {
-      setLoc({ status: "ready", address: loc.address, match });
+    const here = { lat: loc.lat, lng: loc.lng };
+    const withDistance: NearHome[] = existing
+      .map((c) => {
+        const h = c.homes;
+        if (!h || h.lat == null || h.lng == null) return null;
+        return { c, meters: haversineMeters(here, { lat: h.lat, lng: h.lng }) };
+      })
+      .filter((x): x is NearHome => x !== null)
+      .sort((a, b) => a.meters - b.meters);
+    const nearest = withDistance.slice(0, 3);
+    // Auto-match: closest home within 30 m, and clearly closer than #2.
+    const autoMatch =
+      nearest[0] && nearest[0].meters <= 30 && (!nearest[1] || nearest[1].meters > 50)
+        ? nearest[0].c
+        : null;
+    const sameMatch = (autoMatch?.id ?? null) === (loc.match?.id ?? null);
+    const sameList =
+      nearest.length === loc.nearest.length &&
+      nearest.every((n, i) => n.c.id === loc.nearest[i].c.id);
+    if (!sameMatch || !sameList) {
+      setLoc({ ...loc, match: autoMatch, nearest });
     }
   }, [existing, loc]);
+
 
   /* When an existing customer is picked, load that home's appliances (with
      last-job info) so the pro can attach this new visit to the same physical
@@ -423,17 +466,21 @@ function NewJob() {
      one just added is selectable on the next pass. */
   async function logAnother() {
     if (proId) {
-      const { data: c } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: c } = await (supabase as any)
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address)")
+        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     }
+
     setSelectedCustomerId("");
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
     setConsent(false);
     setAddByHand(false);
+    setShowNearby(false);
+
     setEqType("");
     setEqMake("");
     setEqModel("");
@@ -499,56 +546,146 @@ function NewJob() {
               <div className="space-y-5">
                 {/* 1. USE MY LOCATION - hero at the top */}
                 {loc.status === "locating" && (
-                  <Card className="text-center py-8">
-                    <div className="text-sm text-muted">Finding your location…</div>
+                  <Card className="text-center py-8 space-y-1">
+                    <div className="text-sm font-semibold text-ink">Getting a precise location…</div>
+                    <div className="text-xs text-muted">
+                      Takes a few seconds on first use. Best outdoors.
+                    </div>
                   </Card>
                 )}
 
-                {loc.status === "ready" && loc.match && (
-                  <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
-                    <div>
-                      <Pill accent="indigo">You're here</Pill>
-                      <div className="mt-3 text-xl font-semibold text-ink tracking-tight">
-                        {loc.match.name}
+                {loc.status === "ready" && (() => {
+                  const acc = Math.round(loc.accuracy);
+                  const accAccent: "indigo" | "amber" | "red" =
+                    acc <= 25 ? "indigo" : acc <= 100 ? "amber" : "red";
+                  const accLabel =
+                    acc <= 25
+                      ? `Within ~${acc} m`
+                      : acc <= 100
+                        ? `Approximate (~${acc} m)`
+                        : `Rough only (~${acc} m)`;
+                  const others = loc.match
+                    ? loc.nearest.filter((n) => n.c.id !== loc.match!.id)
+                    : loc.nearest;
+                  return (
+                    <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Pill accent="indigo">You're here</Pill>
+                          <Pill accent={accAccent}>{accLabel}</Pill>
+                        </div>
+                        {loc.match ? (
+                          <>
+                            <div className="mt-3 text-xl font-semibold text-ink tracking-tight">
+                              {loc.match.name}
+                            </div>
+                            <div className="mt-1 text-sm text-muted">
+                              {loc.match.homes?.address}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mt-3 text-lg font-semibold text-ink tracking-tight leading-snug">
+                              {loc.address || "Location detected"}
+                            </div>
+                            <div className="mt-1 text-sm text-muted">
+                              {loc.nearest.length > 0
+                                ? "Pick the right house below, or add a new one."
+                                : "Is this the job?"}
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="mt-1 text-sm text-muted">{loc.match.homes?.address}</div>
-                    </div>
-                    <Btn
-                      variant="indigo"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => {
-                        setSelectedCustomerId(loc.match!.id);
-                        setStage("work");
-                      }}
-                    >
-                      Yes, this is the job
-                    </Btn>
-                  </Card>
-                )}
 
-                {loc.status === "ready" && !loc.match && (
-                  <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
-                    <div>
-                      <Pill accent="indigo">You're here</Pill>
-                      <div className="mt-3 text-lg font-semibold text-ink tracking-tight leading-snug">
-                        {loc.address}
-                      </div>
-                      <div className="mt-1 text-sm text-muted">Is this the job?</div>
-                    </div>
-                    <Btn
-                      variant="indigo"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => {
-                        setNewCustomer((n) => ({ ...n, address: loc.address }));
-                        setAddByHand(true);
-                      }}
-                    >
-                      Yes, this is it
-                    </Btn>
-                  </Card>
-                )}
+                      {loc.match && (
+                        <Btn
+                          variant="indigo"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedCustomerId(loc.match!.id);
+                            setStage("work");
+                          }}
+                        >
+                          Yes, this is the job
+                        </Btn>
+                      )}
+
+                      {!loc.match && loc.address && (
+                        <Btn
+                          variant="indigo"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            setNewCustomer((n) => ({ ...n, address: loc.address }));
+                            setAddByHand(true);
+                          }}
+                        >
+                          Yes, this is it
+                        </Btn>
+                      )}
+
+                      {others.length > 0 && (
+                        <div className="space-y-2">
+                          {(loc.match || showNearby) ? (
+                            <>
+                              <div className="text-xs font-semibold text-muted uppercase tracking-wider">
+                                {loc.match ? "Or one of these" : "Nearest customers"}
+                              </div>
+                              {others.map((n) => (
+                                <button
+                                  key={n.c.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedCustomerId(n.c.id);
+                                    setStage("work");
+                                  }}
+                                  className="pressable w-full text-left rounded-2xl border border-line bg-paper px-4 py-3 hover:border-ink/20 transition-all"
+                                >
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <div className="font-semibold text-ink truncate">
+                                        {n.c.name}
+                                      </div>
+                                      <div className="text-xs text-muted truncate">
+                                        {n.c.homes?.address}
+                                      </div>
+                                    </div>
+                                    <div className="text-xs font-semibold text-muted whitespace-nowrap">
+                                      {n.meters < 1000
+                                        ? `${Math.round(n.meters)} m`
+                                        : `${(n.meters / 1000).toFixed(1)} km`}
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setShowNearby(true)}
+                              className="text-sm font-semibold text-indigo hover:text-indigo-dark"
+                            >
+                              Not this house?
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {acc > 100 && (
+                        <button
+                          type="button"
+                          onClick={runLocate}
+                          className="text-sm font-semibold text-indigo hover:text-indigo-dark"
+                        >
+                          Try again for a better fix
+                        </button>
+                      )}
+                    </Card>
+                  );
+                })()}
+
+
 
                 {/* 2. RECENT CUSTOMERS - big tappable cards */}
                 {existing.length > 0 && !addByHand && (
