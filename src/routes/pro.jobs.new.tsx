@@ -98,7 +98,10 @@ function NewJob() {
   useEffect(() => {
     if (!proId) return;
     (async () => {
-      const { data: c } = await supabase
+      // Cast: homes.lat/lng exist in the DB but the generated types haven't
+      // regenerated to include them yet.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: c } = await (supabase as any)
         .from("customers")
         .select("id,name,phone,email,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
@@ -106,6 +109,7 @@ function NewJob() {
       setExisting((c ?? []) as unknown as CustomerOpt[]);
     })();
   }, [proId]);
+
 
   /* Detect the pro's current address on mount. If it matches an existing
      customer, offer one-tap select. Otherwise, offer prefill. */
