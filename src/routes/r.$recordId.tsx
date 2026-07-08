@@ -10,10 +10,15 @@ export const Route = createFileRoute("/r/$recordId")({
   component: PublicRecord,
 });
 
+// Rows the pro chose to hide in the Send step. Keys mirror the FIELD_*
+// constants in pro.jobs.new.tsx: "customer", "equipment", "make_model",
+// "work_done", "next_service", "recall". ("customer" has no row here, so it is
+// only meaningful in the pro-side preview.)
 type RecordView = {
   id: string;
   viewed_at: string | null;
   created_at: string;
+  hidden_fields: string[] | null;
   job: {
     what_done: string;
     next_service_date: string | null;
@@ -98,6 +103,7 @@ function PublicRecord() {
   const reviewUrl = pro && isGoogleUrl(pro.google_place_id) ? pro.google_place_id : null;
   const eq = j.equipment;
   const isClaimed = !!j.home?.claimed_by_homeowner;
+  const hidden = new Set(rec.hidden_fields ?? []);
 
   return (
     <div className="min-h-dvh bg-soft">
@@ -140,19 +146,25 @@ function PublicRecord() {
           </div>
 
           <div className="mt-4">
-            <KV k="Equipment" v={eq?.type ?? "-"} />
-            <KV k="Make / Model" v={[eq?.make, eq?.model].filter(Boolean).join(" · ") || "-"} />
+            {!hidden.has("equipment") && <KV k="Equipment" v={eq?.type ?? "-"} />}
+            {!hidden.has("make_model") && (
+              <KV k="Make / Model" v={[eq?.make, eq?.model].filter(Boolean).join(" · ") || "-"} />
+            )}
             <KV k="Warranty until" v={formatDate(eq?.warranty_until) || "-"} />
-            <KV
-              k="Recall status"
-              v={
-                <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
-                  <ShieldCheck size={18} /> No known recalls, checked today
-                </span>
-              }
-            />
-            <KV k="Work done" v={j.what_done} />
-            <KV k="Next service" v={formatDate(j.next_service_date) || "-"} />
+            {!hidden.has("recall") && (
+              <KV
+                k="Recall status"
+                v={
+                  <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
+                    <ShieldCheck size={18} /> No known recalls, checked today
+                  </span>
+                }
+              />
+            )}
+            {!hidden.has("work_done") && <KV k="Work done" v={j.what_done} />}
+            {!hidden.has("next_service") && (
+              <KV k="Next service" v={formatDate(j.next_service_date) || "-"} />
+            )}
           </div>
         </Card>
 
