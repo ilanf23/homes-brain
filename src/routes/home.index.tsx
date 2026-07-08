@@ -29,6 +29,7 @@ function HomeOverview() {
   } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const [justPaidId, setJustPaidId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!home) return;
@@ -38,11 +39,39 @@ function HomeOverview() {
     })();
   }, [home]);
 
+  // On return with ?paid=<invoiceId>, refresh invoices and flash a confirmation.
+  useEffect(() => {
+    if (typeof window === "undefined" || !home) return;
+    const q = new URLSearchParams(window.location.search).get("paid");
+    if (!q) return;
+    setJustPaidId(q);
+    (async () => setInvoices(await listInvoicesForHome(home.id)))();
+    setToast("Payment complete");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("paid");
+    window.history.replaceState({}, "", url.toString());
+    const t = setTimeout(() => setJustPaidId(null), 6000);
+    return () => clearTimeout(t);
+  }, [home?.id]);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
+
+  const openInvoices = useMemo(
+    () => invoices.filter((i) => i.status === "open"),
+    [invoices],
+  );
+  const totalDue = useMemo(
+    () => openInvoices.reduce((s, i) => s + Number(i.total), 0),
+    [openInvoices],
+  );
+  const justPaidInvoice = useMemo(
+    () => (justPaidId ? invoices.find((i) => i.id === justPaidId) ?? null : null),
+    [justPaidId, invoices],
+  );
 
   const nextDue = useMemo(
     () =>
@@ -84,10 +113,54 @@ function HomeOverview() {
         sub="Every home remembers. Your pros write the record, you own it."
       />
 
+      {justPaidInvoice && (
+        <Card className="anim-fade-up mb-6 border-indigo/30 bg-indigobg/60">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="font-semibold text-indigo">Paid ✓</div>
+              <div className="text-sm text-ink">
+                {formatMoney(Number(justPaidInvoice.total))} to{" "}
+                {justPaidInvoice.pros?.business ?? "your pro"}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {openInvoices.length > 0 && (
+        <Card className="anim-fade-up mb-6 border-indigo/30">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <Eyebrow accent="indigo">Amount due</Eyebrow>
+            {openInvoices.length > 1 && (
+              <div className="text-sm text-muted">
+                Total due{" "}
+                <span className="font-bold text-ink tnum">{formatMoney(totalDue)}</span>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 space-y-3">
+            {openInvoices.map((inv) => (
+              <AmountDueRow
+                key={inv.id}
+                inv={inv}
+                onPaid={async () => {
+                  if (home) setInvoices(await listInvoicesForHome(home.id));
+                  setToast("Payment complete");
+                }}
+                onError={(msg) => setToast(msg)}
+              />
+            ))}
+          </div>
+        </Card>
+      )}
+
       <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
         This record sells as a $49 seller history report when homes change hands. Yours is free for
         life because your pros write it.
       </div>
+
+
+
 
       <div className="anim-fade-up d-1 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {(
@@ -303,6 +376,64 @@ function HomeOverview() {
     </HomeShell>
   );
 }
+
+function AmountDueRow({
+  inv,
+  onPaid,
+  onError,
+}: {
+  inv: HomeInvoice;
+  onPaid: () => void | Promise<void>;
+  onError: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const proName = inv.pros?.business ?? "Your pro";
+  const canPay = !!inv.pros?.stripe_charges_enabled;
+  const description = inv.items[0]?.description ?? "Service";
+  async function pay() {
+    setBusy(true);
+    try {
+      const { url } = await startInvoiceCheckout(inv.id);
+      window.location.href = url;
+    } catch (e) {
+      setBusy(false);
+      onError(e instanceof Error ? e.message : "Couldn't start payment.");
+    }
+    void onPaid;
+  }
+  return (
+    <div className="rounded-xl border border-line p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+      <div className="min-w-0">
+        <div className="font-semibold text-ink truncate">{proName}</div>
+        <div className="text-sm text-muted truncate">{description}</div>
+        {inv.due_date && (
+          <div className="text-xs text-muted mt-0.5">
+            Due {formatDate(inv.due_date)}
+            {isOverdue(inv) ? " · overdue" : ""}
+          </div>
+        )}
+        {!canPay && (
+          <div className="text-xs text-muted mt-1">
+            {proName} hasn't turned on card payments yet.
+          </div>
+        )}
+      </div>
+      <div className="shrink-0">
+        <Btn
+          variant="indigo"
+          size="lg"
+          className="w-full sm:w-auto"
+          loading={busy}
+          disabled={!canPay || busy}
+          onClick={pay}
+        >
+          Pay {formatMoney(Number(inv.total))}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
 
 function InvoiceRow({
   inv,
