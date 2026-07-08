@@ -54,37 +54,40 @@ const NAV_LINKS = [
 ] as const;
 
 
-const FOOTER_GROUPS: { title: string; links: { to: string; label: string }[] }[] = [
+type FooterLink = {
+  to: string;
+  label: string;
+  /* Optional per-link accent so Make it last (coral) and Find a pro (teal)
+     stand out as the two hero destinations, matching the header subbrands. */
+  accent?: "coral" | "teal";
+};
+
+const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
   {
-    title: "Product",
+    title: "Explore",
     links: [
+      { to: "/make-it-last", label: "Make it last", accent: "coral" },
+      { to: "/pros", label: "Find a pro", accent: "teal" },
       { to: "/how-it-works", label: "How it works" },
-      { to: "/security", label: "Security" },
-    ],
-  },
-  {
-    title: "Audiences",
-    links: [
-      { to: "/for-pros", label: "For pros" },
-      { to: "/for-homeowners", label: "For homeowners" },
-      { to: "/make-it-last", label: "Make it last" },
-      { to: "/pros", label: "Find a pro" },
-      { to: "/partners", label: "Partners" },
     ],
   },
   {
     title: "Company",
     links: [
       { to: "/about", label: "About" },
-      { to: "/blog", label: "Guides" },
+      { to: "/for-pros", label: "For pros" },
+      { to: "/for-homeowners", label: "For homeowners" },
+      { to: "/partners", label: "Partners" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { to: "/privacy", label: "Privacy" },
+      { to: "/privacy", label: "Privacy and consent" },
       { to: "/terms", label: "Terms" },
       { to: "/messaging-terms", label: "Messaging terms" },
+      /* No dedicated CCPA page yet - the privacy page covers this today. */
+      { to: "/privacy", label: "Do Not Sell or Share My Information" },
     ],
   },
 ];
