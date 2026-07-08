@@ -27,7 +27,6 @@ import { Route as ProIndexRouteImport } from './routes/pro.index'
 import { Route as MakeItLastIndexRouteImport } from './routes/make-it-last.index'
 import { Route as HomeIndexRouteImport } from './routes/home.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
-import { Route as RRecordIdRouteImport } from './routes/r.$recordId'
 import { Route as ProSignupRouteImport } from './routes/pro.signup'
 import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
@@ -42,7 +41,6 @@ import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
 import { Route as HomeAppliancesRouteImport } from './routes/home.appliances'
 import { Route as HomeAddRouteImport } from './routes/home.add'
-import { Route as ClaimRecordIdRouteImport } from './routes/claim.$recordId'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ProRecordsIndexRouteImport } from './routes/pro.records.index'
@@ -145,11 +143,6 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RRecordIdRoute = RRecordIdRouteImport.update({
-  id: '/r/$recordId',
-  path: '/r/$recordId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProSignupRoute = ProSignupRouteImport.update({
   id: '/pro/signup',
   path: '/pro/signup',
@@ -218,11 +211,6 @@ const HomeAppliancesRoute = HomeAppliancesRouteImport.update({
 const HomeAddRoute = HomeAddRouteImport.update({
   id: '/home/add',
   path: '/home/add',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClaimRecordIdRoute = ClaimRecordIdRouteImport.update({
-  id: '/claim/$recordId',
-  path: '/claim/$recordId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
@@ -297,7 +285,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
-  '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
@@ -312,7 +299,6 @@ export interface FileRoutesByFullPath {
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
-  '/r/$recordId': typeof RRecordIdRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
   '/make-it-last/': typeof MakeItLastIndexRoute
@@ -344,7 +330,6 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
-  '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
@@ -359,7 +344,6 @@ export interface FileRoutesByTo {
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
-  '/r/$recordId': typeof RRecordIdRoute
   '/blog': typeof BlogIndexRoute
   '/home': typeof HomeIndexRoute
   '/make-it-last': typeof MakeItLastIndexRoute
@@ -392,7 +376,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
-  '/claim/$recordId': typeof ClaimRecordIdRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
@@ -407,7 +390,6 @@ export interface FileRoutesById {
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
   '/pro/signup': typeof ProSignupRoute
-  '/r/$recordId': typeof RRecordIdRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
   '/make-it-last/': typeof MakeItLastIndexRoute
@@ -441,7 +423,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/blog/$slug'
-    | '/claim/$recordId'
     | '/home/add'
     | '/home/appliances'
     | '/home/pros'
@@ -456,7 +437,6 @@ export interface FileRouteTypes {
     | '/pro/reviews'
     | '/pro/settings'
     | '/pro/signup'
-    | '/r/$recordId'
     | '/blog/'
     | '/home/'
     | '/make-it-last/'
@@ -488,7 +468,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/blog/$slug'
-    | '/claim/$recordId'
     | '/home/add'
     | '/home/appliances'
     | '/home/pros'
@@ -503,7 +482,6 @@ export interface FileRouteTypes {
     | '/pro/reviews'
     | '/pro/settings'
     | '/pro/signup'
-    | '/r/$recordId'
     | '/blog'
     | '/home'
     | '/make-it-last'
@@ -535,7 +513,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/blog/$slug'
-    | '/claim/$recordId'
     | '/home/add'
     | '/home/appliances'
     | '/home/pros'
@@ -550,7 +527,6 @@ export interface FileRouteTypes {
     | '/pro/reviews'
     | '/pro/settings'
     | '/pro/signup'
-    | '/r/$recordId'
     | '/blog/'
     | '/home/'
     | '/make-it-last/'
@@ -583,7 +559,6 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogSlugRoute: typeof BlogSlugRoute
-  ClaimRecordIdRoute: typeof ClaimRecordIdRoute
   HomeAddRoute: typeof HomeAddRoute
   HomeAppliancesRoute: typeof HomeAppliancesRoute
   HomeProsRoute: typeof HomeProsRoute
@@ -598,7 +573,6 @@ export interface RootRouteChildren {
   ProReviewsRoute: typeof ProReviewsRoute
   ProSettingsRoute: typeof ProSettingsRoute
   ProSignupRoute: typeof ProSignupRoute
-  RRecordIdRoute: typeof RRecordIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
   MakeItLastIndexRoute: typeof MakeItLastIndexRoute
@@ -743,13 +717,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/r/$recordId': {
-      id: '/r/$recordId'
-      path: '/r/$recordId'
-      fullPath: '/r/$recordId'
-      preLoaderRoute: typeof RRecordIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/pro/signup': {
       id: '/pro/signup'
       path: '/pro/signup'
@@ -848,13 +815,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeAddRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/claim/$recordId': {
-      id: '/claim/$recordId'
-      path: '/claim/$recordId'
-      fullPath: '/claim/$recordId'
-      preLoaderRoute: typeof ClaimRecordIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/blog/$slug': {
       id: '/blog/$slug'
       path: '/blog/$slug'
@@ -951,7 +911,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogSlugRoute: BlogSlugRoute,
-  ClaimRecordIdRoute: ClaimRecordIdRoute,
   HomeAddRoute: HomeAddRoute,
   HomeAppliancesRoute: HomeAppliancesRoute,
   HomeProsRoute: HomeProsRoute,
@@ -966,7 +925,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProReviewsRoute: ProReviewsRoute,
   ProSettingsRoute: ProSettingsRoute,
   ProSignupRoute: ProSignupRoute,
-  RRecordIdRoute: RRecordIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
   MakeItLastIndexRoute: MakeItLastIndexRoute,

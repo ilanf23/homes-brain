@@ -244,9 +244,12 @@ export function isGoogleUrl(value?: string | null): value is string {
   return !!value && value.startsWith("https://");
 }
 
-export function buildRecordUrl(recordId: string) {
-  if (typeof window === "undefined") return `/r/${recordId}`;
-  return `${window.location.origin}/r/${recordId}`;
+/* Records no longer have a public shareable page. We keep this helper so the
+   `records.public_url` column (NOT NULL) stays populated, but every link now
+   points the homeowner into their own dashboard. */
+export function buildRecordUrl(_recordId: string) {
+  if (typeof window === "undefined") return `/home`;
+  return `${window.location.origin}/home`;
 }
 
 export function initials(name: string) {
