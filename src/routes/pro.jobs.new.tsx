@@ -433,6 +433,7 @@ function NewJob() {
     setSelectedCustomerId("");
     setNewCustomer({ name: "", address: "", phone: "", email: "" });
     setConsent(false);
+    setAddByHand(false);
     setEqType("");
     setEqMake("");
     setEqModel("");
