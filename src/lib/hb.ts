@@ -35,7 +35,15 @@ export async function logEvent(
   props: Record<string, unknown> = {},
 ) {
   console.log("[event]", type, { actor, ...props });
-  await supabase.from("events").insert({ actor: actor ?? undefined, type, props: props as never });
+  // Events insert is authenticated-only (RLS); anonymous callers get a silent
+  // 401 that we swallow so analytics never breaks a user flow.
+  try {
+    await supabase
+      .from("events")
+      .insert({ actor: actor ?? undefined, type, props: props as never });
+  } catch {
+    /* swallow */
+  }
 }
 
 export type NotificationType =
