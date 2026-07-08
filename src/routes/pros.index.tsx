@@ -47,9 +47,10 @@ function ProsDirectory() {
     <MarketingShell>
       {/* Hero */}
       <section className="mx-auto max-w-3xl px-5 pt-10 sm:pt-16 pb-6 text-center">
-        <Eyebrow accent="coral">Find a pro</Eyebrow>
+        <Eyebrow accent="teal">Find a pro</Eyebrow>
         <h1 className="mt-4 text-[2rem] leading-[1.1] sm:text-5xl sm:leading-[1.06] tracking-tight text-ink">
-          Local pros in <span className="text-coral">St. Johns County</span>.
+          Local pros in <span className="text-teal">St. Johns County</span>.
+
         </h1>
         <p className="mt-4 text-base sm:text-lg text-muted">
           Trusted trades across Nocatee, Ponte Vedra, and St. Augustine. Free to browse, no signup.
