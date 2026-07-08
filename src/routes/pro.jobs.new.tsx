@@ -106,6 +106,46 @@ function NewJob() {
     })();
   }, [proId]);
 
+  /* Detect the pro's current address on mount. If it matches an existing
+     customer, offer one-tap select. Otherwise, offer prefill. */
+  useEffect(() => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      setLoc({ status: "unavailable" });
+      return;
+    }
+    setLoc({ status: "locating" });
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const address = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        if (!address) {
+          setLoc({ status: "unavailable" });
+          return;
+        }
+        setLoc({ status: "ready", address, match: null });
+      },
+      (err) => {
+        setLoc({ status: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
+    );
+  }, []);
+
+  /* Re-match the detected address whenever the customer list arrives/changes. */
+  useEffect(() => {
+    if (loc.status !== "ready") return;
+    const norm = normalizeAddress(loc.address);
+    const match =
+      existing.find((c) => {
+        const a = c.homes?.address;
+        if (!a) return false;
+        const na = normalizeAddress(a);
+        return na === norm || na.startsWith(norm) || norm.startsWith(na);
+      }) ?? null;
+    if ((match?.id ?? null) !== (loc.match?.id ?? null)) {
+      setLoc({ status: "ready", address: loc.address, match });
+    }
+  }, [existing, loc]);
+
   /* When an existing customer is picked, load that home's appliances (with
      last-job info) so the pro can attach this new visit to the same physical
      unit instead of creating a duplicate equipment row. */
