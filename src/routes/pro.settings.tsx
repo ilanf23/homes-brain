@@ -91,6 +91,7 @@ function ProSettings() {
   useEffect(() => {
     if (!pro) return;
     setBusiness(pro.business);
+    setOwnerFirstName(pro.owner_first_name ?? "");
     setTrade(pro.trade);
     setArea(pro.service_area ?? "");
   }, [pro]);
