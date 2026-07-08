@@ -587,9 +587,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="overview" icon={FileText}>
+                <Heading id="overview" icon={FileText}>
                   Overview
-                </SectionHeading>
+                </Heading>
                 <p className="mt-5 text-base sm:text-lg text-ink leading-relaxed">{g.overview}</p>
               </div>
             </>
@@ -600,9 +600,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="top-brands" icon={Award}>
+                <Heading id="top-brands" icon={Award}>
                   Top brands
-                </SectionHeading>
+                </Heading>
                 <p className="mt-3 text-sm text-muted">
                   The names pros and reviewers consistently rank at the top.
                 </p>
@@ -634,9 +634,9 @@ function GuidePage() {
           {/* Maintenance */}
           <SectionDivider />
           <div className="mt-16">
-            <SectionHeading id="maintenance" icon={Wrench}>
+            <Heading id="maintenance" icon={Wrench}>
               The maintenance that buys you the years
-            </SectionHeading>
+            </Heading>
             <ul className="mt-6 space-y-3">
               {orderedMaintenance.map((m) => (
                 <li
@@ -666,9 +666,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="signs" icon={AlertTriangle}>
+                <Heading id="signs" icon={AlertTriangle}>
                   Signs it is failing
-                </SectionHeading>
+                </Heading>
                 <div className="mt-6 rounded-3xl bg-amberbg border border-amber/25 p-5 sm:p-6">
                   <ul className="grid sm:grid-cols-2 gap-3">
                     {g.signs.map((s) => (
@@ -690,9 +690,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="repair-or-replace" icon={Scale}>
+                <Heading id="repair-or-replace" icon={Scale}>
                   Repair or replace
-                </SectionHeading>
+                </Heading>
                 <div className="mt-6 rounded-3xl bg-coralbg border border-coral/20 p-6 sm:p-8 flex gap-4 items-start">
                   <div className="mt-1 flex items-center justify-center w-10 h-10 rounded-full bg-white text-coraldark shrink-0">
                     <Scale size={20} strokeWidth={2.25} />
@@ -706,9 +706,9 @@ function GuidePage() {
           {/* Facts */}
           <SectionDivider />
           <div className="mt-16">
-            <SectionHeading id="facts" icon={Info}>
+            <Heading id="facts" icon={Info}>
               The facts
-            </SectionHeading>
+            </Heading>
             <Card className="mt-6 py-2">
               {g.facts.map((f) => (
                 <KV key={f.k} k={f.k} v={f.v} mono={false} />
@@ -739,9 +739,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="faq" icon={HelpCircle}>
+                <Heading id="faq" icon={HelpCircle}>
                   FAQ
-                </SectionHeading>
+                </Heading>
                 <div className="mt-6 space-y-3">
                   {g.faqs.map((f, i) => (
                     <FaqItem key={f.q} q={f.q} a={f.a} defaultOpen={i === 0} />
@@ -754,9 +754,9 @@ function GuidePage() {
           {/* Sources */}
           <SectionDivider />
           <div className="mt-16">
-            <SectionHeading id="sources" icon={BookOpen}>
+            <Heading id="sources" icon={BookOpen}>
               Sources
-            </SectionHeading>
+            </Heading>
             {g.verifyProminent && (
               <div className="mt-6 rounded-2xl bg-amberbg border border-amber/25 p-4 text-sm text-amberdark">
                 Ranges vary widely by product and model. Verify specifics for your exact equipment before making a
