@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/login")({
