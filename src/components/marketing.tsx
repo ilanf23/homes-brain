@@ -371,39 +371,122 @@ export function MarketingShell({
       <footer
         className={`border-t border-line bg-soft ${mobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
       >
-        <div className="mx-auto max-w-6xl px-5 py-14">
-          <div className="grid grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-10">
-            <div className="col-span-2 md:col-span-1">
-              <Logo size={24} />
-              <p className="mt-3 text-sm text-muted">The living record for every home.</p>
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
+          {/* Slim email capture. No backend: on submit we just acknowledge. */}
+          <FooterSignup />
+
+          <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+            <div>
+              <Logo size={26} />
+              <p className="mt-5 text-xl sm:text-2xl font-bold tracking-tight text-ink leading-tight">
+                Every home remembers.
+              </p>
+              <p className="mt-2 text-sm text-muted leading-relaxed">
+                The living record for every home.
+              </p>
+              <p className="mt-3 text-xs text-muted">
+                Made for Florida homes. St. Johns County first.
+              </p>
             </div>
             {FOOTER_GROUPS.map((g) => (
               <div key={g.title}>
                 <div className="eyebrow text-ink/60">{g.title}</div>
-                <ul className="mt-3 space-y-1">
-                  {g.links.map((l) => (
-                    <li key={l.to}>
-                      <Link
-                        to={l.to}
-                        className="inline-flex items-center min-h-9 text-sm font-medium text-muted hover:text-ink transition-colors"
-                      >
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
+                <ul className="mt-4 space-y-1">
+                  {g.links.map((l) => {
+                    const accentClass =
+                      l.accent === "coral"
+                        ? "text-coraldark font-semibold hover:text-coraldark/80"
+                        : l.accent === "teal"
+                          ? "text-tealdark font-semibold hover:text-tealdark/80"
+                          : "text-muted font-medium hover:text-ink";
+                    return (
+                      <li key={`${g.title}-${l.label}`}>
+                        <Link
+                          to={l.to}
+                          className={`inline-flex items-center min-h-9 text-sm transition-colors ${accentClass}`}
+                        >
+                          {l.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
           </div>
-          <div className="mt-12 pt-6 border-t border-line flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted">
+
+          <div className="mt-14 pt-6 border-t border-line flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted">
             <div className="flex items-center gap-2">
               <LogoMark size={18} />
               <span>© {new Date().getFullYear()} HomesBrain, Inc.</span>
             </div>
-            <span>The living record for every home.</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <span className="italic text-ink/60">Every home remembers.</span>
+              <Link
+                to="/privacy"
+                className="text-muted hover:text-ink transition-colors"
+              >
+                Do Not Sell or Share
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function FooterSignup() {
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setDone(true);
+  }
+
+  return (
+    <div className="rounded-3xl border border-line bg-paper px-5 py-5 sm:px-7 sm:py-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
+        <div className="max-w-md">
+          <p className="text-base sm:text-lg font-semibold text-ink leading-snug">
+            Be first when HomesBrain opens in your area.
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            One quiet note when we're live near you. No spam, ever.
+          </p>
+        </div>
+        {done ? (
+          <p className="text-sm font-semibold text-tealdark">
+            You're on the list. We'll be in touch.
+          </p>
+        ) : (
+          <form
+            onSubmit={onSubmit}
+            className="flex flex-col gap-2 sm:flex-row sm:items-center w-full md:w-auto"
+          >
+            <label htmlFor="footer-email" className="sr-only">
+              Email address
+            </label>
+            <input
+              id="footer-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              className="min-w-0 sm:w-72 rounded-full border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:border-ink/40 focus:ring-2 focus:ring-ink/5 transition"
+            />
+            <Btn type="submit" variant="coral" size="md" className="w-full sm:w-auto">
+              Notify me
+            </Btn>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
     </div>
   );
 }
