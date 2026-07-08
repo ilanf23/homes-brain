@@ -657,7 +657,12 @@ function NewJob() {
       const emailAddr = newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
       if (emailAddr) {
         const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
-          body: { customer_id: customerId, pro_id: proId, origin: window.location.origin },
+          body: {
+            customer_id: customerId,
+            pro_id: proId,
+            origin: window.location.origin,
+            record_id: rec!.id,
+          },
         });
         if (sendErr || (sendResp && sendResp.ok === false)) {
           const code = (sendResp && sendResp.code) || sendErr?.message || "send_failed";
