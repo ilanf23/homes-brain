@@ -377,6 +377,64 @@ function HomeOverview() {
   );
 }
 
+function AmountDueRow({
+  inv,
+  onPaid,
+  onError,
+}: {
+  inv: HomeInvoice;
+  onPaid: () => void | Promise<void>;
+  onError: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const proName = inv.pros?.business ?? "Your pro";
+  const canPay = !!inv.pros?.stripe_charges_enabled;
+  const description = inv.items[0]?.description ?? "Service";
+  async function pay() {
+    setBusy(true);
+    try {
+      const { url } = await startInvoiceCheckout(inv.id);
+      window.location.href = url;
+    } catch (e) {
+      setBusy(false);
+      onError(e instanceof Error ? e.message : "Couldn't start payment.");
+    }
+    void onPaid;
+  }
+  return (
+    <div className="rounded-xl border border-line p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+      <div className="min-w-0">
+        <div className="font-semibold text-ink truncate">{proName}</div>
+        <div className="text-sm text-muted truncate">{description}</div>
+        {inv.due_date && (
+          <div className="text-xs text-muted mt-0.5">
+            Due {formatDate(inv.due_date)}
+            {isOverdue(inv) ? " · overdue" : ""}
+          </div>
+        )}
+        {!canPay && (
+          <div className="text-xs text-muted mt-1">
+            {proName} hasn't turned on card payments yet.
+          </div>
+        )}
+      </div>
+      <div className="shrink-0">
+        <Btn
+          variant="indigo"
+          size="lg"
+          className="w-full sm:w-auto"
+          loading={busy}
+          disabled={!canPay || busy}
+          onClick={pay}
+        >
+          Pay {formatMoney(Number(inv.total))}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+
 function InvoiceRow({
   inv,
   onPaid,
