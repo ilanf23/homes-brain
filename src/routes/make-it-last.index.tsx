@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { InteractiveHouse } from "@/components/interactive-house";
 import {
   Flame,
   Wind,
