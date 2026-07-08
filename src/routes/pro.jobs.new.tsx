@@ -544,56 +544,146 @@ function NewJob() {
               <div className="space-y-5">
                 {/* 1. USE MY LOCATION - hero at the top */}
                 {loc.status === "locating" && (
-                  <Card className="text-center py-8">
-                    <div className="text-sm text-muted">Finding your location…</div>
+                  <Card className="text-center py-8 space-y-1">
+                    <div className="text-sm font-semibold text-ink">Getting a precise location…</div>
+                    <div className="text-xs text-muted">
+                      Takes a few seconds on first use. Best outdoors.
+                    </div>
                   </Card>
                 )}
 
-                {loc.status === "ready" && loc.match && (
-                  <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
-                    <div>
-                      <Pill accent="indigo">You're here</Pill>
-                      <div className="mt-3 text-xl font-semibold text-ink tracking-tight">
-                        {loc.match.name}
+                {loc.status === "ready" && (() => {
+                  const acc = Math.round(loc.accuracy);
+                  const accAccent: "indigo" | "amber" | "red" =
+                    acc <= 25 ? "indigo" : acc <= 100 ? "amber" : "red";
+                  const accLabel =
+                    acc <= 25
+                      ? `Within ~${acc} m`
+                      : acc <= 100
+                        ? `Approximate (~${acc} m)`
+                        : `Rough only (~${acc} m)`;
+                  const others = loc.match
+                    ? loc.nearest.filter((n) => n.c.id !== loc.match!.id)
+                    : loc.nearest;
+                  return (
+                    <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Pill accent="indigo">You're here</Pill>
+                          <Pill accent={accAccent}>{accLabel}</Pill>
+                        </div>
+                        {loc.match ? (
+                          <>
+                            <div className="mt-3 text-xl font-semibold text-ink tracking-tight">
+                              {loc.match.name}
+                            </div>
+                            <div className="mt-1 text-sm text-muted">
+                              {loc.match.homes?.address}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mt-3 text-lg font-semibold text-ink tracking-tight leading-snug">
+                              {loc.address || "Location detected"}
+                            </div>
+                            <div className="mt-1 text-sm text-muted">
+                              {loc.nearest.length > 0
+                                ? "Pick the right house below, or add a new one."
+                                : "Is this the job?"}
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="mt-1 text-sm text-muted">{loc.match.homes?.address}</div>
-                    </div>
-                    <Btn
-                      variant="indigo"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => {
-                        setSelectedCustomerId(loc.match!.id);
-                        setStage("work");
-                      }}
-                    >
-                      Yes, this is the job
-                    </Btn>
-                  </Card>
-                )}
 
-                {loc.status === "ready" && !loc.match && (
-                  <Card className="space-y-4 border-indigo/40 bg-indigobg/40">
-                    <div>
-                      <Pill accent="indigo">You're here</Pill>
-                      <div className="mt-3 text-lg font-semibold text-ink tracking-tight leading-snug">
-                        {loc.address}
-                      </div>
-                      <div className="mt-1 text-sm text-muted">Is this the job?</div>
-                    </div>
-                    <Btn
-                      variant="indigo"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => {
-                        setNewCustomer((n) => ({ ...n, address: loc.address }));
-                        setAddByHand(true);
-                      }}
-                    >
-                      Yes, this is it
-                    </Btn>
-                  </Card>
-                )}
+                      {loc.match && (
+                        <Btn
+                          variant="indigo"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedCustomerId(loc.match!.id);
+                            setStage("work");
+                          }}
+                        >
+                          Yes, this is the job
+                        </Btn>
+                      )}
+
+                      {!loc.match && loc.address && (
+                        <Btn
+                          variant="indigo"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            setNewCustomer((n) => ({ ...n, address: loc.address }));
+                            setAddByHand(true);
+                          }}
+                        >
+                          Yes, this is it
+                        </Btn>
+                      )}
+
+                      {others.length > 0 && (
+                        <div className="space-y-2">
+                          {(loc.match || showNearby) ? (
+                            <>
+                              <div className="text-xs font-semibold text-muted uppercase tracking-wider">
+                                {loc.match ? "Or one of these" : "Nearest customers"}
+                              </div>
+                              {others.map((n) => (
+                                <button
+                                  key={n.c.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedCustomerId(n.c.id);
+                                    setStage("work");
+                                  }}
+                                  className="pressable w-full text-left rounded-2xl border border-line bg-paper px-4 py-3 hover:border-ink/20 transition-all"
+                                >
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <div className="font-semibold text-ink truncate">
+                                        {n.c.name}
+                                      </div>
+                                      <div className="text-xs text-muted truncate">
+                                        {n.c.homes?.address}
+                                      </div>
+                                    </div>
+                                    <div className="text-xs font-semibold text-muted whitespace-nowrap">
+                                      {n.meters < 1000
+                                        ? `${Math.round(n.meters)} m`
+                                        : `${(n.meters / 1000).toFixed(1)} km`}
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setShowNearby(true)}
+                              className="text-sm font-semibold text-indigo hover:text-indigo-dark"
+                            >
+                              Not this house?
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {acc > 100 && (
+                        <button
+                          type="button"
+                          onClick={runLocate}
+                          className="text-sm font-semibold text-indigo hover:text-indigo-dark"
+                        >
+                          Try again for a better fix
+                        </button>
+                      )}
+                    </Card>
+                  );
+                })()}
+
+
 
                 {/* 2. RECENT CUSTOMERS - big tappable cards */}
                 {existing.length > 0 && !addByHand && (
