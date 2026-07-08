@@ -494,6 +494,39 @@ export type Database = {
           },
         ]
       }
+      service_requests: {
+        Row: {
+          created_at: string
+          homeowner_contact: string
+          homeowner_name: string
+          id: string
+          message: string | null
+          pro_slug: string
+          source: string | null
+          trade: string | null
+        }
+        Insert: {
+          created_at?: string
+          homeowner_contact: string
+          homeowner_name: string
+          id?: string
+          message?: string | null
+          pro_slug: string
+          source?: string | null
+          trade?: string | null
+        }
+        Update: {
+          created_at?: string
+          homeowner_contact?: string
+          homeowner_name?: string
+          id?: string
+          message?: string | null
+          pro_slug?: string
+          source?: string | null
+          trade?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
