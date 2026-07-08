@@ -315,6 +315,19 @@ function NewJob() {
     : existing;
   const hasExactMatch = existing.some((c) => c.name?.trim().toLowerCase() === q);
 
+  // Existing customer whose home address matches the pro's current GPS location.
+  // Used to prefill the name at the top of the customer step ("At your current
+  // location: Jane Doe"), so the pro just taps to confirm.
+  const locationMatch =
+    loc.status === "ready"
+      ? existing.find(
+          (c) =>
+            c.homes?.address &&
+            normalizeAddress(c.homes.address) === normalizeAddress(loc.address),
+        )
+      : undefined;
+
+
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
     const onFile = c.homes?.address ?? "";
