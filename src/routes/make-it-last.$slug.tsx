@@ -19,6 +19,7 @@ import {
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { MarketingShell, SITE_URL, marketingHead } from "@/components/marketing";
 import { GUIDE_ORDER, getGuide, otherGuides, type Guide } from "@/lib/make-it-last";
+import { getSlugMeta, getCategory, payoffFor, useCountUp } from "@/lib/make-it-last-visuals";
 
 const UPDATED_ISO = "2026-07-01";
 const UPDATED_LABEL = "July 2026";
@@ -167,15 +168,21 @@ function ImpactPill({ impact }: { impact?: "High" | "Medium" | "Low" }) {
 function SectionHeading({
   id,
   icon: Icon,
+  tintBg,
+  tintFg,
   children,
 }: {
   id: string;
   icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  tintBg?: string;
+  tintFg?: string;
   children: React.ReactNode;
 }) {
+  const bg = tintBg ?? "bg-coralbg";
+  const fg = tintFg ?? "text-coraldark";
   return (
     <div id={id} className="scroll-mt-32 flex items-center gap-3">
-      <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+      <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${bg} ${fg}`}>
         <Icon size={20} strokeWidth={2.25} />
       </div>
       <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">{children}</h2>
@@ -251,6 +258,10 @@ function FaqItem({ q, a, defaultOpen = false }: { q: string; a: string; defaultO
 function GuidePage() {
   const { slug } = Route.useParams();
   const g = getGuide(slug)!;
+  const meta = getSlugMeta(slug);
+  const cat = getCategory(meta.categoryId);
+  const CatIcon = meta.Icon;
+  const payoff = payoffFor(g);
   const gap = g.maintained - g.neglected;
   const maxYears = Math.max(
     ...GUIDE_ORDER.map((s) => getGuide(s)!)
@@ -263,6 +274,9 @@ function GuidePage() {
   const sections = buildSections(g);
   const active = useScrollSpy(sections.map((s) => s.id));
 
+  // Animated payoff number for the hero.
+  const heroCount = useCountUp(payoff.kind === "gain" ? payoff.years : 0, g.slug);
+
   const orderedMaintenance = [...g.maintenance].sort(
     (a, b) => (IMPACT_ORDER[a.impact ?? "Medium"] ?? 1) - (IMPACT_ORDER[b.impact ?? "Medium"] ?? 1)
   );
@@ -274,6 +288,12 @@ function GuidePage() {
   const brandSource = g.brands?.[0]
     ? { label: g.brands[0].sourceLabel, url: g.brands[0].sourceUrl }
     : null;
+
+  // Alias so every section heading in this page picks up the category tint.
+  const Heading = (props: React.ComponentProps<typeof SectionHeading>) => (
+    <SectionHeading tintBg={cat.bg} tintFg={cat.fg} {...props} />
+  );
+
 
   return (
     <MarketingShell mobileCta={{ label: "Start free record", to: "/home/signup", variant: "coral" }}>
@@ -356,6 +376,99 @@ function GuidePage() {
             </div>
           </header>
 
+          {/* Visual hero band: medallion + big payoff + graphic two-lifespans */}
+          <section
+            className={`mt-8 rounded-3xl border border-line ${cat.bg} p-6 sm:p-8 overflow-hidden`}
+            aria-label="At a glance"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div
+                className={`flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white ${cat.fg} shrink-0 shadow-sm`}
+              >
+                <CatIcon size={44} strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className={`text-[11px] font-bold uppercase tracking-wider ${cat.fg}`}>
+                  {cat.label}
+                </div>
+                {payoff.kind === "gain" ? (
+                  <>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="tnum text-6xl sm:text-7xl font-bold text-coral leading-none">
+                        +{heroCount}
+                      </span>
+                      <span className="text-lg font-semibold text-ink">years</span>
+                    </div>
+                    <p className="mt-2 text-sm sm:text-base text-ink/80">
+                      Maintained lasts <strong className="text-ink">{g.maintained} years</strong>,
+                      left alone about <strong className="text-ink">{g.neglected}</strong>. That
+                      gap is yours to keep.
+                    </p>
+                  </>
+                ) : payoff.kind === "life" ? (
+                  <>
+                    <div className="mt-1 text-4xl sm:text-5xl font-bold text-coral leading-tight">
+                      Built to last
+                    </div>
+                    <p className="mt-2 text-sm sm:text-base text-ink/80">
+                      {g.expectedLife ?? g.quickAnswer}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-1 text-4xl sm:text-5xl font-bold text-coral leading-tight">
+                      Protect it
+                    </div>
+                    <p className="mt-2 text-sm sm:text-base text-ink/80">
+                      This one is a cadence, not a countdown. Keep the schedule and you stay
+                      protected.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Graphic two-lifespans bars, only when meaningful */}
+            {payoff.kind === "gain" && (
+              <div className="mt-6 rounded-2xl bg-white/70 backdrop-blur p-4 sm:p-5">
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                        Left alone
+                      </div>
+                      <div className="tnum text-sm font-bold text-muted">
+                        {g.neglected} yrs
+                      </div>
+                    </div>
+                    <div className="h-3 rounded-full bg-soft overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-line transition-all duration-700"
+                        style={{ width: `${neglectedPct}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">
+                        Maintained
+                      </div>
+                      <div className="tnum text-sm font-bold text-coraldark">
+                        {g.maintained} yrs
+                      </div>
+                    </div>
+                    <div className="h-3 rounded-full bg-coralbg overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-coral transition-all duration-700"
+                        style={{ width: `${maintainedPct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* Quick answer */}
           <section className="mt-8 rounded-3xl bg-coralbg p-6 sm:p-8 border border-coral/20">
             <div className="text-[11px] font-bold uppercase tracking-wider text-coraldark">Quick answer</div>
@@ -366,7 +479,7 @@ function GuidePage() {
           {g.expectedLifeOnly ? (
             <section className="mt-10 scroll-mt-32" id="built-to-last">
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                   <Info size={20} strokeWidth={2.25} />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
@@ -393,7 +506,7 @@ function GuidePage() {
           ) : g.cadenceOnly ? (
             <section className="mt-10 scroll-mt-32" id="cadence">
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                   <Info size={20} strokeWidth={2.25} />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
@@ -414,7 +527,7 @@ function GuidePage() {
           ) : (
             <section className="mt-10 scroll-mt-32" id="two-lifespans">
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                   <BarChart3 size={20} strokeWidth={2.25} />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Two lifespans</h2>
@@ -480,9 +593,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="overview" icon={FileText}>
+                <Heading id="overview" icon={FileText}>
                   Overview
-                </SectionHeading>
+                </Heading>
                 <p className="mt-5 text-base sm:text-lg text-ink leading-relaxed">{g.overview}</p>
               </div>
             </>
@@ -493,9 +606,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="top-brands" icon={Award}>
+                <Heading id="top-brands" icon={Award}>
                   Top brands
-                </SectionHeading>
+                </Heading>
                 <p className="mt-3 text-sm text-muted">
                   The names pros and reviewers consistently rank at the top.
                 </p>
@@ -527,9 +640,9 @@ function GuidePage() {
           {/* Maintenance */}
           <SectionDivider />
           <div className="mt-16">
-            <SectionHeading id="maintenance" icon={Wrench}>
+            <Heading id="maintenance" icon={Wrench}>
               The maintenance that buys you the years
-            </SectionHeading>
+            </Heading>
             <ul className="mt-6 space-y-3">
               {orderedMaintenance.map((m) => (
                 <li
@@ -559,9 +672,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="signs" icon={AlertTriangle}>
+                <Heading id="signs" icon={AlertTriangle}>
                   Signs it is failing
-                </SectionHeading>
+                </Heading>
                 <div className="mt-6 rounded-3xl bg-amberbg border border-amber/25 p-5 sm:p-6">
                   <ul className="grid sm:grid-cols-2 gap-3">
                     {g.signs.map((s) => (
@@ -583,9 +696,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="repair-or-replace" icon={Scale}>
+                <Heading id="repair-or-replace" icon={Scale}>
                   Repair or replace
-                </SectionHeading>
+                </Heading>
                 <div className="mt-6 rounded-3xl bg-coralbg border border-coral/20 p-6 sm:p-8 flex gap-4 items-start">
                   <div className="mt-1 flex items-center justify-center w-10 h-10 rounded-full bg-white text-coraldark shrink-0">
                     <Scale size={20} strokeWidth={2.25} />
@@ -599,9 +712,9 @@ function GuidePage() {
           {/* Facts */}
           <SectionDivider />
           <div className="mt-16">
-            <SectionHeading id="facts" icon={Info}>
+            <Heading id="facts" icon={Info}>
               The facts
-            </SectionHeading>
+            </Heading>
             <Card className="mt-6 py-2">
               {g.facts.map((f) => (
                 <KV key={f.k} k={f.k} v={f.v} mono={false} />
@@ -632,9 +745,9 @@ function GuidePage() {
             <>
               <SectionDivider />
               <div className="mt-16">
-                <SectionHeading id="faq" icon={HelpCircle}>
+                <Heading id="faq" icon={HelpCircle}>
                   FAQ
-                </SectionHeading>
+                </Heading>
                 <div className="mt-6 space-y-3">
                   {g.faqs.map((f, i) => (
                     <FaqItem key={f.q} q={f.q} a={f.a} defaultOpen={i === 0} />
@@ -647,9 +760,9 @@ function GuidePage() {
           {/* Sources */}
           <SectionDivider />
           <div className="mt-16">
-            <SectionHeading id="sources" icon={BookOpen}>
+            <Heading id="sources" icon={BookOpen}>
               Sources
-            </SectionHeading>
+            </Heading>
             {g.verifyProminent && (
               <div className="mt-6 rounded-2xl bg-amberbg border border-amber/25 p-4 text-sm text-amberdark">
                 Ranges vary widely by product and model. Verify specifics for your exact equipment before making a
@@ -698,7 +811,7 @@ function GuidePage() {
           {/* Keep going */}
           <section className="mt-16">
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-coralbg text-coraldark">
+              <div className={`flex items-center justify-center w-10 h-10 rounded-2xl ${cat.bg} ${cat.fg}`}>
                 <ChevronRight size={20} strokeWidth={2.25} />
               </div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">Keep going</h2>
