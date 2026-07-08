@@ -29,6 +29,7 @@ function HomeOverview() {
   } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const [justPaidId, setJustPaidId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!home) return;
@@ -38,11 +39,39 @@ function HomeOverview() {
     })();
   }, [home]);
 
+  // On return with ?paid=<invoiceId>, refresh invoices and flash a confirmation.
+  useEffect(() => {
+    if (typeof window === "undefined" || !home) return;
+    const q = new URLSearchParams(window.location.search).get("paid");
+    if (!q) return;
+    setJustPaidId(q);
+    (async () => setInvoices(await listInvoicesForHome(home.id)))();
+    setToast("Payment complete");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("paid");
+    window.history.replaceState({}, "", url.toString());
+    const t = setTimeout(() => setJustPaidId(null), 6000);
+    return () => clearTimeout(t);
+  }, [home?.id]);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
+
+  const openInvoices = useMemo(
+    () => invoices.filter((i) => i.status === "open"),
+    [invoices],
+  );
+  const totalDue = useMemo(
+    () => openInvoices.reduce((s, i) => s + Number(i.total), 0),
+    [openInvoices],
+  );
+  const justPaidInvoice = useMemo(
+    () => (justPaidId ? invoices.find((i) => i.id === justPaidId) ?? null : null),
+    [justPaidId, invoices],
+  );
 
   const nextDue = useMemo(
     () =>
