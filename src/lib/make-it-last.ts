@@ -2,8 +2,11 @@
    here so the route file stays a pure template. */
 
 export type Fact = { k: string; v: string };
-export type MaintenanceStep = { task: string; frequency: string; effect: string };
+export type Impact = "High" | "Medium" | "Low";
+export type MaintenanceStep = { task: string; frequency: string; effect: string; impact?: Impact };
 export type Source = { label: string; url: string };
+export type Brand = { name: string; note: string; sourceUrl: string; sourceLabel: string };
+export type Faq = { q: string; a: string };
 
 export type Guide = {
   slug: string;
@@ -11,16 +14,22 @@ export type Guide = {
   h1: string;
   metaDescription: string;
   quickAnswer: string;
+  overview?: string;
   neglected: number; // years, "left alone"
   maintained: number; // years, "maintained"
   barsLabel?: string; // optional label shown on bars (e.g. "the pump" for pool)
+  brands?: Brand[];
   maintenance: MaintenanceStep[];
+  signs?: string[];
+  repairOrReplace?: string;
   facts: Fact[];
+  faqs?: Faq[];
   floridaNote: string;
   sources: Source[];
   /* Prominent verify-specifics note on top of the standard disclaimer. */
   verifyProminent?: boolean;
 };
+
 
 export const GUIDES: Record<string, Guide> = {
   "water-heater": {
