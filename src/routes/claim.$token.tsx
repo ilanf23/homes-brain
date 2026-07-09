@@ -36,6 +36,8 @@ type ExchangeResp = {
   hashed_token?: string;
   email?: string;
   record_id?: string;
+  intent?: string | null;
+  first_name?: string | null;
   preview?: Preview;
 };
 
