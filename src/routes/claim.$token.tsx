@@ -145,12 +145,13 @@ function ClaimByToken() {
         // ignore
       }
       setPhase("done");
-      const eqId = resp.preview?.equipment_id ?? preview?.equipment_id ?? null;
-      if (eqId) {
-        navigate({ to: "/home/items/$itemId", params: { itemId: eqId } });
+      const rid = resp.record_id ?? preview?.record_id ?? null;
+      if (rid) {
+        navigate({ to: "/home/records/$recordId", params: { recordId: rid } });
       } else {
         navigate({ to: "/home", search: { welcome: "1" } as never });
       }
+
       return;
     }
     // Login-only token: session established, straight to /home.
