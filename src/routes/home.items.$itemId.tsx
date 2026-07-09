@@ -159,6 +159,22 @@ function ItemDetail() {
           </div>
         </Card>
 
+        {/* Trade-specific details from equipment.attributes. Labels/units come
+            from the trade_fields config; unknown keys fall back to a humanized
+            version so nothing goes missing. */}
+        {attributeEntries.length > 0 && (
+          <Card className="anim-fade-up d-2">
+            <Eyebrow accent="indigo">Details</Eyebrow>
+            <div className="mt-2">
+              {attributeEntries.map((e) => (
+                <KV key={e.key} k={e.label} v={e.value} />
+              ))}
+            </div>
+          </Card>
+        )}
+
+
+
         {/* Recall status */}
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between flex-wrap gap-3">
