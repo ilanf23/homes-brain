@@ -160,11 +160,16 @@ function HomeownerSignup() {
                 />
               </Field>
               <Field label="Home address (optional)">
-                <Input
+                <AddressField
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="123 Main St, Austin, TX"
+                  onChange={setAddress}
+                  onResolve={(r) => setAddress(r.address)}
+                  placeholder="Start typing your address…"
+                  ariaLabel="Home address"
                 />
+                <p className="mt-1.5 text-xs text-muted">
+                  Pick your address from the list to confirm it. You can skip this and add it later, or claim it automatically when a pro sends you a service record.
+                </p>
               </Field>
               <label className="flex items-start gap-2 text-xs text-muted">
                 <input
