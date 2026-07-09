@@ -13,18 +13,18 @@ export const Route = createFileRoute("/home/signup")({
 
 const PENDING_KEY = "hb_pending_signup";
 
-/* Homeowner signup via magic link. If a session already exists on mount
-   (return-from-email), finish setup with the address/name stashed in
-   localStorage and hop to /home. */
+/* Homeowner signup via email + password. Email is auto-confirmed at the
+   project level, so submitting the form creates the account and signs the
+   user in immediately. Google OAuth still works for one-tap signup. */
 function HomeownerSignup() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [linkSent, setLinkSent] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
@@ -68,24 +68,36 @@ function HomeownerSignup() {
     };
   }, [navigate]);
 
-  async function sendLink() {
+  async function signUpWithPassword() {
     setBusy(true);
     setErr(null);
     localStorage.setItem(
       PENDING_KEY,
       JSON.stringify({ name: name.trim(), address: address.trim(), consent }),
     );
-    const { error } = await supabase.auth.signInWithOtp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/home/signup` },
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/home` },
     });
     if (error) {
       setErr(error.message);
       setBusy(false);
       return;
     }
-    setLinkSent(email.trim());
-    setBusy(false);
+    if (!data.session) {
+      // Fall back to signing in (covers "user already exists" flows too).
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signInErr) {
+        setErr(signInErr.message);
+        setBusy(false);
+        return;
+      }
+    }
+    // onAuthStateChange in the effect will finish setup and navigate.
   }
 
   return (
@@ -107,16 +119,6 @@ function HomeownerSignup() {
         <Card>
           {finishing ? (
             <div className="py-6 text-center text-sm text-muted">Finishing your account…</div>
-          ) : linkSent ? (
-            <div className="space-y-3">
-              <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
-                Check your email at <span className="font-semibold">{linkSent}</span> and click
-                the link to finish creating your account.
-              </div>
-              <p className="text-center text-[11px] text-muted">
-                The link opens this page again and completes signup automatically.
-              </p>
-            </div>
           ) : (
             <div className="space-y-4">
               <GoogleAuthButton
@@ -144,6 +146,16 @@ function HomeownerSignup() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
+                  autoComplete="email"
+                />
+              </Field>
+              <Field label="Password">
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
                 />
               </Field>
               <Field label="Home address (optional)">
@@ -169,10 +181,10 @@ function HomeownerSignup() {
                 variant="indigo"
                 size="lg"
                 className="w-full"
-                disabled={!email.trim() || busy}
-                onClick={sendLink}
+                disabled={!email.trim() || password.length < 8 || busy}
+                onClick={signUpWithPassword}
               >
-                {busy ? "Sending…" : "Email me a sign-in link"}
+                {busy ? "Creating account…" : "Create my account"}
               </Btn>
               <p className="text-center text-xs text-muted">
                 Already have an account?{" "}
@@ -187,6 +199,7 @@ function HomeownerSignup() {
     </div>
   );
 }
+
 
 function GoogleAuthButton({
   busy,
