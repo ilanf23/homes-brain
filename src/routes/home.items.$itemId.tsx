@@ -30,6 +30,7 @@ type EquipmentRow = {
   recall_checked_at: string | null;
   source: string;
   created_at: string;
+  attributes: Record<string, string | boolean> | null;
 };
 type JobRow = { id: string; what_done: string; created_at: string; pro_id: string };
 type ProRow = { id: string; business: string; trade: string };
