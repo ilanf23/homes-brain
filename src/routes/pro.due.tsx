@@ -90,6 +90,18 @@ function DueForService() {
     );
   }
 
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="due">
+        <PlanLock
+          title="Rebooking & retention"
+          description="Automated campaigns that bring past customers back before someone else gets the call. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
+
   const byBucket = {
     overdue: jobs.filter((j) => bucketOf(j.next_service_date) === "overdue"),
     soon: jobs.filter((j) => bucketOf(j.next_service_date) === "soon"),
