@@ -397,19 +397,21 @@ function ActivityCard({
             );
             const cls =
               "flex items-center justify-between gap-3 rounded-xl bg-paper border border-line px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper";
-            if (row.href) {
+            if (row.href?.to === "/home/records/$recordId") {
               return (
-                <Link
-                  key={row.key}
-                  to={row.href.to}
-                  params={row.href.params}
-                  onClick={row.onTap}
-                  className={cls}
-                >
+                <Link key={row.key} to="/home/records/$recordId" params={row.href.params} onClick={row.onTap} className={cls}>
                   {inner}
                 </Link>
               );
             }
+            if (row.href?.to === "/home/items/$itemId") {
+              return (
+                <Link key={row.key} to="/home/items/$itemId" params={row.href.params} onClick={row.onTap} className={cls}>
+                  {inner}
+                </Link>
+              );
+            }
+
             return (
               <button key={row.key} type="button" onClick={row.onTap} className={cls}>
                 {inner}
