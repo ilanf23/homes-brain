@@ -1,12 +1,9 @@
 /* Per-record homeowner notification. Every new job triggers one email
    telling the homeowner a new service record was added to their home.
-   The link always drops them into their HomesBrain dashboard (/home);
-   if they don't have an account yet, that route routes them through the
-   normal login / signup path. There is no standalone public record page
-   anymore.
-
-   Volume is bounded by a per-pro daily cap so a hostile account can't
-   torch the sending domain.
+   The CTA is a real Supabase magic link that signs them in with one tap
+   and drops them at /auth/callback?claim=<recordId>, which claims the
+   home for their account and lands them on /home. Falls back to a plain
+   /home link if magic-link generation fails so the email still ships.
 
    verify_jwt stays off (see supabase/config.toml) because the browser
    session is still mocked in v0; server-side we resolve the pro from the
@@ -22,6 +19,7 @@ declare const Deno: {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const DAILY_LIMIT = 200; // per-pro sends in a rolling 24h window
@@ -52,7 +50,7 @@ function recordEmail(
   business: string,
   address: string,
   what: string | null,
-  homeUrl: string,
+  ctaUrl: string,
   claimed: boolean,
 ) {
   const summary = what?.trim() ? `: ${what.trim()}` : "";
@@ -60,7 +58,7 @@ function recordEmail(
   const text = [
     `${business} added a new service record to your home at ${address}${summary}.`,
     "",
-    `${cta}: ${homeUrl}`,
+    `${cta}: ${ctaUrl}`,
     "",
     "Every visit builds your home's living record. Free for life.",
   ].join("\n");
@@ -75,8 +73,9 @@ function recordEmail(
       <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">New service record added</h1>
       <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${b} added a new record to your home at ${a}${s}. Every visit builds your home's living record. Free for life.</p>
       <div style="margin-top:22px;">
-        <a href="${homeUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${cta}</a>
+        <a href="${ctaUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${cta}</a>
       </div>
+      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">One tap signs you in. This link only works from your inbox.</p>
     </div>
     <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} services your home at ${a}.</p>
   </div>
@@ -92,7 +91,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { customer_id, pro_id, origin } = await req.json();
+    const { customer_id, pro_id, origin, record_id } = await req.json();
     if (typeof customer_id !== "string" || !customer_id) {
       return json({ ok: false, code: "bad_request" }, 400);
     }
@@ -144,15 +143,36 @@ Deno.serve(async (req) => {
       .gt("created_at", since);
     if ((sentToday ?? 0) >= DAILY_LIMIT) return json({ ok: false, code: "daily_limit" });
 
-    // Latest job for this home + pro gives us the "what was done" summary.
+    // Latest job for this home + pro gives us the "what was done" summary
+    // and (via records) the record id we hand to /auth/callback for claim.
     const { data: jobRows } = await admin
       .from("jobs")
-      .select("id,created_at,what_done")
+      .select("id,created_at,what_done,records(id,created_at)")
       .eq("home_id", customer.home_id)
       .eq("pro_id", pro.id)
       .order("created_at", { ascending: false })
       .limit(1);
     const latestJob = jobRows?.[0] ?? null;
+    const jobRecords = (latestJob?.records ?? []) as { id: string; created_at: string }[];
+    const latestRecordId = jobRecords
+      .slice()
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0]?.id ?? null;
+
+    // Trust an explicit record_id only when it actually belongs to a job by
+    // this pro on this customer's home.
+    let claimRecordId: string | null = null;
+    if (typeof record_id === "string" && record_id) {
+      const { data: verify } = await admin
+        .from("records")
+        .select("id,jobs!inner(pro_id,home_id)")
+        .eq("id", record_id)
+        .maybeSingle();
+      const jrec = verify as unknown as { jobs?: { pro_id: string; home_id: string } } | null;
+      if (jrec?.jobs?.pro_id === pro.id && jrec.jobs.home_id === customer.home_id) {
+        claimRecordId = record_id;
+      }
+    }
+    if (!claimRecordId) claimRecordId = latestRecordId;
 
     const key = Deno.env.get("RESEND_API_KEY");
     if (!key) return json({ ok: false, code: "not_configured" });
@@ -161,11 +181,38 @@ Deno.serve(async (req) => {
     const address = home?.address ?? "your home";
     const claimed = !!home?.claimed_at;
 
+    // Prefer a real Supabase magic link for one-tap sign-in. generateLink
+    // auto-creates the auth user for new emails and works for returning
+    // users too. The link opens /auth/callback which auto-claims the home
+    // (when we have a valid record id). Fall back to plain /home so the
+    // email still ships if magic-link generation errors.
+    const redirectTo = claimRecordId
+      ? `${originUrl}/auth/callback?claim=${claimRecordId}`
+      : `${originUrl}/auth/callback`;
+    let ctaUrl = `${originUrl}/home`;
+    if (!claimed) {
+      try {
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: customer.email,
+          options: { redirectTo },
+        });
+        if (linkErr) {
+          console.error("invite-claim generateLink error", linkErr);
+        } else {
+          const action = linkData?.properties?.action_link;
+          if (typeof action === "string" && action) ctaUrl = action;
+        }
+      } catch (e) {
+        console.error("invite-claim generateLink threw", e);
+      }
+    }
+
     const email = recordEmail(
       pro.business,
       address,
       latestJob?.what_done ?? null,
-      `${originUrl}/home`,
+      ctaUrl,
       claimed,
     );
 
