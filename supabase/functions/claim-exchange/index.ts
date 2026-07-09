@@ -130,6 +130,8 @@ Deno.serve(async (req) => {
       hashed_token: linkData.properties.hashed_token,
       email,
       record_id: row.record_id,
+      intent: row.intent ?? null,
+      first_name: row.first_name ?? null,
       preview,
     });
   } catch (e) {
