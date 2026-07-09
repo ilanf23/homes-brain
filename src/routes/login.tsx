@@ -695,3 +695,50 @@ function OrDivider() {
     </div>
   );
 }
+
+/* Segmented Homeowner|Pro toggle. Decides which magic-link function to
+   call and which account row to auto-create on the other side of the
+   token exchange, so one email can hold both types. */
+function RoleToggle({
+  role,
+  onChange,
+  disabled,
+}: {
+  role: Role;
+  onChange: (r: Role) => void;
+  disabled?: boolean;
+}) {
+  const base =
+    "flex-1 rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo/40";
+  const active = "bg-white text-ink shadow-sm";
+  const inactive = "text-muted hover:text-ink";
+  return (
+    <div
+      role="tablist"
+      aria-label="Sign in as"
+      className="flex items-center gap-1 rounded-full border border-line bg-soft p-1"
+    >
+      <button
+        type="button"
+        role="tab"
+        aria-selected={role === "homeowner"}
+        disabled={disabled}
+        onClick={() => onChange("homeowner")}
+        className={`${base} ${role === "homeowner" ? active : inactive}`}
+      >
+        Homeowner
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={role === "pro"}
+        disabled={disabled}
+        onClick={() => onChange("pro")}
+        className={`${base} ${role === "pro" ? active : inactive}`}
+      >
+        Pro
+      </button>
+    </div>
+  );
+}
+}
