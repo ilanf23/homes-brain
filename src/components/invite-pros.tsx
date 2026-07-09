@@ -223,14 +223,20 @@ export function InviteProsCard({
                 key={i.id}
                 className="anim-fade-in flex items-center justify-between rounded-xl bg-soft px-3 py-2 text-sm"
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 min-w-0">
                   {i.trade && <TradeIcon trade={i.trade} size={14} className="text-muted" />}
-                  {i.to_pro_name}{" "}
-                  {i.trade && <span className="text-muted">· {tradeLabel(i.trade)}</span>}
+                  <span className="truncate">
+                    <span className="font-semibold">{i.to_pro_name}</span>
+                    {i.trade && <span className="text-muted"> · {tradeLabel(i.trade)}</span>}
+                    {(i.to_pro_email || i.to_pro_phone) && (
+                      <span className="text-muted"> · {i.to_pro_email ?? i.to_pro_phone}</span>
+                    )}
+                  </span>
                 </span>
                 <Pill accent="amber">{i.status}</Pill>
               </div>
             ))}
+
           </div>
         </div>
       )}
