@@ -24,6 +24,7 @@ export const Route = createFileRoute("/login")({
    both -> small choice, none -> signup pointers. */
 type Step =
   | "email"
+  | "pro-sent"
   | "pro-password"
   | "ho-password"
   | "ho-sent"
@@ -34,6 +35,7 @@ type Step =
 
 const STEP_COPY: Record<Step, { title: string; sub: string }> = {
   email: { title: "Welcome back", sub: "Enter your email and we'll take it from there." },
+  "pro-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
   "pro-password": { title: "Welcome back", sub: "Enter your password to sign in." },
   "ho-password": { title: "Welcome back", sub: "Enter your password to sign in." },
   "ho-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
