@@ -89,8 +89,8 @@ function Login() {
       return;
     }
     if (data === "pro") {
-      setStep("pro-password");
-      setBusy(false);
+      // Default to a Resend magic link for pros (no password required).
+      await sendProMagicLink();
     } else if (data === "homeowner") {
       setStep("ho-password");
       setBusy(false);
@@ -101,6 +101,33 @@ function Login() {
       setStep("no-account");
       setBusy(false);
     }
+  }
+
+  async function sendProMagicLink() {
+    setBusy(true);
+    setErr(null);
+    const { data, error } = await supabase.functions.invoke("pro-login", {
+      body: { email: email.trim(), origin: window.location.origin },
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    const res = data as { ok?: boolean; code?: string } | null;
+    if (!res?.ok) {
+      setErr(
+        res?.code === "not_configured"
+          ? "Email is not configured yet."
+          : res?.code === "daily_limit"
+            ? "Too many sign-in links sent recently. Try again later."
+            : "We couldn't send that link. Try again.",
+      );
+      setBusy(false);
+      return;
+    }
+    setStep("pro-sent");
+    setBusy(false);
   }
 
 
