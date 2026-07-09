@@ -416,6 +416,8 @@ function HomeownerSettings() {
           <SettingsSection id="account" eyebrow="Account & security">
             <div className="mt-3">
               <SettingRow label="Email" sub={homeowner?.email || "Not set"} />
+              <AccountPasswordRow onDone={(msg) => setToast(msg)} />
+              <AccountGoogleRow onDone={(msg) => setToast(msg)} />
               <SettingRow label="Session" sub="Signed in on this device">
                 <Btn variant="secondary" size="sm" onClick={signOut}>
                   <LogOut size={14} /> Sign out
