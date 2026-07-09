@@ -1,13 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
 
+type LoginSearch = { email?: string; claim?: string; note?: string };
+
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Log in - HomesBrain" }] }),
+  validateSearch: (s: Record<string, unknown>): LoginSearch => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+    claim: typeof s.claim === "string" ? s.claim : undefined,
+    note: typeof s.note === "string" ? s.note : undefined,
+  }),
   component: Login,
 });
 
