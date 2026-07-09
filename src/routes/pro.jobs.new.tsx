@@ -370,7 +370,9 @@ function NewJob() {
     (async () => {
       const { data: eq } = await supabase
         .from("equipment")
-        .select("id,type,make,model,warranty_until,jobs(created_at)")
+        // attributes column added by migration 2026-07-09; cast in the map
+        // below until the Lovable-generated Database types refresh.
+        .select("id,type,make,model,warranty_until,attributes,jobs(created_at)")
         .eq("home_id", homeId)
         .order("created_at", { ascending: false });
       const rows = (eq ?? []).map((r) => {
@@ -380,12 +382,17 @@ function NewJob() {
             .map((j) => j.created_at)
             .sort()
             .at(-1) ?? null;
+        const attrs = (r as { attributes?: unknown }).attributes;
         return {
           id: r.id as string,
           type: (r.type as string | null) ?? null,
           make: (r.make as string | null) ?? null,
           model: (r.model as string | null) ?? null,
           warranty_until: (r.warranty_until as string | null) ?? null,
+          attributes:
+            attrs && typeof attrs === "object"
+              ? (attrs as Record<string, string | boolean>)
+              : null,
           last_job_at: last,
           job_count: jobs.length,
         } satisfies ApplianceOpt;
