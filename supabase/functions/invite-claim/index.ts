@@ -1,13 +1,14 @@
 /* Per-record homeowner notification. Every new job triggers one email
    telling the homeowner a new service record was added to their home.
-   The CTA is a real Supabase magic link that signs them in with one tap
-   and drops them at /auth/callback?claim=<recordId>, which claims the
-   home for their account and lands them on /home. Falls back to a plain
-   /home link if magic-link generation fails so the email still ships.
+
+   The CTA in the email is now a branded homesbrain.com/claim/:token
+   link. That token is minted here (single-use, hashed at rest, 7-day
+   TTL) and consumed by the /claim/:token page + claim-exchange edge
+   function. No supabase.co URL is exposed to the homeowner.
 
    verify_jwt stays off (see supabase/config.toml) because the browser
-   session is still mocked in v0; server-side we resolve the pro from the
-   pro_id in the body and check that the customer belongs to them. */
+   session is still mocked in v0; server-side we resolve the pro from
+   the pro_id in the body and check that the customer belongs to them. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -25,6 +26,7 @@ const corsHeaders = {
 const DAILY_LIMIT = 200; // per-pro sends in a rolling 24h window
 const FALLBACK_ORIGIN = "https://homesbrain.com";
 const ALLOWED_ORIGINS = [/^http:\/\/localhost(:\d+)?$/, /^https:\/\/(www\.)?homesbrain\.com$/];
+const EMAIL_TOKEN_TTL_MS = 7 * 24 * 3600 * 1000;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -46,43 +48,106 @@ function esc(s: string) {
     .replace(/"/g, "&quot;");
 }
 
-function recordEmail(
-  business: string,
-  address: string,
-  what: string | null,
-  ctaUrl: string,
-  claimed: boolean,
-) {
-  const summary = what?.trim() ? `: ${what.trim()}` : "";
-  const cta = claimed ? "Open my home" : "See it in HomesBrain";
-  const text = [
-    `${business} added a new service record to your home at ${address}${summary}.`,
+function base64url(bytes: Uint8Array) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function isHttpsUrl(v: unknown): v is string {
+  return typeof v === "string" && /^https:\/\//i.test(v);
+}
+
+type EquipmentPreview = {
+  type: string | null;
+  make: string | null;
+  model: string | null;
+  warranty_until: string | null;
+};
+
+function equipmentLine(eq: EquipmentPreview | null): string | null {
+  if (!eq) return null;
+  const parts = [eq.type, eq.make, eq.model].filter((x): x is string => !!x && !!x.trim());
+  if (!parts.length) return null;
+  return parts.join(" ");
+}
+
+function recordEmail(opts: {
+  business: string;
+  logo: string | null;
+  address: string;
+  whatDone: string | null;
+  equipment: EquipmentPreview | null;
+  ctaUrl: string;
+  claimed: boolean;
+}) {
+  const { business, logo, address, whatDone, equipment, ctaUrl, claimed } = opts;
+  const cta = claimed ? "Open my home" : "Claim your home record";
+  const eqLine = equipmentLine(equipment);
+  const warranty = equipment?.warranty_until ? `Warranty through ${equipment.warranty_until}` : null;
+  const textLines = [
+    `${business} added a new service record to your home at ${address}.`,
     "",
-    `${cta}: ${ctaUrl}`,
-    "",
-    "Every visit builds your home's living record. Free for life.",
-  ].join("\n");
+    "Record",
+    `Address: ${address}`,
+  ];
+  if (whatDone?.trim()) textLines.push(`Work: ${whatDone.trim()}`);
+  if (eqLine) textLines.push(`Equipment: ${eqLine}`);
+  if (warranty) textLines.push(warranty);
+  textLines.push("", `${cta}: ${ctaUrl}`, "", "Every visit builds your home's living record. Free for life.", "", "via HomesBrain");
+
   const b = esc(business);
   const a = esc(address);
-  const s = esc(summary);
+  const w = whatDone?.trim() ? esc(whatDone.trim()) : "";
+  const eqEsc = eqLine ? esc(eqLine) : "";
+  const warrantyEsc = warranty ? esc(warranty) : "";
+
+  const header = logo && isHttpsUrl(logo)
+    ? `<img src="${esc(logo)}" alt="${b}" style="max-height:44px;max-width:220px;display:block;" />`
+    : `<div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">${b}</div>`;
+
+  const previewRows = [
+    `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;width:110px;">Address</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${a}</td></tr>`,
+    w
+      ? `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;">Work done</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${w}</td></tr>`
+      : "",
+    eqEsc
+      ? `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;">Equipment</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${eqEsc}</td></tr>`
+      : "",
+    warrantyEsc
+      ? `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;">Warranty</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${warrantyEsc}</td></tr>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
   const html = `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:520px;margin:0 auto;padding:32px 20px;">
-    <div style="font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">HomesBrain</div>
-    <div style="margin-top:16px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">New service record added</h1>
-      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${b} added a new record to your home at ${a}${s}. Every visit builds your home's living record. Free for life.</p>
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
+    <div style="display:flex;align-items:center;gap:12px;">${header}</div>
+    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">via HomesBrain</div>
+    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
+      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">New service record from ${b}</h1>
+      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${b} added a new record to your home. It's saved to your address for life. Free.</p>
+      <table role="presentation" style="width:100%;margin-top:18px;border-collapse:collapse;border-top:1px solid #e7e5de;">${previewRows}</table>
       <div style="margin-top:22px;">
         <a href="${ctaUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${cta}</a>
       </div>
-      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">One tap signs you in. This link only works from your inbox.</p>
+      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">One tap opens your record and signs you in. This link only works from your inbox.</p>
     </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} services your home at ${a}.</p>
+    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} services your home at ${a}. HomesBrain hosts the record on their behalf.</p>
   </div>
 </body></html>`;
   return {
     subject: `New service record from ${business}`,
-    text,
+    text: textLines.join("\n"),
     html,
   };
 }
@@ -106,7 +171,7 @@ Deno.serve(async (req) => {
 
     const { data: pro, error: proErr } = await admin
       .from("pros")
-      .select("id,business")
+      .select("id,business,logo")
       .eq("id", pro_id)
       .maybeSingle();
     if (!pro) {
@@ -147,7 +212,7 @@ Deno.serve(async (req) => {
     // and (via records) the record id we hand to /auth/callback for claim.
     const { data: jobRows } = await admin
       .from("jobs")
-      .select("id,created_at,what_done,records(id,created_at)")
+      .select("id,created_at,what_done,equipment_id,records(id,created_at)")
       .eq("home_id", customer.home_id)
       .eq("pro_id", pro.id)
       .order("created_at", { ascending: false })
@@ -174,6 +239,17 @@ Deno.serve(async (req) => {
     }
     if (!claimRecordId) claimRecordId = latestRecordId;
 
+    // Equipment preview for the email body.
+    let equipment: EquipmentPreview | null = null;
+    if (latestJob?.equipment_id) {
+      const { data: eq } = await admin
+        .from("equipment")
+        .select("type,make,model,warranty_until")
+        .eq("id", latestJob.equipment_id)
+        .maybeSingle();
+      if (eq) equipment = eq;
+    }
+
     const key = Deno.env.get("RESEND_API_KEY");
     if (!key) return json({ ok: false, code: "not_configured" });
 
@@ -181,46 +257,47 @@ Deno.serve(async (req) => {
     const address = home?.address ?? "your home";
     const claimed = !!home?.claimed_at;
 
-    // Prefer a real Supabase magic link for one-tap sign-in. generateLink
-    // auto-creates the auth user for new emails and works for returning
-    // users too. The link opens /auth/callback which auto-claims the home
-    // (when we have a valid record id). Fall back to plain /home so the
-    // email still ships if magic-link generation errors.
-    const redirectTo = claimRecordId
-      ? `${originUrl}/auth/callback?claim=${claimRecordId}`
-      : `${originUrl}/auth/callback`;
+    // Mint a branded, single-use, hashed, expiring claim token when the
+    // home is unclaimed and we have a record to point at. Otherwise fall
+    // back to a plain /home link.
     let ctaUrl = `${originUrl}/home`;
-    if (!claimed) {
-      try {
-        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-          type: "magiclink",
-          email: customer.email,
-          options: { redirectTo },
-        });
-        if (linkErr) {
-          console.error("invite-claim generateLink error", linkErr);
-        } else {
-          const action = linkData?.properties?.action_link;
-          if (typeof action === "string" && action) ctaUrl = action;
-        }
-      } catch (e) {
-        console.error("invite-claim generateLink threw", e);
+    if (!claimed && claimRecordId) {
+      const raw = base64url(crypto.getRandomValues(new Uint8Array(32)));
+      const tokenHash = await sha256Hex(raw);
+      const expiresAt = new Date(Date.now() + EMAIL_TOKEN_TTL_MS).toISOString();
+      const { error: tokErr } = await admin.from("claim_tokens").insert({
+        token_hash: tokenHash,
+        record_id: claimRecordId,
+        home_id: customer.home_id,
+        pro_id: pro.id,
+        email: customer.email,
+        expires_at: expiresAt,
+      });
+      if (tokErr) {
+        console.error("invite-claim token insert failed", tokErr);
+      } else {
+        ctaUrl = `${originUrl}/claim/${raw}`;
       }
     }
 
-    const email = recordEmail(
-      pro.business,
+    const email = recordEmail({
+      business: pro.business,
+      logo: pro.logo ?? null,
       address,
-      latestJob?.what_done ?? null,
+      whatDone: latestJob?.what_done ?? null,
+      equipment,
       ctaUrl,
       claimed,
-    );
+    });
 
+    // Display name is the pro; sending address stays on the verified
+    // homesbrain.com domain so deliverability doesn't crater.
+    const fromDisplay = `${pro.business.replace(/[<>]/g, "")} via HomesBrain`;
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "HomesBrain <invites@homesbrain.com>",
+        from: `${fromDisplay} <invites@homesbrain.com>`,
         to: [customer.email],
         subject: email.subject,
         html: email.html,
