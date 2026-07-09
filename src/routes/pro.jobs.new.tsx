@@ -436,6 +436,63 @@ function NewJob() {
     }
   }
 
+  /* Ask the AI to pull equipment + next-service out of the note. Fills blanks
+     only, never clobbers what the pro already typed or picked from history. */
+  async function runExtract(note: string) {
+    const trimmed = note.trim();
+    if (trimmed.length < 6) return;
+    if (trimmed === lastExtractedNote.current) return;
+    lastExtractedNote.current = trimmed;
+    setExtractState("working");
+    try {
+      const r = await extractFromNotes(trimmed, proTrade);
+      const filled: string[] = [];
+      if (r.type && !eqType) {
+        setEqType(r.type);
+        filled.push("type");
+      }
+      if (r.make && !eqMake) {
+        setEqMake(r.make);
+        filled.push("make");
+      }
+      if (r.model && !eqModel) {
+        setEqModel(r.model);
+        filled.push("model");
+      }
+      if (
+        r.next_service_date &&
+        /^\d{4}-\d{2}-\d{2}$/.test(r.next_service_date) &&
+        !nextService
+      ) {
+        setNextService(r.next_service_date);
+        filled.push("next service");
+      }
+      setExtractFilled(filled);
+      setExtractState(filled.length ? "done" : "idle");
+      if (filled.length) {
+        // Reveal the equipment drawer on first-visit homes so the pro can see
+        // what got filled in without having to expand it.
+        setDetailsOpen(true);
+        await logEvent(proId ? `pro:${proId}` : null, "notes_extracted", { filled });
+      }
+    } catch {
+      setExtractState("error");
+    }
+  }
+
+  /* Debounced auto-extract: 900ms after the pro stops typing/dictating. */
+  useEffect(() => {
+    if (stage !== "work") return;
+    if (dictation.listening) return;
+    const t = setTimeout(() => {
+      void runExtract(whatDone);
+    }, 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [whatDone, dictation.listening, stage]);
+
+
+
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
   const previewName = selectedCustomer?.name || newCustomer.name;
