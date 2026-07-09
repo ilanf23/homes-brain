@@ -21,6 +21,18 @@ import { AddressField } from "@/components/address-field";
 import { extractFromNotes, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
+import { Select } from "@/lib/ui";
+import {
+  fetchTradeFields,
+  fetchTrades,
+  type TradeField,
+  type TradeOption,
+} from "@/lib/trade-fields";
+import {
+  cleanAttributes,
+  TradeFieldInputs,
+  type AttributeValues,
+} from "@/components/trade-field-inputs";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
