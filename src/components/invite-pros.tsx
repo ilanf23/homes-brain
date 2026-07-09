@@ -135,7 +135,7 @@ export function InviteProsCard({
             {gaps.map((g, i) => (
               <button
                 key={g}
-                onClick={() => sendInvite(`Your ${tradeLabel(g).toLowerCase()} pro`, null, g)}
+                onClick={() => sendInvite(`Your ${tradeLabel(g).toLowerCase()} pro`, null, null, g)}
                 className="pressable anim-fade-up inline-flex items-center gap-2 rounded-full bg-indigobg text-indigo text-sm font-semibold px-3.5 py-2 hover:shadow-[0_8px_20px_-10px_rgba(71,63,176,0.5)] hover:-translate-y-px transition-all duration-200"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
@@ -147,20 +147,12 @@ export function InviteProsCard({
         </div>
       )}
 
-      <div className="mt-5 grid sm:grid-cols-3 gap-3 items-end">
+      <div className="mt-5 grid sm:grid-cols-2 gap-3 items-end">
         <Field label="Pro name">
           <Input
             value={inviteName}
             onChange={(e) => setInviteName(e.target.value)}
             placeholder="Rio Grande Electric"
-          />
-        </Field>
-        <Field label="Phone">
-          <Input
-            value={invitePhone}
-            onChange={(e) => setInvitePhone(e.target.value)}
-            placeholder="512-847-1928"
-            type="tel"
           />
         </Field>
         <Field label="Trade">
@@ -172,20 +164,55 @@ export function InviteProsCard({
             ))}
           </Select>
         </Field>
+        <Field label="Email">
+          <Input
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="pro@business.com"
+            type="email"
+          />
+        </Field>
+        <Field label="Phone (optional)">
+          <Input
+            value={invitePhone}
+            onChange={(e) => setInvitePhone(e.target.value)}
+            placeholder="512-847-1928"
+            type="tel"
+          />
+        </Field>
       </div>
+      <p className="mt-2 text-xs text-muted">
+        Email delivers a real invitation. Phone is captured for now — texting isn't live yet.
+      </p>
       <div className="mt-3">
         <Btn
           variant="indigo"
-          disabled={!inviteName || !invitePhone}
-          onClick={() => {
-            sendInvite(inviteName, invitePhone, inviteTrade);
-            setInviteName("");
-            setInvitePhone("");
+          disabled={
+            sending ||
+            !inviteName.trim() ||
+            (!inviteEmail.trim() && !invitePhone.trim())
+          }
+          onClick={async () => {
+            setSending(true);
+            try {
+              await sendInvite(
+                inviteName.trim(),
+                invitePhone.trim() || null,
+                inviteEmail.trim() || null,
+                inviteTrade,
+              );
+              setInviteName("");
+              setInvitePhone("");
+              setInviteEmail("");
+            } finally {
+              setSending(false);
+            }
           }}
         >
-          Send invite
+          {sending ? "Sending…" : "Send invite"}
         </Btn>
       </div>
+
 
       {invites.length > 0 && (
         <div className="mt-5">
