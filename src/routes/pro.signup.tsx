@@ -28,12 +28,13 @@ function isValidEmail(s: string) {
 }
 
 function ProSignup() {
+  const search = Route.useSearch();
   const [submitting, setSubmitting] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
 
   const canContinue = firstName.trim().length > 0 && isValidEmail(email.trim());
 
