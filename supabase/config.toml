@@ -37,3 +37,10 @@ verify_jwt = false
 # authorization comes from possession of the high-entropy token.
 [functions.claim-exchange]
 verify_jwt = false
+
+# homeowner-login mints a hashed, single-use, 30-min claim token and
+# emails a homesbrain.com/claim link via Resend. Only ever emails an
+# address that already has a homeowners row.
+[functions.homeowner-login]
+verify_jwt = false
+

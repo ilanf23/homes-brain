@@ -98,23 +98,35 @@ function Login() {
   async function sendMagicLink() {
     setBusy(true);
     setErr(null);
-    // Preserve the claim record through the resend so a fresh link still
-    // auto-claims the right home after the callback runs.
-    const redirect = claimRecordId
-      ? `${window.location.origin}/auth/callback?claim=${encodeURIComponent(claimRecordId)}`
-      : `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: redirect },
+    const { data, error } = await supabase.functions.invoke("homeowner-login", {
+      body: { email: email.trim(), origin: window.location.origin },
     });
     if (error) {
       setErr(error.message);
       setBusy(false);
       return;
     }
+    const res = data as { ok?: boolean; code?: string } | null;
+    if (!res?.ok) {
+      if (res?.code === "no_account") {
+        setStep("no-account");
+        setBusy(false);
+        return;
+      }
+      setErr(
+        res?.code === "not_configured"
+          ? "Email is not configured yet."
+          : res?.code === "daily_limit"
+            ? "Too many sign-in links sent recently. Try again later."
+            : "We couldn't send that link. Try again.",
+      );
+      setBusy(false);
+      return;
+    }
     setStep("ho-sent");
     setBusy(false);
   }
+
 
   async function homeownerPasswordLogin() {
     setBusy(true);
