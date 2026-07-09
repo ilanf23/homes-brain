@@ -174,15 +174,16 @@ export function Btn({
     size === "lg"
       ? "px-6 py-3 text-base min-h-12"
       : size === "sm"
-        ? "px-3 py-1.5 text-sm"
+        ? "px-3 py-1.5 text-sm min-h-9"
         : "px-4 py-2.5 text-sm min-h-11";
   return (
     <button
       {...rest}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={`pressable relative inline-flex items-center justify-center gap-2 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none ${sizeC} ${btnStyles[variant]} ${className}`}
+      className={`pressable relative inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-[background-color,box-shadow,border-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:translate-y-0 ${sizeC} ${btnStyles[variant]} ${className}`}
     >
+
       {/* Keep the label in the layout while loading so the button never changes width. */}
       <span
         className={`inline-flex items-center justify-center gap-2 transition-opacity duration-150 ${loading ? "opacity-0" : ""}`}
