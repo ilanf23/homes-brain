@@ -55,6 +55,7 @@ function Login() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showHoPassword, setShowHoPassword] = useState(false);
+  const [showProPassword, setShowProPassword] = useState(false);
   const claimRecordId = search.claim ?? null;
   const expiredNote = search.note === "expired";
 
