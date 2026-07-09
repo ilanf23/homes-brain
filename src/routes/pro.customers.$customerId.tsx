@@ -424,6 +424,18 @@ function CustomerDetail() {
     );
   }
 
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="customers">
+        <PlanLock
+          title="Customer CRM"
+          description="Deep customer profiles with visits, equipment, invoices, and notes. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
+
   if (!customer) {
     return (
       <ProShell pro={pro} active="customers">
