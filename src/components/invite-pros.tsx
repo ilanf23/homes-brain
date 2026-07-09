@@ -34,7 +34,9 @@ export function InviteProsCard({
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [inviteName, setInviteName] = useState("");
   const [invitePhone, setInvitePhone] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [inviteTrade, setInviteTrade] = useState<string>("electrical");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!homeownerId) return;
@@ -47,19 +49,55 @@ export function InviteProsCard({
 
   const gaps = useMemo(() => suggestTradeGaps(knownTrades).slice(0, 3), [knownTrades]);
 
-  async function sendInvite(toName: string, toPhone: string | null, trade: string | null) {
+  async function sendInvite(
+    toName: string,
+    toPhone: string | null,
+    toEmail: string | null,
+    trade: string | null,
+  ) {
     if (!homeownerId) return;
     const { data, error } = await supabase.rpc("homeowner_create_invite", {
       p_to_pro_name: toName,
       p_to_pro_phone: toPhone ?? "",
+      p_to_pro_email: toEmail ?? "",
       p_trade: trade ?? "",
     });
     if (!error && data) {
       setInvites((prev) => [
-        { id: data as string, to_pro_name: toName, trade, status: "pending" },
+        {
+          id: data as string,
+          to_pro_name: toName,
+          to_pro_email: toEmail,
+          to_pro_phone: toPhone,
+          trade,
+          status: "pending",
+        },
         ...prev,
       ]);
     }
+
+    let emailed = false;
+    if (toEmail) {
+      const { data: emailResp, error: emailErr } = await supabase.functions.invoke(
+        "invite-pro",
+        {
+          body: {
+            to_name: toName,
+            to_email: toEmail,
+            trade: trade ?? "",
+            origin: window.location.origin,
+          },
+        },
+      );
+      const ok = !emailErr && (emailResp as { ok?: boolean } | null)?.ok === true;
+      emailed = ok;
+      if (!ok) {
+        onToast(`Invite saved, but email couldn't be sent to ${toName}`);
+      }
+    }
+
+    // Phone stays as an optional capture until real SMS is live. Keep the
+    // mock log so existing "message preview" surfaces don't regress.
     if (toPhone) {
       await mockSend({
         channel: "sms",
@@ -68,12 +106,18 @@ export function InviteProsCard({
         kind: "invite",
       });
     }
-    await logEvent(`homeowner:${homeownerId}`, "pro_invited", { trade });
+
+    await logEvent(`homeowner:${homeownerId}`, "pro_invited", {
+      trade,
+      channel: toEmail ? "email" : toPhone ? "sms" : "none",
+    });
     if (prosCount + invites.length + 1 === 2) {
       await logEvent(`homeowner:${homeownerId}`, "second_pro_added", {});
     }
-    onToast(`Invite sent to ${toName}`);
+    if (emailed) onToast(`Invite emailed to ${toName}`);
+    else if (!toEmail) onToast(`Invite sent to ${toName}`);
   }
+
 
   return (
     <Card className={className}>
