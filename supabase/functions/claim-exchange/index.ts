@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     const tokenHash = await sha256Hex(token);
     const { data: row } = await admin
       .from("claim_tokens")
-      .select("id,record_id,home_id,pro_id,email,expires_at,used_at")
+      .select("id,record_id,home_id,pro_id,email,expires_at,used_at,intent,first_name")
       .eq("token_hash", tokenHash)
       .maybeSingle();
 
@@ -130,6 +130,8 @@ Deno.serve(async (req) => {
       hashed_token: linkData.properties.hashed_token,
       email,
       record_id: row.record_id,
+      intent: row.intent ?? null,
+      first_name: row.first_name ?? null,
       preview,
     });
   } catch (e) {

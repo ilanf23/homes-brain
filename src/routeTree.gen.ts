@@ -28,6 +28,7 @@ import { Route as MakeItLastIndexRouteImport } from './routes/make-it-last.index
 import { Route as HomeIndexRouteImport } from './routes/home.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ProSignupRouteImport } from './routes/pro.signup'
+import { Route as ProSetupRouteImport } from './routes/pro.setup'
 import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
@@ -148,6 +149,11 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
 const ProSignupRoute = ProSignupRouteImport.update({
   id: '/pro/signup',
   path: '/pro/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProSetupRoute = ProSetupRouteImport.update({
+  id: '/pro/setup',
+  path: '/pro/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProSettingsRoute = ProSettingsRouteImport.update({
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
+  '/pro/setup': typeof ProSetupRoute
   '/pro/signup': typeof ProSignupRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
+  '/pro/setup': typeof ProSetupRoute
   '/pro/signup': typeof ProSignupRoute
   '/blog': typeof BlogIndexRoute
   '/home': typeof HomeIndexRoute
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
+  '/pro/setup': typeof ProSetupRoute
   '/pro/signup': typeof ProSignupRoute
   '/blog/': typeof BlogIndexRoute
   '/home/': typeof HomeIndexRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
+    | '/pro/setup'
     | '/pro/signup'
     | '/blog/'
     | '/home/'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
+    | '/pro/setup'
     | '/pro/signup'
     | '/blog'
     | '/home'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
+    | '/pro/setup'
     | '/pro/signup'
     | '/blog/'
     | '/home/'
@@ -597,6 +609,7 @@ export interface RootRouteChildren {
   ProReferralRoute: typeof ProReferralRoute
   ProReviewsRoute: typeof ProReviewsRoute
   ProSettingsRoute: typeof ProSettingsRoute
+  ProSetupRoute: typeof ProSetupRoute
   ProSignupRoute: typeof ProSignupRoute
   BlogIndexRoute: typeof BlogIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
@@ -748,6 +761,13 @@ declare module '@tanstack/react-router' {
       path: '/pro/signup'
       fullPath: '/pro/signup'
       preLoaderRoute: typeof ProSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/setup': {
+      id: '/pro/setup'
+      path: '/pro/setup'
+      fullPath: '/pro/setup'
+      preLoaderRoute: typeof ProSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro/settings': {
@@ -965,6 +985,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProReferralRoute: ProReferralRoute,
   ProReviewsRoute: ProReviewsRoute,
   ProSettingsRoute: ProSettingsRoute,
+  ProSetupRoute: ProSetupRoute,
   ProSignupRoute: ProSignupRoute,
   BlogIndexRoute: BlogIndexRoute,
   HomeIndexRoute: HomeIndexRoute,

@@ -19,8 +19,10 @@ export type Database = {
           created_at: string
           email: string | null
           expires_at: string
+          first_name: string | null
           home_id: string | null
           id: string
+          intent: string | null
           pro_id: string | null
           record_id: string | null
           token_hash: string
@@ -30,8 +32,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           expires_at: string
+          first_name?: string | null
           home_id?: string | null
           id?: string
+          intent?: string | null
           pro_id?: string | null
           record_id?: string | null
           token_hash: string
@@ -41,8 +45,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           expires_at?: string
+          first_name?: string | null
           home_id?: string | null
           id?: string
+          intent?: string | null
           pro_id?: string | null
           record_id?: string | null
           token_hash?: string
@@ -605,7 +611,7 @@ export type Database = {
       pros: {
         Row: {
           auth_user_id: string | null
-          business: string
+          business: string | null
           created_at: string
           email: string | null
           google_place_id: string | null
@@ -627,11 +633,11 @@ export type Database = {
           stripe_charges_enabled: boolean
           stripe_details_submitted: boolean
           stripe_payouts_enabled: boolean
-          trade: string
+          trade: string | null
         }
         Insert: {
           auth_user_id?: string | null
-          business: string
+          business?: string | null
           created_at?: string
           email?: string | null
           google_place_id?: string | null
@@ -653,11 +659,11 @@ export type Database = {
           stripe_charges_enabled?: boolean
           stripe_details_submitted?: boolean
           stripe_payouts_enabled?: boolean
-          trade: string
+          trade?: string | null
         }
         Update: {
           auth_user_id?: string | null
-          business?: string
+          business?: string | null
           created_at?: string
           email?: string | null
           google_place_id?: string | null
@@ -679,7 +685,7 @@ export type Database = {
           stripe_charges_enabled?: boolean
           stripe_details_submitted?: boolean
           stripe_payouts_enabled?: boolean
-          trade?: string
+          trade?: string | null
         }
         Relationships: []
       }

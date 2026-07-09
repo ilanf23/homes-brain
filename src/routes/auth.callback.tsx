@@ -40,6 +40,7 @@ function AuthCallback() {
 
       // If Google signup path stashed pro-signup intent, create the pros row.
       let pending: {
+        intent?: string;
         business?: string;
         owner_first_name?: string;
         trade?: string;
@@ -54,39 +55,56 @@ function AuthCallback() {
 
       const { data: existingPro } = await supabase
         .from("pros")
-        .select("id")
+        .select("id,business,trade,service_area")
         .eq("auth_user_id", user.id)
         .maybeSingle();
 
-      if (!existingPro && pending?.business && pending?.trade) {
+      // New pro coming from the pro signup path (either the legacy full
+      // form or the new 2-field intent flow).
+      const isProSignup =
+        !!pending && (pending.intent === "pro" || (!!pending.business && !!pending.trade));
+
+      if (!existingPro && isProSignup) {
+        const firstName =
+          pending!.owner_first_name?.trim() ||
+          (user.user_metadata?.full_name?.toString().split(" ")[0] ?? null) ||
+          null;
         const { data: inserted, error: insertErr } = await supabase
           .from("pros")
           .insert({
             auth_user_id: user.id,
-            business: pending.business,
-            trade: pending.trade,
-            service_area: pending.service_area ?? null,
+            business: pending!.business?.trim() || null,
+            trade: pending!.trade || null,
+            service_area: pending!.service_area?.trim() || null,
             email: user.email ?? null,
             plan: "free",
-            owner_first_name: pending.owner_first_name ?? null,
+            owner_first_name: firstName,
           })
-          .select("id")
+          .select("id,business,trade,service_area")
           .single();
         localStorage.removeItem("hb_pending_pro_signup");
         if (!insertErr && inserted) {
           await logEvent(`pro:${inserted.id}`, "pro_signed_up", {
-            trade: pending.trade,
-            business: pending.business,
+            trade: pending!.trade ?? null,
+            business: pending!.business ?? null,
             via: "google",
           });
-          navigate({ to: "/pro" });
+          const complete =
+            !!inserted.business?.trim() &&
+            !!inserted.trade?.trim() &&
+            !!inserted.service_area?.trim();
+          navigate({ to: complete ? "/pro" : "/pro/setup" });
           return;
         }
       }
 
       if (existingPro) {
         await logEvent(`pro:${existingPro.id}`, "pro_email_verified", {});
-        navigate({ to: "/pro" });
+        const complete =
+          !!existingPro.business?.trim() &&
+          !!existingPro.trade?.trim() &&
+          !!existingPro.service_area?.trim();
+        navigate({ to: complete ? "/pro" : "/pro/setup" });
         return;
       }
       // Default: homeowner. Auto-claim the home linked to the emailed

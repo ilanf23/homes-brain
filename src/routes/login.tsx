@@ -24,6 +24,7 @@ export const Route = createFileRoute("/login")({
    both -> small choice, none -> signup pointers. */
 type Step =
   | "email"
+  | "pro-sent"
   | "pro-password"
   | "ho-password"
   | "ho-sent"
@@ -34,6 +35,7 @@ type Step =
 
 const STEP_COPY: Record<Step, { title: string; sub: string }> = {
   email: { title: "Welcome back", sub: "Enter your email and we'll take it from there." },
+  "pro-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
   "pro-password": { title: "Welcome back", sub: "Enter your password to sign in." },
   "ho-password": { title: "Welcome back", sub: "Enter your password to sign in." },
   "ho-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
@@ -53,6 +55,7 @@ function Login() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showHoPassword, setShowHoPassword] = useState(false);
+  const [showProPassword, setShowProPassword] = useState(false);
   const claimRecordId = search.claim ?? null;
   const expiredNote = search.note === "expired";
 
@@ -71,6 +74,7 @@ function Login() {
     setPassword("");
     setErr(null);
     setShowHoPassword(false);
+    setShowProPassword(false);
   }
 
   async function continueWithEmail() {
@@ -85,8 +89,8 @@ function Login() {
       return;
     }
     if (data === "pro") {
-      setStep("pro-password");
-      setBusy(false);
+      // Default to a Resend magic link for pros (no password required).
+      await sendProMagicLink();
     } else if (data === "homeowner") {
       setStep("ho-password");
       setBusy(false);
@@ -97,6 +101,33 @@ function Login() {
       setStep("no-account");
       setBusy(false);
     }
+  }
+
+  async function sendProMagicLink() {
+    setBusy(true);
+    setErr(null);
+    const { data, error } = await supabase.functions.invoke("pro-login", {
+      body: { email: email.trim(), origin: window.location.origin },
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    const res = data as { ok?: boolean; code?: string } | null;
+    if (!res?.ok) {
+      setErr(
+        res?.code === "not_configured"
+          ? "Email is not configured yet."
+          : res?.code === "daily_limit"
+            ? "Too many sign-in links sent recently. Try again later."
+            : "We couldn't send that link. Try again.",
+      );
+      setBusy(false);
+      return;
+    }
+    setStep("pro-sent");
+    setBusy(false);
   }
 
 
@@ -274,6 +305,71 @@ function Login() {
             </p>
           </>
         )}
+
+        {step === "pro-sent" && (
+          <>
+            <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
+              We emailed a one-tap sign-in link to{" "}
+              <span className="font-semibold">{email.trim()}</span>. Tap it and you're in.
+            </div>
+            {showProPassword ? (
+              <>
+                <Field label="Password">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Your password"
+                    autoComplete="current-password"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && password && !busy) proLogin();
+                    }}
+                  />
+                </Field>
+                <ErrorRow err={err} />
+                <Btn
+                  variant="indigo"
+                  size="lg"
+                  className="w-full"
+                  disabled={!password}
+                  loading={busy}
+                  onClick={proLogin}
+                >
+                  Sign in
+                </Btn>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("forgot");
+                      setErr(null);
+                    }}
+                    className="text-xs font-semibold text-indigo hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProPassword(true);
+                    setErr(null);
+                  }}
+                  className="text-xs font-semibold text-indigo hover:underline"
+                >
+                  Use my password instead
+                </button>
+              </div>
+            )}
+            <BackToEmail onClick={resetToEmail} />
+          </>
+        )}
+
+
 
         {step === "pro-password" && (
           <>
