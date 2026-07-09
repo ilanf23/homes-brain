@@ -309,6 +309,7 @@ export type Database = {
           home_id: string
           id: string
           status: string
+          to_pro_email: string | null
           to_pro_name: string
           to_pro_phone: string | null
           trade: string | null
@@ -319,6 +320,7 @@ export type Database = {
           home_id: string
           id?: string
           status?: string
+          to_pro_email?: string | null
           to_pro_name: string
           to_pro_phone?: string | null
           trade?: string | null
@@ -329,6 +331,7 @@ export type Database = {
           home_id?: string
           id?: string
           status?: string
+          to_pro_email?: string | null
           to_pro_name?: string
           to_pro_phone?: string | null
           trade?: string | null
@@ -778,7 +781,12 @@ export type Database = {
         Returns: string
       }
       homeowner_create_invite: {
-        Args: { p_to_pro_name: string; p_to_pro_phone: string; p_trade: string }
+        Args: {
+          p_to_pro_email: string
+          p_to_pro_name: string
+          p_to_pro_phone: string
+          p_trade: string
+        }
         Returns: string
       }
       homeowner_delete_equipment: {
