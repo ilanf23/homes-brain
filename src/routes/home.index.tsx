@@ -7,7 +7,12 @@ import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, useHomeownerGuard, type HomeownerRow } from "@/components/home-shell";
+import {
+  HomePageHead,
+  HomeShell,
+  useHomeownerGuard,
+  type HomeownerRow,
+} from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/")({
@@ -29,7 +34,6 @@ function HomeOverview() {
   } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const [justPaidId, setJustPaidId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!home) return;
@@ -39,19 +43,16 @@ function HomeOverview() {
     })();
   }, [home]);
 
-  // On return with ?paid=<invoiceId>, refresh invoices and flash a confirmation.
+  // On return with ?paid=<invoiceId>, refresh invoices and flash a toast.
   useEffect(() => {
     if (typeof window === "undefined" || !home) return;
     const q = new URLSearchParams(window.location.search).get("paid");
     if (!q) return;
-    setJustPaidId(q);
     (async () => setInvoices(await listInvoicesForHome(home.id)))();
-    setToast("Payment complete");
+    setToast("Paid ✓");
     const url = new URL(window.location.href);
     url.searchParams.delete("paid");
     window.history.replaceState({}, "", url.toString());
-    const t = setTimeout(() => setJustPaidId(null), 6000);
-    return () => clearTimeout(t);
   }, [home?.id]);
 
   useEffect(() => {
@@ -60,18 +61,7 @@ function HomeOverview() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const openInvoices = useMemo(
-    () => invoices.filter((i) => i.status === "open"),
-    [invoices],
-  );
-  const totalDue = useMemo(
-    () => openInvoices.reduce((s, i) => s + Number(i.total), 0),
-    [openInvoices],
-  );
-  const justPaidInvoice = useMemo(
-    () => (justPaidId ? invoices.find((i) => i.id === justPaidId) ?? null : null),
-    [justPaidId, invoices],
-  );
+  const openInvoices = useMemo(() => invoices.filter((i) => i.status === "open"), [invoices]);
 
   const nextDue = useMemo(
     () =>
@@ -79,15 +69,6 @@ function HomeOverview() {
         .filter((j) => j.next_service_date)
         .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))[0] ?? null,
     [jobs],
-  );
-  const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
-  const newRecords = useMemo(
-    () =>
-      records
-        .filter((r) => !r.viewed_at)
-        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
-        .slice(0, 5),
-    [records],
   );
 
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
@@ -110,34 +91,12 @@ function HomeOverview() {
       <HomePageHead
         eyebrow="My home"
         title={home.address}
-        sub="Every home remembers. Your pros write the record, you own it."
+        sub="Your pros write the record. You own it."
       />
-
-      {justPaidInvoice && (
-        <Card className="anim-fade-up mb-6 border-indigo/30 bg-indigobg/60">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="font-semibold text-indigo">Paid ✓</div>
-              <div className="text-sm text-ink">
-                {formatMoney(Number(justPaidInvoice.total))} to{" "}
-                {justPaidInvoice.pros?.business ?? "your pro"}
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {openInvoices.length > 0 && (
         <Card className="anim-fade-up mb-6 border-indigo/30">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <Eyebrow accent="indigo">Amount due</Eyebrow>
-            {openInvoices.length > 1 && (
-              <div className="text-sm text-muted">
-                Total due{" "}
-                <span className="font-bold text-ink tnum">{formatMoney(totalDue)}</span>
-              </div>
-            )}
-          </div>
+          <Eyebrow accent="indigo">Amount due</Eyebrow>
           <div className="mt-3 space-y-3">
             {openInvoices.map((inv) => (
               <AmountDueRow
@@ -154,91 +113,38 @@ function HomeOverview() {
         </Card>
       )}
 
-      <div className="anim-fade-up rounded-2xl bg-indigobg text-indigo px-4 py-3 text-sm font-semibold mb-6">
-        This record sells as a $49 seller history report when homes change hands. Yours is free for
-        life because your pros write it.
-      </div>
-
-
-
-
-      <div className="anim-fade-up d-1 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        {(
-          [
-            [equipment.length, "Items on file"],
-            [verifiedCount, "Verified by pros"],
-            [pros.length, "Pros on the home"],
-            [jobs.length, "Visits recorded"],
-          ] as const
-        ).map(([n, label]) => (
-          <Card key={label} className="text-center py-4">
-            <div className="text-2xl font-extrabold tracking-tight tnum">{n}</div>
-            <div className="text-xs text-muted mt-0.5">{label}</div>
-          </Card>
-        ))}
+      <div className="anim-fade-up mb-6 text-sm text-muted">
+        {equipment.length} item{equipment.length === 1 ? "" : "s"} · {pros.length} pro
+        {pros.length === 1 ? "" : "s"} · {jobs.length} visit{jobs.length === 1 ? "" : "s"}
+        {verifiedCount > 0 && (
+          <>
+            {" · "}
+            <span className="inline-flex items-center gap-1 text-indigo font-semibold">
+              <ShieldCheck size={13} animate={false} /> all verified
+            </span>
+          </>
+        )}
       </div>
 
       <div className="space-y-6">
-        {newRecords.length > 0 && (
-          <Card className="anim-fade-up d-1 border-coral/30 bg-coralbg/40">
-            <div className="flex items-center justify-between">
-              <Eyebrow accent="coral">New from your pros</Eyebrow>
-              <Pill accent="coral">
-                {newRecords.length} new
-              </Pill>
-            </div>
-            <div className="mt-3 space-y-2">
-              {newRecords.map((r) => {
-                const j = jobById.get(r.job_id);
-                const pro = j ? pros.find((p) => p.id === j.pro_id) : undefined;
-                const eqId = j?.equipment_id ?? null;
-                const markViewed = async () => {
-                  await supabase.rpc("mark_record_viewed", { p_record_id: r.id });
-                  refresh();
-                };
-                const inner = (
-                  <>
-                    <div className="min-w-0">
-                      <div className="font-semibold text-ink truncate">
-                        {pro?.business ?? "Your pro"}
-                      </div>
-                      <div className="text-xs text-muted truncate">
-                        {j?.what_done ?? "New service record"} · {formatDate(r.created_at)}
-                      </div>
-                    </div>
-                    <Btn variant="coral" size="sm">
-                      {eqId ? "View" : "Got it"}
-                    </Btn>
-                  </>
-                );
-                const className =
-                  "flex items-center justify-between gap-3 rounded-xl bg-background border border-line px-3 py-2.5 hover:border-coral/40 transition-colors text-left w-full";
-                return eqId ? (
-                  <Link
-                    key={r.id}
-                    to="/home/items/$itemId"
-                    params={{ itemId: eqId }}
-                    onClick={markViewed}
-                    className={className}
-                  >
-                    {inner}
-                  </Link>
-                ) : (
-                  <button key={r.id} type="button" onClick={markViewed} className={className}>
-                    {inner}
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
-        )}
-
+        <ActivityCard
+          records={records}
+          jobs={jobs}
+          pros={pros}
+          onView={async (recordId) => {
+            await supabase.rpc("mark_record_viewed", { p_record_id: recordId });
+            refresh();
+          }}
+        />
 
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between">
             <Eyebrow accent="indigo">On file</Eyebrow>
-            <Link to="/home/add" className="text-xs font-semibold text-indigo hover:underline">
-              Add something
+            <Link
+              to="/home/add"
+              className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
+            >
+              + Add something
             </Link>
           </div>
           {equipment.length === 0 ? (
@@ -246,33 +152,27 @@ function HomeOverview() {
               Nothing yet. Records from your pros will show up here.
             </p>
           ) : (
-            <div className="mt-3 space-y-3">
-              {equipment.map((e, i) => (
+            <div className="mt-3 space-y-2">
+              {equipment.map((e) => (
                 <Link
                   key={e.id}
                   to="/home/items/$itemId"
                   params={{ itemId: e.id }}
-                  className="anim-fade-up rounded-xl border border-line p-3 flex items-start justify-between gap-3 hover:border-ink/20 hover:shadow-sm transition-all duration-200 block"
-                  style={{ animationDelay: `${i * 60}ms` }}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
                 >
-                  <div>
-                    <div className="font-semibold text-ink">{e.type ?? "Equipment"}</div>
-                    <div className="text-sm text-muted">
-                      {[e.make, e.model].filter(Boolean).join(" · ")}
+                  <div className="min-w-0">
+                    <div className="font-semibold text-ink truncate">{e.type ?? "Equipment"}</div>
+                    <div className="text-xs text-muted truncate">
+                      {[e.make, e.model].filter(Boolean).join(" · ") || "No details yet"}
                     </div>
-                    {e.warranty_until && (
-                      <div className="text-xs text-muted mt-1 font-mono tnum">
-                        Warranty until {formatDate(e.warranty_until)}
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {e.source === "pro" ? (
-                      <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-xs">
-                        <ShieldCheck size={15} animate={false} /> Verified
+                      <span className="inline-flex items-center gap-1 text-indigo font-semibold text-xs">
+                        <ShieldCheck size={13} animate={false} /> Verified
                       </span>
                     ) : (
-                      <Pill accent="amber">Self-added</Pill>
+                      <span className="text-xs text-muted">Self-added</span>
                     )}
                     <ChevronRight size={16} className="text-muted" />
                   </div>
@@ -285,50 +185,38 @@ function HomeOverview() {
         {nextDue && (
           <Card className="anim-fade-up d-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <Eyebrow accent="indigo">Next up</Eyebrow>
-                <div className="mt-2 font-semibold text-ink">{nextDue.what_done}</div>
-                <div className="text-xs text-muted mt-0.5">
+              <div className="min-w-0">
+                <Eyebrow accent="indigo">Coming up</Eyebrow>
+                <div className="mt-2 font-semibold text-ink truncate">{nextDue.what_done}</div>
+                <div className="text-xs text-muted mt-0.5 truncate">
                   {proById.get(nextDue.pro_id)?.business ?? ""} · due{" "}
                   {formatDate(nextDue.next_service_date)}
                 </div>
               </div>
-              <Link to="/home/reminders">
-                <Btn variant="secondary" size="sm">
+              <div className="flex items-center gap-2 shrink-0">
+                <Link to="/home/reminders">
+                  <Btn variant="secondary" size="sm">
+                    Remind me
+                  </Btn>
+                </Link>
+                <Link
+                  to="/home/reminders"
+                  className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
+                >
                   All reminders
-                </Btn>
-              </Link>
+                </Link>
+              </div>
             </div>
           </Card>
         )}
-
-        {invoices.length > 0 && (
-          <Card className="anim-fade-up d-3">
-            <Eyebrow accent="indigo">Invoices</Eyebrow>
-            <div className="mt-3 divide-y divide-line">
-              {invoices.map((inv) => (
-                <InvoiceRow
-                  key={inv.id}
-                  inv={inv}
-                  onPaid={async () => {
-                    if (home) setInvoices(await listInvoicesForHome(home.id));
-                    setToast("Payment complete");
-                  }}
-                  onError={(msg) => setToast(msg)}
-                />
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-muted">
-              Sent by your pros. Pay securely through HomesBrain when your pro has payments turned on.
-            </p>
-          </Card>
-        )}
-
 
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
             <Eyebrow accent="indigo">My pros</Eyebrow>
-            <Link to="/home/pros" className="text-xs font-semibold text-indigo hover:underline">
+            <Link
+              to="/home/pros"
+              className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
+            >
               See all
             </Link>
           </div>
@@ -340,10 +228,10 @@ function HomeOverview() {
                 const visits = jobs.filter((j) => j.pro_id === p.id).length;
                 return (
                   <div key={p.id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <Avatar name={p.business} accent="indigo" />
-                      <div>
-                        <div className="font-semibold text-ink">{p.business}</div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-ink truncate">{p.business}</div>
                         <div className="text-xs text-muted flex items-center gap-1.5">
                           <TradeIcon trade={p.trade} size={13} className="text-indigo" />
                           {tradeLabel(p.trade)} · {visits} visit{visits === 1 ? "" : "s"}
@@ -374,6 +262,132 @@ function HomeOverview() {
 
       {toast && <Toast>{toast}</Toast>}
     </HomeShell>
+  );
+}
+
+/* Merged feed of new records + recent visits, as whole-row tappable rows.
+   Unseen records get a coral "New" pill and fire mark_record_viewed on tap. */
+type FeedRow = {
+  key: string;
+  href: { to: "/home/items/$itemId"; params: { itemId: string } } | null;
+  onTap?: () => void | Promise<void>;
+  proName: string;
+  what: string;
+  when: string;
+  isNew: boolean;
+};
+
+function ActivityCard({
+  records,
+  jobs,
+  pros,
+  onView,
+}: {
+  records: ReturnType<typeof useHomeownerGuard>["records"];
+  jobs: ReturnType<typeof useHomeownerGuard>["jobs"];
+  pros: ReturnType<typeof useHomeownerGuard>["pros"];
+  onView: (recordId: string) => void | Promise<void>;
+}) {
+  const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
+  const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
+  const rows: FeedRow[] = useMemo(() => {
+    const seenJobs = new Set<string>();
+    const fromRecords: FeedRow[] = records
+      .slice()
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, 8)
+      .map((r) => {
+        const j = jobById.get(r.job_id);
+        if (j) seenJobs.add(j.id);
+        const pro = j ? proById.get(j.pro_id) : undefined;
+        const eqId = j?.equipment_id ?? null;
+        return {
+          key: `r-${r.id}`,
+          href: eqId ? { to: "/home/items/$itemId" as const, params: { itemId: eqId } } : null,
+          onTap: !r.viewed_at ? () => onView(r.id) : undefined,
+          proName: pro?.business ?? "Your pro",
+          what: j?.what_done ?? "New service record",
+          when: formatDate(r.created_at),
+          isNew: !r.viewed_at,
+        };
+      });
+    const fromJobs: FeedRow[] = jobs
+      .filter((j) => !seenJobs.has(j.id))
+      .slice()
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, 6)
+      .map((j) => {
+        const pro = proById.get(j.pro_id);
+        return {
+          key: `j-${j.id}`,
+          href: j.equipment_id
+            ? { to: "/home/items/$itemId" as const, params: { itemId: j.equipment_id } }
+            : null,
+          proName: pro?.business ?? "Your pro",
+          what: j.what_done ?? "Service visit",
+          when: formatDate(j.created_at),
+          isNew: false,
+        };
+      });
+    return [...fromRecords, ...fromJobs].slice(0, 8);
+  }, [records, jobs, jobById, proById, onView]);
+
+  return (
+    <Card className="anim-fade-up d-1">
+      <div className="flex items-center justify-between">
+        <Eyebrow accent="indigo">Recent activity</Eyebrow>
+        <Link
+          to="/home/pros"
+          className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
+        >
+          See all
+        </Link>
+      </div>
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm text-muted">
+          Nothing yet. When your pros log a job, it'll show up here.
+        </p>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {rows.map((row) => {
+            const inner = (
+              <>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="font-semibold text-ink truncate">{row.proName}</div>
+                    {row.isNew && <Pill accent="coral">New</Pill>}
+                  </div>
+                  <div className="text-xs text-muted truncate">
+                    {row.what} · {row.when}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted shrink-0" />
+              </>
+            );
+            const cls =
+              "flex items-center justify-between gap-3 rounded-xl bg-paper border border-line px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper";
+            if (row.href) {
+              return (
+                <Link
+                  key={row.key}
+                  to={row.href.to}
+                  params={row.href.params}
+                  onClick={row.onTap}
+                  className={cls}
+                >
+                  {inner}
+                </Link>
+              );
+            }
+            return (
+              <button key={row.key} type="button" onClick={row.onTap} className={cls}>
+                {inner}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -429,69 +443,6 @@ function AmountDueRow({
         >
           Pay {formatMoney(Number(inv.total))}
         </Btn>
-      </div>
-    </div>
-  );
-}
-
-
-function InvoiceRow({
-  inv,
-  onPaid,
-  onError,
-}: {
-  inv: HomeInvoice;
-  onPaid: () => void | Promise<void>;
-  onError: (msg: string) => void;
-}) {
-  const [busy, setBusy] = useState(false);
-  const canPay = inv.status === "open" && !!inv.pros?.stripe_charges_enabled;
-  async function pay() {
-    setBusy(true);
-    try {
-      const { url } = await startInvoiceCheckout(inv.id);
-      window.location.href = url;
-    } catch (e) {
-      setBusy(false);
-      onError(e instanceof Error ? e.message : "Couldn't start payment.");
-    }
-  }
-  // On return with ?paid=<invoiceId>, refresh the invoice list once.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const q = new URLSearchParams(window.location.search).get("paid");
-    if (q === inv.id) {
-      onPaid();
-      const url = new URL(window.location.href);
-      url.searchParams.delete("paid");
-      window.history.replaceState({}, "", url.toString());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div className="py-3 flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <div className="font-semibold text-ink truncate">{inv.pros?.business ?? "Your pro"}</div>
-        <div className="text-xs text-muted truncate">
-          {inv.items[0]?.description ?? ""}
-          {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <div className="font-bold text-ink tnum">{formatMoney(Number(inv.total))}</div>
-        {inv.status === "paid" ? (
-          <Pill accent="indigo">Paid</Pill>
-        ) : isOverdue(inv) ? (
-          <Pill accent="amber">Overdue</Pill>
-        ) : (
-          <Pill accent="ink">Open</Pill>
-        )}
-        {canPay && (
-          <Btn variant="indigo" size="sm" loading={busy} onClick={pay}>
-            Pay
-          </Btn>
-        )}
       </div>
     </div>
   );

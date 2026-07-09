@@ -46,7 +46,6 @@ const accentTextOnTint: Record<Accent, string> = {
   ink: "text-ink",
 };
 
-
 export function Eyebrow({ accent = "indigo", children }: { accent?: Accent; children: ReactNode }) {
   return <div className={`eyebrow ${accentText[accent]}`}>{children}</div>;
 }
@@ -123,17 +122,16 @@ type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "teal" | "ghost
    --on-accent). */
 const btnStyles: Record<BtnVariant, string> = {
   primary:
-    "bg-ink text-background hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)]",
-  secondary: "bg-soft text-ink hover:bg-line",
+    "bg-ink text-background hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)] active:translate-y-px",
+  secondary:
+    "bg-paper text-ink border border-line hover:border-ink/40 hover:bg-soft active:translate-y-px",
   coral:
-    "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
+    "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)] active:translate-y-px",
   indigo:
-    "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
-  teal:
-    "bg-teal text-(--on-accent) hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)]",
-  ghost: "bg-transparent text-ink hover:bg-soft",
+    "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)] active:translate-y-px",
+  teal: "bg-teal text-(--on-accent) hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)] active:translate-y-px",
+  ghost: "bg-transparent text-ink hover:bg-soft active:translate-y-px",
 };
-
 
 /* Tiny inline spinner for Btn's loading state - transform-only animation. */
 function Spinner({ size = 14 }: { size?: number }) {
@@ -172,14 +170,14 @@ export function Btn({
     size === "lg"
       ? "px-6 py-3 text-base min-h-12"
       : size === "sm"
-        ? "px-3 py-1.5 text-sm"
+        ? "px-3 py-1.5 text-sm min-h-9"
         : "px-4 py-2.5 text-sm min-h-11";
   return (
     <button
       {...rest}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={`pressable relative inline-flex items-center justify-center gap-2 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none ${sizeC} ${btnStyles[variant]} ${className}`}
+      className={`pressable relative inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-[background-color,box-shadow,border-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:translate-y-0 ${sizeC} ${btnStyles[variant]} ${className}`}
     >
       {/* Keep the label in the layout while loading so the button never changes width. */}
       <span
