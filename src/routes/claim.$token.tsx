@@ -157,40 +157,34 @@ function ClaimByToken() {
       return;
     }
     // Login-only token. If this was a pro intent, ensure a pros row exists
-    // and route into the setup step (or straight to /pro if complete).
+    // via SECURITY DEFINER RPC and route into setup (or straight to /pro if complete).
+    // Never call homeowner-side RPCs here — that would create a stray homeowners row.
     if (resp.intent === "pro") {
+      const { error: ensureErr } = await supabase.rpc("pro_ensure", {
+        p_first_name: resp.first_name ?? null,
+      });
+      if (ensureErr) console.error("pro_ensure failed", ensureErr);
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
       if (user) {
-        const { data: pro } = await supabase
-          .from("pros")
-          .select("id,business,trade,service_area")
-          .eq("auth_user_id", user.id)
-          .maybeSingle();
-        if (!pro) {
-          const { error: insErr } = await supabase.from("pros").insert({
-            auth_user_id: user.id,
-            email: resp.email ?? user.email ?? null,
-            owner_first_name: resp.first_name ?? null,
-            plan: "free",
-          });
-          if (insErr) console.error("pro insert failed", insErr);
-          await logEvent(`user:${user.id}`, "pro_signed_up", { via: "magic_link" });
-          setPhase("done");
-          navigate({ to: "/pro/setup" });
-          return;
-        }
-        const complete =
-          !!pro.business?.trim() && !!pro.trade?.trim() && !!pro.service_area?.trim();
-        setPhase("done");
-        navigate({ to: complete ? "/pro" : "/pro/setup" });
-        return;
+        await logEvent(`user:${user.id}`, "pro_signed_in", { via: "magic_link" });
       }
+      const { data: pro } = await supabase
+        .from("pros")
+        .select("business,trade,service_area")
+        .eq("auth_user_id", user?.id ?? "")
+        .maybeSingle();
+      const complete =
+        !!pro?.business?.trim() && !!pro?.trade?.trim() && !!pro?.service_area?.trim();
+      setPhase("done");
+      navigate({ to: complete ? "/pro" : "/pro/setup" });
+      return;
     }
     // Default: homeowner login-only. Session established, straight to /home.
     setPhase("done");
     navigate({ to: "/home" });
   }
+
 
 
   useEffect(() => {

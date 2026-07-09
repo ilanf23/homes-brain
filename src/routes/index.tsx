@@ -433,11 +433,12 @@ function Landing() {
                 I own a home
               </Btn>
             </Link>
-            <Link to="/for-pros" className="block">
+            <Link to="/pro/signup" className="block">
               <Btn variant="indigo" size="lg" className="w-full text-lg py-5">
                 I am a pro
               </Btn>
             </Link>
+
           </div>
           <div className="anim-fade-up d-3 mt-6 flex items-center justify-center lg:justify-start gap-4 text-xs text-muted">
             <span className="flex items-center gap-1.5">
@@ -931,11 +932,12 @@ function Landing() {
                 I own a home
               </Btn>
             </Link>
-            <Link to="/for-pros">
+            <Link to="/pro/signup">
               <Btn variant="indigo" size="lg">
                 I am a pro
               </Btn>
             </Link>
+
           </div>
         </InView>
       </section>
