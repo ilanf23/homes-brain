@@ -16,8 +16,25 @@ function AuthCallback() {
       // Supabase client picks up the tokens from the URL hash on load.
       const { data } = await supabase.auth.getSession();
       const user = data.session?.user;
+      // Read one-tap claim record from ?claim=<recordId> (set by the
+      // invite-claim email's magic link).
+      const params =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const claimRecordId = params?.get("claim") ?? null;
+
       if (!user) {
-        navigate({ to: "/login" });
+        // Magic link expired or already used. Route back to login with the
+        // context so we can offer a fresh one-tap link that still claims
+        // the right record.
+        const hashParams =
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.hash.replace(/^#/, ""))
+            : null;
+        const stashedEmail = hashParams?.get("email") ?? "";
+        const search: Record<string, string> = { note: "expired" };
+        if (claimRecordId) search.claim = claimRecordId;
+        if (stashedEmail) search.email = stashedEmail;
+        navigate({ to: "/login", search });
         return;
       }
 
@@ -72,8 +89,15 @@ function AuthCallback() {
         navigate({ to: "/pro" });
         return;
       }
-      // Default: homeowner. Ensure a homeowner row exists (auto-created on
-      // first authenticated view via get_home_view too).
+      // Default: homeowner. Auto-claim the home linked to the emailed
+      // record so first-tap lands on their own home, not empty state.
+      if (claimRecordId) {
+        const { error: claimErr } = await supabase.rpc("claim_home", {
+          p_record_id: claimRecordId,
+        });
+        if (claimErr) console.error("claim_home failed", claimErr);
+        else await logEvent(`user:${user.id}`, "home_claimed", { record_id: claimRecordId });
+      }
       await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
       navigate({ to: "/home" });
     })();
