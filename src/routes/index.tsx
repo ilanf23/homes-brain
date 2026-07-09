@@ -446,7 +446,7 @@ function Landing() {
               included
             </span>
             <span>·</span>
-            <span>No credit card</span>
+            <span>Set up in minutes</span>
             <span>·</span>
             <span>Free for homeowners, forever</span>
           </div>
