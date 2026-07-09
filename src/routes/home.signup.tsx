@@ -7,8 +7,13 @@ import { logEvent } from "@/lib/hb";
 import { Logo } from "@/components/svg";
 import { AddressField } from "@/components/address-field";
 
+type HomeSignupSearch = { email?: string };
+
 export const Route = createFileRoute("/home/signup")({
   head: () => ({ meta: [{ title: "Create your home account - HomesBrain" }] }),
+  validateSearch: (s: Record<string, unknown>): HomeSignupSearch => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+  }),
   component: HomeownerSignup,
 });
 
@@ -19,8 +24,9 @@ const PENDING_KEY = "hb_pending_signup";
    user in immediately. Google OAuth still works for one-tap signup. */
 function HomeownerSignup() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(true);

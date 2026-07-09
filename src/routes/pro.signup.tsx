@@ -13,8 +13,13 @@ import { Logo, ShieldCheck } from "@/components/svg";
    No password, no business, no trade on this screen — everything is
    deferred into /pro/setup to keep the first ask trivial for the pro. */
 
+type ProSignupSearch = { email?: string };
+
 export const Route = createFileRoute("/pro/signup")({
   head: () => ({ meta: [{ title: "Start free - HomesBrain for pros" }] }),
+  validateSearch: (s: Record<string, unknown>): ProSignupSearch => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+  }),
   component: ProSignup,
 });
 
@@ -23,12 +28,13 @@ function isValidEmail(s: string) {
 }
 
 function ProSignup() {
+  const search = Route.useSearch();
   const [submitting, setSubmitting] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
 
   const canContinue = firstName.trim().length > 0 && isValidEmail(email.trim());
 
