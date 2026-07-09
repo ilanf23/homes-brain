@@ -31,3 +31,9 @@ verify_jwt = false
 # signature against the raw body using STRIPE_WEBHOOK_SECRET.
 [functions.stripe-webhook]
 verify_jwt = false
+
+# claim-exchange validates a single-use, hashed, expiring token from the
+# branded /claim/:token page. The homeowner has no session yet by design;
+# authorization comes from possession of the high-entropy token.
+[functions.claim-exchange]
+verify_jwt = false
