@@ -917,6 +917,7 @@ export type Database = {
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
+      pro_ensure: { Args: { p_first_name?: string }; Returns: string }
       pro_serves_home: { Args: { p_home_id: string }; Returns: boolean }
       pro_upsert_equipment: {
         Args: {
