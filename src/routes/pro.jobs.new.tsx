@@ -18,7 +18,7 @@ import { createInvoice, formatMoney } from "@/lib/invoices";
 
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
-import { scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
+import { extractFromNotes, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 
