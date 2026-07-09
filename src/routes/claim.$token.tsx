@@ -108,7 +108,7 @@ function ClaimByToken() {
   );
 
   async function finalize(resp: ExchangeResp) {
-    if (!resp.hashed_token || !resp.record_id) {
+    if (!resp.hashed_token) {
       setPhase("error");
       setErrorCode(resp.code ?? "error");
       return;
@@ -124,27 +124,34 @@ function ClaimByToken() {
       setErrorCode("send_failed");
       return;
     }
-    const { error: claimErr } = await supabase.rpc("claim_home", {
-      p_record_id: resp.record_id,
-    });
-    if (claimErr && !/already_claimed/i.test(claimErr.message ?? "")) {
-      console.error("claim_home failed", claimErr);
-    }
-    const { data: userData } = await supabase.auth.getUser();
-    if (userData?.user) {
-      await logEvent(`user:${userData.user.id}`, "home_claimed", {
-        record_id: resp.record_id,
-        via: "branded_claim",
+    if (resp.record_id) {
+      const { error: claimErr } = await supabase.rpc("claim_home", {
+        p_record_id: resp.record_id,
       });
+      if (claimErr && !/already_claimed/i.test(claimErr.message ?? "")) {
+        console.error("claim_home failed", claimErr);
+      }
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        await logEvent(`user:${userData.user.id}`, "home_claimed", {
+          record_id: resp.record_id,
+          via: "branded_claim",
+        });
+      }
+      try {
+        sessionStorage.setItem("hb_prompt_secure", "1");
+      } catch {
+        // ignore
+      }
+      setPhase("done");
+      navigate({ to: "/home", search: { welcome: "1" } as never });
+      return;
     }
-    try {
-      sessionStorage.setItem("hb_prompt_secure", "1");
-    } catch {
-      // ignore
-    }
+    // Login-only token: session established, straight to /home.
     setPhase("done");
-    navigate({ to: "/home", search: { welcome: "1" } as never });
+    navigate({ to: "/home" });
   }
+
 
   useEffect(() => {
     let cancelled = false;
