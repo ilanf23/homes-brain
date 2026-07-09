@@ -160,9 +160,8 @@ Deno.serve(async (req) => {
     });
     if (msgErr) console.error("homeowner-login message log failed", msgErr);
 
-    // Do not log the raw token; only success + email.
-    void esc;
     return json({ ok: true });
+
   } catch (e) {
     console.error("homeowner-login error", e);
     return json({ ok: false, code: "error" }, 500);
