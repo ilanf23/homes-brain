@@ -46,10 +46,24 @@ const STEP_COPY: Record<Step, { title: string; sub: string }> = {
 };
 
 
+type Role = "homeowner" | "pro";
+const ROLE_KEY = "hb_login_role";
+
+function readSavedRole(): Role {
+  if (typeof window === "undefined") return "homeowner";
+  try {
+    const v = localStorage.getItem(ROLE_KEY);
+    return v === "pro" ? "pro" : "homeowner";
+  } catch {
+    return "homeowner";
+  }
+}
+
 function Login() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [step, setStep] = useState<Step>("email");
+  const [role, setRoleState] = useState<Role>("homeowner");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -58,6 +72,20 @@ function Login() {
   const [showProPassword, setShowProPassword] = useState(false);
   const claimRecordId = search.claim ?? null;
   const expiredNote = search.note === "expired";
+
+  // Hydrate saved role after mount (SSR-safe).
+  useEffect(() => {
+    setRoleState(readSavedRole());
+  }, []);
+
+  function setRole(next: Role) {
+    setRoleState(next);
+    try {
+      localStorage.setItem(ROLE_KEY, next);
+    } catch {
+      // ignore
+    }
+  }
 
   // Prefill and auto-continue when the callback sent us here after an
   // expired magic link.
@@ -78,32 +106,16 @@ function Login() {
   }
 
   async function continueWithEmail() {
-    setBusy(true);
-    setErr(null);
-    const { data, error } = await supabase.rpc("lookup_login_method", {
-      p_email: email.trim(),
-    });
-    if (error) {
-      setErr(error.message);
-      setBusy(false);
-      return;
-    }
-    if (data === "pro") {
-      // Default to a Resend magic link for pros (no password required).
-      await sendProMagicLink();
-    } else if (data === "homeowner") {
-      // Default to a Resend magic link for homeowners too.
-      await sendMagicLink();
-    } else if (data === "both") {
-      // Either link establishes the session; use the pro link by default
-      // so folks who use both accounts land on /pro after tapping.
+    // The role toggle decides which magic-link function to call. This
+    // lets one email hold BOTH a homeowner and a pro account: whichever
+    // side is missing gets created on the spot after the token exchange.
+    if (role === "pro") {
       await sendProMagicLink();
     } else {
-      setStep("no-account");
-      setBusy(false);
+      await sendMagicLink();
     }
-
   }
+
 
   async function sendProMagicLink() {
     setBusy(true);
