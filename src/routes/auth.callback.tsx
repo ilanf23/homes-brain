@@ -98,7 +98,45 @@ function AuthCallback() {
         }
       }
 
-      if (existingPro) {
+      // Login role stashed by /login's Homeowner|Pro toggle when the user
+      // clicked "Continue with Google". Lets one email hold both account
+      // types: picking the other role here creates that row on the spot.
+      let loginRole: "pro" | "homeowner" | null = null;
+      try {
+        const raw = localStorage.getItem("hb_pending_login_role");
+        if (raw === "pro" || raw === "homeowner") loginRole = raw;
+      } catch {
+        // ignore
+      }
+      if (loginRole) localStorage.removeItem("hb_pending_login_role");
+
+      // If the user chose "Pro" at login and doesn't have a pros row yet,
+      // create one via SECURITY DEFINER RPC. Also honors existing pros.
+      if (loginRole === "pro") {
+        if (!existingPro) {
+          const firstName =
+            user.user_metadata?.full_name?.toString().split(" ")[0] ?? null;
+          const { error: ensureErr } = await supabase.rpc("pro_ensure", {
+            p_first_name: firstName ?? undefined,
+          });
+          if (ensureErr) console.error("pro_ensure failed", ensureErr);
+        }
+        const { data: pro } = await supabase
+          .from("pros")
+          .select("business,trade,service_area")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+        const complete =
+          !!pro?.business?.trim() && !!pro?.trade?.trim() && !!pro?.service_area?.trim();
+        await logEvent(`user:${user.id}`, "pro_signed_in", { via: "google" });
+        navigate({ to: complete ? "/pro" : "/pro/setup" });
+        return;
+      }
+
+      // Default and explicit-homeowner path. If a pros row exists but no
+      // homeowner role was chosen, keep the legacy behavior of routing
+      // pros to their dashboard.
+      if (existingPro && loginRole !== "homeowner") {
         await logEvent(`pro:${existingPro.id}`, "pro_email_verified", {});
         const complete =
           !!existingPro.business?.trim() &&
@@ -107,8 +145,10 @@ function AuthCallback() {
         navigate({ to: complete ? "/pro" : "/pro/setup" });
         return;
       }
-      // Default: homeowner. Auto-claim the home linked to the emailed
-      // record so first-tap lands on their own home, not empty state.
+
+      // Homeowner (explicit or default). Ensure a homeowners row exists.
+      const { error: ensureHoErr } = await supabase.rpc("get_home_view");
+      if (ensureHoErr) console.error("get_home_view failed", ensureHoErr);
       if (claimRecordId) {
         const { error: claimErr } = await supabase.rpc("claim_home", {
           p_record_id: claimRecordId,

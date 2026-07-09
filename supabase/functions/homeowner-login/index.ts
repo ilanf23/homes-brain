@@ -96,12 +96,20 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // We used to reject unknown emails here with "no_account". Now the
+    // homeowner side is also a signup path: one auth user (email) can
+    // hold BOTH a homeowners row AND a pros row, and picking "Homeowner"
+    // at /login for a pro-only or brand-new email should create the
+    // homeowners row on the spot after the token exchange. claim-exchange
+    // + get_home_view do that materialization; we just need to send the
+    // link and tag the token's intent.
     const { data: ho } = await admin
       .from("homeowners")
       .select("id")
       .ilike("email", email)
       .maybeSingle();
-    if (!ho) return json({ ok: false, code: "no_account" });
+    // Kept for logging/telemetry only.
+    void ho;
 
     // Per-address daily cap protects the sending domain reputation.
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
@@ -127,6 +135,7 @@ Deno.serve(async (req) => {
       pro_id: null,
       email,
       expires_at: expiresAt,
+      intent: "homeowner",
     });
     if (tokErr) {
       console.error("homeowner-login token insert failed", tokErr);

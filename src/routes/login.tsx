@@ -46,10 +46,24 @@ const STEP_COPY: Record<Step, { title: string; sub: string }> = {
 };
 
 
+type Role = "homeowner" | "pro";
+const ROLE_KEY = "hb_login_role";
+
+function readSavedRole(): Role {
+  if (typeof window === "undefined") return "homeowner";
+  try {
+    const v = localStorage.getItem(ROLE_KEY);
+    return v === "pro" ? "pro" : "homeowner";
+  } catch {
+    return "homeowner";
+  }
+}
+
 function Login() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [step, setStep] = useState<Step>("email");
+  const [role, setRoleState] = useState<Role>("homeowner");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -58,6 +72,20 @@ function Login() {
   const [showProPassword, setShowProPassword] = useState(false);
   const claimRecordId = search.claim ?? null;
   const expiredNote = search.note === "expired";
+
+  // Hydrate saved role after mount (SSR-safe).
+  useEffect(() => {
+    setRoleState(readSavedRole());
+  }, []);
+
+  function setRole(next: Role) {
+    setRoleState(next);
+    try {
+      localStorage.setItem(ROLE_KEY, next);
+    } catch {
+      // ignore
+    }
+  }
 
   // Prefill and auto-continue when the callback sent us here after an
   // expired magic link.
@@ -78,32 +106,16 @@ function Login() {
   }
 
   async function continueWithEmail() {
-    setBusy(true);
-    setErr(null);
-    const { data, error } = await supabase.rpc("lookup_login_method", {
-      p_email: email.trim(),
-    });
-    if (error) {
-      setErr(error.message);
-      setBusy(false);
-      return;
-    }
-    if (data === "pro") {
-      // Default to a Resend magic link for pros (no password required).
-      await sendProMagicLink();
-    } else if (data === "homeowner") {
-      // Default to a Resend magic link for homeowners too.
-      await sendMagicLink();
-    } else if (data === "both") {
-      // Either link establishes the session; use the pro link by default
-      // so folks who use both accounts land on /pro after tapping.
+    // The role toggle decides which magic-link function to call. This
+    // lets one email hold BOTH a homeowner and a pro account: whichever
+    // side is missing gets created on the spot after the token exchange.
+    if (role === "pro") {
       await sendProMagicLink();
     } else {
-      setStep("no-account");
-      setBusy(false);
+      await sendMagicLink();
     }
-
   }
+
 
   async function sendProMagicLink() {
     setBusy(true);
@@ -252,11 +264,19 @@ function Login() {
       <div className="space-y-4">
         {step === "email" && (
           <>
+            <RoleToggle role={role} onChange={setRole} disabled={busy} />
             <GoogleButton
               busy={busy}
               onClick={async () => {
                 setBusy(true);
                 setErr(null);
+                // Stash the chosen role so /auth/callback creates the
+                // matching account row if it doesn't exist yet.
+                try {
+                  localStorage.setItem("hb_pending_login_role", role);
+                } catch {
+                  // ignore
+                }
                 const result = await lovable.auth.signInWithOAuth("google", {
                   redirect_uri: `${window.location.origin}/auth/callback`,
                 });
@@ -293,7 +313,7 @@ function Login() {
               loading={busy}
               onClick={continueWithEmail}
             >
-              Continue
+              {role === "pro" ? "Continue as pro" : "Continue as homeowner"}
             </Btn>
             <p className="text-center text-xs text-muted">
               New here?{" "}
@@ -307,6 +327,7 @@ function Login() {
             </p>
           </>
         )}
+
 
         {step === "pro-sent" && (
           <>
@@ -674,3 +695,50 @@ function OrDivider() {
     </div>
   );
 }
+
+/* Segmented Homeowner|Pro toggle. Decides which magic-link function to
+   call and which account row to auto-create on the other side of the
+   token exchange, so one email can hold both types. */
+function RoleToggle({
+  role,
+  onChange,
+  disabled,
+}: {
+  role: Role;
+  onChange: (r: Role) => void;
+  disabled?: boolean;
+}) {
+  const base =
+    "flex-1 rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo/40";
+  const active = "bg-white text-ink shadow-sm";
+  const inactive = "text-muted hover:text-ink";
+  return (
+    <div
+      role="tablist"
+      aria-label="Sign in as"
+      className="flex items-center gap-1 rounded-full border border-line bg-soft p-1"
+    >
+      <button
+        type="button"
+        role="tab"
+        aria-selected={role === "homeowner"}
+        disabled={disabled}
+        onClick={() => onChange("homeowner")}
+        className={`${base} ${role === "homeowner" ? active : inactive}`}
+      >
+        Homeowner
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={role === "pro"}
+        disabled={disabled}
+        onClick={() => onChange("pro")}
+        className={`${base} ${role === "pro" ? active : inactive}`}
+      >
+        Pro
+      </button>
+    </div>
+  );
+}
+

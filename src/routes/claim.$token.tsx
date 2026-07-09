@@ -180,7 +180,12 @@ function ClaimByToken() {
       navigate({ to: complete ? "/pro" : "/pro/setup" });
       return;
     }
-    // Default: homeowner login-only. Session established, straight to /home.
+    // Default: homeowner login-only. Ensure a homeowners row exists for
+    // this auth user (works even if the same email already has a pros
+    // row - one auth user can hold both). get_home_view calls
+    // homeowner_ensure under the hood.
+    const { error: ensureHoErr } = await supabase.rpc("get_home_view");
+    if (ensureHoErr) console.error("get_home_view failed", ensureHoErr);
     setPhase("done");
     navigate({ to: "/home" });
   }
