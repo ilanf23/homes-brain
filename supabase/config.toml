@@ -48,6 +48,12 @@ verify_jwt = false
 [functions.homeowner-login]
 verify_jwt = false
 
+# pro-login mirrors homeowner-login but is also the signup path for pros:
+# it stores intent='pro' + first_name on the claim token so claim-exchange
+# can create the pros row on first tap. Emails only via Resend.
+[functions.pro-login]
+verify_jwt = false
+
 # password-reset routes forgot-password emails through Resend so they
 # actually deliver. Silent-success on unknown emails to avoid leaking
 # account existence.
