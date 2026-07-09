@@ -32,6 +32,7 @@ import { Route as ProSetupRouteImport } from './routes/pro.setup'
 import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
+import { Route as ProPlanRouteImport } from './routes/pro.plan'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
 import { Route as ProSlugRouteImport } from './routes/pro.$slug'
@@ -169,6 +170,11 @@ const ProReviewsRoute = ProReviewsRouteImport.update({
 const ProReferralRoute = ProReferralRouteImport.update({
   id: '/pro/referral',
   path: '/pro/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProPlanRoute = ProPlanRouteImport.update({
+  id: '/pro/plan',
+  path: '/pro/plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProOfficeRoute = ProOfficeRouteImport.update({
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
+  '/pro/plan': typeof ProPlanRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
+  '/pro/plan': typeof ProPlanRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/pro/$slug': typeof ProSlugRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
+  '/pro/plan': typeof ProPlanRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -461,6 +470,7 @@ export interface FileRouteTypes {
     | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
+    | '/pro/plan'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -509,6 +519,7 @@ export interface FileRouteTypes {
     | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
+    | '/pro/plan'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -557,6 +568,7 @@ export interface FileRouteTypes {
     | '/pro/$slug'
     | '/pro/due'
     | '/pro/office'
+    | '/pro/plan'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -606,6 +618,7 @@ export interface RootRouteChildren {
   ProSlugRoute: typeof ProSlugRoute
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
+  ProPlanRoute: typeof ProPlanRoute
   ProReferralRoute: typeof ProReferralRoute
   ProReviewsRoute: typeof ProReviewsRoute
   ProSettingsRoute: typeof ProSettingsRoute
@@ -789,6 +802,13 @@ declare module '@tanstack/react-router' {
       path: '/pro/referral'
       fullPath: '/pro/referral'
       preLoaderRoute: typeof ProReferralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/plan': {
+      id: '/pro/plan'
+      path: '/pro/plan'
+      fullPath: '/pro/plan'
+      preLoaderRoute: typeof ProPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro/office': {
@@ -982,6 +1002,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProSlugRoute: ProSlugRoute,
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
+  ProPlanRoute: ProPlanRoute,
   ProReferralRoute: ProReferralRoute,
   ProReviewsRoute: ProReviewsRoute,
   ProSettingsRoute: ProSettingsRoute,
