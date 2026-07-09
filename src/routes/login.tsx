@@ -344,6 +344,15 @@ function Login() {
             >
               Sign in
             </Btn>
+            <Btn
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              loading={busy}
+              onClick={sendMagicLink}
+            >
+              Email me a sign-in link instead
+            </Btn>
             <div className="text-center">
               <button
                 type="button"
