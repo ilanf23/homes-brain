@@ -429,12 +429,12 @@ function Landing() {
           </p>
           <div className="anim-fade-up d-2 mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto lg:mx-0">
             <Link to="/home/signup" className="block">
-              <Btn variant="indigo" size="lg" className="w-full text-lg py-5">
+              <Btn variant="indigo" size="lg" className="w-full">
                 I own a home
               </Btn>
             </Link>
             <Link to="/pro/signup" className="block">
-              <Btn variant="indigo" size="lg" className="w-full text-lg py-5">
+              <Btn variant="indigo" size="lg" className="w-full">
                 I am a pro
               </Btn>
             </Link>
