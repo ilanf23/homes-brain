@@ -21,6 +21,18 @@ import { AddressField } from "@/components/address-field";
 import { extractFromNotes, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
+import { Select } from "@/lib/ui";
+import {
+  fetchTradeFields,
+  fetchTrades,
+  type TradeField,
+  type TradeOption,
+} from "@/lib/trade-fields";
+import {
+  cleanAttributes,
+  TradeFieldInputs,
+  type AttributeValues,
+} from "@/components/trade-field-inputs";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
@@ -47,6 +59,7 @@ type ApplianceOpt = {
   make: string | null;
   model: string | null;
   warranty_until: string | null;
+  attributes: Record<string, string | boolean> | null;
   last_job_at: string | null;
   job_count: number;
 };
@@ -175,6 +188,18 @@ function NewJob() {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>(""); // "" = add new
   const [editDetails, setEditDetails] = useState(false);
   const [applianceHistory, setApplianceHistory] = useState<JobHistoryRow[]>([]);
+
+  // Trade-driven dynamic equipment fields. `activeTrade` defaults to the pro's
+  // trade but can be overridden per job (e.g. a plumber logging a water-treatment
+  // unit). Fields are fetched from `trade_fields` in the database so admins can
+  // change the form without a deploy. Answers live in `attrValues` and are
+  // written to `equipment.attributes` on save.
+  const [trades, setTrades] = useState<TradeOption[]>([]);
+  const [activeTrade, setActiveTrade] = useState<string>("");
+  const [tradeFields, setTradeFields] = useState<TradeField[]>([]);
+  const [attrValues, setAttrValues] = useState<AttributeValues>({});
+  const setAttr = (key: string, value: string | boolean) =>
+    setAttrValues((prev) => ({ ...prev, [key]: value }));
 
   // Nameplate scan
   const fileRef = useRef<HTMLInputElement>(null);
@@ -345,7 +370,9 @@ function NewJob() {
     (async () => {
       const { data: eq } = await supabase
         .from("equipment")
-        .select("id,type,make,model,warranty_until,jobs(created_at)")
+        // attributes column added by migration 2026-07-09; cast in the map
+        // below until the Lovable-generated Database types refresh.
+        .select("id,type,make,model,warranty_until,attributes,jobs(created_at)")
         .eq("home_id", homeId)
         .order("created_at", { ascending: false });
       const rows = (eq ?? []).map((r) => {
@@ -355,12 +382,17 @@ function NewJob() {
             .map((j) => j.created_at)
             .sort()
             .at(-1) ?? null;
+        const attrs = (r as { attributes?: unknown }).attributes;
         return {
           id: r.id as string,
           type: (r.type as string | null) ?? null,
           make: (r.make as string | null) ?? null,
           model: (r.model as string | null) ?? null,
           warranty_until: (r.warranty_until as string | null) ?? null,
+          attributes:
+            attrs && typeof attrs === "object"
+              ? (attrs as Record<string, string | boolean>)
+              : null,
           last_job_at: last,
           job_count: jobs.length,
         } satisfies ApplianceOpt;
@@ -385,6 +417,9 @@ function NewJob() {
       setEqMake(app.make ?? "");
       setEqModel(app.model ?? "");
       setWarrantyUntil(app.warranty_until ?? "");
+      // Prefill trade-specific attributes so "Correct unit details" opens with
+      // the same answers the pro captured last time.
+      setAttrValues((app.attributes ?? {}) as AttributeValues);
     }
     (async () => {
       const { data: js } = await supabase
@@ -396,6 +431,42 @@ function NewJob() {
       setApplianceHistory((js ?? []) as JobHistoryRow[]);
     })();
   }, [selectedEquipmentId, homeAppliances]);
+
+  /* Load the trade catalog once, and default the active trade to the pro's own
+     trade. Editable per job so a plumber can log a water-treatment unit, etc. */
+  useEffect(() => {
+    let cancelled = false;
+    fetchTrades().then((t) => {
+      if (cancelled) return;
+      setTrades(t);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTrade || !proTrade) return;
+    setActiveTrade(proTrade);
+  }, [proTrade, activeTrade]);
+
+  /* Fetch the fields for whichever trade is active. Answers already collected
+     for keys that no longer exist stay in state (harmless) but only rendered
+     fields show. */
+  useEffect(() => {
+    if (!activeTrade) {
+      setTradeFields([]);
+      return;
+    }
+    let cancelled = false;
+    fetchTradeFields(activeTrade).then((f) => {
+      if (cancelled) return;
+      setTradeFields(f);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTrade]);
 
   async function onNameplate(file: File) {
     setScanState("scanning");
@@ -660,9 +731,13 @@ function NewJob() {
     // Equipment: reuse an existing appliance on this home when the pro picked
     // one (so a repeat visit builds a real service history), otherwise insert.
     let equipmentId: string | undefined;
+    const cleanedAttrs = cleanAttributes(attrValues);
+    const hasAttrs = Object.keys(cleanedAttrs).length > 0;
     if (selectedEquipmentId) {
       equipmentId = selectedEquipmentId;
       if (editDetails) {
+        // attributes column shipped in migration 2026-07-09; cast the payload
+        // until the Lovable-generated Database types refresh.
         await supabase
           .from("equipment")
           .update({
@@ -672,10 +747,11 @@ function NewJob() {
             warranty_until: warrantyUntil || null,
             recall_status: recall.status,
             recall_checked_at: recall.checked_at,
-          })
+            attributes: cleanedAttrs,
+          } as never)
           .eq("id", selectedEquipmentId);
       }
-    } else if (eqType || eqMake || eqModel) {
+    } else if (eqType || eqMake || eqModel || hasAttrs) {
       const { data: eq } = await supabase
         .from("equipment")
         .insert({
@@ -687,7 +763,8 @@ function NewJob() {
           recall_status: recall.status,
           recall_checked_at: recall.checked_at,
           source: "pro",
-        })
+          attributes: cleanedAttrs,
+        } as never)
         .select("id")
         .single();
       equipmentId = eq?.id;
@@ -833,6 +910,8 @@ function NewJob() {
     setEditDetails(false);
     setHomeAppliances([]);
     setApplianceHistory([]);
+    setAttrValues({});
+    setActiveTrade(proTrade);
     if (scanPreview) URL.revokeObjectURL(scanPreview);
     setScanPreview(null);
     setScanState("idle");
@@ -863,28 +942,57 @@ function NewJob() {
   // Manual unit fields, shared by the repeat-home picker (shown when adding a
   // new unit or correcting one) and the new-home drawer (always shown there,
   // since a first-visit home has no unit on file yet to pick).
+  // Trade picker + common unit fields + dynamic per-trade fields, driven by
+  // the `trades` / `trade_fields` config tables so admins can change the form
+  // without a code deploy.
+  const tradePicker = trades.length > 0 && (
+    <Field
+      label="Trade"
+      hint="Defaults to your trade. Switch it if this job is a different category."
+    >
+      <Select value={activeTrade} onChange={(e) => setActiveTrade(e.target.value)}>
+        {trades.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.label}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  );
   const unitFieldsGrid = (
-    <div className="grid grid-cols-2 gap-3">
-      <Field label="Unit type">
-        <Input value={eqType} onChange={(e) => setEqType(e.target.value)} placeholder="Softener" />
-      </Field>
-      <Field label="Make">
-        <Input value={eqMake} onChange={(e) => setEqMake(e.target.value)} placeholder="EcoWater" />
-      </Field>
-      <Field label="Model">
-        <Input
-          value={eqModel}
-          onChange={(e) => setEqModel(e.target.value)}
-          placeholder="EVR3700R30"
-        />
-      </Field>
-      <Field label="Warranty until">
-        <Input
-          type="date"
-          value={warrantyUntil}
-          onChange={(e) => setWarrantyUntil(e.target.value)}
-        />
-      </Field>
+    <div className="space-y-3">
+      {tradePicker}
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Unit type">
+          <Input
+            value={eqType}
+            onChange={(e) => setEqType(e.target.value)}
+            placeholder="Softener"
+          />
+        </Field>
+        <Field label="Make">
+          <Input
+            value={eqMake}
+            onChange={(e) => setEqMake(e.target.value)}
+            placeholder="EcoWater"
+          />
+        </Field>
+        <Field label="Model">
+          <Input
+            value={eqModel}
+            onChange={(e) => setEqModel(e.target.value)}
+            placeholder="EVR3700R30"
+          />
+        </Field>
+        <Field label="Warranty until">
+          <Input
+            type="date"
+            value={warrantyUntil}
+            onChange={(e) => setWarrantyUntil(e.target.value)}
+          />
+        </Field>
+      </div>
+      <TradeFieldInputs fields={tradeFields} values={attrValues} onChange={setAttr} />
     </div>
   );
   const nextServiceField = (
@@ -892,6 +1000,7 @@ function NewJob() {
       <Input type="date" value={nextService} onChange={(e) => setNextService(e.target.value)} />
     </Field>
   );
+
 
   if (!proId) {
     return (

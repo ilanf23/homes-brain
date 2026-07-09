@@ -128,6 +128,7 @@ export type Database = {
       }
       equipment: {
         Row: {
+          attributes: Json
           created_at: string
           home_id: string
           id: string
@@ -143,6 +144,7 @@ export type Database = {
           warranty_until: string | null
         }
         Insert: {
+          attributes?: Json
           created_at?: string
           home_id: string
           id?: string
@@ -158,6 +160,7 @@ export type Database = {
           warranty_until?: string | null
         }
         Update: {
+          attributes?: Json
           created_at?: string
           home_id?: string
           id?: string
@@ -748,6 +751,83 @@ export type Database = {
           pro_slug?: string
           source?: string | null
           trade?: string | null
+        }
+        Relationships: []
+      }
+      trade_fields: {
+        Row: {
+          active: boolean
+          help: string | null
+          id: string
+          input_type: string
+          key: string
+          label: string
+          options: Json | null
+          required: boolean
+          sort_order: number
+          trade_id: string
+          unit: string | null
+        }
+        Insert: {
+          active?: boolean
+          help?: string | null
+          id?: string
+          input_type: string
+          key: string
+          label: string
+          options?: Json | null
+          required?: boolean
+          sort_order?: number
+          trade_id: string
+          unit?: string | null
+        }
+        Update: {
+          active?: boolean
+          help?: string | null
+          id?: string
+          input_type?: string
+          key?: string
+          label?: string
+          options?: Json | null
+          required?: boolean
+          sort_order?: number
+          trade_id?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_fields_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trades: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string | null
+          id: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          label?: string
+          sort_order?: number
         }
         Relationships: []
       }

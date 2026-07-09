@@ -6,6 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import {
+  fetchAllTradeFields,
+  formatAttrValue,
+  humanizeKey,
+  type TradeField,
+} from "@/lib/trade-fields";
 
 export const Route = createFileRoute("/home/items/$itemId")({
   head: () => ({ meta: [{ title: "Item - HomesBrain" }] }),
@@ -24,6 +30,7 @@ type EquipmentRow = {
   recall_checked_at: string | null;
   source: string;
   created_at: string;
+  attributes: Record<string, string | boolean> | null;
 };
 type JobRow = { id: string; what_done: string; created_at: string; pro_id: string };
 type ProRow = { id: string; business: string; trade: string };
@@ -50,7 +57,46 @@ function ItemDetail() {
     if (!guardLoading && !home) navigate({ to: "/home" });
   }, [guardLoading, home, navigate]);
 
+  // Fetch all trade-field defs so we can label attribute keys with the config's
+  // human labels/units. Fallback to a humanized key when a def isn't found.
+  const [fieldDefs, setFieldDefs] = useState<Map<string, TradeField>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    fetchAllTradeFields().then((all) => {
+      if (cancelled) return;
+      setFieldDefs(new Map(all.map((f) => [`${f.trade_id}:${f.key}`, f])));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
+
+  const attributeEntries = useMemo(() => {
+    const attrs = item?.attributes;
+    if (!attrs || typeof attrs !== "object") return [] as Array<{ key: string; label: string; value: string }>;
+    const out: Array<{ key: string; label: string; value: string; sort: number }> = [];
+    for (const [key, value] of Object.entries(attrs)) {
+      if (value === null || value === undefined || value === "") continue;
+      // Match by key across any trade (attributes are stored without a trade id).
+      let def: TradeField | undefined;
+      for (const f of fieldDefs.values()) {
+        if (f.key === key) {
+          def = f;
+          break;
+        }
+      }
+      out.push({
+        key,
+        label: def?.label ?? humanizeKey(key),
+        value: formatAttrValue(value, def),
+        sort: def?.sort_order ?? 999,
+      });
+    }
+    return out.sort((a, b) => a.sort - b.sort);
+  }, [item, fieldDefs]);
+
 
   if (guardLoading) return <PageLoader label="Loading item" />;
   if (!home) return <PageLoader label="Setting up your home" />;
@@ -112,6 +158,22 @@ function ItemDetail() {
             />
           </div>
         </Card>
+
+        {/* Trade-specific details from equipment.attributes. Labels/units come
+            from the trade_fields config; unknown keys fall back to a humanized
+            version so nothing goes missing. */}
+        {attributeEntries.length > 0 && (
+          <Card className="anim-fade-up d-2">
+            <Eyebrow accent="indigo">Details</Eyebrow>
+            <div className="mt-2">
+              {attributeEntries.map((e) => (
+                <KV key={e.key} k={e.label} v={e.value} />
+              ))}
+            </div>
+          </Card>
+        )}
+
+
 
         {/* Recall status */}
         <Card className="anim-fade-up d-2">
