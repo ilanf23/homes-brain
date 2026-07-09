@@ -60,7 +60,7 @@ function RecordPreview({ preview }: { preview: Preview }) {
   const eq = preview.equipment;
   const eqLine = [eq?.type, eq?.make, eq?.model].filter(Boolean).join(" ");
   return (
-    <Card accent="indigo">
+    <Card>
       <div className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo">
         New service record
       </div>
@@ -244,7 +244,7 @@ function ClaimByToken() {
                   placeholder="you@example.com"
                 />
               </Field>
-              <Btn type="submit" accent="indigo" disabled={submitting}>
+              <Btn type="submit" variant="indigo" disabled={submitting}>
                 {submitting ? "Opening…" : "Claim my home record"}
               </Btn>
             </form>
@@ -252,7 +252,7 @@ function ClaimByToken() {
         )}
 
         {phase === "error" && (
-          <Card className="mt-6" accent="amber">
+          <Card className="mt-6">
             <h2 className="text-lg font-extrabold tracking-tight text-ink">
               {errorCode === "expired"
                 ? "This link has expired"
@@ -266,7 +266,7 @@ function ClaimByToken() {
                 : "Links expire after 7 days for security. Get a fresh one and we'll still take you straight to your record."}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Btn accent="indigo" onClick={requestFreshLink}>
+              <Btn variant="indigo" onClick={requestFreshLink}>
                 Send a fresh link
               </Btn>
             </div>
