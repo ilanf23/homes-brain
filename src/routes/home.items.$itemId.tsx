@@ -6,6 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import {
+  fetchAllTradeFields,
+  formatAttrValue,
+  humanizeKey,
+  type TradeField,
+} from "@/lib/trade-fields";
 
 export const Route = createFileRoute("/home/items/$itemId")({
   head: () => ({ meta: [{ title: "Item - HomesBrain" }] }),
