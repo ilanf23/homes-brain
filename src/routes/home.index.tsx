@@ -106,6 +106,22 @@ function HomeOverview() {
         sub="Your pros write the record. You own it."
       />
 
+      {showSetPassword && (
+        <SetPasswordCard
+          onDone={(msg) => {
+            try {
+              sessionStorage.removeItem("hb_prompt_secure");
+            } catch {
+              // ignore
+            }
+            setShowSetPassword(false);
+            if (msg) setToast(msg);
+          }}
+        />
+      )}
+
+
+
       {openInvoices.length > 0 && (
         <Card className="anim-fade-up mb-6 border-indigo/30">
           <Eyebrow accent="indigo">Amount due</Eyebrow>
