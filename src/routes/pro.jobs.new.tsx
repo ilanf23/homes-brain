@@ -940,28 +940,57 @@ function NewJob() {
   // Manual unit fields, shared by the repeat-home picker (shown when adding a
   // new unit or correcting one) and the new-home drawer (always shown there,
   // since a first-visit home has no unit on file yet to pick).
+  // Trade picker + common unit fields + dynamic per-trade fields, driven by
+  // the `trades` / `trade_fields` config tables so admins can change the form
+  // without a code deploy.
+  const tradePicker = trades.length > 0 && (
+    <Field
+      label="Trade"
+      hint="Defaults to your trade. Switch it if this job is a different category."
+    >
+      <Select value={activeTrade} onChange={(e) => setActiveTrade(e.target.value)}>
+        {trades.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.label}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  );
   const unitFieldsGrid = (
-    <div className="grid grid-cols-2 gap-3">
-      <Field label="Unit type">
-        <Input value={eqType} onChange={(e) => setEqType(e.target.value)} placeholder="Softener" />
-      </Field>
-      <Field label="Make">
-        <Input value={eqMake} onChange={(e) => setEqMake(e.target.value)} placeholder="EcoWater" />
-      </Field>
-      <Field label="Model">
-        <Input
-          value={eqModel}
-          onChange={(e) => setEqModel(e.target.value)}
-          placeholder="EVR3700R30"
-        />
-      </Field>
-      <Field label="Warranty until">
-        <Input
-          type="date"
-          value={warrantyUntil}
-          onChange={(e) => setWarrantyUntil(e.target.value)}
-        />
-      </Field>
+    <div className="space-y-3">
+      {tradePicker}
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Unit type">
+          <Input
+            value={eqType}
+            onChange={(e) => setEqType(e.target.value)}
+            placeholder="Softener"
+          />
+        </Field>
+        <Field label="Make">
+          <Input
+            value={eqMake}
+            onChange={(e) => setEqMake(e.target.value)}
+            placeholder="EcoWater"
+          />
+        </Field>
+        <Field label="Model">
+          <Input
+            value={eqModel}
+            onChange={(e) => setEqModel(e.target.value)}
+            placeholder="EVR3700R30"
+          />
+        </Field>
+        <Field label="Warranty until">
+          <Input
+            type="date"
+            value={warrantyUntil}
+            onChange={(e) => setWarrantyUntil(e.target.value)}
+          />
+        </Field>
+      </div>
+      <TradeFieldInputs fields={tradeFields} values={attrValues} onChange={setAttr} />
     </div>
   );
   const nextServiceField = (
@@ -969,6 +998,7 @@ function NewJob() {
       <Input type="date" value={nextService} onChange={(e) => setNextService(e.target.value)} />
     </Field>
   );
+
 
   if (!proId) {
     return (
