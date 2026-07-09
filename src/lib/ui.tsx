@@ -123,16 +123,18 @@ type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "teal" | "ghost
    --on-accent). */
 const btnStyles: Record<BtnVariant, string> = {
   primary:
-    "bg-ink text-background hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)]",
-  secondary: "bg-soft text-ink hover:bg-line",
+    "bg-ink text-background hover:bg-ink/85 hover:shadow-[0_10px_24px_-12px_rgba(22,22,15,0.5)] active:translate-y-px",
+  secondary:
+    "bg-paper text-ink border border-line hover:border-ink/40 hover:bg-soft active:translate-y-px",
   coral:
-    "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)]",
+    "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)] active:translate-y-px",
   indigo:
-    "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)]",
+    "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)] active:translate-y-px",
   teal:
-    "bg-teal text-(--on-accent) hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)]",
-  ghost: "bg-transparent text-ink hover:bg-soft",
+    "bg-teal text-(--on-accent) hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)] active:translate-y-px",
+  ghost: "bg-transparent text-ink hover:bg-soft active:translate-y-px",
 };
+
 
 
 /* Tiny inline spinner for Btn's loading state - transform-only animation. */
