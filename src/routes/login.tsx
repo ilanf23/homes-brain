@@ -25,6 +25,7 @@ export const Route = createFileRoute("/login")({
 type Step =
   | "email"
   | "pro-password"
+  | "ho-password"
   | "ho-sent"
   | "no-account"
   | "choose-role"
@@ -34,12 +35,14 @@ type Step =
 const STEP_COPY: Record<Step, { title: string; sub: string }> = {
   email: { title: "Welcome back", sub: "Enter your email and we'll take it from there." },
   "pro-password": { title: "Welcome back", sub: "Enter your password to sign in." },
+  "ho-password": { title: "Welcome back", sub: "Enter your password to sign in." },
   "ho-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
   "no-account": { title: "No account yet", sub: "We couldn't find an account for that email." },
   "choose-role": { title: "Two accounts, one email", sub: "How do you want to sign in?" },
   forgot: { title: "Reset your password", sub: "We'll email you a reset link." },
   "forgot-sent": { title: "Check your email", sub: "Your reset link is on the way." },
 };
+
 
 function Login() {
   const navigate = useNavigate();
@@ -85,7 +88,8 @@ function Login() {
       setStep("pro-password");
       setBusy(false);
     } else if (data === "homeowner") {
-      await sendMagicLink();
+      setStep("ho-password");
+      setBusy(false);
     } else if (data === "both") {
       setStep("choose-role");
       setBusy(false);
@@ -94,6 +98,7 @@ function Login() {
       setBusy(false);
     }
   }
+
 
   async function sendMagicLink() {
     setBusy(true);
@@ -300,6 +305,50 @@ function Login() {
             </div>
           </>
         )}
+
+        {step === "ho-password" && (
+          <>
+            <EmailSummary email={email} onChange={resetToEmail} />
+            <Field label="Password">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                autoComplete="current-password"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && password && !busy) homeownerPasswordLogin();
+                }}
+              />
+            </Field>
+            <ErrorRow err={err} />
+            <Btn
+              variant="indigo"
+              size="lg"
+              className="w-full"
+              disabled={!password}
+              loading={busy}
+              onClick={homeownerPasswordLogin}
+            >
+              Sign in
+            </Btn>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("forgot");
+                  setErr(null);
+                }}
+                className="text-xs font-semibold text-indigo hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          </>
+        )}
+
+
 
         {step === "ho-sent" && (
           <>
