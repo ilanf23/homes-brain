@@ -51,6 +51,7 @@ import { Route as ProRecordsRecordIdRouteImport } from './routes/pro.records.$re
 import { Route as ProJobsNewRouteImport } from './routes/pro.jobs.new'
 import { Route as ProInvoicesNewRouteImport } from './routes/pro.invoices.new'
 import { Route as ProCustomersCustomerIdRouteImport } from './routes/pro.customers.$customerId'
+import { Route as HomeRecordsRecordIdRouteImport } from './routes/home.records.$recordId'
 import { Route as HomeItemsItemIdRouteImport } from './routes/home.items.$itemId'
 import { Route as ProCityTradeBusinessRouteImport } from './routes/pro.$city.$trade.$business'
 
@@ -264,6 +265,11 @@ const ProCustomersCustomerIdRoute = ProCustomersCustomerIdRouteImport.update({
   path: '/pro/customers/$customerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeRecordsRecordIdRoute = HomeRecordsRecordIdRouteImport.update({
+  id: '/home/records/$recordId',
+  path: '/home/records/$recordId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeItemsItemIdRoute = HomeItemsItemIdRouteImport.update({
   id: '/home/items/$itemId',
   path: '/home/items/$itemId',
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/pro/': typeof ProIndexRoute
   '/pros/': typeof ProsIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
+  '/home/records/$recordId': typeof HomeRecordsRecordIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/invoices/new': typeof ProInvoicesNewRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/pro': typeof ProIndexRoute
   '/pros': typeof ProsIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
+  '/home/records/$recordId': typeof HomeRecordsRecordIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/invoices/new': typeof ProInvoicesNewRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/pro/': typeof ProIndexRoute
   '/pros/': typeof ProsIndexRoute
   '/home/items/$itemId': typeof HomeItemsItemIdRoute
+  '/home/records/$recordId': typeof HomeRecordsRecordIdRoute
   '/pro/customers/$customerId': typeof ProCustomersCustomerIdRoute
   '/pro/invoices/new': typeof ProInvoicesNewRoute
   '/pro/jobs/new': typeof ProJobsNewRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
     | '/pro/'
     | '/pros/'
     | '/home/items/$itemId'
+    | '/home/records/$recordId'
     | '/pro/customers/$customerId'
     | '/pro/invoices/new'
     | '/pro/jobs/new'
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/pros'
     | '/home/items/$itemId'
+    | '/home/records/$recordId'
     | '/pro/customers/$customerId'
     | '/pro/invoices/new'
     | '/pro/jobs/new'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/pro/'
     | '/pros/'
     | '/home/items/$itemId'
+    | '/home/records/$recordId'
     | '/pro/customers/$customerId'
     | '/pro/invoices/new'
     | '/pro/jobs/new'
@@ -592,6 +604,7 @@ export interface RootRouteChildren {
   ProIndexRoute: typeof ProIndexRoute
   ProsIndexRoute: typeof ProsIndexRoute
   HomeItemsItemIdRoute: typeof HomeItemsItemIdRoute
+  HomeRecordsRecordIdRoute: typeof HomeRecordsRecordIdRoute
   ProCustomersCustomerIdRoute: typeof ProCustomersCustomerIdRoute
   ProInvoicesNewRoute: typeof ProInvoicesNewRoute
   ProJobsNewRoute: typeof ProJobsNewRoute
@@ -898,6 +911,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProCustomersCustomerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/records/$recordId': {
+      id: '/home/records/$recordId'
+      path: '/home/records/$recordId'
+      fullPath: '/home/records/$recordId'
+      preLoaderRoute: typeof HomeRecordsRecordIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home/items/$itemId': {
       id: '/home/items/$itemId'
       path: '/home/items/$itemId'
@@ -952,6 +972,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProIndexRoute: ProIndexRoute,
   ProsIndexRoute: ProsIndexRoute,
   HomeItemsItemIdRoute: HomeItemsItemIdRoute,
+  HomeRecordsRecordIdRoute: HomeRecordsRecordIdRoute,
   ProCustomersCustomerIdRoute: ProCustomersCustomerIdRoute,
   ProInvoicesNewRoute: ProInvoicesNewRoute,
   ProJobsNewRoute: ProJobsNewRoute,
