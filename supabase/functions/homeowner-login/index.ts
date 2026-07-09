@@ -37,11 +37,8 @@ function loginOrigin(raw: unknown): string {
   return ALLOWED_ORIGINS.some((re) => re.test(raw)) ? raw : FALLBACK_ORIGIN;
 }
 
-function esc(s: string) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 function base64url(bytes: Uint8Array) {
+
   let s = "";
   for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
@@ -53,7 +50,8 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 function loginEmail(ctaUrl: string) {
-  const url = esc(ctaUrl);
+  const url = ctaUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+
   const text = [
     "Tap to sign in to your HomesBrain home.",
     "",
