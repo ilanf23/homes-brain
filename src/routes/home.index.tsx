@@ -297,7 +297,10 @@ function HomeOverview() {
    Unseen records get a coral "New" pill and fire mark_record_viewed on tap. */
 type FeedRow = {
   key: string;
-  href: { to: "/home/items/$itemId"; params: { itemId: string } } | null;
+  href:
+    | { to: "/home/records/$recordId"; params: { recordId: string } }
+    | { to: "/home/items/$itemId"; params: { itemId: string } }
+    | null;
   onTap?: () => void | Promise<void>;
   proName: string;
   what: string;
@@ -328,10 +331,9 @@ function ActivityCard({
         const j = jobById.get(r.job_id);
         if (j) seenJobs.add(j.id);
         const pro = j ? proById.get(j.pro_id) : undefined;
-        const eqId = j?.equipment_id ?? null;
         return {
           key: `r-${r.id}`,
-          href: eqId ? { to: "/home/items/$itemId" as const, params: { itemId: eqId } } : null,
+          href: { to: "/home/records/$recordId" as const, params: { recordId: r.id } },
           onTap: !r.viewed_at ? () => onView(r.id) : undefined,
           proName: pro?.business ?? "Your pro",
           what: j?.what_done ?? "New service record",
@@ -359,6 +361,7 @@ function ActivityCard({
       });
     return [...fromRecords, ...fromJobs].slice(0, 8);
   }, [records, jobs, jobById, proById, onView]);
+
 
   return (
     <Card className="anim-fade-up d-1">
