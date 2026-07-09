@@ -264,11 +264,19 @@ function Login() {
       <div className="space-y-4">
         {step === "email" && (
           <>
+            <RoleToggle role={role} onChange={setRole} disabled={busy} />
             <GoogleButton
               busy={busy}
               onClick={async () => {
                 setBusy(true);
                 setErr(null);
+                // Stash the chosen role so /auth/callback creates the
+                // matching account row if it doesn't exist yet.
+                try {
+                  localStorage.setItem("hb_pending_login_role", role);
+                } catch {
+                  // ignore
+                }
                 const result = await lovable.auth.signInWithOAuth("google", {
                   redirect_uri: `${window.location.origin}/auth/callback`,
                 });
@@ -305,7 +313,7 @@ function Login() {
               loading={busy}
               onClick={continueWithEmail}
             >
-              Continue
+              {role === "pro" ? "Continue as pro" : "Continue as homeowner"}
             </Btn>
             <p className="text-center text-xs text-muted">
               New here?{" "}
@@ -319,6 +327,7 @@ function Login() {
             </p>
           </>
         )}
+
 
         {step === "pro-sent" && (
           <>
