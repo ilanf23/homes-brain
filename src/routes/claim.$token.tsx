@@ -161,7 +161,7 @@ function ClaimByToken() {
     // Never call homeowner-side RPCs here — that would create a stray homeowners row.
     if (resp.intent === "pro") {
       const { error: ensureErr } = await supabase.rpc("pro_ensure", {
-        p_first_name: resp.first_name ?? null,
+        p_first_name: resp.first_name ?? undefined,
       });
       if (ensureErr) console.error("pro_ensure failed", ensureErr);
       const { data: userData } = await supabase.auth.getUser();
