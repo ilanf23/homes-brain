@@ -59,6 +59,7 @@ type ApplianceOpt = {
   make: string | null;
   model: string | null;
   warranty_until: string | null;
+  attributes: Record<string, string | boolean> | null;
   last_job_at: string | null;
   job_count: number;
 };
