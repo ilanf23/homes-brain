@@ -46,9 +46,23 @@ function RecordDetail() {
     [job, pros],
   );
 
+  const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
+  const [payErr, setPayErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!home) return;
+    (async () => setInvoices(await listInvoicesForHome(home.id)))();
+  }, [home]);
+
+  const invoice = useMemo(
+    () => invoices.find((i) => i.job_id === record?.job_id) ?? null,
+    [invoices, record],
+  );
+
   useEffect(() => {
     if (!loading && !home) navigate({ to: "/home" });
   }, [loading, home, navigate]);
+
 
   if (loading) return <PageLoader label="Loading record" />;
   if (!home) return <PageLoader label="Setting up your home" />;
