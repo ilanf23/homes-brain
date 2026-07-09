@@ -417,6 +417,9 @@ function NewJob() {
       setEqMake(app.make ?? "");
       setEqModel(app.model ?? "");
       setWarrantyUntil(app.warranty_until ?? "");
+      // Prefill trade-specific attributes so "Correct unit details" opens with
+      // the same answers the pro captured last time.
+      setAttrValues((app.attributes ?? {}) as AttributeValues);
     }
     (async () => {
       const { data: js } = await supabase
@@ -428,6 +431,42 @@ function NewJob() {
       setApplianceHistory((js ?? []) as JobHistoryRow[]);
     })();
   }, [selectedEquipmentId, homeAppliances]);
+
+  /* Load the trade catalog once, and default the active trade to the pro's own
+     trade. Editable per job so a plumber can log a water-treatment unit, etc. */
+  useEffect(() => {
+    let cancelled = false;
+    fetchTrades().then((t) => {
+      if (cancelled) return;
+      setTrades(t);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTrade || !proTrade) return;
+    setActiveTrade(proTrade);
+  }, [proTrade, activeTrade]);
+
+  /* Fetch the fields for whichever trade is active. Answers already collected
+     for keys that no longer exist stay in state (harmless) but only rendered
+     fields show. */
+  useEffect(() => {
+    if (!activeTrade) {
+      setTradeFields([]);
+      return;
+    }
+    let cancelled = false;
+    fetchTradeFields(activeTrade).then((f) => {
+      if (cancelled) return;
+      setTradeFields(f);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTrade]);
 
   async function onNameplate(file: File) {
     setScanState("scanning");
