@@ -19,10 +19,10 @@ export type Database = {
           created_at: string
           email: string | null
           expires_at: string
-          home_id: string
+          home_id: string | null
           id: string
-          pro_id: string
-          record_id: string
+          pro_id: string | null
+          record_id: string | null
           token_hash: string
           used_at: string | null
         }
@@ -30,10 +30,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           expires_at: string
-          home_id: string
+          home_id?: string | null
           id?: string
-          pro_id: string
-          record_id: string
+          pro_id?: string | null
+          record_id?: string | null
           token_hash: string
           used_at?: string | null
         }
@@ -41,10 +41,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           expires_at?: string
-          home_id?: string
+          home_id?: string | null
           id?: string
-          pro_id?: string
-          record_id?: string
+          pro_id?: string | null
+          record_id?: string | null
           token_hash?: string
           used_at?: string | null
         }
