@@ -476,6 +476,70 @@ function AmountDueRow({
   );
 }
 
+function SetPasswordCard({ onDone }: { onDone: (msg?: string) => void }) {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function save() {
+    if (password.length < 8) {
+      setErr("Use at least 8 characters.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    const { error } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    onDone("Password saved");
+  }
+
+  return (
+    <Card className="anim-fade-up mb-6 border-indigo/30">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Eyebrow accent="indigo">Optional · faster sign in next time</Eyebrow>
+          <p className="mt-2 text-sm text-ink">
+            Set a password so you can sign in without waiting for a magic-link email. You can
+            always keep using the emailed link if you'd rather.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDone()}
+          className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
+        >
+          Not now
+        </button>
+      </div>
+      <div className="mt-3 flex flex-col sm:flex-row gap-2">
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="New password"
+          autoComplete="new-password"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && password && !busy) save();
+          }}
+        />
+        <Btn variant="indigo" onClick={save} disabled={!password || busy} loading={busy}>
+          Save password
+        </Btn>
+      </div>
+      {err && (
+        <div role="alert" className="mt-2 text-sm text-red bg-redbg rounded-xl px-3 py-2">
+          {err}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+
 function OnboardingNoHome({
   homeownerId,
   homeowner,
