@@ -127,6 +127,7 @@ Deno.serve(async (req) => {
       pro_id: null,
       email,
       expires_at: expiresAt,
+      intent: "homeowner",
     });
     if (tokErr) {
       console.error("homeowner-login token insert failed", tokErr);
