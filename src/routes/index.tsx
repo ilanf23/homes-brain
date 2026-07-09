@@ -417,36 +417,29 @@ function Landing() {
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
         <div className="text-center lg:text-left">
-          <div className="anim-fade-up">
-            <Eyebrow accent="indigo">A Carfax for homes that writes itself</Eyebrow>
-          </div>
-          <h1 className="anim-fade-up d-1 mt-4 text-5xl sm:text-6xl tracking-tight text-ink leading-[1.04]">
+          <h1 className="anim-fade-up mt-2 text-5xl sm:text-6xl tracking-tight text-ink leading-[1.04]">
             Every home{" "}
             <span className="relative inline-block">
               remembers.
               <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
             </span>
           </h1>
-          <p className="anim-fade-up d-2 mt-3 text-base text-muted">
+          <p className="anim-fade-up d-1 mt-4 text-lg text-muted max-w-xl mx-auto lg:mx-0">
             The living record for every home.
           </p>
-          <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-xl mx-auto lg:mx-0">
-            Every repair, appliance, and warranty in one place. Built by the pros who fix your home.
-            Owned by you for life.
-          </p>
-          <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
-            <Link to="/home/signup">
-              <Btn variant="indigo" size="lg">
+          <div className="anim-fade-up d-2 mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto lg:mx-0">
+            <Link to="/home/signup" className="block">
+              <Btn variant="indigo" size="lg" className="w-full text-lg py-5">
                 I own a home
               </Btn>
             </Link>
-            <Link to="/for-pros">
-              <Btn variant="indigo" size="lg">
+            <Link to="/for-pros" className="block">
+              <Btn variant="indigo" size="lg" className="w-full text-lg py-5">
                 I am a pro
               </Btn>
             </Link>
           </div>
-          <div className="anim-fade-up d-4 mt-8 flex items-center justify-center lg:justify-start gap-4 text-xs text-muted">
+          <div className="anim-fade-up d-3 mt-6 flex items-center justify-center lg:justify-start gap-4 text-xs text-muted">
             <span className="flex items-center gap-1.5">
               <ShieldCheck size={16} className="text-indigo" animate={false} /> Recall checks
               included
@@ -461,6 +454,7 @@ function Landing() {
           <CoreLoopScene step={heroKey} className="w-full max-w-md mx-auto" />
         </div>
       </section>
+
 
       {/* 1 · The problem - the forgetting tax */}
       <section className="bg-soft border-y border-line py-24">
