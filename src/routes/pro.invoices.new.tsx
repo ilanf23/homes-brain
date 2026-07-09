@@ -134,6 +134,18 @@ function NewInvoice() {
     );
   }
 
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="invoices">
+        <PlanLock
+          title="Invoicing + get paid"
+          description="Create and send invoices, then get paid through HomesBrain. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
+
   return (
     <ProShell pro={pro} active="invoices">
       <Link
