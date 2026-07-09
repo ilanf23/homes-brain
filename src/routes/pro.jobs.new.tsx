@@ -182,6 +182,12 @@ function NewJob() {
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
+  // AI extract from the "What was done" note. Auto-runs on a debounce so the
+  // pro dictates/types once and the equipment fields below fill themselves in.
+  const [extractState, setExtractState] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [extractFilled, setExtractFilled] = useState<string[]>([]);
+  const lastExtractedNote = useRef<string>("");
+
   // Voice note. Dictation supplies the transcript; useMicLevel supplies live
   // loudness + frequency spectrum for the immersive orb. The full-screen mic
   // mode is opened from the work step and torn down on close (stops the mic,
