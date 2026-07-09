@@ -910,6 +910,8 @@ function NewJob() {
     setEditDetails(false);
     setHomeAppliances([]);
     setApplianceHistory([]);
+    setAttrValues({});
+    setActiveTrade(proTrade);
     if (scanPreview) URL.revokeObjectURL(scanPreview);
     setScanPreview(null);
     setScanState("idle");
