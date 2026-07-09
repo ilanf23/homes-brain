@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
 import { Logo } from "@/components/svg";
+import { AddressField } from "@/components/address-field";
 
 export const Route = createFileRoute("/home/signup")({
   head: () => ({ meta: [{ title: "Create your home account - HomesBrain" }] }),
