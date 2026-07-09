@@ -608,6 +608,69 @@ export type Database = {
           },
         ]
       }
+      plan_features: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          feature_key: string
+          id: string
+          label: string
+          sort_order: number
+          tier: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          feature_key: string
+          id?: string
+          label: string
+          sort_order?: number
+          tier: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          feature_key?: string
+          id?: string
+          label?: string
+          sort_order?: number
+          tier?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          price_monthly: number
+          sort_order: number
+          tagline: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id: string
+          name: string
+          price_monthly?: number
+          sort_order?: number
+          tagline?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          price_monthly?: number
+          sort_order?: number
+          tagline?: string | null
+        }
+        Relationships: []
+      }
       pros: {
         Row: {
           auth_user_id: string | null
@@ -624,6 +687,8 @@ export type Database = {
           owner_first_name: string | null
           phone: string | null
           plan: string
+          plan_since: string | null
+          plan_status: string
           quickbooks_connected: boolean
           referral_code: string | null
           review_requests_on: boolean
@@ -650,6 +715,8 @@ export type Database = {
           owner_first_name?: string | null
           phone?: string | null
           plan?: string
+          plan_since?: string | null
+          plan_status?: string
           quickbooks_connected?: boolean
           referral_code?: string | null
           review_requests_on?: boolean
@@ -676,6 +743,8 @@ export type Database = {
           owner_first_name?: string | null
           phone?: string | null
           plan?: string
+          plan_since?: string | null
+          plan_status?: string
           quickbooks_connected?: boolean
           referral_code?: string | null
           review_requests_on?: boolean
@@ -913,8 +982,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_pro: { Args: never; Returns: boolean }
       lookup_login_method: { Args: { p_email: string }; Returns: string }
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
+      mock_set_plan: { Args: { p_plan: string }; Returns: string }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
       pro_ensure: { Args: { p_first_name?: string }; Returns: string }
