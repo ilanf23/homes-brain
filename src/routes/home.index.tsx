@@ -7,7 +7,12 @@ import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, useHomeownerGuard, type HomeownerRow } from "@/components/home-shell";
+import {
+  HomePageHead,
+  HomeShell,
+  useHomeownerGuard,
+  type HomeownerRow,
+} from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 
 export const Route = createFileRoute("/home/")({
@@ -56,10 +61,7 @@ function HomeOverview() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const openInvoices = useMemo(
-    () => invoices.filter((i) => i.status === "open"),
-    [invoices],
-  );
+  const openInvoices = useMemo(() => invoices.filter((i) => i.status === "open"), [invoices]);
 
   const nextDue = useMemo(
     () =>
@@ -71,8 +73,6 @@ function HomeOverview() {
 
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
-
-
 
   if (guardLoading) return <PageLoader label="Loading your home" />;
   if (!home)
@@ -380,12 +380,7 @@ function ActivityCard({
               );
             }
             return (
-              <button
-                key={row.key}
-                type="button"
-                onClick={row.onTap}
-                className={cls}
-              >
+              <button key={row.key} type="button" onClick={row.onTap} className={cls}>
                 {inner}
               </button>
             );
@@ -395,7 +390,6 @@ function ActivityCard({
     </Card>
   );
 }
-
 
 function AmountDueRow({
   inv,
@@ -453,8 +447,6 @@ function AmountDueRow({
     </div>
   );
 }
-
-
 
 function OnboardingNoHome({
   homeownerId,
