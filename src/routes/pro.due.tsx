@@ -4,6 +4,7 @@ import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { PlanLock } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/due")({
   head: () => ({ meta: [{ title: "Due for service - HomesBrain" }] }),
@@ -88,6 +89,18 @@ function DueForService() {
       </ProShell>
     );
   }
+
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="due">
+        <PlanLock
+          title="Rebooking & retention"
+          description="Automated campaigns that bring past customers back before someone else gets the call. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
 
   const byBucket = {
     overdue: jobs.filter((j) => bucketOf(j.next_service_date) === "overdue"),

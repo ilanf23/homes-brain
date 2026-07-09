@@ -47,3 +47,41 @@ export function PlanLock({
     </Card>
   );
 }
+
+/** Compact locked upsell for gating a single widget inline on a dashboard. */
+export function PlanLockCompact({
+  title,
+  description,
+  className = "",
+}: {
+  title: string;
+  description: string;
+  className?: string;
+}) {
+  return (
+    <Card className={`anim-fade-up ${className}`}>
+      <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
+          <Lock size={16} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Eyebrow accent="indigo">Pro feature</Eyebrow>
+            <Pill accent="indigo">Demo — not charged</Pill>
+          </div>
+          <div className="mt-1 font-semibold text-ink">{title}</div>
+          <p className="text-sm text-muted mt-0.5">{description}</p>
+          <p className="text-xs text-muted mt-1">
+            Demo — you won't be charged. No card required.
+          </p>
+        </div>
+        <Link to="/pro/plan" className="shrink-0">
+          <Btn variant="primary" size="sm">
+            Upgrade to Pro — $19/mo ({DEMO_SHORT})
+          </Btn>
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
