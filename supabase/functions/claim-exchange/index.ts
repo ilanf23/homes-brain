@@ -78,17 +78,18 @@ Deno.serve(async (req) => {
       } | null)?.jobs;
       const address = job?.homes?.address ?? null;
       const whatDone = job?.what_done ?? null;
+      const equipmentId = job?.equipment_id ?? null;
       let equipment: {
         type: string | null;
         make: string | null;
         model: string | null;
         warranty_until: string | null;
       } | null = null;
-      if (job?.equipment_id) {
+      if (equipmentId) {
         const { data: eq } = await admin
           .from("equipment")
           .select("type,make,model,warranty_until")
-          .eq("id", job.equipment_id)
+          .eq("id", equipmentId)
           .maybeSingle();
         if (eq) equipment = eq;
       }
@@ -98,6 +99,7 @@ Deno.serve(async (req) => {
 
       preview = {
         record_id: row.record_id,
+        equipment_id: equipmentId,
         address,
         what_done: whatDone,
         equipment,
