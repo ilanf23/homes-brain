@@ -141,17 +141,24 @@ export function useDictation(onText: (finalText: string) => void) {
   return { supported, listening, interim, start, stop };
 }
 
-/* ---------- Mic amplitude (Web Audio) ----------
-   Runs alongside useDictation to give the immersive voice UI a live loudness
-   signal the transcript can't provide. Exposes a mutable `levelRef` (0..1,
-   smoothed) that visual code reads every frame - no per-frame React state, so
-   the orb can animate without re-rendering the tree.
+/* ---------- Mic amplitude + spectrum (Web Audio) ----------
+   Runs alongside useDictation to give the immersive voice UI live audio
+   signals the transcript can't provide. Exposes two mutable refs that visual
+   code reads every frame - no per-frame React state, so the orb can animate
+   without re-rendering the tree:
+   - `levelRef`: overall loudness 0..1, smoothed.
+   - `bandsRef`: Float32Array(MIC_BAND_COUNT) of log-spaced frequency bands
+     0..1 covering the speech range (~90Hz-6kHz), each with fast-attack /
+     slow-decay smoothing so bars leap on syllables and settle gracefully.
 
    IMPORTANT lifecycle: start() must be called from a user gesture (the tap that
    opens the voice UI) so the AudioContext can resume under the autoplay policy;
    stop() tears down the stream + context + rAF so the mic never stays hot. */
+export const MIC_BAND_COUNT = 48;
+
 export function useMicLevel() {
   const levelRef = useRef(0);
+  const bandsRef = useRef(new Float32Array(MIC_BAND_COUNT));
   const [active, setActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
@@ -172,12 +179,25 @@ export function useMicLevel() {
       ctxRef.current = ctx;
       const src = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 1024;
+      // Light built-in smoothing; the per-band attack/decay below does the
+      // real shaping, and 0.8 here made the bars feel sluggish.
+      analyser.smoothingTimeConstant = 0.55;
       src.connect(analyser);
       const data = new Uint8Array(analyser.fftSize);
+      const freq = new Uint8Array(analyser.frequencyBinCount);
+      // Log-spaced band edges over the speech range, precomputed as bin indexes.
+      const binHz = ctx.sampleRate / analyser.fftSize;
+      const F_LO = 90;
+      const F_HI = 6000;
+      const edges: number[] = [];
+      for (let k = 0; k <= MIC_BAND_COUNT; k++) {
+        const f = F_LO * Math.pow(F_HI / F_LO, k / MIC_BAND_COUNT);
+        edges.push(Math.min(freq.length - 1, Math.round(f / binHz)));
+      }
       setActive(true);
       const tick = () => {
+        // Overall loudness from the time domain (unaffected by smoothing).
         analyser.getByteTimeDomainData(data);
         let sum = 0;
         for (let i = 0; i < data.length; i++) {
@@ -188,6 +208,23 @@ export function useMicLevel() {
         const target = Math.min(1, rms * 3.4); // map speech range into a full 0..1
         // Ease toward the target so the orb glides instead of jittering.
         levelRef.current += (target - levelRef.current) * 0.35;
+
+        // Per-band energy from the frequency domain.
+        analyser.getByteFrequencyData(freq);
+        const bands = bandsRef.current;
+        for (let b = 0; b < MIC_BAND_COUNT; b++) {
+          const lo = edges[b];
+          const hi = Math.max(lo + 1, edges[b + 1]);
+          let acc = 0;
+          for (let i = lo; i < hi; i++) acc += freq[i];
+          let v = acc / (hi - lo) / 255;
+          // Subtract the noise floor, then boost so quiet speech still reads.
+          v = Math.max(0, v - 0.09) / 0.91;
+          v = Math.min(1, v * 1.7);
+          // Fast attack, slow decay: bars leap on a syllable, fall gently.
+          const cur = bands[b];
+          bands[b] = cur + (v - cur) * (v > cur ? 0.55 : 0.12);
+        }
         rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
@@ -205,10 +242,11 @@ export function useMicLevel() {
     void ctxRef.current?.close();
     ctxRef.current = null;
     levelRef.current = 0;
+    bandsRef.current.fill(0);
     setActive(false);
   }
 
   useEffect(() => () => stop(), []);
 
-  return { levelRef, active, supported, start, stop };
+  return { levelRef, bandsRef, active, supported, start, stop };
 }

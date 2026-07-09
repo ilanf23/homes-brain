@@ -183,8 +183,9 @@ function NewJob() {
   const [scanError, setScanError] = useState<string | null>(null);
 
   // Voice note. Dictation supplies the transcript; useMicLevel supplies live
-  // loudness for the immersive orb. The full-screen mic mode is opened from the
-  // work step and torn down on close (stops the mic, closes the audio context).
+  // loudness + frequency spectrum for the immersive orb. The full-screen mic
+  // mode is opened from the work step and torn down on close (stops the mic,
+  // closes the audio context).
   const dictation = useDictation((text) => {
     setWhatDone((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
   });
@@ -1444,15 +1445,11 @@ function NewJob() {
                     )}
                   </div>
 
-
                   {/* Optional "bill this customer" amount. Leave blank to skip;
                       any positive number creates an open invoice tied to the job
                       so the homeowner can pay it from /home. */}
                   <div className="mt-5 border-t border-line pt-4">
-                    <label
-                      htmlFor="charge-amount"
-                      className="block text-sm font-semibold text-ink"
-                    >
+                    <label htmlFor="charge-amount" className="block text-sm font-semibold text-ink">
                       Charge for this job (optional)
                     </label>
                     <div className="mt-2 relative">
@@ -1551,7 +1548,12 @@ function NewJob() {
       </div>
 
       {voiceOpen && (
-        <VoiceCaptureOverlay levelRef={micLevel.levelRef} text={liveWhatDone} onDone={closeVoice} />
+        <VoiceCaptureOverlay
+          levelRef={micLevel.levelRef}
+          bandsRef={micLevel.bandsRef}
+          text={liveWhatDone}
+          onDone={closeVoice}
+        />
       )}
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
