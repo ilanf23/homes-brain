@@ -30,6 +30,7 @@ import {
   type TimelineEntry,
 } from "@/components/crm";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { PlanLock } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer - HomesBrain" }] }),
