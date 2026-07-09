@@ -41,6 +41,7 @@ import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
 import { Route as HomeAppliancesRouteImport } from './routes/home.appliances'
 import { Route as HomeAddRouteImport } from './routes/home.add'
+import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ProRecordsIndexRouteImport } from './routes/pro.records.index'
@@ -213,6 +214,11 @@ const HomeAddRoute = HomeAddRouteImport.update({
   path: '/home/add',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClaimTokenRoute = ClaimTokenRouteImport.update({
+  id: '/claim/$token',
+  path: '/claim/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
@@ -376,6 +384,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
   '/home/pros': typeof HomeProsRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/claim/$token'
     | '/home/add'
     | '/home/appliances'
     | '/home/pros'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/claim/$token'
     | '/home/add'
     | '/home/appliances'
     | '/home/pros'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/claim/$token'
     | '/home/add'
     | '/home/appliances'
     | '/home/pros'
@@ -559,6 +571,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  ClaimTokenRoute: typeof ClaimTokenRoute
   HomeAddRoute: typeof HomeAddRoute
   HomeAppliancesRoute: typeof HomeAppliancesRoute
   HomeProsRoute: typeof HomeProsRoute
@@ -815,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeAddRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/claim/$token': {
+      id: '/claim/$token'
+      path: '/claim/$token'
+      fullPath: '/claim/$token'
+      preLoaderRoute: typeof ClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/$slug': {
       id: '/blog/$slug'
       path: '/blog/$slug'
@@ -911,6 +931,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogSlugRoute: BlogSlugRoute,
+  ClaimTokenRoute: ClaimTokenRoute,
   HomeAddRoute: HomeAddRoute,
   HomeAppliancesRoute: HomeAppliancesRoute,
   HomeProsRoute: HomeProsRoute,
