@@ -92,15 +92,17 @@ function Login() {
       // Default to a Resend magic link for pros (no password required).
       await sendProMagicLink();
     } else if (data === "homeowner") {
-      setStep("ho-password");
-      setBusy(false);
+      // Default to a Resend magic link for homeowners too.
+      await sendMagicLink();
     } else if (data === "both") {
-      setStep("choose-role");
-      setBusy(false);
+      // Either link establishes the session; use the pro link by default
+      // so folks who use both accounts land on /pro after tapping.
+      await sendProMagicLink();
     } else {
       setStep("no-account");
       setBusy(false);
     }
+
   }
 
   async function sendProMagicLink() {
