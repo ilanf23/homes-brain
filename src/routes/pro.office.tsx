@@ -10,6 +10,7 @@ import { MoneyRow } from "@/components/money-row";
 import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
 import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { PlanLockCompact } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/office")({
   head: () => ({ meta: [{ title: "Office - HomesBrain" }] }),
