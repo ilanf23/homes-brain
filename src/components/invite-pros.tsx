@@ -4,7 +4,15 @@ import { logEvent, mockSend, suggestTradeGaps, TRADES, tradeLabel } from "@/lib/
 import { Btn, Card, Eyebrow, Field, Input, Pill, Select } from "@/lib/ui";
 import { TradeIcon } from "@/components/svg";
 
-type InviteRow = { id: string; to_pro_name: string; trade: string | null; status: string };
+type InviteRow = {
+  id: string;
+  to_pro_name: string;
+  to_pro_email?: string | null;
+  to_pro_phone?: string | null;
+  trade: string | null;
+  status: string;
+};
+
 
 /* The one-tap "invite your other pros" card (Flow C hook), shared by the
    homeowner overview, My Pros, and Add pages. Fetches its own invites. */
