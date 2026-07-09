@@ -74,6 +74,7 @@ function Login() {
     setPassword("");
     setErr(null);
     setShowHoPassword(false);
+    setShowProPassword(false);
   }
 
   async function continueWithEmail() {
