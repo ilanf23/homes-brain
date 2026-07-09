@@ -140,3 +140,75 @@ export function useDictation(onText: (finalText: string) => void) {
 
   return { supported, listening, interim, start, stop };
 }
+
+/* ---------- Mic amplitude (Web Audio) ----------
+   Runs alongside useDictation to give the immersive voice UI a live loudness
+   signal the transcript can't provide. Exposes a mutable `levelRef` (0..1,
+   smoothed) that visual code reads every frame - no per-frame React state, so
+   the orb can animate without re-rendering the tree.
+
+   IMPORTANT lifecycle: start() must be called from a user gesture (the tap that
+   opens the voice UI) so the AudioContext can resume under the autoplay policy;
+   stop() tears down the stream + context + rAF so the mic never stays hot. */
+export function useMicLevel() {
+  const levelRef = useRef(0);
+  const [active, setActive] = useState(false);
+  const streamRef = useRef<MediaStream | null>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const supported =
+    typeof window !== "undefined" &&
+    !!navigator.mediaDevices?.getUserMedia &&
+    !!window.AudioContext;
+
+  async function start() {
+    if (ctxRef.current || !supported) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const ctx = new AudioContext();
+      // Resume in case the context started suspended (autoplay policy).
+      if (ctx.state === "suspended") await ctx.resume();
+      ctxRef.current = ctx;
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.8;
+      src.connect(analyser);
+      const data = new Uint8Array(analyser.fftSize);
+      setActive(true);
+      const tick = () => {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const v = (data[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / data.length); // 0..~1, speech usually 0..0.3
+        const target = Math.min(1, rms * 3.4); // map speech range into a full 0..1
+        // Ease toward the target so the orb glides instead of jittering.
+        levelRef.current += (target - levelRef.current) * 0.35;
+        rafRef.current = requestAnimationFrame(tick);
+      };
+      rafRef.current = requestAnimationFrame(tick);
+    } catch {
+      // Mic denied or unavailable: leave level at 0, the UI still works via text.
+      stop();
+    }
+  }
+
+  function stop() {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    void ctxRef.current?.close();
+    ctxRef.current = null;
+    levelRef.current = 0;
+    setActive(false);
+  }
+
+  useEffect(() => () => stop(), []);
+
+  return { levelRef, active, supported, start, stop };
+}

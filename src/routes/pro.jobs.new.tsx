@@ -18,8 +18,9 @@ import { createInvoice, formatMoney } from "@/lib/invoices";
 
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
-import { scanNameplate, useDictation } from "@/lib/capture";
+import { scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
+import { VoiceCaptureOverlay } from "@/components/voice-orb";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
@@ -181,10 +182,26 @@ function NewJob() {
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
-  // Voice note
+  // Voice note. Dictation supplies the transcript; useMicLevel supplies live
+  // loudness for the immersive orb. The full-screen mic mode is opened from the
+  // work step and torn down on close (stops the mic, closes the audio context).
   const dictation = useDictation((text) => {
     setWhatDone((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
   });
+  const micLevel = useMicLevel();
+  const [voiceOpen, setVoiceOpen] = useState(false);
+
+  function openVoice() {
+    // start() must run inside this tap so the AudioContext can resume.
+    micLevel.start();
+    dictation.start();
+    setVoiceOpen(true);
+  }
+  function closeVoice() {
+    dictation.stop();
+    micLevel.stop();
+    setVoiceOpen(false);
+  }
 
   // Review. The record always sends (no branded-record toggle in v0); only the
   // Google review ask is optional.
@@ -757,6 +774,8 @@ function NewJob() {
     setScanState("idle");
     setScanError(null);
     dictation.stop();
+    micLevel.stop();
+    setVoiceOpen(false);
     setAskReview(true);
     setHiddenFields(new Set());
     setRecordUrl(null);
@@ -1079,39 +1098,22 @@ function NewJob() {
 
             {stage === "work" && (
               <Card className="space-y-5">
-                {/* Big voice button - the main input */}
+                {/* Big voice button - opens the immersive white mic mode */}
                 <div>
                   {dictation.supported ? (
                     <button
                       type="button"
-                      onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
-                      aria-pressed={dictation.listening}
-                      aria-label={
-                        dictation.listening ? "Stop recording" : "Tap and tell me what you did"
-                      }
-                      className={`pressable w-full rounded-2xl px-6 py-8 text-center transition-all duration-200 ${
-                        dictation.listening
-                          ? "bg-indigo text-white shadow-lg"
-                          : "bg-indigobg text-indigo hover:bg-indigo hover:text-white"
-                      }`}
+                      onClick={openVoice}
+                      aria-label="Tap and tell me what you did"
+                      className="pressable w-full rounded-2xl bg-indigobg px-6 py-8 text-center text-indigo transition-all duration-200 hover:bg-indigo hover:text-white"
                     >
-                      <div
-                        className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${
-                          dictation.listening ? "bg-white/20 animate-pulse" : "bg-white/70"
-                        }`}
-                      >
+                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/70">
                         <MicIcon size={36} />
                       </div>
                       <div className="mt-4 text-lg font-bold tracking-tight">
-                        {dictation.listening
-                          ? "Listening… tap to stop"
-                          : "Tap and tell me what you did"}
+                        Tap and tell me what you did
                       </div>
-                      <div className="mt-1 text-xs opacity-80">
-                        {dictation.listening
-                          ? "Talk through the job."
-                          : "Your words fill in the record."}
-                      </div>
+                      <div className="mt-1 text-xs opacity-80">Your words fill in the record.</div>
                     </button>
                   ) : (
                     <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
@@ -1289,7 +1291,6 @@ function NewJob() {
                         <div className="h-px flex-1 bg-line" />
                       </div>
                     )}
-
 
                     {selectedEquipmentId && applianceHistory.length > 0 && (
                       <div className="rounded-xl bg-soft px-3 py-2.5">
@@ -1548,6 +1549,10 @@ function NewJob() {
           </div>
         </div>
       </div>
+
+      {voiceOpen && (
+        <VoiceCaptureOverlay levelRef={micLevel.levelRef} text={liveWhatDone} onDone={closeVoice} />
+      )}
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </div>
