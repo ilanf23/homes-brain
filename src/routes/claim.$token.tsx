@@ -23,6 +23,7 @@ type EquipmentPreview = {
 
 type Preview = {
   record_id: string;
+  equipment_id?: string | null;
   address: string | null;
   what_done: string | null;
   equipment: EquipmentPreview | null;
@@ -144,7 +145,12 @@ function ClaimByToken() {
         // ignore
       }
       setPhase("done");
-      navigate({ to: "/home", search: { welcome: "1" } as never });
+      const eqId = resp.preview?.equipment_id ?? preview?.equipment_id ?? null;
+      if (eqId) {
+        navigate({ to: "/home/items/$itemId", params: { itemId: eqId } });
+      } else {
+        navigate({ to: "/home", search: { welcome: "1" } as never });
+      }
       return;
     }
     // Login-only token: session established, straight to /home.
