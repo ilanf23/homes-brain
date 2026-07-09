@@ -64,48 +64,51 @@ Deno.serve(async (req) => {
       return json({ ok: false, code: "expired", record_id: row.record_id });
     }
 
-    // Load preview data even before finalizing, so the client can render.
-    const { data: recordRow } = await admin
-      .from("records")
-      .select("id,created_at,jobs(what_done,equipment_id,homes(address))")
-      .eq("id", row.record_id)
-      .maybeSingle();
-    const job = (recordRow as unknown as {
-      jobs?: { what_done?: string; equipment_id?: string | null; homes?: { address?: string } };
-    } | null)?.jobs;
-    const address = job?.homes?.address ?? null;
-    const whatDone = job?.what_done ?? null;
-    let equipment: {
-      type: string | null;
-      make: string | null;
-      model: string | null;
-      warranty_until: string | null;
-    } | null = null;
-    if (job?.equipment_id) {
-      const { data: eq } = await admin
-        .from("equipment")
-        .select("type,make,model,warranty_until")
-        .eq("id", job.equipment_id)
+    // Login-only token: no record to claim, just establish a session.
+    let preview: unknown = null;
+    if (row.record_id) {
+      // Load preview data even before finalizing, so the client can render.
+      const { data: recordRow } = await admin
+        .from("records")
+        .select("id,created_at,jobs(what_done,equipment_id,homes(address))")
+        .eq("id", row.record_id)
         .maybeSingle();
-      if (eq) equipment = eq;
-    }
-    const { data: pro } = await admin
-      .from("pros")
-      .select("id,business,logo")
-      .eq("id", row.pro_id)
-      .maybeSingle();
+      const job = (recordRow as unknown as {
+        jobs?: { what_done?: string; equipment_id?: string | null; homes?: { address?: string } };
+      } | null)?.jobs;
+      const address = job?.homes?.address ?? null;
+      const whatDone = job?.what_done ?? null;
+      let equipment: {
+        type: string | null;
+        make: string | null;
+        model: string | null;
+        warranty_until: string | null;
+      } | null = null;
+      if (job?.equipment_id) {
+        const { data: eq } = await admin
+          .from("equipment")
+          .select("type,make,model,warranty_until")
+          .eq("id", job.equipment_id)
+          .maybeSingle();
+        if (eq) equipment = eq;
+      }
+      const { data: pro } = row.pro_id
+        ? await admin.from("pros").select("id,business,logo").eq("id", row.pro_id).maybeSingle()
+        : { data: null };
 
-    const preview = {
-      record_id: row.record_id,
-      address,
-      what_done: whatDone,
-      equipment,
-      pro: pro ? { business: pro.business, logo: pro.logo } : null,
-    };
+      preview = {
+        record_id: row.record_id,
+        address,
+        what_done: whatDone,
+        equipment,
+        pro: pro ? { business: pro.business, logo: pro.logo } : null,
+      };
+    }
 
     // If the token has no email, ask for it (one-time capture path).
     const email = row.email ?? providedEmail;
     if (!email) return json({ ok: false, code: "need_email", preview });
+
 
     // Mint a magic credential without a visible supabase.co redirect.
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
