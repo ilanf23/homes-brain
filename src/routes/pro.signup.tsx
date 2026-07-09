@@ -13,8 +13,13 @@ import { Logo, ShieldCheck } from "@/components/svg";
    No password, no business, no trade on this screen — everything is
    deferred into /pro/setup to keep the first ask trivial for the pro. */
 
+type ProSignupSearch = { email?: string };
+
 export const Route = createFileRoute("/pro/signup")({
   head: () => ({ meta: [{ title: "Start free - HomesBrain for pros" }] }),
+  validateSearch: (s: Record<string, unknown>): ProSignupSearch => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+  }),
   component: ProSignup,
 });
 
