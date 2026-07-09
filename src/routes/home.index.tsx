@@ -29,7 +29,6 @@ function HomeOverview() {
   } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const [justPaidId, setJustPaidId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!home) return;
@@ -39,19 +38,16 @@ function HomeOverview() {
     })();
   }, [home]);
 
-  // On return with ?paid=<invoiceId>, refresh invoices and flash a confirmation.
+  // On return with ?paid=<invoiceId>, refresh invoices and flash a toast.
   useEffect(() => {
     if (typeof window === "undefined" || !home) return;
     const q = new URLSearchParams(window.location.search).get("paid");
     if (!q) return;
-    setJustPaidId(q);
     (async () => setInvoices(await listInvoicesForHome(home.id)))();
-    setToast("Payment complete");
+    setToast("Paid ✓");
     const url = new URL(window.location.href);
     url.searchParams.delete("paid");
     window.history.replaceState({}, "", url.toString());
-    const t = setTimeout(() => setJustPaidId(null), 6000);
-    return () => clearTimeout(t);
   }, [home?.id]);
 
   useEffect(() => {
@@ -64,14 +60,6 @@ function HomeOverview() {
     () => invoices.filter((i) => i.status === "open"),
     [invoices],
   );
-  const totalDue = useMemo(
-    () => openInvoices.reduce((s, i) => s + Number(i.total), 0),
-    [openInvoices],
-  );
-  const justPaidInvoice = useMemo(
-    () => (justPaidId ? invoices.find((i) => i.id === justPaidId) ?? null : null),
-    [justPaidId, invoices],
-  );
 
   const nextDue = useMemo(
     () =>
@@ -80,18 +68,11 @@ function HomeOverview() {
         .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))[0] ?? null,
     [jobs],
   );
-  const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
-  const newRecords = useMemo(
-    () =>
-      records
-        .filter((r) => !r.viewed_at)
-        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
-        .slice(0, 5),
-    [records],
-  );
 
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
+
+
 
   if (guardLoading) return <PageLoader label="Loading your home" />;
   if (!home)
