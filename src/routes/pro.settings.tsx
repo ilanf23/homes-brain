@@ -326,28 +326,89 @@ function ProSettings() {
           </SettingsSection>
 
           <SettingsSection id="plan" eyebrow="Plan & billing" delay={3}>
-            <div className="mt-3 flex items-center justify-between">
-              <div>
-                <div className="font-extrabold text-ink capitalize">{pro.plan}</div>
-                <div className="text-xs text-muted">Unlimited records. No card required.</div>
-              </div>
-              <Pill accent="indigo">Current</Pill>
-            </div>
-            <div className="mt-4 rounded-xl border border-line bg-soft p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-sm font-semibold text-ink">
-                    Pro - <span className="tnum">$99</span>/mo
+            {(() => {
+              const isPro = pro.plan === "pro";
+              return (
+                <>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div>
+                      <div className="font-extrabold text-ink">
+                        {isPro ? "Pro · demo" : "Free"}
+                      </div>
+                      <div className="text-xs text-muted">
+                        {isPro
+                          ? "You're on Pro (demo — you're not being billed)."
+                          : "Log jobs and own your records — free forever."}
+                      </div>
+                    </div>
+                    <Pill accent="indigo">{isPro ? "Pro (demo)" : "Current"}</Pill>
                   </div>
-                  <div className="text-xs text-muted mt-0.5">
-                    Team seats, branded records, priority support. Billing opens in v0.5.
+
+                  <div className="mt-3">
+                    <DemoNotice />
                   </div>
-                </div>
-                <Btn variant="secondary" size="sm" onClick={upgradeInterest} className="shrink-0">
-                  Get notified
-                </Btn>
-              </div>
-            </div>
+
+                  <div className="mt-4 rounded-xl border border-line bg-soft p-4">
+                    {isPro ? (
+                      <div className="space-y-3">
+                        <div className="text-sm text-ink">
+                          <span className="font-semibold">Pro plan — demo.</span>{" "}
+                          You're not being billed. Real billing arrives later.
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <Link
+                            to="/pro/plan"
+                            className="text-sm font-semibold text-indigo hover:underline"
+                          >
+                            View plan details →
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const { mockSetPlan } = await import("@/lib/plan");
+                              try {
+                                await mockSetPlan("free");
+                                setPro({ ...pro, plan: "free" });
+                                setToast("Switched back to Free (demo).");
+                              } catch {
+                                setToast("Couldn't switch plan.");
+                              }
+                            }}
+                            className="text-sm font-semibold text-muted hover:text-ink underline underline-offset-2"
+                          >
+                            Switch back to Free
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <div className="text-sm font-semibold text-ink">
+                            Pro — <span className="tnum">$19</span>/mo{" "}
+                            <span className="text-muted font-normal">(demo — not charged)</span>
+                          </div>
+                          <div className="text-xs text-muted mt-0.5">
+                            Invoicing, rebooking, review automation, CRM, analytics, team seats.
+                          </div>
+                        </div>
+                        <Link to="/pro/plan" className="shrink-0">
+                          <Btn variant="primary" size="sm">
+                            Upgrade to Pro
+                          </Btn>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                  {/* legacy: keep the "get notified" hook for analytics */}
+                  <button
+                    type="button"
+                    onClick={upgradeInterest}
+                    className="hidden"
+                    aria-hidden
+                  />
+                </>
+              );
+            })()}
             <div className="mt-4 border-t border-line pt-4">
               <StripePayoutsPanel
                 proId={proId!}
@@ -357,6 +418,8 @@ function ProSettings() {
               />
             </div>
           </SettingsSection>
+
+
 
           <SettingsSection id="notifications" eyebrow="Notifications" delay={4}>
             <p className="mt-1 text-sm text-muted">
