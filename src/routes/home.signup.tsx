@@ -7,8 +7,13 @@ import { logEvent } from "@/lib/hb";
 import { Logo } from "@/components/svg";
 import { AddressField } from "@/components/address-field";
 
+type HomeSignupSearch = { email?: string };
+
 export const Route = createFileRoute("/home/signup")({
   head: () => ({ meta: [{ title: "Create your home account - HomesBrain" }] }),
+  validateSearch: (s: Record<string, unknown>): HomeSignupSearch => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+  }),
   component: HomeownerSignup,
 });
 
