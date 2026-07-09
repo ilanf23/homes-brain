@@ -306,6 +306,50 @@ function Login() {
           </>
         )}
 
+        {step === "ho-password" && (
+          <>
+            <EmailSummary email={email} onChange={resetToEmail} />
+            <Field label="Password">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                autoComplete="current-password"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && password && !busy) homeownerPasswordLogin();
+                }}
+              />
+            </Field>
+            <ErrorRow err={err} />
+            <Btn
+              variant="indigo"
+              size="lg"
+              className="w-full"
+              disabled={!password}
+              loading={busy}
+              onClick={homeownerPasswordLogin}
+            >
+              Sign in
+            </Btn>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("forgot");
+                  setErr(null);
+                }}
+                className="text-xs font-semibold text-indigo hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          </>
+        )}
+
+
+
         {step === "ho-sent" && (
           <>
             {expiredNote && (
