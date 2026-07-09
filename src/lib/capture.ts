@@ -73,6 +73,32 @@ export async function scanNameplate(file: File): Promise<NameplateScan> {
   return data as NameplateScan;
 }
 
+/* ---------- Extract equipment fields from a free-text note ---------- */
+
+export type JobExtract = {
+  type: string | null;
+  make: string | null;
+  model: string | null;
+  next_service_date: string | null;
+  what_done_clean: string | null;
+};
+
+export async function extractFromNotes(note: string, trade?: string): Promise<JobExtract> {
+  const { data, error } = await supabase.functions.invoke("extract-job", {
+    body: { note, trade },
+  });
+  if (error) {
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.json().catch(() => null);
+      if (body?.error) throw new Error(body.error);
+    }
+    throw new Error("Couldn't read the note. Try again.");
+  }
+  if (data?.error) throw new Error(data.error);
+  return data as JobExtract;
+}
+
 /* ---------- Voice dictation (Web Speech API) ---------- */
 
 type SpeechResultEvent = {

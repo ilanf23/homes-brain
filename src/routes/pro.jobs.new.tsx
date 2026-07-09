@@ -18,7 +18,7 @@ import { createInvoice, formatMoney } from "@/lib/invoices";
 
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
-import { scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
+import { extractFromNotes, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 
@@ -181,6 +181,12 @@ function NewJob() {
   const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+
+  // AI extract from the "What was done" note. Auto-runs on a debounce so the
+  // pro dictates/types once and the equipment fields below fill themselves in.
+  const [extractState, setExtractState] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [extractFilled, setExtractFilled] = useState<string[]>([]);
+  const lastExtractedNote = useRef<string>("");
 
   // Voice note. Dictation supplies the transcript; useMicLevel supplies live
   // loudness + frequency spectrum for the immersive orb. The full-screen mic
@@ -429,6 +435,63 @@ function NewJob() {
       setScanError(e instanceof Error ? e.message : "Scan failed. Try again.");
     }
   }
+
+  /* Ask the AI to pull equipment + next-service out of the note. Fills blanks
+     only, never clobbers what the pro already typed or picked from history. */
+  async function runExtract(note: string) {
+    const trimmed = note.trim();
+    if (trimmed.length < 6) return;
+    if (trimmed === lastExtractedNote.current) return;
+    lastExtractedNote.current = trimmed;
+    setExtractState("working");
+    try {
+      const r = await extractFromNotes(trimmed, proTrade);
+      const filled: string[] = [];
+      if (r.type && !eqType) {
+        setEqType(r.type);
+        filled.push("type");
+      }
+      if (r.make && !eqMake) {
+        setEqMake(r.make);
+        filled.push("make");
+      }
+      if (r.model && !eqModel) {
+        setEqModel(r.model);
+        filled.push("model");
+      }
+      if (
+        r.next_service_date &&
+        /^\d{4}-\d{2}-\d{2}$/.test(r.next_service_date) &&
+        !nextService
+      ) {
+        setNextService(r.next_service_date);
+        filled.push("next service");
+      }
+      setExtractFilled(filled);
+      setExtractState(filled.length ? "done" : "idle");
+      if (filled.length) {
+        // Reveal the equipment drawer on first-visit homes so the pro can see
+        // what got filled in without having to expand it.
+        setDetailsOpen(true);
+        await logEvent(proId ? `pro:${proId}` : null, "notes_extracted", { filled });
+      }
+    } catch {
+      setExtractState("error");
+    }
+  }
+
+  /* Debounced auto-extract: 900ms after the pro stops typing/dictating. */
+  useEffect(() => {
+    if (stage !== "work") return;
+    if (dictation.listening) return;
+    const t = setTimeout(() => {
+      void runExtract(whatDone);
+    }, 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [whatDone, dictation.listening, stage]);
+
+
 
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
@@ -1134,7 +1197,20 @@ function NewJob() {
                     placeholder="Or type here…"
                     rows={3}
                   />
+                  {extractState === "working" && (
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                      <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                      Reading your note…
+                    </div>
+                  )}
+                  {extractState === "done" && extractFilled.length > 0 && (
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                      <ShieldCheck size={13} animate={false} />
+                      Auto-filled {extractFilled.join(", ")} below
+                    </div>
+                  )}
                 </Field>
+
 
                 {/* Photo (optional) */}
                 <div>
