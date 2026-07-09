@@ -731,9 +731,13 @@ function NewJob() {
     // Equipment: reuse an existing appliance on this home when the pro picked
     // one (so a repeat visit builds a real service history), otherwise insert.
     let equipmentId: string | undefined;
+    const cleanedAttrs = cleanAttributes(attrValues);
+    const hasAttrs = Object.keys(cleanedAttrs).length > 0;
     if (selectedEquipmentId) {
       equipmentId = selectedEquipmentId;
       if (editDetails) {
+        // attributes column shipped in migration 2026-07-09; cast the payload
+        // until the Lovable-generated Database types refresh.
         await supabase
           .from("equipment")
           .update({
@@ -743,10 +747,11 @@ function NewJob() {
             warranty_until: warrantyUntil || null,
             recall_status: recall.status,
             recall_checked_at: recall.checked_at,
-          })
+            attributes: cleanedAttrs,
+          } as never)
           .eq("id", selectedEquipmentId);
       }
-    } else if (eqType || eqMake || eqModel) {
+    } else if (eqType || eqMake || eqModel || hasAttrs) {
       const { data: eq } = await supabase
         .from("equipment")
         .insert({
@@ -758,7 +763,8 @@ function NewJob() {
           recall_status: recall.status,
           recall_checked_at: recall.checked_at,
           source: "pro",
-        })
+          attributes: cleanedAttrs,
+        } as never)
         .select("id")
         .single();
       equipmentId = eq?.id;
