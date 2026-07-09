@@ -765,30 +765,18 @@ export type Database = {
         Args: { p_business: string; p_trade: string }
         Returns: Json
       }
-      homeowner_add_equipment:
-        | {
-            Args: {
-              p_make: string
-              p_model: string
-              p_serial: string
-              p_source: string
-              p_type: string
-              p_warranty_until: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_label?: string
-              p_make: string
-              p_model: string
-              p_serial: string
-              p_source: string
-              p_type: string
-              p_warranty_until: string
-            }
-            Returns: string
-          }
+      homeowner_add_equipment: {
+        Args: {
+          p_label?: string
+          p_make: string
+          p_model: string
+          p_serial: string
+          p_source: string
+          p_type: string
+          p_warranty_until: string
+        }
+        Returns: string
+      }
       homeowner_create_invite: {
         Args: { p_to_pro_name: string; p_to_pro_phone: string; p_trade: string }
         Returns: string
@@ -805,30 +793,18 @@ export type Database = {
         Args: { p_address?: string; p_marketing_consent?: boolean }
         Returns: string
       }
-      homeowner_update_equipment:
-        | {
-            Args: {
-              p_equipment_id: string
-              p_make?: string
-              p_model?: string
-              p_serial?: string
-              p_type?: string
-              p_warranty_until?: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_equipment_id: string
-              p_label?: string
-              p_make?: string
-              p_model?: string
-              p_serial?: string
-              p_type?: string
-              p_warranty_until?: string
-            }
-            Returns: undefined
-          }
+      homeowner_update_equipment: {
+        Args: {
+          p_equipment_id: string
+          p_label?: string
+          p_make?: string
+          p_model?: string
+          p_serial?: string
+          p_type?: string
+          p_warranty_until?: string
+        }
+        Returns: undefined
+      }
       homeowner_update_home: { Args: { p_address: string }; Returns: string }
       homeowner_update_profile: {
         Args: {
