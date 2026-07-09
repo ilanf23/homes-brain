@@ -96,6 +96,18 @@ function InvoicesList() {
     );
   }
 
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="invoices">
+        <PlanLock
+          title="Invoicing + get paid"
+          description="Send invoices to homeowners and collect payment through HomesBrain. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
+
   return (
     <ProShell pro={pro} active="invoices">
       <ProPageHead
