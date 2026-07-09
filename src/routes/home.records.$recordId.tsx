@@ -1,10 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import {
+  formatMoney,
+  isOverdue,
+  listInvoicesForHome,
+  type HomeInvoice,
+} from "@/lib/invoices";
+import { startInvoiceCheckout } from "@/lib/stripe-connect";
 
 export const Route = createFileRoute("/home/records/$recordId")({
   head: () => ({ meta: [{ title: "Service record - HomesBrain" }] }),
@@ -13,6 +20,7 @@ export const Route = createFileRoute("/home/records/$recordId")({
 
 function RecordDetail() {
   const { recordId } = Route.useParams();
+
   const navigate = useNavigate();
   const {
     homeowner,
