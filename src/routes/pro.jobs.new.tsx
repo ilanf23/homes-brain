@@ -188,6 +188,18 @@ function NewJob() {
   const [editDetails, setEditDetails] = useState(false);
   const [applianceHistory, setApplianceHistory] = useState<JobHistoryRow[]>([]);
 
+  // Trade-driven dynamic equipment fields. `activeTrade` defaults to the pro's
+  // trade but can be overridden per job (e.g. a plumber logging a water-treatment
+  // unit). Fields are fetched from `trade_fields` in the database so admins can
+  // change the form without a deploy. Answers live in `attrValues` and are
+  // written to `equipment.attributes` on save.
+  const [trades, setTrades] = useState<TradeOption[]>([]);
+  const [activeTrade, setActiveTrade] = useState<string>("");
+  const [tradeFields, setTradeFields] = useState<TradeField[]>([]);
+  const [attrValues, setAttrValues] = useState<AttributeValues>({});
+  const setAttr = (key: string, value: string | boolean) =>
+    setAttrValues((prev) => ({ ...prev, [key]: value }));
+
   // Nameplate scan
   const fileRef = useRef<HTMLInputElement>(null);
   const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
