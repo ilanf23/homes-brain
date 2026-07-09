@@ -30,6 +30,7 @@ import {
   type TimelineEntry,
 } from "@/components/crm";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { PlanLock } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer - HomesBrain" }] }),
@@ -422,6 +423,18 @@ function CustomerDetail() {
       </ProShell>
     );
   }
+
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="customers">
+        <PlanLock
+          title="Customer CRM"
+          description="Deep customer profiles with visits, equipment, invoices, and notes. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
 
   if (!customer) {
     return (

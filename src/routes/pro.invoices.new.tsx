@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { createInvoice, formatMoney, type InvoiceItem } from "@/lib/invoices";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { PlanLock } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/invoices/new")({
   head: () => ({ meta: [{ title: "New invoice - HomesBrain" }] }),
@@ -132,6 +133,18 @@ function NewInvoice() {
       </ProShell>
     );
   }
+
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="invoices">
+        <PlanLock
+          title="Invoicing + get paid"
+          description="Create and send invoices, then get paid through HomesBrain. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
 
   return (
     <ProShell pro={pro} active="invoices">
