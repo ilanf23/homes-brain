@@ -98,9 +98,14 @@ function Login() {
   async function sendMagicLink() {
     setBusy(true);
     setErr(null);
+    // Preserve the claim record through the resend so a fresh link still
+    // auto-claims the right home after the callback runs.
+    const redirect = claimRecordId
+      ? `${window.location.origin}/auth/callback?claim=${encodeURIComponent(claimRecordId)}`
+      : `${window.location.origin}/auth/callback`;
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/home` },
+      options: { emailRedirectTo: redirect },
     });
     if (error) {
       setErr(error.message);
@@ -109,6 +114,27 @@ function Login() {
     }
     setStep("ho-sent");
     setBusy(false);
+  }
+
+  async function homeownerPasswordLogin() {
+    setBusy(true);
+    setErr(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    if (claimRecordId) {
+      const { error: claimErr } = await supabase.rpc("claim_home", {
+        p_record_id: claimRecordId,
+      });
+      if (claimErr) console.error("claim_home failed", claimErr);
+    }
+    navigate({ to: "/home" });
   }
 
   async function proLogin() {
