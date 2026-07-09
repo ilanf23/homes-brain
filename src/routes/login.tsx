@@ -43,16 +43,31 @@ const STEP_COPY: Record<Step, { title: string; sub: string }> = {
 
 function Login() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showHoPassword, setShowHoPassword] = useState(false);
+  const claimRecordId = search.claim ?? null;
+  const expiredNote = search.note === "expired";
+
+  // Prefill and auto-continue when the callback sent us here after an
+  // expired magic link.
+  useEffect(() => {
+    if (search.email && expiredNote) {
+      // Fire a fresh link automatically so it's really one tap.
+      void sendMagicLink();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function resetToEmail() {
     setStep("email");
     setPassword("");
     setErr(null);
+    setShowHoPassword(false);
   }
 
   async function continueWithEmail() {
