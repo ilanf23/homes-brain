@@ -1,10 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import {
+  formatMoney,
+  isOverdue,
+  listInvoicesForHome,
+  type HomeInvoice,
+} from "@/lib/invoices";
+import { startInvoiceCheckout } from "@/lib/stripe-connect";
 
 export const Route = createFileRoute("/home/records/$recordId")({
   head: () => ({ meta: [{ title: "Service record - HomesBrain" }] }),
@@ -13,6 +20,7 @@ export const Route = createFileRoute("/home/records/$recordId")({
 
 function RecordDetail() {
   const { recordId } = Route.useParams();
+
   const navigate = useNavigate();
   const {
     homeowner,
@@ -38,9 +46,23 @@ function RecordDetail() {
     [job, pros],
   );
 
+  const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
+  const [payErr, setPayErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!home) return;
+    (async () => setInvoices(await listInvoicesForHome(home.id)))();
+  }, [home]);
+
+  const invoice = useMemo(
+    () => invoices.find((i) => i.job_id === record?.job_id) ?? null,
+    [invoices, record],
+  );
+
   useEffect(() => {
     if (!loading && !home) navigate({ to: "/home" });
   }, [loading, home, navigate]);
+
 
   if (loading) return <PageLoader label="Loading record" />;
   if (!home) return <PageLoader label="Setting up your home" />;
@@ -107,6 +129,75 @@ function RecordDetail() {
             )}
           </div>
         </Card>
+
+        {invoice && (
+          <Card className="anim-fade-up d-2 border-indigo/30">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <Eyebrow accent="indigo">Invoice</Eyebrow>
+              {invoice.status === "paid" ? (
+                <Pill accent="indigo">Paid</Pill>
+              ) : isOverdue(invoice) ? (
+                <Pill accent="red">Overdue</Pill>
+              ) : (
+                <Pill accent="amber">Open</Pill>
+              )}
+            </div>
+            <div className="mt-3 space-y-1">
+              {invoice.items.map((it, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-ink">{it.description}</span>
+                  <span className="text-ink font-semibold tnum">{formatMoney(Number(it.amount))}</span>
+                </div>
+              ))}
+              <div className="flex justify-between border-t border-line pt-2 mt-2 text-sm font-bold">
+                <span>Total</span>
+                <span className="tnum">{formatMoney(Number(invoice.total))}</span>
+              </div>
+              {invoice.due_date && invoice.status === "open" && (
+                <div className="text-xs text-muted mt-1">
+                  Due {formatDate(invoice.due_date)}
+                  {isOverdue(invoice) ? " · overdue" : ""}
+                </div>
+              )}
+              {invoice.note && (
+                <div className="text-xs text-muted mt-2 whitespace-pre-wrap">{invoice.note}</div>
+              )}
+            </div>
+            {invoice.status === "open" && (
+              <div className="mt-4">
+                {invoice.pros?.stripe_charges_enabled ? (
+                  <Btn
+                    variant="indigo"
+                    onClick={async () => {
+                      setPayErr(null);
+                      try {
+                        const { url } = await startInvoiceCheckout(invoice.id);
+                        window.location.href = url;
+                      } catch (e) {
+                        setPayErr(e instanceof Error ? e.message : "Couldn't start payment.");
+                      }
+                    }}
+                  >
+                    Pay {formatMoney(Number(invoice.total))}
+                  </Btn>
+                ) : (
+                  <p className="text-xs text-muted">
+                    {invoice.pros?.business ?? "Your pro"} hasn't turned on card payments yet.
+                  </p>
+                )}
+                {payErr && (
+                  <div role="alert" className="mt-2 text-sm text-red bg-redbg rounded-xl px-3 py-2">
+                    {payErr}
+                  </div>
+                )}
+              </div>
+            )}
+            {invoice.status === "paid" && invoice.paid_at && (
+              <div className="mt-3 text-xs text-muted">Paid {formatDate(invoice.paid_at)}</div>
+            )}
+          </Card>
+        )}
+
 
         {item && (
           <Card className="anim-fade-up d-2">
