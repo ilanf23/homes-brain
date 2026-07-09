@@ -24,8 +24,9 @@ const PENDING_KEY = "hb_pending_signup";
    user in immediately. Google OAuth still works for one-tap signup. */
 function HomeownerSignup() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(true);
