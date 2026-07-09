@@ -220,6 +220,3 @@ function PlanCard({
     </Card>
   );
 }
-
-// keep Link import used (referenced elsewhere via TS check)
-void Link;
