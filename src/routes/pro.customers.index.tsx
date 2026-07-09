@@ -487,6 +487,18 @@ function CustomersList() {
     );
   }
 
+  if (pro.plan !== "pro") {
+    return (
+      <ProShell pro={pro} active="customers">
+        <PlanLock
+          title="Customer CRM"
+          description="Your full customer + property history in one place — visits, equipment, invoices, notes. Included with Pro."
+        />
+      </ProShell>
+    );
+  }
+
+
   return (
     <ProShell pro={pro} active="customers">
       <ProPageHead
