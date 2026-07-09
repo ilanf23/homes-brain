@@ -143,7 +143,7 @@ function ProSignup() {
         <div className="text-center mb-8">
           <h1 className="text-3xl tracking-tight">Start free</h1>
           <p className="mt-2 text-sm text-muted">
-            No password. No credit card. Two fields to start.
+            No password. Two fields to start.
           </p>
         </div>
 
