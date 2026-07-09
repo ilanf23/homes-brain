@@ -106,13 +106,38 @@ function Login() {
   }
 
   async function continueWithEmail() {
-    // The role toggle decides which magic-link function to call. This
-    // lets one email hold BOTH a homeowner and a pro account: whichever
-    // side is missing gets created on the spot after the token exchange.
+    // Login is for existing accounts only. Look up which account types
+    // the email has and route accordingly: if the chosen role isn't
+    // present, send them to that role's sign-up (email pre-filled)
+    // rather than silently creating an account here.
+    setBusy(true);
+    setErr(null);
+    const trimmed = email.trim();
+    const { data, error } = await supabase.rpc("lookup_login_method", {
+      p_email: trimmed,
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    const method = (data as string) ?? "none";
+    const hasPro = method === "pro" || method === "both";
+    const hasHo = method === "homeowner" || method === "both";
     if (role === "pro") {
-      await sendProMagicLink();
+      if (hasPro) {
+        await sendProMagicLink();
+      } else {
+        setBusy(false);
+        navigate({ to: "/pro/signup", search: { email: trimmed } });
+      }
     } else {
-      await sendMagicLink();
+      if (hasHo) {
+        await sendMagicLink();
+      } else {
+        setBusy(false);
+        navigate({ to: "/home/signup", search: { email: trimmed } });
+      }
     }
   }
 
