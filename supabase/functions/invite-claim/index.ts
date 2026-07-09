@@ -257,11 +257,12 @@ Deno.serve(async (req) => {
     const address = home?.address ?? "your home";
     const claimed = !!home?.claimed_at;
 
-    // Mint a branded, single-use, hashed, expiring claim token when the
-    // home is unclaimed and we have a record to point at. Otherwise fall
-    // back to a plain /home link.
+    // Mint a branded, single-use, hashed, expiring claim token whenever we
+    // have a record to point at. For unclaimed homes claim_home attaches the
+    // home to the homeowner; for already-claimed homes it's a no-op and the
+    // /claim/:token page just signs the homeowner in and opens the record.
     let ctaUrl = `${originUrl}/home`;
-    if (!claimed && claimRecordId) {
+    if (claimRecordId) {
       const raw = base64url(crypto.getRandomValues(new Uint8Array(32)));
       const tokenHash = await sha256Hex(raw);
       const expiresAt = new Date(Date.now() + EMAIL_TOKEN_TTL_MS).toISOString();
