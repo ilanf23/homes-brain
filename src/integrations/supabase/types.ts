@@ -14,6 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      claim_tokens: {
+        Row: {
+          created_at: string
+          email: string | null
+          expires_at: string
+          home_id: string
+          id: string
+          pro_id: string
+          record_id: string
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          expires_at: string
+          home_id: string
+          id?: string
+          pro_id: string
+          record_id: string
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          home_id?: string
+          id?: string
+          pro_id?: string
+          record_id?: string
+          token_hash?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_tokens_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_tokens_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_tokens_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           claim_invited_at: string | null
