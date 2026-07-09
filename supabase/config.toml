@@ -44,3 +44,10 @@ verify_jwt = false
 [functions.homeowner-login]
 verify_jwt = false
 
+# password-reset routes forgot-password emails through Resend so they
+# actually deliver. Silent-success on unknown emails to avoid leaking
+# account existence.
+[functions.password-reset]
+verify_jwt = false
+
+

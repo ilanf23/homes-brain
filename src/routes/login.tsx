@@ -184,17 +184,28 @@ function Login() {
   async function sendReset() {
     setBusy(true);
     setErr(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const { data, error } = await supabase.functions.invoke("password-reset", {
+      body: { email: email.trim(), origin: window.location.origin },
     });
     if (error) {
       setErr(error.message);
       setBusy(false);
       return;
     }
+    const res = data as { ok?: boolean; code?: string } | null;
+    if (!res?.ok) {
+      setErr(
+        res?.code === "not_configured"
+          ? "Email is not configured yet."
+          : "We couldn't send that link. Try again.",
+      );
+      setBusy(false);
+      return;
+    }
     setStep("forgot-sent");
     setBusy(false);
   }
+
 
   const copy = STEP_COPY[step];
 
