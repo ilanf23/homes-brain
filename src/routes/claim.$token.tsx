@@ -23,6 +23,7 @@ type EquipmentPreview = {
 
 type Preview = {
   record_id: string;
+  equipment_id?: string | null;
   address: string | null;
   what_done: string | null;
   equipment: EquipmentPreview | null;
