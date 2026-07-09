@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import { FilterSelect, SlideOver, SortableTh, UnderlineTabs } from "@/components/crm";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { PlanLock } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/customers/")({
   head: () => ({ meta: [{ title: "Customers - HomesBrain" }] }),
