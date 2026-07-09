@@ -416,6 +416,8 @@ function HomeownerSettings() {
           <SettingsSection id="account" eyebrow="Account & security">
             <div className="mt-3">
               <SettingRow label="Email" sub={homeowner?.email || "Not set"} />
+              <AccountPasswordRow onDone={(msg) => setToast(msg)} />
+              <AccountGoogleRow onDone={(msg) => setToast(msg)} />
               <SettingRow label="Session" sub="Signed in on this device">
                 <Btn variant="secondary" size="sm" onClick={signOut}>
                   <LogOut size={14} /> Sign out
@@ -428,5 +430,139 @@ function HomeownerSettings() {
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </HomeShell>
+  );
+}
+
+/* Optional: add a password so the homeowner can also sign in with email +
+   password later. Magic link still works either way. */
+function AccountPasswordRow({ onDone }: { onDone: (msg: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const identities = data.user?.identities ?? [];
+      setHasPassword(identities.some((i) => i.provider === "email"));
+    })();
+  }, []);
+
+  async function save() {
+    setErr(null);
+    if (pw.length < 8) return setErr("Use at least 8 characters.");
+    if (pw !== confirm) return setErr("Passwords don't match.");
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: pw });
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    setPw("");
+    setConfirm("");
+    setOpen(false);
+    setHasPassword(true);
+    onDone("Password set - you can now sign in with email + password too.");
+  }
+
+  const label = hasPassword === false ? "Add a password" : "Change password";
+  const sub =
+    hasPassword === false
+      ? "Optional. You can keep using the magic link instead."
+      : "Update the password on your account.";
+
+  return (
+    <>
+      <SettingRow label={label} sub={sub}>
+        <Btn variant="secondary" size="sm" onClick={() => setOpen((v) => !v)}>
+          {open ? "Cancel" : hasPassword === false ? "Add" : "Change"}
+        </Btn>
+      </SettingRow>
+      {open && (
+        <div className="anim-fade-in mt-2 space-y-3 rounded-xl border border-line bg-soft p-4">
+          <Field label="New password">
+            <Input
+              type="password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+            />
+          </Field>
+          <Field label="Confirm">
+            <Input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+            />
+          </Field>
+          {err && (
+            <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
+              {err}
+            </div>
+          )}
+          <Btn variant="indigo" size="sm" loading={busy} onClick={save}>
+            Save password
+          </Btn>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* Optional: link a Google identity so the homeowner can also sign in with
+   Google later. Magic link still works either way. */
+function AccountGoogleRow({ onDone }: { onDone: (msg: string) => void }) {
+  const [linked, setLinked] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const identities = data.user?.identities ?? [];
+      setLinked(identities.some((i) => i.provider === "google"));
+    })();
+  }, []);
+
+  async function link() {
+    setBusy(true);
+    setErr(null);
+    const { error } = await supabase.auth.linkIdentity({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    // Redirect happens; keep busy state.
+    onDone("Google linked.");
+  }
+
+  return (
+    <SettingRow
+      label="Google sign-in"
+      sub={linked ? "Google connected." : "Optional. Sign in with one tap next time."}
+    >
+      {linked ? (
+        <span className="text-xs font-semibold text-muted">Connected</span>
+      ) : (
+        <Btn variant="secondary" size="sm" loading={busy} onClick={link}>
+          Link Google
+        </Btn>
+      )}
+      {err && (
+        <div role="alert" className="mt-2 text-sm text-red bg-redbg rounded-xl px-3 py-2">
+          {err}
+        </div>
+      )}
+    </SettingRow>
   );
 }

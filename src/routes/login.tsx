@@ -1,13 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
 
+type LoginSearch = { email?: string; claim?: string; note?: string };
+
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Log in - HomesBrain" }] }),
+  validateSearch: (s: Record<string, unknown>): LoginSearch => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+    claim: typeof s.claim === "string" ? s.claim : undefined,
+    note: typeof s.note === "string" ? s.note : undefined,
+  }),
   component: Login,
 });
 
@@ -36,16 +43,31 @@ const STEP_COPY: Record<Step, { title: string; sub: string }> = {
 
 function Login() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showHoPassword, setShowHoPassword] = useState(false);
+  const claimRecordId = search.claim ?? null;
+  const expiredNote = search.note === "expired";
+
+  // Prefill and auto-continue when the callback sent us here after an
+  // expired magic link.
+  useEffect(() => {
+    if (search.email && expiredNote) {
+      // Fire a fresh link automatically so it's really one tap.
+      void sendMagicLink();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function resetToEmail() {
     setStep("email");
     setPassword("");
     setErr(null);
+    setShowHoPassword(false);
   }
 
   async function continueWithEmail() {
@@ -76,9 +98,14 @@ function Login() {
   async function sendMagicLink() {
     setBusy(true);
     setErr(null);
+    // Preserve the claim record through the resend so a fresh link still
+    // auto-claims the right home after the callback runs.
+    const redirect = claimRecordId
+      ? `${window.location.origin}/auth/callback?claim=${encodeURIComponent(claimRecordId)}`
+      : `${window.location.origin}/auth/callback`;
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/home` },
+      options: { emailRedirectTo: redirect },
     });
     if (error) {
       setErr(error.message);
@@ -87,6 +114,27 @@ function Login() {
     }
     setStep("ho-sent");
     setBusy(false);
+  }
+
+  async function homeownerPasswordLogin() {
+    setBusy(true);
+    setErr(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      setErr(error.message);
+      setBusy(false);
+      return;
+    }
+    if (claimRecordId) {
+      const { error: claimErr } = await supabase.rpc("claim_home", {
+        p_record_id: claimRecordId,
+      });
+      if (claimErr) console.error("claim_home failed", claimErr);
+    }
+    navigate({ to: "/home" });
   }
 
   async function proLogin() {
@@ -243,10 +291,56 @@ function Login() {
 
         {step === "ho-sent" && (
           <>
+            {expiredNote && (
+              <div className="text-sm text-ink bg-amberbg rounded-xl px-3 py-2">
+                That link expired. We just sent a fresh one.
+              </div>
+            )}
             <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
               We emailed a sign-in link to <span className="font-semibold">{email.trim()}</span>.
               Click it and you're in.
             </div>
+            {showHoPassword ? (
+              <>
+                <Field label="Password">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Your password"
+                    autoComplete="current-password"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && password && !busy) homeownerPasswordLogin();
+                    }}
+                  />
+                </Field>
+                <ErrorRow err={err} />
+                <Btn
+                  variant="indigo"
+                  size="lg"
+                  className="w-full"
+                  disabled={!password}
+                  loading={busy}
+                  onClick={homeownerPasswordLogin}
+                >
+                  Sign in
+                </Btn>
+              </>
+            ) : (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowHoPassword(true);
+                    setErr(null);
+                  }}
+                  className="text-xs font-semibold text-indigo hover:underline"
+                >
+                  Use my password instead
+                </button>
+              </div>
+            )}
             <BackToEmail onClick={resetToEmail} />
           </>
         )}
