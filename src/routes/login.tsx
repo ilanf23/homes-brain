@@ -306,6 +306,71 @@ function Login() {
           </>
         )}
 
+        {step === "pro-sent" && (
+          <>
+            <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
+              We emailed a one-tap sign-in link to{" "}
+              <span className="font-semibold">{email.trim()}</span>. Tap it and you're in.
+            </div>
+            {showProPassword ? (
+              <>
+                <Field label="Password">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Your password"
+                    autoComplete="current-password"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && password && !busy) proLogin();
+                    }}
+                  />
+                </Field>
+                <ErrorRow err={err} />
+                <Btn
+                  variant="indigo"
+                  size="lg"
+                  className="w-full"
+                  disabled={!password}
+                  loading={busy}
+                  onClick={proLogin}
+                >
+                  Sign in
+                </Btn>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("forgot");
+                      setErr(null);
+                    }}
+                    className="text-xs font-semibold text-indigo hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProPassword(true);
+                    setErr(null);
+                  }}
+                  className="text-xs font-semibold text-indigo hover:underline"
+                >
+                  Use my password instead
+                </button>
+              </div>
+            )}
+            <BackToEmail onClick={resetToEmail} />
+          </>
+        )}
+
+
+
         {step === "pro-password" && (
           <>
             <EmailSummary email={email} onChange={resetToEmail} />
