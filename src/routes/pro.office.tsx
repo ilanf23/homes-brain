@@ -326,31 +326,51 @@ function ProDashboard() {
         </Card>
       )}
 
-      <MoneyRow
-        invoices={invoices}
-        rebooksThisMonth={rebooksThisMonth}
-        rebooksAllTime={rebooks.length}
-      />
+      {pro.plan === "pro" ? (
+        <>
+          <MoneyRow
+            invoices={invoices}
+            rebooksThisMonth={rebooksThisMonth}
+            rebooksAllTime={rebooks.length}
+          />
 
-      <ActionQueue
-        proId={proId!}
-        proBusiness={pro.business}
-        dueJobs={dueQueue}
-        overdueInvoices={overdueInvoices}
-        staleHomes={staleHomes}
-        onInvoicePaid={(invoiceId) =>
-          setInvoices((prev) =>
-            prev.map((i) =>
-              i.id === invoiceId
-                ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
-                : i,
-            ),
-          )
-        }
-        onToast={setToast}
-      />
+          <ActionQueue
+            proId={proId!}
+            proBusiness={pro.business}
+            dueJobs={dueQueue}
+            overdueInvoices={overdueInvoices}
+            staleHomes={staleHomes}
+            onInvoicePaid={(invoiceId) =>
+              setInvoices((prev) =>
+                prev.map((i) =>
+                  i.id === invoiceId
+                    ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
+                    : i,
+                ),
+              )
+            }
+            onToast={setToast}
+          />
 
-      <CustomerMap pins={pins} geocodingCount={geocodingCount} />
+          <CustomerMap pins={pins} geocodingCount={geocodingCount} />
+        </>
+      ) : (
+        <div className="space-y-4">
+          <PlanLockCompact
+            title="Money dashboard"
+            description="Revenue, paid invoices, and rebook value at a glance."
+          />
+          <PlanLockCompact
+            title="Smart action queue"
+            description="Rebook nudges for due jobs, overdue-invoice reminders, and follow-ups on unclaimed homes — all automated."
+          />
+          <PlanLockCompact
+            title="Customer map"
+            description="See every home you serve, color-coded by who owes, who's due, and who's unclaimed."
+          />
+        </div>
+      )}
+
 
       <div className="mt-4 grid grid-cols-3 gap-4">
         <Card className="anim-fade-up d-4">
