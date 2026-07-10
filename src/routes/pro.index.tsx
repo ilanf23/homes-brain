@@ -149,7 +149,7 @@ function ProHome() {
   }
 
   const firstName =
-    (pro.owner_first_name?.trim() || pro.business.split(" ")[0] || "").trim();
+    (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
   const greeting = firstName
     ? `${timeOfDayGreeting()}, ${firstName}.`
     : `${timeOfDayGreeting()}.`;
