@@ -98,7 +98,7 @@ function ProSettings() {
     if (!pro) return;
     setBusiness(pro.business);
     setOwnerFirstName(pro.owner_first_name ?? "");
-    setTrade(pro.trade);
+    setTrades(proTrades(pro));
     setArea(pro.service_area ?? "");
   }, [pro]);
 
