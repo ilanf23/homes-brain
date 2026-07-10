@@ -259,30 +259,44 @@ function ProSettings() {
                 />
               </Field>
               <div>
-                <div className="text-sm font-semibold text-ink mb-2">Trade</div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <div className="text-sm font-semibold text-ink">Trades</div>
+                  <div className="text-xs text-muted">
+                    Pick every trade you offer. First one is your primary.
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {TRADES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTrade(t.id)}
-                      aria-pressed={trade === t.id}
-                      className={`pressable text-left rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2.5 ${
-                        trade === t.id
-                          ? "border-indigo bg-indigobg text-indigo shadow-sm"
-                          : "border-line bg-paper text-ink hover:bg-soft hover:border-ink/20"
-                      }`}
-                    >
-                      <TradeIcon
-                        trade={t.id}
-                        size={18}
-                        className={trade === t.id ? "text-indigo" : "text-muted"}
-                      />
-                      {t.label}
-                    </button>
-                  ))}
+                  {TRADES.map((t) => {
+                    const selected = trades.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setTrades(
+                            selected ? trades.filter((x) => x !== t.id) : [...trades, t.id],
+                          )
+                        }
+                        aria-pressed={selected}
+                        className={`pressable text-left rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2.5 ${
+                          selected
+                            ? "border-indigo bg-indigobg text-indigo shadow-sm"
+                            : "border-line bg-paper text-ink hover:bg-soft hover:border-ink/20"
+                        }`}
+                      >
+                        <TradeIcon
+                          trade={t.id}
+                          size={18}
+                          className={selected ? "text-indigo" : "text-muted"}
+                        />
+                        <span className="min-w-0 truncate">{t.label}</span>
+                        {selected && <Check size={14} className="ml-auto text-indigo shrink-0" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
               <Field label="Service area" hint="City or ZIP.">
                 <Input value={area} onChange={(e) => setArea(e.target.value)} />
               </Field>
