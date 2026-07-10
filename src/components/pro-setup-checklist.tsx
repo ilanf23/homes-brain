@@ -39,7 +39,7 @@ type ProSetupState = {
   allDone: boolean;
 };
 
-export function useProSetup(proId: string | null, jobsCount: number): ProSetupState {
+export function useProSetup(proId: string | null, jobsCount?: number): ProSetupState {
   const [row, setRow] = useState<{
     business: string | null;
     trade: string | null;
@@ -48,20 +48,35 @@ export function useProSetup(proId: string | null, jobsCount: number): ProSetupSt
     stripe_charges_enabled: boolean | null;
     google_place_id: string | null;
   } | null>(null);
+  const [fetchedJobsCount, setFetchedJobsCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!proId) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("pros")
-        .select("business,trade,service_area,phone,stripe_charges_enabled,google_place_id")
-        .eq("id", proId)
-        .maybeSingle();
+      const promises: Promise<unknown>[] = [
+        supabase
+          .from("pros")
+          .select("business,trade,service_area,phone,stripe_charges_enabled,google_place_id")
+          .eq("id", proId)
+          .maybeSingle(),
+      ];
+      if (jobsCount === undefined) {
+        promises.push(
+          supabase
+            .from("jobs")
+            .select("id", { count: "exact", head: true })
+            .eq("pro_id", proId),
+        );
+      }
+      const results = (await Promise.all(promises)) as Array<{
+        data: unknown;
+        count?: number | null;
+      }>;
       if (cancelled) return;
       setRow(
-        (data as {
+        (results[0].data as {
           business: string | null;
           trade: string | null;
           service_area: string | null;
@@ -70,12 +85,17 @@ export function useProSetup(proId: string | null, jobsCount: number): ProSetupSt
           google_place_id: string | null;
         } | null) ?? null,
       );
+      if (jobsCount === undefined && results[1]) {
+        setFetchedJobsCount(results[1].count ?? 0);
+      }
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [proId]);
+  }, [proId, jobsCount]);
+
+  const effectiveJobsCount = jobsCount ?? fetchedJobsCount ?? 0;
 
   const items: ChecklistItem[] = [
     {
