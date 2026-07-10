@@ -311,7 +311,6 @@ export function PhoneInput({
   value: string;
   onChange: (formatted: string) => void;
 }) {
-  const { formatPhone } = require("./hb") as typeof import("./hb");
   return (
     <input
       {...rest}
