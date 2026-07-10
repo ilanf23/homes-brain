@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Eyebrow } from "@/lib/ui";
+import { Link } from "@tanstack/react-router";
+import { Btn, Eyebrow } from "@/lib/ui";
 import { LogoMark } from "@/components/svg";
 
 /* The forgetting-tax scene, acted out: homeowner questions whip across the
    stage - never more than a few at once - over speed streaks that build with
    the panic. Then the finale: the biggest question of all, "Where do I even
-   go?", looms slowly into center stage, holds, and cracks apart word by word.
-   As the pieces fall, the home's record comes clearly into view behind them,
-   answering every question row by row. Starts when scrolled into view and
-   loops; reduced motion (and no-JS/SSR) gets the settled resolution instead. */
+   go?", as a giant indigo cell that whips in from the left, stops dead
+   center, shakes as it holds, and cracks apart word by word. As the pieces fall, the home's record comes clearly into view
+   behind them, answering every question row by row - with a signup CTA so the
+   payoff is actionable. Starts when scrolled into view and plays once, ending
+   settled on the record; reduced motion (and no-JS/SSR) gets the settled
+   resolution instead. */
 
 type Panic = 0 | 1 | 2;
 
@@ -109,14 +112,15 @@ const QUESTIONS: Question[] = [
 const CHAOS_MS = 5600;
 const PANIC_1_AT = 2400;
 const PANIC_2_AT = 3900;
-const FINALE_MS = 3100; // keep in sync with the hb-loom duration in styles.css
+const FINALE_MS = 2400; // keep in sync with the hb-finale-fly duration in styles.css
 const BREAK_MS = 1750;
-const RESOLVED_HOLD = 6500;
 
-/* The finale line, one span per word so it can crack apart piece by piece.
-   Each word comes loose in its own direction; the delays stagger the collapse
-   ("even" gives first, "go?" hangs on longest) so it reads as slowly falling
-   apart rather than one clean exit. */
+/* The finale line, one pill per word so the cell can crack apart piece by
+   piece - each word carries its own chunk of the indigo background, seamless
+   against the cell until it falls. Each word comes loose in its own
+   direction; the delays stagger the collapse ("even" gives first, "go?"
+   hangs on longest) so it reads as slowly falling apart rather than one
+   clean exit. */
 const FINALE_WORDS = [
   { word: "Where", x: -34, rot: -16, delay: 300 },
   { word: "do", x: 12, rot: 9, delay: 150 },
@@ -238,16 +242,23 @@ function Resolution({ animate }: { animate: boolean }) {
             ))}
           </div>
           <div
-            className={`${animate ? "anim-fade-up" : ""} flex items-center justify-between gap-4 rounded-b-[21px] border-t border-line bg-soft px-5 py-3`}
+            className={`${animate ? "anim-fade-up" : ""} rounded-b-[21px] border-t border-line bg-soft px-5 py-3.5`}
             style={delay(460)}
           >
-            <span className="text-[13px] text-muted">Where do I even go?</span>
-            <span className="text-[13px] font-bold text-indigo">Mike · ABC Water →</span>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[13px] text-muted">Where do I even go?</span>
+              <span className="text-[13px] font-bold text-indigo">Mike · ABC Water →</span>
+            </div>
+            <Link to="/home/signup" className="mt-3 block">
+              <Btn variant="indigo" className="w-full">
+                Start your free record
+              </Btn>
+            </Link>
           </div>
         </div>
         <p
           className={`${animate ? "anim-fade-up" : ""} mt-4 text-sm text-muted`}
-          style={delay(540)}
+          style={delay(560)}
         >
           One record. Every answer. Zero typing.
         </p>
@@ -262,9 +273,12 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<"chaos" | "finale" | "break" | "resolved">("chaos");
   const [panic, setPanic] = useState<Panic>(0);
-  const [cycle, setCycle] = useState(0);
 
-  // Kick off only once the stage is actually on screen.
+  // Kick off once the stage is mostly on screen. A second, lower threshold
+  // guards the case where the section is taller than the viewport (or the
+  // page is scrolled in an unusual way) and 0.35 never fires: once any part
+  // of it is visible, a short fallback timer forces the start anyway, so
+  // the finale and CTA still show up for sighted users.
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
@@ -272,22 +286,42 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
       setStarted(true);
       return;
     }
+    let fallback: number | undefined;
+    const clearFallback = () => {
+      if (fallback !== undefined) {
+        window.clearTimeout(fallback);
+        fallback = undefined;
+      }
+    };
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.intersectionRatio >= 0.35) {
           setStarted(true);
           io.disconnect();
+          clearFallback();
+          return;
+        }
+        if (entry.isIntersecting && fallback === undefined) {
+          fallback = window.setTimeout(() => {
+            setStarted(true);
+            io.disconnect();
+          }, 2000);
+        } else if (!entry.isIntersecting) {
+          clearFallback();
         }
       },
-      { threshold: 0.35 },
+      { threshold: [0.05, 0.35] },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      clearFallback();
+    };
   }, []);
 
-  // The loop: one chaos act (bubble flights are pure CSS, keyed by cycle),
-  // the panic level stepping up underneath, then the finale question looming
-  // in and breaking apart into the resolution, then again.
+  // The act plays once: chaos with the panic level stepping up underneath,
+  // then the finale question flying in and breaking apart into the
+  // resolution, which stays settled so its signup CTA holds still.
   useEffect(() => {
     if (!started || reduced) return;
     let cancelled = false;
@@ -297,28 +331,23 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
         timers.push(window.setTimeout(res, ms));
       });
     (async () => {
-      while (!cancelled) {
-        setPhase("chaos");
-        setPanic(0);
-        await wait(PANIC_1_AT);
-        if (cancelled) return;
-        setPanic(1);
-        await wait(PANIC_2_AT - PANIC_1_AT);
-        if (cancelled) return;
-        setPanic(2);
-        await wait(CHAOS_MS - PANIC_2_AT);
-        if (cancelled) return;
-        setPhase("finale");
-        await wait(FINALE_MS);
-        if (cancelled) return;
-        setPhase("break");
-        await wait(BREAK_MS);
-        if (cancelled) return;
-        setPhase("resolved");
-        await wait(RESOLVED_HOLD);
-        if (cancelled) return;
-        setCycle((c) => c + 1);
-      }
+      setPhase("chaos");
+      setPanic(0);
+      await wait(PANIC_1_AT);
+      if (cancelled) return;
+      setPanic(1);
+      await wait(PANIC_2_AT - PANIC_1_AT);
+      if (cancelled) return;
+      setPanic(2);
+      await wait(CHAOS_MS - PANIC_2_AT);
+      if (cancelled) return;
+      setPhase("finale");
+      await wait(FINALE_MS);
+      if (cancelled) return;
+      setPhase("break");
+      await wait(BREAK_MS);
+      if (cancelled) return;
+      setPhase("resolved");
     })();
     return () => {
       cancelled = true;
@@ -329,12 +358,20 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
   // Reduced motion / pre-hydration: the settled resolution, frozen.
   const isStatic = reduced;
   const chaos = !isStatic && phase === "chaos";
+  const showResolution = isStatic || phase === "break" || phase === "resolved";
 
+  // The chaos and finale layers are decorative (aria-hidden) and role="img"
+  // on the stage gives assistive tech a plain-language description of the
+  // scene. Real content and the signup CTA live in an always-mounted
+  // sr-only block below so screen-reader users get them from first render,
+  // not only once the animation reaches the break phase; that block is
+  // hidden from the accessibility tree once the visible Resolution card
+  // mounts, so the moment isn't announced twice.
   return (
     <div
       ref={stageRef}
       role="img"
-      aria-label="Homeowner questions flying past faster and faster (warranty dates, filter sizes, who installed what) until one giant question, where do I even go, fills the stage, breaks apart, and the home's verified record card comes into view answering every one, down to which pro to call"
+      aria-label="A home's scattered paper service records swirl in a panic, then dissolve into one clean, verified HomesBrain service record."
       className={`relative h-[440px] sm:h-[470px] overflow-hidden ${className}`}
     >
       {/* Speed streaks - the background accelerates as the panic builds. */}
@@ -363,10 +400,9 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
       </div>
 
       {/* The flying questions. Each flight is one CSS animation (in → across
-          → out), so only a few share the stage at any moment. Remounting on
-          `cycle` restarts the act. */}
+          → out), so only a few share the stage at any moment. */}
       {chaos && started && (
-        <div key={cycle} aria-hidden="true" className="absolute inset-0">
+        <div aria-hidden="true" className="absolute inset-0">
           {QUESTIONS.map((q) => (
             <div
               key={q.text}
@@ -396,43 +432,75 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
         </div>
       )}
 
-      {/* The finale: the biggest question looms slowly into the middle of the
-          stage, holds, then cracks apart word by word. Transforms don't move
-          the layout boxes, so nothing reflows while the words fall in front
-          of the record card arriving underneath (z-20 over the card's z-10). */}
+      {/* The finale: the biggest question - now a giant indigo cell, the
+          panic bubbles' final form - whips in from the left, stops dead
+          center, jitters in place while it holds, then cracks apart word by
+          word. Three nested wrappers so the transforms compose: flight on
+          the outside, the shake in the middle, the cell itself inside. The
+          cell's background fades as it breaks while each word pill keeps its
+          own indigo chunk, so the white words stay visible as they fall.
+          Transforms don't move the layout boxes, so nothing reflows while
+          the pieces fall in front of the record card arriving underneath
+          (z-20 over the card's z-10). */}
       {!isStatic && (phase === "finale" || phase === "break") && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6"
         >
-          <p
-            className={`${phase === "finale" ? "loom" : ""} max-w-[560px] text-center text-[clamp(30px,6vw,52px)] font-extrabold leading-[1.08] tracking-tight text-ink`}
+          <div
+            className={phase === "finale" ? "finale-fly" : ""}
             style={phase === "finale" ? { animationDuration: `${FINALE_MS}ms` } : undefined}
           >
-            {FINALE_WORDS.map((w, i) => (
-              <span key={w.word}>
-                <span
-                  className={`inline-block ${phase === "break" ? "word-fall" : ""}`}
-                  style={
-                    {
-                      "--fall-x": `${w.x}px`,
-                      "--fall-rot": `${w.rot}deg`,
-                      animationDelay: phase === "break" ? `${w.delay}ms` : undefined,
-                    } as React.CSSProperties
-                  }
-                >
-                  {w.word}
-                </span>
-                {i < FINALE_WORDS.length - 1 ? " " : null}
-              </span>
-            ))}
-          </p>
+            <div
+              className={phase === "finale" ? "jitter" : ""}
+              // The shake kicks in only once the flight has stopped center.
+              style={
+                phase === "finale"
+                  ? { animationDelay: `${Math.round(FINALE_MS * 0.4)}ms` }
+                  : undefined
+              }
+            >
+              <div
+                className={`flex max-w-[620px] flex-wrap justify-center gap-x-1.5 gap-y-1.5 rounded-[26px] px-5 py-4 sm:px-8 sm:py-6 transition-[background-color,box-shadow] duration-300 ${
+                  phase === "break"
+                    ? "bg-transparent shadow-none"
+                    : "bg-indigo shadow-[0_24px_60px_-18px_rgba(71,63,176,0.65)]"
+                }`}
+              >
+                {FINALE_WORDS.map((w) => (
+                  <span
+                    key={w.word}
+                    className={`inline-block rounded-2xl bg-indigo px-2.5 py-1 text-center text-[clamp(26px,5.5vw,44px)] font-extrabold leading-[1.05] tracking-tight text-white ${phase === "break" ? "word-fall" : ""}`}
+                    style={
+                      {
+                        "--fall-x": `${w.x}px`,
+                        "--fall-rot": `${w.rot}deg`,
+                        animationDelay: phase === "break" ? `${w.delay}ms` : undefined,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {w.word}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {(isStatic || phase === "break" || phase === "resolved") && (
-        <Resolution animate={!isStatic} />
-      )}
+      {/* Always in the DOM from first render, for screen readers and for the
+          case where the intersection threshold above never fires: the same
+          headline and signup CTA the visible Resolution card shows once the
+          animation settles. */}
+      <div className="sr-only" aria-hidden={showResolution ? "true" : undefined}>
+        <p>
+          Every question a homeowner has about their house, warranties, install dates, service
+          history, gets answered by one clean, verified HomesBrain record.
+        </p>
+        <Link to="/home/signup">Start your free record</Link>
+      </div>
+
+      {showResolution && <Resolution animate={!isStatic} />}
     </div>
   );
 }

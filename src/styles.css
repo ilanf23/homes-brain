@@ -602,31 +602,37 @@
   animation-fill-mode: both;
 }
 
-/* Forgetting-scene finale: the last, biggest question looms slowly into
-   center stage - it never fully stops moving, settling to full size right as
-   it breaks. Duration is set inline from FINALE_MS in forgetting-scene.tsx
-   (3.1s); the 3.1s here is the fallback. */
-@keyframes hb-loom {
+/* Forgetting-scene finale: the last, biggest question whips in from the left
+   like the smaller questions before it, decelerates hard, and stops dead
+   center - then holds until the break. The tiny overshoot at 38% sells the
+   sudden stop. Duration is set inline from FINALE_MS in forgetting-scene.tsx
+   (2.4s); the 2.4s here is the fallback. */
+@keyframes hb-finale-fly {
   0% {
     opacity: 0;
-    transform: translateY(28px) scale(0.55);
-    filter: blur(8px);
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateX(-560px) scale(0.96);
+    filter: blur(7px);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  40% {
+  12% {
     opacity: 1;
-    transform: translateY(4px) scale(0.94);
+  }
+  38% {
+    transform: translateX(10px) scale(1);
     filter: blur(0);
     animation-timing-function: cubic-bezier(0.35, 0, 0.3, 1);
   }
+  50% {
+    transform: translateX(0) scale(1);
+  }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0) scale(1);
     filter: blur(0);
   }
 }
-@utility loom {
-  animation: hb-loom 3.1s both;
+@utility finale-fly {
+  animation: hb-finale-fly 2.4s both;
 }
 
 /* ...then it cracks apart: each word lifts loose with a tilt, hangs for a
