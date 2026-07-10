@@ -139,11 +139,13 @@ export function PropertyRow({
   value,
   display,
   onSave,
+  type = "text",
 }: {
   label: string;
   value?: string;
   display?: ReactNode;
   onSave?: (v: string) => Promise<boolean>;
+  type?: "text" | "phone";
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -157,22 +159,44 @@ export function PropertyRow({
     if (ok) setEditing(false);
   }
 
+  const displayValue =
+    display ??
+    (value
+      ? type === "phone"
+        ? formatPhone(value)
+        : value
+      : <span className="text-muted font-normal">Not set</span>);
+
   return (
     <div className="group py-2.5 border-b border-line last:border-b-0">
       <div className="text-xs text-muted">{label}</div>
       {editing ? (
         <div className="mt-1.5 flex items-center gap-2">
-          <Input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            autoFocus
-            aria-label={label}
-            className="!min-h-9 !py-1.5 !text-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") save();
-              if (e.key === "Escape") setEditing(false);
-            }}
-          />
+          {type === "phone" ? (
+            <PhoneInput
+              value={draft}
+              onChange={(v) => setDraft(v)}
+              autoFocus
+              aria-label={label}
+              className="!min-h-9 !py-1.5 !text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") save();
+                if (e.key === "Escape") setEditing(false);
+              }}
+            />
+          ) : (
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              autoFocus
+              aria-label={label}
+              className="!min-h-9 !py-1.5 !text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") save();
+                if (e.key === "Escape") setEditing(false);
+              }}
+            />
+          )}
           <Btn size="sm" variant="indigo" loading={saving} onClick={save}>
             Save
           </Btn>
@@ -183,7 +207,7 @@ export function PropertyRow({
       ) : (
         <div className="mt-0.5 flex items-center justify-between gap-2 min-h-6">
           <div className="text-sm font-semibold text-ink min-w-0 truncate">
-            {display ?? (value || <span className="text-muted font-normal">Not set</span>)}
+            {displayValue}
           </div>
           {onSave && (
             <button
