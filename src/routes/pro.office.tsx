@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
+import { Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { backfillHomeGeocodes, fetchProHomes, formatDate, type ProHome } from "@/lib/hb";
 import { isOverdue, listInvoicesForPro, type ProInvoice } from "@/lib/invoices";
