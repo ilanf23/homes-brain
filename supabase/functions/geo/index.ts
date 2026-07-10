@@ -8,6 +8,7 @@
      details      { placeId, sessionToken? }            -> { address, lat, lng }
      reverse      { lat, lng }                          -> { address, lat, lng }
      forward      { address }                           -> { lat, lng }
+     findBusiness { query, area? }                       -> { candidates: [{ placeId, name, address, rating, ratingCount, mapsUrl }] }
 
    Autocomplete + details share a sessionToken so Google bills them as one
    session (much cheaper than per-keystroke). Places API (New) for search,
@@ -31,13 +32,15 @@ function json(body: unknown, status = 200) {
 }
 
 type Body = {
-  op?: "autocomplete" | "details" | "reverse" | "forward";
+  op?: "autocomplete" | "details" | "reverse" | "forward" | "findBusiness";
   input?: string;
   placeId?: string;
   sessionToken?: string;
   address?: string;
   lat?: number;
   lng?: number;
+  query?: string;
+  area?: string;
 };
 
 Deno.serve(async (req) => {
@@ -139,6 +142,55 @@ Deno.serve(async (req) => {
         const loc = data.results?.[0]?.geometry?.location;
         if (!loc) return json({ lat: null, lng: null });
         return json({ lat: loc.lat, lng: loc.lng });
+      }
+
+      case "findBusiness": {
+        const query = (body.query ?? "").trim();
+        if (query.length < 2) return json({ candidates: [] });
+        const area = (body.area ?? "").trim();
+        /* Places Text Search (New). No session tokens here: text search is
+           billed per request, not per session like autocomplete. */
+        const resp = await fetch("https://places.googleapis.com/v1/places:searchText", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": key,
+            "X-Goog-FieldMask":
+              "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.googleMapsUri",
+          },
+          body: JSON.stringify({
+            textQuery: area ? `${query} ${area}` : query,
+            regionCode: "US",
+            maxResultCount: 5,
+          }),
+        });
+        if (!resp.ok) {
+          console.error("findBusiness error", resp.status, await resp.text());
+          return json({ candidates: [], error: "find_business_failed" }, 200);
+        }
+        const data = await resp.json();
+        type Place = {
+          id?: string;
+          displayName?: { text?: string };
+          formattedAddress?: string;
+          rating?: number;
+          userRatingCount?: number;
+          googleMapsUri?: string;
+        };
+        const candidates = ((data.places ?? []) as Place[])
+          .map((p) => {
+            if (!p.id || !p.displayName?.text || !p.googleMapsUri) return null;
+            return {
+              placeId: p.id,
+              name: p.displayName.text,
+              address: p.formattedAddress ?? null,
+              rating: typeof p.rating === "number" ? p.rating : null,
+              ratingCount: typeof p.userRatingCount === "number" ? p.userRatingCount : null,
+              mapsUrl: p.googleMapsUri,
+            };
+          })
+          .filter(Boolean);
+        return json({ candidates });
       }
 
       default:
