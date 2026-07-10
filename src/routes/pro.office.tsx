@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { backfillHomeGeocodes, fetchProHomes, formatDate, type ProHome } from "@/lib/hb";
 import { isOverdue, listInvoicesForPro, type ProInvoice } from "@/lib/invoices";
 import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
-import { CoreLoopScene } from "@/components/core-loop-scene";
+
 import { MoneyRow } from "@/components/money-row";
 import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
 import { CustomerMap, type MapPin } from "@/components/customer-map";
