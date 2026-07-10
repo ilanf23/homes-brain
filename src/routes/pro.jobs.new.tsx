@@ -1280,6 +1280,7 @@ function NewJob() {
                   )}
                 </div>
               </Card>
+              </div>
             )}
 
             {stage === "location" &&
