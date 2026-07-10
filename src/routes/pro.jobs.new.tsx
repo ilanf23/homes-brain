@@ -1162,7 +1162,7 @@ function NewJob() {
                   <button
                     type="button"
                     onClick={openVoiceFull}
-                    aria-label="Speak the whole job and I'll fill it in"
+                    aria-label="Talk to HomesBrain AI and it fills in the job"
                     className="pressable group w-full rounded-3xl bg-indigo px-6 py-6 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
                   >
                     <div className="flex items-center gap-4">
@@ -1170,11 +1170,14 @@ function NewJob() {
                         <MicIcon size={26} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="text-lg font-extrabold tracking-tight">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-80">
+                          HomesBrain AI
+                        </div>
+                        <div className="mt-0.5 text-lg font-extrabold tracking-tight">
                           Just tell me about the job
                         </div>
                         <div className="mt-0.5 text-sm opacity-90">
-                          Who it's for, where, when, what you did. I'll fill everything in.
+                          Who it's for, where, when, what you did. HomesBrain AI fills it all in.
                         </div>
                       </div>
                     </div>
@@ -1182,7 +1185,7 @@ function NewJob() {
                 )}
                 {fullBusy && (
                   <div className="rounded-2xl border border-indigo/20 bg-indigobg px-4 py-3 text-sm font-semibold text-indigo">
-                    Reading what you said…
+                    HomesBrain AI is reading what you said…
                   </div>
                 )}
               <Card className="space-y-3">
