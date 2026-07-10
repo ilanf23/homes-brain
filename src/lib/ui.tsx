@@ -4,7 +4,7 @@ import type {
   InputHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
-import { initials } from "./hb";
+import { initials, formatPhone } from "./hb";
 
 /* indigo = brand (default), coral = homeowner + payoff moments,
    teal = pro-world subbrand (pros directory, pro profiles, pros-near-you),
@@ -299,6 +299,30 @@ const baseInput =
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${baseInput} ${props.className ?? ""}`} />;
+}
+
+/* Masked US phone input. Live-formats to (123) 456-7890 as user types. */
+export function PhoneInput({
+  value,
+  onChange,
+  className,
+  ...rest
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value" | "type"> & {
+  value: string;
+  onChange: (formatted: string) => void;
+}) {
+  return (
+    <input
+      {...rest}
+      type="tel"
+      inputMode="tel"
+      autoComplete="tel"
+      placeholder={rest.placeholder ?? "(___) ___-____"}
+      value={formatPhone(value ?? "")}
+      onChange={(e) => onChange(formatPhone(e.target.value))}
+      className={`${baseInput} ${className ?? ""}`}
+    />
+  );
 }
 
 export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, QrCode } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/lib/hb";
+import { formatDate, formatPhone } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 
@@ -185,7 +185,7 @@ function RecordDetail() {
                 }
                 mono={false}
               />
-              <KV k="Sent to" v={job?.customers?.phone ?? job?.customers?.email ?? "-"} />
+              <KV k="Sent to" v={job?.customers?.phone ? formatPhone(job.customers.phone) : (job?.customers?.email ?? "-")} />
             </div>
           </Card>
 

@@ -20,6 +20,21 @@ export function suggestTradeGaps(have: string[]): TradeId[] {
   return all.filter((t) => !have.includes(t)) as TradeId[];
 }
 
+/* US phone helpers. formatPhone is idempotent - safe on stored formatted values. */
+export function phoneDigits(value: string): string {
+  let d = (value ?? "").replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+  return d.slice(0, 10);
+}
+
+export function formatPhone(value: string): string {
+  const d = phoneDigits(value);
+  if (d.length === 0) return "";
+  if (d.length <= 3) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+}
+
 // Stub recall check - always "no known recalls" for v0 per spec.
 export function checkRecall(_make?: string, _model?: string) {
   return {

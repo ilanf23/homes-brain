@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { Btn, Field, Input, KV, PageLoader, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
+import { Btn, Field, Input, KV, PageLoader, PhoneInput, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent } from "@/lib/hb";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
@@ -220,11 +220,9 @@ function HomeownerSettings() {
                 />
               </Field>
               <Field label="Phone">
-                <Input
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  type="tel"
-                  placeholder="904-555-0182"
+                  onChange={(v) => setPhone(v)}
                 />
               </Field>
               <Field label="Email">

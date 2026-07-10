@@ -17,6 +17,7 @@ import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
 import { MarketingShell, marketingHead, SITE_URL } from "@/components/marketing";
 import { ContactProModal } from "@/components/contact-pro-modal";
 import { getPro, TRADE_LABELS, type Pro } from "@/lib/pros";
+import { formatPhone } from "@/lib/hb";
 
 /* /pro/$slug is a single-segment dynamic route. Static /pro/* routes (jobs,
    customers, office, etc.) take precedence via file-based routing, but we also
@@ -139,7 +140,7 @@ function ProProfile() {
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-soft transition-colors"
               >
                 <Phone size={16} strokeWidth={2} />
-                <span className="tnum">{pro.phone}</span>
+                <span className="tnum">{formatPhone(pro.phone)}</span>
               </a>
             )}
           </div>
@@ -162,7 +163,7 @@ function ProProfile() {
                     href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
                     className="text-ink hover:text-tealdark transition-colors tnum"
                   >
-                    {pro.phone}
+                    {formatPhone(pro.phone)}
                   </a>
                 </ContactRow>
               )}

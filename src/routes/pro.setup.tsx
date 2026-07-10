@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, X, Check } from "lucide-react";
-import { Btn, Field, Input, PageLoader, Pill } from "@/lib/ui";
+import { Btn, Field, Input, PageLoader, PhoneInput, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent, TRADES, isGoogleUrl } from "@/lib/hb";
 import { Logo, TradeIcon } from "@/components/svg";
@@ -415,12 +415,9 @@ function StepView(props: {
     return (
       <StepFrame title="Your contact number" sub="Homeowners can reach you back on this.">
         <Field label="Contact phone">
-          <Input
-            type="tel"
-            inputMode="tel"
+          <PhoneInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="904-555-0182"
+            onChange={(v) => setPhone(v)}
             className="!text-xl !py-4"
             autoFocus
           />

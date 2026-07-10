@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, Search } from "lucide-react";
 import { Avatar, Btn, Card, Input, KV, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, mockSend } from "@/lib/hb";
+import { formatDate, formatPhone, logEvent, mockSend } from "@/lib/hb";
 import { FilterSelect, SlideOver, SortableTh, UnderlineTabs } from "@/components/crm";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
@@ -432,7 +432,7 @@ function CustomersList() {
             key={col}
             className={`${base} text-muted font-mono text-[13px] tnum whitespace-nowrap`}
           >
-            {d.c.phone ?? d.c.email ?? "-"}
+            {d.c.phone ? formatPhone(d.c.phone) : (d.c.email ?? "-")}
           </td>
         );
       case "email":
@@ -837,7 +837,7 @@ function CustomersList() {
               )}
             </div>
             <div className="mt-4">
-              <KV k="Phone" v={previewRow.c.phone ?? "-"} />
+              <KV k="Phone" v={previewRow.c.phone ? formatPhone(previewRow.c.phone) : "-"} />
               <KV k="Email" v={previewRow.c.email ?? "-"} />
               <KV k="Jobs" v={String(previewRow.jobCount)} />
               <KV

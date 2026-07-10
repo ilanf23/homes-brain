@@ -14,7 +14,7 @@ import {
 import { Avatar, Btn, Card, KV, Pill, Toast } from "@/lib/ui";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, mockSend } from "@/lib/hb";
+import { formatDate, formatPhone, logEvent, mockSend } from "@/lib/hb";
 import {
   formatMoney,
   isOverdue,
@@ -485,7 +485,7 @@ function CustomerDetail() {
             <h1 className="mt-3 text-2xl tracking-tight">{customer.name}</h1>
             <div className="mt-1 text-sm text-muted">{customer.homes?.address}</div>
             {customer.phone && (
-              <div className="mt-1.5 text-xs text-muted font-mono tnum">{customer.phone}</div>
+              <div className="mt-1.5 text-xs text-muted font-mono tnum">{formatPhone(customer.phone)}</div>
             )}
             {customer.email && (
               <div className="text-xs text-muted font-mono tnum">{customer.email}</div>
@@ -561,6 +561,7 @@ function CustomerDetail() {
                 label="Phone"
                 value={customer.phone ?? ""}
                 onSave={(v) => saveField("phone", v)}
+                type="phone"
               />
               <PropertyRow
                 label="Email"
@@ -687,7 +688,7 @@ function CustomerDetail() {
               </div>
               {homeowner ? (
                 <div className="mt-2">
-                  <KV k="Phone" v={homeowner.phone ?? "-"} />
+                  <KV k="Phone" v={homeowner.phone ? formatPhone(homeowner.phone) : "-"} />
                   <KV k="Email" v={homeowner.email ?? "-"} />
                   <KV k="Joined" v={formatDate(homeowner.created_at)} />
                 </div>

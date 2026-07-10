@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent, mockSend, suggestTradeGaps, TRADES, tradeLabel } from "@/lib/hb";
-import { Btn, Card, Eyebrow, Field, Input, Pill, Select } from "@/lib/ui";
+import { formatPhone, logEvent, mockSend, suggestTradeGaps, TRADES, tradeLabel } from "@/lib/hb";
+import { Btn, Card, Eyebrow, Field, Input, PhoneInput, Pill, Select } from "@/lib/ui";
 import { TradeIcon } from "@/components/svg";
 
 type InviteRow = {
@@ -173,11 +173,9 @@ export function InviteProsCard({
           />
         </Field>
         <Field label="Phone (optional)">
-          <Input
+          <PhoneInput
             value={invitePhone}
-            onChange={(e) => setInvitePhone(e.target.value)}
-            placeholder="512-847-1928"
-            type="tel"
+            onChange={(v) => setInvitePhone(v)}
           />
         </Field>
       </div>
@@ -229,7 +227,7 @@ export function InviteProsCard({
                     <span className="font-semibold">{i.to_pro_name}</span>
                     {i.trade && <span className="text-muted"> · {tradeLabel(i.trade)}</span>}
                     {(i.to_pro_email || i.to_pro_phone) && (
-                      <span className="text-muted"> · {i.to_pro_email ?? i.to_pro_phone}</span>
+                      <span className="text-muted"> · {i.to_pro_email ?? formatPhone(i.to_pro_phone ?? "")}</span>
                     )}
                   </span>
                 </span>
