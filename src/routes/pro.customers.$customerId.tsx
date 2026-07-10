@@ -561,6 +561,7 @@ function CustomerDetail() {
                 label="Phone"
                 value={customer.phone ?? ""}
                 onSave={(v) => saveField("phone", v)}
+                type="phone"
               />
               <PropertyRow
                 label="Email"
