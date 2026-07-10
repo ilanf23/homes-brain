@@ -315,7 +315,7 @@ function ProDashboard() {
       />
 
 
-      <ProSetupChecklist proId={proId} jobsCount={jobs.length} />
+      <ProSetupChecklist proId={proId} />
 
 
 
