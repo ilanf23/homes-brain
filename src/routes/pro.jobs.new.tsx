@@ -929,6 +929,9 @@ function NewJob() {
     setAskReview(true);
     setHiddenFields(new Set());
     setRecordUrl(null);
+    setSentCustomerId(null);
+    setSentRecordId(null);
+    setQrOpen(false);
     setCopied(false);
     setChargeAmount("");
     setBilledAmount(null);
