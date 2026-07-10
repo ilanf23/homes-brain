@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent, mockSend, suggestTradeGaps, TRADES, tradeLabel } from "@/lib/hb";
-import { Btn, Card, Eyebrow, Field, Input, Pill, Select } from "@/lib/ui";
+import { Btn, Card, Eyebrow, Field, Input, PhoneInput, Pill, Select } from "@/lib/ui";
 import { TradeIcon } from "@/components/svg";
 
 type InviteRow = {
