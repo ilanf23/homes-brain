@@ -41,6 +41,8 @@ function RecordDetail() {
   const { proId, pro } = useProGuard();
   const [record, setRecord] = useState<RecordRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [qrOpen, setQrOpen] = useState(false);
+
 
   useEffect(() => {
     if (!proId) return;
