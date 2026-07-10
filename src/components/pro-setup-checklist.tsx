@@ -199,7 +199,7 @@ export function ProSetupChecklist({
   jobsCount,
 }: {
   proId: string | null;
-  jobsCount: number;
+  jobsCount?: number;
 }) {
   const { loading, items, completed, total, allDone } = useProSetup(proId, jobsCount);
   const [collapsed, setCollapsed] = useState(false);
