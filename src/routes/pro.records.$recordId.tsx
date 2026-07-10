@@ -185,7 +185,7 @@ function RecordDetail() {
                 }
                 mono={false}
               />
-              <KV k="Sent to" v={job?.customers?.phone ?? job?.customers?.email ?? "-"} />
+              <KV k="Sent to" v={job?.customers?.phone ? formatPhone(job.customers.phone) : (job?.customers?.email ?? "-")} />
             </div>
           </Card>
 
