@@ -832,6 +832,8 @@ function NewJob() {
     const finalUrl = buildRecordUrl(rec!.id);
     await supabase.from("records").update({ public_url: finalUrl }).eq("id", rec!.id);
     setRecordUrl(finalUrl);
+    setSentCustomerId(customerId);
+    setSentRecordId(rec!.id);
 
     if (toContact) {
       const body = `${proName}: Your service record is ready. ${finalUrl} (Reply STOP to opt out.)`;
