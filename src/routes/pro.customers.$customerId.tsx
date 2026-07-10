@@ -836,6 +836,16 @@ function CustomerDetail() {
       </div>
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
+
+      {qrOpen && (
+        <ClaimQRModal
+          customerId={customerId}
+          proId={pro.id}
+          proBusiness={pro.business}
+          proLogo={pro.logo ?? null}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
     </ProShell>
   );
 }
