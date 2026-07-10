@@ -415,12 +415,9 @@ function StepView(props: {
     return (
       <StepFrame title="Your contact number" sub="Homeowners can reach you back on this.">
         <Field label="Contact phone">
-          <Input
-            type="tel"
-            inputMode="tel"
+          <PhoneInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="904-555-0182"
+            onChange={(v) => setPhone(v)}
             className="!text-xl !py-4"
             autoFocus
           />
