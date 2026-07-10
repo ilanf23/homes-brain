@@ -432,7 +432,7 @@ function CustomersList() {
             key={col}
             className={`${base} text-muted font-mono text-[13px] tnum whitespace-nowrap`}
           >
-            {d.c.phone ?? d.c.email ?? "-"}
+            {d.c.phone ? formatPhone(d.c.phone) : (d.c.email ?? "-")}
           </td>
         );
       case "email":
