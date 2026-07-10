@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, QrCode } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { ClaimQRModal } from "@/components/claim-qr-modal";
+
 
 export const Route = createFileRoute("/pro/records/$recordId")({
   head: () => ({ meta: [{ title: "Record - HomesBrain" }] }),
@@ -39,6 +41,8 @@ function RecordDetail() {
   const { proId, pro } = useProGuard();
   const [record, setRecord] = useState<RecordRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [qrOpen, setQrOpen] = useState(false);
+
 
   useEffect(() => {
     if (!proId) return;
@@ -108,12 +112,18 @@ function RecordDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
+          {job?.customers && !claimed && (
+            <Btn variant="secondary" onClick={() => setQrOpen(true)}>
+              <QrCode size={15} /> Show claim QR
+            </Btn>
+          )}
           {job?.customers && (
             <Link to="/pro/invoices/new" search={{ customer: job.customers.id, job: job.id }}>
               <Btn variant="secondary">Create invoice</Btn>
             </Link>
           )}
         </div>
+
       </div>
 
       <div className="grid md:grid-cols-2 gap-5 items-start">
@@ -202,6 +212,17 @@ function RecordDetail() {
           )}
         </div>
       </div>
+
+      {qrOpen && job?.customers && (
+        <ClaimQRModal
+          customerId={job.customers.id}
+          proId={pro.id}
+          recordId={record.id}
+          proBusiness={pro.business}
+          proLogo={pro.logo ?? null}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
     </ProShell>
   );
 }

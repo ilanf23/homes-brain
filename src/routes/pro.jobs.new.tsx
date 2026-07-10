@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Avatar, Btn, Card, Field, Input, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
+import { ClaimQRModal } from "@/components/claim-qr-modal";
+import { QrCode } from "lucide-react";
 import {
   buildRecordUrl,
   checkRecall,
@@ -240,6 +242,11 @@ function NewJob() {
   const [askReview, setAskReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [recordUrl, setRecordUrl] = useState<string | null>(null);
+  // Captured on submit so the "Show claim QR" button on the done screen can
+  // open ClaimQRModal for the same customer + record we just sent.
+  const [sentCustomerId, setSentCustomerId] = useState<string | null>(null);
+  const [sentRecordId, setSentRecordId] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
   // Optional "bill this customer" amount entered on the review slide. String so
   // the input can be empty; parsed to a number at submit time. When >0 we also
   // create an open invoice so the homeowner can pay it via the existing flow.
@@ -827,6 +834,8 @@ function NewJob() {
     const finalUrl = buildRecordUrl(rec!.id);
     await supabase.from("records").update({ public_url: finalUrl }).eq("id", rec!.id);
     setRecordUrl(finalUrl);
+    setSentCustomerId(customerId);
+    setSentRecordId(rec!.id);
 
     if (toContact) {
       const body = `${proName}: Your service record is ready. ${finalUrl} (Reply STOP to opt out.)`;
@@ -922,6 +931,9 @@ function NewJob() {
     setAskReview(true);
     setHiddenFields(new Set());
     setRecordUrl(null);
+    setSentCustomerId(null);
+    setSentRecordId(null);
+    setQrOpen(false);
     setCopied(false);
     setChargeAmount("");
     setBilledAmount(null);
@@ -1719,6 +1731,11 @@ function NewJob() {
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {sentCustomerId && (
+                    <Btn variant="secondary" onClick={() => setQrOpen(true)}>
+                      <QrCode size={15} /> Show claim QR
+                    </Btn>
+                  )}
                   <Btn variant="indigo" onClick={logAnother}>
                     Log another
                   </Btn>
@@ -1726,6 +1743,7 @@ function NewJob() {
                     <Btn variant="secondary">Back to dashboard</Btn>
                   </Link>
                 </div>
+
               </Card>
             )}
           </div>
@@ -1742,6 +1760,17 @@ function NewJob() {
       )}
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
+
+      {qrOpen && sentCustomerId && proId && pro && (
+        <ClaimQRModal
+          customerId={sentCustomerId}
+          proId={proId}
+          recordId={sentRecordId ?? undefined}
+          proBusiness={pro.business}
+          proLogo={pro.logo ?? null}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
     </div>
   );
 }

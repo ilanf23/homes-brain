@@ -5,12 +5,14 @@ import {
   BellRing,
   Eye,
   Mail,
+  QrCode,
   ReceiptText,
   Send,
   StickyNote,
   Wrench,
 } from "lucide-react";
 import { Avatar, Btn, Card, KV, Pill, Toast } from "@/lib/ui";
+
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import {
@@ -31,6 +33,8 @@ import {
 } from "@/components/crm";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
+import { ClaimQRModal } from "@/components/claim-qr-modal";
+
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer - HomesBrain" }] }),
@@ -100,8 +104,10 @@ function CustomerDetail() {
   const [savingNote, setSavingNote] = useState(false);
   const [nudging, setNudging] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+
 
   useEffect(() => {
     if (!proId) return;
@@ -513,20 +519,34 @@ function CustomerDetail() {
                 }
               />
               {!customer.homes?.claimed_at && (
-                <ActionCircle
-                  icon={Mail}
-                  label="Invite"
-                  onClick={sendClaimInvite}
-                  disabled={!customer.email || inviting || inviteOnCooldown}
-                  title={
-                    !customer.email
-                      ? "No email on file"
-                      : inviteOnCooldown
-                        ? `Invited ${formatDate(customer.claim_invited_at!)} · resend available ${formatDate(inviteCooldownUntil!)}`
-                        : "Email an invite to claim this home record"
-                  }
-                />
+                <>
+                  <ActionCircle
+                    icon={Mail}
+                    label="Invite"
+                    onClick={sendClaimInvite}
+                    disabled={!customer.email || inviting || inviteOnCooldown}
+                    title={
+                      !customer.email
+                        ? "No email on file"
+                        : inviteOnCooldown
+                          ? `Invited ${formatDate(customer.claim_invited_at!)} · resend available ${formatDate(inviteCooldownUntil!)}`
+                          : "Email an invite to claim this home record"
+                    }
+                  />
+                  <ActionCircle
+                    icon={QrCode}
+                    label="Show QR"
+                    onClick={() => setQrOpen(true)}
+                    disabled={!customer.email}
+                    title={
+                      !customer.email
+                        ? "No email on file"
+                        : "Show a QR the homeowner can scan to claim"
+                    }
+                  />
+                </>
               )}
+
             </div>
           </Card>
 
@@ -816,6 +836,16 @@ function CustomerDetail() {
       </div>
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
+
+      {qrOpen && (
+        <ClaimQRModal
+          customerId={customerId}
+          proId={pro.id}
+          proBusiness={pro.business}
+          proLogo={pro.logo ?? null}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
     </ProShell>
   );
 }
