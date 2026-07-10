@@ -1760,6 +1760,17 @@ function NewJob() {
       )}
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
+
+      {qrOpen && sentCustomerId && proId && pro && (
+        <ClaimQRModal
+          customerId={sentCustomerId}
+          proId={proId}
+          recordId={sentRecordId ?? undefined}
+          proBusiness={pro.business}
+          proLogo={pro.logo ?? null}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
     </div>
   );
 }
