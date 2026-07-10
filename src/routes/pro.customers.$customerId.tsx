@@ -104,8 +104,10 @@ function CustomerDetail() {
   const [savingNote, setSavingNote] = useState(false);
   const [nudging, setNudging] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+
 
   useEffect(() => {
     if (!proId) return;
