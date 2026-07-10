@@ -1157,6 +1157,34 @@ function NewJob() {
         <div>
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
+              <div className="space-y-4">
+                {fullDictation.supported && (
+                  <button
+                    type="button"
+                    onClick={openVoiceFull}
+                    aria-label="Speak the whole job and I'll fill it in"
+                    className="pressable group w-full rounded-3xl bg-indigo px-6 py-6 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/15">
+                        <MicIcon size={26} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-lg font-extrabold tracking-tight">
+                          Just tell me about the job
+                        </div>
+                        <div className="mt-0.5 text-sm opacity-90">
+                          Who it's for, where, when, what you did. I'll fill everything in.
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                )}
+                {fullBusy && (
+                  <div className="rounded-2xl border border-indigo/20 bg-indigobg px-4 py-3 text-sm font-semibold text-indigo">
+                    Reading what you said…
+                  </div>
+                )}
               <Card className="space-y-3">
                 <Input
                   value={query}
