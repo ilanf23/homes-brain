@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { I18nProvider } from "../lib/i18n";
+import { getLocaleServerFn } from "../lib/i18n-server";
 
 function NotFoundComponent() {
   return (
@@ -112,6 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
+  loader: async () => ({ locale: await getLocaleServerFn() }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -134,9 +137,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { locale } = Route.useLoaderData();
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <I18nProvider initialLocale={locale}>
+        <Outlet />
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

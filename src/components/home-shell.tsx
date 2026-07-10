@@ -6,6 +6,7 @@ import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
+import { LanguageToggle, useT, type TKey } from "@/lib/i18n";
 
 export type HomeownerRow = {
   id: string;
@@ -167,12 +168,12 @@ export function useHomeownerGuard() {
 
 export type HomeNavKey = "overview" | "appliances" | "pros" | "reminders" | "add" | "settings";
 
-const NAV: { key: HomeNavKey; label: string; to: string; icon: typeof Home }[] = [
-  { key: "overview", label: "My home", to: "/home", icon: Home },
-  { key: "appliances", label: "Appliances", to: "/home/appliances", icon: Wrench },
-  { key: "pros", label: "My pros", to: "/home/pros", icon: Users },
-  { key: "reminders", label: "Reminders", to: "/home/reminders", icon: Bell },
-  { key: "settings", label: "Settings", to: "/home/settings", icon: Settings },
+const NAV: { key: HomeNavKey; labelKey: TKey; to: string; icon: typeof Home }[] = [
+  { key: "overview", labelKey: "nav.myHome", to: "/home", icon: Home },
+  { key: "appliances", labelKey: "nav.appliances", to: "/home/appliances", icon: Wrench },
+  { key: "pros", labelKey: "nav.myPros", to: "/home/pros", icon: Users },
+  { key: "reminders", labelKey: "nav.reminders", to: "/home/reminders", icon: Bell },
+  { key: "settings", labelKey: "nav.settings", to: "/home/settings", icon: Settings },
 ];
 
 export function HomeShell({
@@ -188,6 +189,7 @@ export function HomeShell({
 }) {
   const navigate = useNavigate();
   const [theme] = useTheme();
+  const t = useT();
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -209,12 +211,12 @@ export function HomeShell({
         <div className="p-3">
           <Link to="/home/add">
             <Btn variant="indigo" className="w-full">
-              <Plus size={16} /> Add to your home
+              <Plus size={16} /> {t("nav.addToHome")}
             </Btn>
           </Link>
         </div>
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto" aria-label="Homeowner navigation">
-          {NAV.map(({ key, label, to, icon: Icon }) => (
+          {NAV.map(({ key, labelKey, to, icon: Icon }) => (
             <Link
               key={key}
               to={to}
@@ -226,24 +228,27 @@ export function HomeShell({
               }`}
             >
               <Icon size={17} />
-              {label}
+              {t(labelKey)}
             </Link>
           ))}
         </nav>
-        <div className="p-3 border-t border-line">
+        <div className="p-3 border-t border-line space-y-2">
+          <div className="px-2">
+            <LanguageToggle className="w-fit" />
+          </div>
           <div className="flex items-center gap-2.5 px-2">
-            <Avatar name={homeowner?.name || "Homeowner"} accent="indigo" size={36} />
+            <Avatar name={homeowner?.name || t("chrome.homeowner")} accent="indigo" size={36} />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-ink truncate">
-                {homeowner?.name || "Homeowner"}
+                {homeowner?.name || t("chrome.homeowner")}
               </div>
               <div className="text-xs text-muted truncate">{home?.address ?? ""}</div>
             </div>
             <ThemeToggle />
             <button
               onClick={signOut}
-              aria-label="Sign out"
-              title="Sign out"
+              aria-label={t("chrome.signOut")}
+              title={t("chrome.signOut")}
               className="pressable text-muted hover:text-ink p-1.5 rounded-lg hover:bg-soft transition-colors"
             >
               <LogOut size={16} />
@@ -262,14 +267,15 @@ export function HomeShell({
             <div className="flex items-center gap-2">
               <Link to="/home/add">
                 <Btn variant="indigo" size="sm">
-                  <Plus size={14} /> Add
+                  <Plus size={14} /> {t("nav.add")}
                 </Btn>
               </Link>
-              <Pill accent="indigo">Homeowner</Pill>
+              <Pill accent="indigo">{t("chrome.homeowner")}</Pill>
+              <LanguageToggle />
               <ThemeToggle />
               <button
                 onClick={signOut}
-                aria-label="Sign out"
+                aria-label={t("chrome.signOut")}
                 className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
               >
                 <LogOut size={16} />
@@ -280,7 +286,7 @@ export function HomeShell({
             className="flex gap-1 px-3 pb-2 overflow-x-auto no-scrollbar"
             aria-label="Homeowner navigation"
           >
-            {NAV.map(({ key, label, to }) => (
+            {NAV.map(({ key, labelKey, to }) => (
               <Link
                 key={key}
                 to={to}
@@ -291,7 +297,7 @@ export function HomeShell({
                     : "text-muted font-semibold hover:text-ink"
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </Link>
             ))}
           </nav>

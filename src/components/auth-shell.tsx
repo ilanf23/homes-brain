@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Logo, TradeIcon } from "@/components/svg";
 import type { TradeIconName } from "@/components/svg";
+import { LanguageToggle, useT } from "@/lib/i18n";
 
 /* Split-screen shell for the auth pages (/login, /reset-password).
    Left: logo top-left, form column vertically centered, muted footer line.
@@ -9,17 +10,21 @@ import type { TradeIconName } from "@/components/svg";
    filling in, so the auth pages read as the product's front door, not an
    app screen. */
 export function AuthShell({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+  const t = useT();
   return (
     <div className="font-app min-h-dvh bg-soft text-ink lg:grid lg:grid-cols-[1fr_minmax(0,46%)]">
       <div className="flex min-h-dvh flex-col px-5 py-6 sm:px-10">
-        <Link to="/" className="group inline-flex w-fit items-center gap-2.5">
-          <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/" className="group inline-flex w-fit items-center gap-2.5">
+            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
+          </Link>
+          <LanguageToggle />
+        </div>
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">{children}</div>
         </div>
         <div className="text-center text-xs text-muted">
-          {footer ?? <span>Free for homeowners. Records stay yours for life.</span>}
+          {footer ?? <span>{t("login.footer")}</span>}
         </div>
       </div>
       <aside
@@ -31,15 +36,13 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
         }}
       >
         <div className="mx-auto w-full max-w-md">
-          <div className="eyebrow text-indigo">The home ledger</div>
+          <div className="eyebrow text-indigo">{t("aside.eyebrow")}</div>
           <h2 className="mt-3 text-[32px] font-extrabold leading-[1.12] tracking-tight text-ink">
-            A home that
+            {t("aside.headline1")}
             <br />
-            remembers itself.
+            {t("aside.headline2")}
           </h2>
-          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-muted">
-            Every visit from your pros becomes a verified record your home keeps for good.
-          </p>
+          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-muted">{t("aside.sub")}</p>
           <LedgerStack />
         </div>
       </aside>

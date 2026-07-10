@@ -5,6 +5,7 @@ import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
+import { useT, type TKey } from "@/lib/i18n";
 
 type LoginSearch = { email?: string; claim?: string; note?: string };
 
@@ -33,16 +34,16 @@ type Step =
   | "forgot"
   | "forgot-sent";
 
-const STEP_COPY: Record<Step, { title: string; sub: string }> = {
-  email: { title: "Welcome back", sub: "Enter your email and we'll take it from there." },
-  "pro-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
-  "pro-password": { title: "Welcome back", sub: "Enter your password to sign in." },
-  "ho-password": { title: "Welcome back", sub: "Enter your password to sign in." },
-  "ho-sent": { title: "Check your email", sub: "We sent you a one-tap sign-in link." },
-  "no-account": { title: "No account yet", sub: "We couldn't find an account for that email." },
-  "choose-role": { title: "Two accounts, one email", sub: "How do you want to sign in?" },
-  forgot: { title: "Reset your password", sub: "We'll email you a reset link." },
-  "forgot-sent": { title: "Check your email", sub: "Your reset link is on the way." },
+const STEP_COPY: Record<Step, { title: TKey; sub: TKey }> = {
+  email: { title: "login.email.title", sub: "login.email.sub" },
+  "pro-sent": { title: "login.sent.title", sub: "login.sent.sub" },
+  "pro-password": { title: "login.email.title", sub: "login.password.sub" },
+  "ho-password": { title: "login.email.title", sub: "login.password.sub" },
+  "ho-sent": { title: "login.sent.title", sub: "login.sent.sub" },
+  "no-account": { title: "login.noAccount.title", sub: "login.noAccount.sub" },
+  "choose-role": { title: "login.chooseRole.title", sub: "login.chooseRole.sub" },
+  forgot: { title: "login.forgot.title", sub: "login.forgot.sub" },
+  "forgot-sent": { title: "login.forgotSent.title", sub: "login.forgotSent.sub" },
 };
 
 type Role = "homeowner" | "pro";
@@ -61,6 +62,7 @@ function readSavedRole(): Role {
 function Login() {
   const navigate = useNavigate();
   const search = Route.useSearch();
+  const t = useT();
   const [step, setStep] = useState<Step>("email");
   const [role, setRoleState] = useState<Role>("homeowner");
   const [email, setEmail] = useState(search.email ?? "");
@@ -277,16 +279,17 @@ function Login() {
   return (
     <AuthShell>
       <div className="mb-6">
-        <h1 className="text-3xl tracking-tight">{copy.title}</h1>
-        <p className="mt-2 text-sm text-muted">{copy.sub}</p>
+        <h1 className="text-3xl tracking-tight">{t(copy.title)}</h1>
+        <p className="mt-2 text-sm text-muted">{t(copy.sub)}</p>
       </div>
 
       <div className="space-y-4">
         {step === "email" && (
           <>
-            <RoleToggle role={role} onChange={setRole} disabled={busy} />
+            <RoleToggle role={role} onChange={setRole} disabled={busy} t={t} />
             <GoogleButton
               busy={busy}
+              t={t}
               onClick={async () => {
                 setBusy(true);
                 setErr(null);
@@ -310,13 +313,13 @@ function Login() {
                 navigate({ to: "/auth/callback" });
               }}
             />
-            <OrDivider />
-            <Field label="Email">
+            <OrDivider t={t} />
+            <Field label={t("auth.email")}>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
+                placeholder={t("auth.emailPlaceholder")}
                 autoComplete="email"
                 autoFocus
                 onKeyDown={(e) => {
@@ -333,16 +336,16 @@ function Login() {
               loading={busy}
               onClick={continueWithEmail}
             >
-              {role === "pro" ? "Continue as pro" : "Continue as homeowner"}
+              {role === "pro" ? t("login.continuePro") : t("login.continueHomeowner")}
             </Btn>
             <p className="text-center text-xs text-muted">
-              New here?{" "}
+              {t("login.newHere")}{" "}
               <Link to="/pro/signup" className="font-semibold text-indigo hover:underline">
-                Start free as a pro
+                {t("login.startFreePro")}
               </Link>{" "}
-              or{" "}
+              {t("auth.or")}{" "}
               <Link to="/home/signup" className="font-semibold text-indigo hover:underline">
-                create your home account
+                {t("login.createHomeAccountLink")}
               </Link>
             </p>
           </>
@@ -351,8 +354,9 @@ function Login() {
         {step === "pro-sent" && (
           <>
             <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
-              We emailed a one-tap sign-in link to{" "}
-              <span className="font-semibold">{email.trim()}</span>. Tap it and you're in.
+              {t("login.proSent.pre")}
+              <span className="font-semibold">{email.trim()}</span>
+              {t("login.proSent.post")}
             </div>
             {showProPassword ? (
               <>
@@ -361,7 +365,7 @@ function Login() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Your password"
+                    placeholder={t("auth.passwordPlaceholder")}
                     autoComplete="current-password"
                     autoFocus
                     onKeyDown={(e) => {
@@ -378,7 +382,7 @@ function Login() {
                   loading={busy}
                   onClick={proLogin}
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Btn>
                 <div className="text-center">
                   <button
@@ -389,7 +393,7 @@ function Login() {
                     }}
                     className="text-xs font-semibold text-indigo hover:underline"
                   >
-                    Forgot password?
+                    {t("login.forgotPassword")}
                   </button>
                 </div>
               </>
@@ -403,7 +407,7 @@ function Login() {
                   }}
                   className="text-xs font-semibold text-indigo hover:underline"
                 >
-                  Use my password instead
+                  {t("login.usePasswordInstead")}
                 </button>
               </div>
             )}
@@ -419,7 +423,7 @@ function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder={t("auth.passwordPlaceholder")}
                 autoComplete="current-password"
                 autoFocus
                 onKeyDown={(e) => {
@@ -436,7 +440,7 @@ function Login() {
               loading={busy}
               onClick={proLogin}
             >
-              Sign in
+              {t("auth.signIn")}
             </Btn>
             <div className="text-center">
               <button
@@ -447,7 +451,7 @@ function Login() {
                 }}
                 className="text-xs font-semibold text-indigo hover:underline"
               >
-                Forgot password?
+                {t("login.forgotPassword")}
               </button>
             </div>
           </>
@@ -461,7 +465,7 @@ function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder={t("auth.passwordPlaceholder")}
                 autoComplete="current-password"
                 autoFocus
                 onKeyDown={(e) => {
@@ -478,7 +482,7 @@ function Login() {
               loading={busy}
               onClick={homeownerPasswordLogin}
             >
-              Sign in
+              {t("auth.signIn")}
             </Btn>
             <Btn
               variant="secondary"
@@ -487,7 +491,7 @@ function Login() {
               loading={busy}
               onClick={sendMagicLink}
             >
-              Email me a sign-in link instead
+              {t("login.emailLinkInstead")}
             </Btn>
             <div className="text-center">
               <button
@@ -498,7 +502,7 @@ function Login() {
                 }}
                 className="text-xs font-semibold text-indigo hover:underline"
               >
-                Forgot password?
+                {t("login.forgotPassword")}
               </button>
             </div>
           </>
@@ -508,12 +512,13 @@ function Login() {
           <>
             {expiredNote && (
               <div className="text-sm text-ink bg-amberbg rounded-xl px-3 py-2">
-                That link expired. We just sent a fresh one.
+                {t("login.expiredLink")}
               </div>
             )}
             <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
-              We emailed a sign-in link to <span className="font-semibold">{email.trim()}</span>.
-              Click it and you're in.
+              {t("login.hoSent.pre")}
+              <span className="font-semibold">{email.trim()}</span>
+              {t("login.hoSent.post")}
             </div>
             {showHoPassword ? (
               <>
@@ -522,7 +527,7 @@ function Login() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Your password"
+                    placeholder={t("auth.passwordPlaceholder")}
                     autoComplete="current-password"
                     autoFocus
                     onKeyDown={(e) => {
@@ -539,7 +544,7 @@ function Login() {
                   loading={busy}
                   onClick={homeownerPasswordLogin}
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Btn>
               </>
             ) : (
@@ -552,7 +557,7 @@ function Login() {
                   }}
                   className="text-xs font-semibold text-indigo hover:underline"
                 >
-                  Use my password instead
+                  {t("login.usePasswordInstead")}
                 </button>
               </div>
             )}
@@ -563,17 +568,18 @@ function Login() {
         {step === "no-account" && (
           <>
             <div className="text-sm text-ink bg-soft border border-line rounded-xl px-3 py-2">
-              Nothing yet for <span className="font-semibold">{email.trim()}</span>. Pick where to
-              start:
+              {t("login.noAccount.pre")}
+              <span className="font-semibold">{email.trim()}</span>
+              {t("login.noAccount.post")}
             </div>
             <Link to="/pro/signup" className="block">
               <Btn variant="indigo" size="lg" className="w-full">
-                Start free as a pro
+                {t("login.startFreePro")}
               </Btn>
             </Link>
             <Link to="/home/signup" className="block">
               <Btn variant="secondary" size="lg" className="w-full">
-                Create your home account
+                {t("login.createHomeAccountBtn")}
               </Btn>
             </Link>
             <BackToEmail onClick={resetToEmail} />
@@ -593,7 +599,7 @@ function Login() {
                 setErr(null);
               }}
             >
-              Sign in with password
+              {t("login.signInWithPassword")}
             </Btn>
             <Btn
               variant="secondary"
@@ -602,7 +608,7 @@ function Login() {
               loading={busy}
               onClick={sendMagicLink}
             >
-              Email me a sign-in link
+              {t("login.emailLink")}
             </Btn>
           </>
         )}
@@ -612,7 +618,7 @@ function Login() {
             <EmailSummary email={email} onChange={resetToEmail} />
             <ErrorRow err={err} />
             <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={sendReset}>
-              Send reset link
+              {t("login.sendReset")}
             </Btn>
             <div className="text-center">
               <button
@@ -623,7 +629,7 @@ function Login() {
                 }}
                 className="text-xs font-semibold text-indigo hover:underline"
               >
-                Back to sign in
+                {t("login.backToSignIn")}
               </button>
             </div>
           </>
@@ -632,8 +638,9 @@ function Login() {
         {step === "forgot-sent" && (
           <>
             <div className="text-sm text-ink bg-indigobg rounded-xl px-3 py-2">
-              Reset link sent to <span className="font-semibold">{email.trim()}</span>. Open it to
-              set a new password.
+              {t("login.forgotSent.pre")}
+              <span className="font-semibold">{email.trim()}</span>
+              {t("login.forgotSent.post")}
             </div>
             <BackToEmail onClick={resetToEmail} />
           </>
@@ -654,6 +661,7 @@ function ErrorRow({ err }: { err: string | null }) {
 
 /* The confirmed email, shown read-only above later steps. */
 function EmailSummary({ email, onChange }: { email: string; onChange: () => void }) {
+  const t = useT();
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3.5 py-2.5">
       <span className="truncate text-sm font-semibold text-ink">{email.trim()}</span>
@@ -662,13 +670,14 @@ function EmailSummary({ email, onChange }: { email: string; onChange: () => void
         onClick={onChange}
         className="shrink-0 text-xs font-semibold text-indigo hover:underline"
       >
-        Not you?
+        {t("login.notYou")}
       </button>
     </div>
   );
 }
 
 function BackToEmail({ onClick }: { onClick: () => void }) {
+  const t = useT();
   return (
     <div className="text-center">
       <button
@@ -676,13 +685,21 @@ function BackToEmail({ onClick }: { onClick: () => void }) {
         onClick={onClick}
         className="text-xs font-semibold text-indigo hover:underline"
       >
-        Use a different email
+        {t("login.useDifferentEmail")}
       </button>
     </div>
   );
 }
 
-function GoogleButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
+function GoogleButton({
+  busy,
+  onClick,
+  t,
+}: {
+  busy: boolean;
+  onClick: () => void;
+  t: (key: TKey) => string;
+}) {
   return (
     <button
       type="button"
@@ -708,16 +725,16 @@ function GoogleButton({ busy, onClick }: { busy: boolean; onClick: () => void })
           d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"
         />
       </svg>
-      {busy ? "Opening Google…" : "Continue with Google"}
+      {busy ? t("auth.openingGoogle") : t("auth.continueGoogle")}
     </button>
   );
 }
 
-function OrDivider() {
+function OrDivider({ t }: { t: (key: TKey) => string }) {
   return (
     <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-muted">
       <div className="h-px flex-1 bg-line" />
-      or
+      {t("auth.or")}
       <div className="h-px flex-1 bg-line" />
     </div>
   );
@@ -730,10 +747,12 @@ function RoleToggle({
   role,
   onChange,
   disabled,
+  t,
 }: {
   role: Role;
   onChange: (r: Role) => void;
   disabled?: boolean;
+  t: (key: TKey) => string;
 }) {
   const base =
     "flex-1 rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo/40";
@@ -753,7 +772,7 @@ function RoleToggle({
         onClick={() => onChange("homeowner")}
         className={`${base} ${role === "homeowner" ? active : inactive}`}
       >
-        Homeowner
+        {t("login.role.homeowner")}
       </button>
       <button
         type="button"
@@ -763,7 +782,7 @@ function RoleToggle({
         onClick={() => onChange("pro")}
         className={`${base} ${role === "pro" ? active : inactive}`}
       >
-        Pro
+        {t("login.role.pro")}
       </button>
     </div>
   );

@@ -6,6 +6,7 @@ import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
 import { Logo } from "@/components/svg";
 import { AddressField } from "@/components/address-field";
+import { LanguageToggle, useT } from "@/lib/i18n";
 
 type HomeSignupSearch = { email?: string };
 
@@ -25,6 +26,7 @@ const PENDING_KEY = "hb_pending_signup";
 function HomeownerSignup() {
   const navigate = useNavigate();
   const search = Route.useSearch();
+  const t = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
@@ -117,18 +119,21 @@ function HomeownerSignup() {
           <Link to="/" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          <Pill accent="indigo">For homeowners</Pill>
+          <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <Pill accent="indigo">{t("chrome.forHomeowners")}</Pill>
+          </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="text-center mb-6">
-          <h1 className="text-3xl tracking-tight">Start your home's record</h1>
-          <p className="mt-2 text-sm text-muted">Free. Yours for life. No card.</p>
+          <h1 className="text-3xl tracking-tight">{t("signup.title")}</h1>
+          <p className="mt-2 text-sm text-muted">{t("signup.subtitle")}</p>
         </div>
         <Card>
           {finishing ? (
-            <div className="py-6 text-center text-sm text-muted">Finishing your account…</div>
+            <div className="py-6 text-center text-sm text-muted">{t("signup.finishing")}</div>
           ) : (
             <div className="space-y-4">
               <GoogleAuthButton
@@ -143,42 +148,40 @@ function HomeownerSignup() {
                 }}
               />
               <OrDivider />
-              <Field label="Your name (optional)">
+              <Field label={t("signup.nameLabel")}>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex"
+                  placeholder={t("signup.namePlaceholder")}
                 />
               </Field>
-              <Field label="Email">
+              <Field label={t("auth.email")}>
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@email.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   autoComplete="email"
                 />
               </Field>
-              <Field label="Password">
+              <Field label={t("auth.password")}>
                 <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
+                  placeholder={t("signup.passwordPlaceholder")}
                   autoComplete="new-password"
                 />
               </Field>
-              <Field label="Home address (optional)">
+              <Field label={t("signup.addressLabel")}>
                 <AddressField
                   value={address}
                   onChange={setAddress}
                   onResolve={(r) => setAddress(r.address)}
-                  placeholder="Start typing your address…"
-                  ariaLabel="Home address"
+                  placeholder={t("signup.addressPlaceholder")}
+                  ariaLabel={t("signup.addressLabel")}
                 />
-                <p className="mt-1.5 text-xs text-muted">
-                  Pick your address from the list to confirm it. You can skip this and add it later, or claim it automatically when a pro sends you a service record.
-                </p>
+                <p className="mt-1.5 text-xs text-muted">{t("signup.addressHelp")}</p>
               </Field>
               <label className="flex items-start gap-2 text-xs text-muted">
                 <input
@@ -187,7 +190,7 @@ function HomeownerSignup() {
                   onChange={(e) => setConsent(e.target.checked)}
                   className="mt-0.5"
                 />
-                <span>I agree to receive service records and updates about my home.</span>
+                <span>{t("signup.consent")}</span>
               </label>
               {err && (
                 <div className="text-sm text-red bg-redbg rounded-xl px-3 py-2">{err}</div>
@@ -199,12 +202,12 @@ function HomeownerSignup() {
                 disabled={!email.trim() || password.length < 8 || busy}
                 onClick={signUpWithPassword}
               >
-                {busy ? "Creating account…" : "Create my account"}
+                {busy ? t("signup.creating") : t("signup.create")}
               </Btn>
               <p className="text-center text-xs text-muted">
-                Already have an account?{" "}
+                {t("signup.haveAccount")}{" "}
                 <Link to="/login" className="font-semibold text-indigo hover:underline">
-                  Log in
+                  {t("auth.logIn")}
                 </Link>
               </p>
             </div>
@@ -227,6 +230,7 @@ function GoogleAuthButton({
   onBusyChange: (b: boolean) => void;
   stashPending: () => void;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -254,16 +258,17 @@ function GoogleAuthButton({
         <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z" />
         <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
       </svg>
-      Continue with Google
+      {t("auth.continueGoogle")}
     </button>
   );
 }
 
 function OrDivider() {
+  const t = useT();
   return (
     <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-muted">
       <div className="h-px flex-1 bg-line" />
-      or
+      {t("auth.or")}
       <div className="h-px flex-1 bg-line" />
     </div>
   );
