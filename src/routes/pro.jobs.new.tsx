@@ -1493,7 +1493,7 @@ function NewJob() {
                         </span>
                       </div>
                       <div className="mt-1 text-xs text-muted">
-                        We'll fill in make, model, and warranty for you.
+                        HomesBrain AI reads the make, model, and warranty for you.
                       </div>
                     </button>
                   ) : (
@@ -1510,12 +1510,12 @@ function NewJob() {
                           {scanState === "scanning" && (
                             <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
                               <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                              Reading the photo…
+                              HomesBrain AI reading the photo…
                             </div>
                           )}
                           {scanState === "done" && (
                             <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                              <ShieldCheck size={16} animate={false} /> Auto-filled unit details
+                              <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the unit details
                             </div>
                           )}
                           {scanState === "error" && (
