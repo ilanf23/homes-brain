@@ -1,16 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
+import { Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { backfillHomeGeocodes, fetchProHomes, formatDate, type ProHome } from "@/lib/hb";
 import { isOverdue, listInvoicesForPro, type ProInvoice } from "@/lib/invoices";
 import { CountUp, ProgressRing, SparkLine } from "@/components/svg";
-import { CoreLoopScene } from "@/components/core-loop-scene";
+
 import { MoneyRow } from "@/components/money-row";
 import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
 import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLockCompact } from "@/components/plan-lock";
+import { ProSetupChecklist } from "@/components/pro-setup-checklist";
 
 export const Route = createFileRoute("/pro/office")({
   head: () => ({ meta: [{ title: "Office - HomesBrain" }] }),
@@ -292,7 +293,7 @@ function ProDashboard() {
     );
   }
 
-  const empty = jobs.length === 0;
+  
   const viewRate = sentCount ? viewedCount / sentCount : 0;
 
   const hour = new Date().getHours();
@@ -310,21 +311,9 @@ function ProDashboard() {
       />
 
 
-      {empty && (
-        <Card className="anim-fade-up mb-5 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-          <CoreLoopScene variant="compact" pose="pro" className="w-28 shrink-0 opacity-90" />
-          <div className="flex-1 min-w-[200px]">
-            <Eyebrow accent="indigo">Get started</Eyebrow>
-            <div className="mt-1 font-semibold text-ink">Log your first job (about 30 seconds)</div>
-            <p className="text-sm text-muted mt-0.5">
-              We'll send a branded record to your customer and ask for a Google review.
-            </p>
-          </div>
-          <Link to="/pro/jobs/new" className="shrink-0">
-            <Btn variant="indigo">Log a job</Btn>
-          </Link>
-        </Card>
-      )}
+      <ProSetupChecklist proId={proId} jobsCount={jobs.length} />
+
+
 
       {pro.plan === "pro" ? (
         <>
