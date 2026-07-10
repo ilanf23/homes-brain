@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl, logEvent, mockSend } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProSetupChecklist } from "@/components/pro-setup-checklist";
 
 export const Route = createFileRoute("/pro/")({
   head: () => ({ meta: [{ title: "HomesBrain" }] }),
