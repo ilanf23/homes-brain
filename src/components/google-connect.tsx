@@ -270,14 +270,24 @@ export function GoogleConnect({
                     : "No rating yet"}
                 </div>
               </div>
-              <Btn
-                variant="indigo"
-                loading={savingId === c.placeId}
-                disabled={busy}
-                onClick={() => void confirmCandidate(c)}
-              >
-                This is me
-              </Btn>
+              <div className="flex flex-col items-center gap-1.5 shrink-0">
+                <Btn
+                  variant="indigo"
+                  loading={savingId === c.placeId}
+                  disabled={busy}
+                  onClick={() => void confirmCandidate(c)}
+                >
+                  This is me
+                </Btn>
+                <a
+                  href={c.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-indigo hover:underline"
+                >
+                  View on Google <ExternalLink size={11} />
+                </a>
+              </div>
             </div>
           ))}
         </div>
