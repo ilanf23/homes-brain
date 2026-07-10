@@ -324,8 +324,8 @@ function StepView(props: {
   step: StepKey;
   business: string;
   setBusiness: (v: string) => void;
-  trade: string;
-  setTrade: (v: string) => void;
+  trades: string[];
+  setTrades: (v: string[]) => void;
   area: string;
   setArea: (v: string) => void;
   phone: string;
@@ -340,8 +340,8 @@ function StepView(props: {
     step,
     business,
     setBusiness,
-    trade,
-    setTrade,
+    trades,
+    setTrades,
     area,
     setArea,
     phone,
@@ -373,18 +373,24 @@ function StepView(props: {
   }
 
   if (step === "trade") {
+    function toggle(id: string) {
+      setTrades(trades.includes(id) ? trades.filter((t) => t !== id) : [...trades, id]);
+    }
     return (
-      <StepFrame title="What do you do?" sub="Pick your trade so we tailor forms and reminders.">
+      <StepFrame
+        title="What do you do?"
+        sub="Pick every trade you offer. You can select more than one."
+      >
         <div className="grid grid-cols-2 gap-3">
           {TRADES.map((t) => {
-            const selected = trade === t.id;
+            const selected = trades.includes(t.id);
             return (
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTrade(t.id)}
+                onClick={() => toggle(t.id)}
                 aria-pressed={selected}
-                className={`pressable text-left rounded-2xl border px-4 py-5 text-base font-semibold transition-all duration-200 flex items-center gap-3 ${
+                className={`pressable text-left rounded-2xl border px-4 py-4 text-sm font-semibold transition-all duration-200 flex items-center gap-3 ${
                   selected
                     ? "border-indigo bg-indigobg text-indigo shadow-sm"
                     : "border-line bg-white text-ink hover:bg-soft hover:border-ink/20"
@@ -392,17 +398,24 @@ function StepView(props: {
               >
                 <TradeIcon
                   trade={t.id}
-                  size={24}
+                  size={22}
                   className={selected ? "text-indigo" : "text-muted"}
                 />
-                {t.label}
+                <span className="min-w-0 truncate">{t.label}</span>
+                {selected && <Check size={16} className="ml-auto text-indigo shrink-0" />}
               </button>
             );
           })}
         </div>
+        {trades.length > 0 && (
+          <p className="mt-4 text-xs text-muted">
+            {trades.length} selected. The first one is your primary trade.
+          </p>
+        )}
       </StepFrame>
     );
   }
+
 
   if (step === "service_area") {
     return (
