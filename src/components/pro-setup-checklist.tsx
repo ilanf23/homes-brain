@@ -39,7 +39,7 @@ type ProSetupState = {
   allDone: boolean;
 };
 
-export function useProSetup(proId: string | null, jobsCount: number): ProSetupState {
+export function useProSetup(proId: string | null, jobsCount?: number): ProSetupState {
   const [row, setRow] = useState<{
     business: string | null;
     trade: string | null;
@@ -48,20 +48,36 @@ export function useProSetup(proId: string | null, jobsCount: number): ProSetupSt
     stripe_charges_enabled: boolean | null;
     google_place_id: string | null;
   } | null>(null);
+  const [fetchedJobsCount, setFetchedJobsCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!proId) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const proQuery = supabase
         .from("pros")
         .select("business,trade,service_area,phone,stripe_charges_enabled,google_place_id")
         .eq("id", proId)
         .maybeSingle();
+      const jobsQuery =
+        jobsCount === undefined
+          ? supabase
+              .from("jobs")
+              .select("id", { count: "exact", head: true })
+              .eq("pro_id", proId)
+          : null;
+      const [proRes, jobsRes] = await Promise.all([
+        proQuery,
+        jobsQuery ?? Promise.resolve(null),
+      ]);
+      const results = [
+        { data: proRes.data },
+        jobsRes ? { count: jobsRes.count } : null,
+      ] as Array<{ data?: unknown; count?: number | null } | null>;
       if (cancelled) return;
       setRow(
-        (data as {
+        (results[0]?.data as {
           business: string | null;
           trade: string | null;
           service_area: string | null;
@@ -70,12 +86,17 @@ export function useProSetup(proId: string | null, jobsCount: number): ProSetupSt
           google_place_id: string | null;
         } | null) ?? null,
       );
+      if (jobsCount === undefined && results[1]) {
+        setFetchedJobsCount(results[1].count ?? 0);
+      }
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [proId]);
+  }, [proId, jobsCount]);
+
+  const effectiveJobsCount = jobsCount ?? fetchedJobsCount ?? 0;
 
   const items: ChecklistItem[] = [
     {
@@ -137,7 +158,7 @@ export function useProSetup(proId: string | null, jobsCount: number): ProSetupSt
       label: "Log your first job",
       hint: "About 30 seconds. Sends a branded record.",
       icon: ClipboardList,
-      done: jobsCount > 0,
+      done: effectiveJobsCount > 0,
       to: "/pro/jobs/new",
     },
   ];
@@ -178,7 +199,7 @@ export function ProSetupChecklist({
   jobsCount,
 }: {
   proId: string | null;
-  jobsCount: number;
+  jobsCount?: number;
 }) {
   const { loading, items, completed, total, allDone } = useProSetup(proId, jobsCount);
   const [collapsed, setCollapsed] = useState(false);

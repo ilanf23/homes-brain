@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl, logEvent, mockSend } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { ProSetupChecklist } from "@/components/pro-setup-checklist";
 
 export const Route = createFileRoute("/pro/")({
   head: () => ({ meta: [{ title: "HomesBrain" }] }),
@@ -148,7 +149,7 @@ function ProHome() {
   }
 
   const firstName =
-    (pro.owner_first_name?.trim() || pro.business.split(" ")[0] || "").trim();
+    (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
   const greeting = firstName
     ? `${timeOfDayGreeting()}, ${firstName}.`
     : `${timeOfDayGreeting()}.`;
@@ -169,6 +170,12 @@ function ProHome() {
           </div>
         )}
       </div>
+
+      <div className="mt-6">
+        <ProSetupChecklist proId={proId} />
+      </div>
+
+
 
       {/* Hero action: the one thing this screen exists to make easy. */}
       <Link to="/pro/jobs/new" className="anim-fade-up d-1 block mt-6">
