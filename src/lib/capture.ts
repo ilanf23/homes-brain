@@ -99,6 +99,32 @@ export async function extractFromNotes(note: string, trade?: string): Promise<Jo
   return data as JobExtract;
 }
 
+/* "Speak the whole job" flow: one note → customer + address + equipment +
+   what-was-done + next-service. Any field the pro didn't mention comes back
+   null; the caller fills only the blanks it has room for. */
+export type FullJobExtract = JobExtract & {
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  address: string | null;
+};
+
+export async function extractFullJob(note: string, trade?: string): Promise<FullJobExtract> {
+  const { data, error } = await supabase.functions.invoke("extract-job", {
+    body: { note, trade, mode: "full" },
+  });
+  if (error) {
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.json().catch(() => null);
+      if (body?.error) throw new Error(body.error);
+    }
+    throw new Error("Couldn't read the note. Try again.");
+  }
+  if (data?.error) throw new Error(data.error);
+  return data as FullJobExtract;
+}
+
 /* ---------- Voice dictation (Web Speech API) ---------- */
 
 type SpeechResultEvent = {
