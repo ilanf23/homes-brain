@@ -293,7 +293,7 @@ function ProDashboard() {
     );
   }
 
-  const viewRate2Unused = false; void viewRate2Unused;
+  
   const viewRate = sentCount ? viewedCount / sentCount : 0;
 
   const hour = new Date().getHours();
