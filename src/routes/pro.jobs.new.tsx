@@ -240,6 +240,11 @@ function NewJob() {
   const [askReview, setAskReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [recordUrl, setRecordUrl] = useState<string | null>(null);
+  // Captured on submit so the "Show claim QR" button on the done screen can
+  // open ClaimQRModal for the same customer + record we just sent.
+  const [sentCustomerId, setSentCustomerId] = useState<string | null>(null);
+  const [sentRecordId, setSentRecordId] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
   // Optional "bill this customer" amount entered on the review slide. String so
   // the input can be empty; parsed to a number at submit time. When >0 we also
   // create an open invoice so the homeowner can pay it via the existing flow.
