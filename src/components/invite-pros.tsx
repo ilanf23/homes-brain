@@ -173,11 +173,9 @@ export function InviteProsCard({
           />
         </Field>
         <Field label="Phone (optional)">
-          <Input
+          <PhoneInput
             value={invitePhone}
-            onChange={(e) => setInvitePhone(e.target.value)}
-            placeholder="512-847-1928"
-            type="tel"
+            onChange={(v) => setInvitePhone(v)}
           />
         </Field>
       </div>
