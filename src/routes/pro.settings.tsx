@@ -280,11 +280,9 @@ function ProSettings() {
                   />
                 </Field>
                 <Field label="Contact phone">
-                  <Input
-                    type="tel"
+                  <PhoneInput
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="904-555-0182"
+                    onChange={(v) => setPhone(v)}
                   />
                 </Field>
               </div>
