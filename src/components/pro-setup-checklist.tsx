@@ -55,25 +55,26 @@ export function useProSetup(proId: string | null, jobsCount?: number): ProSetupS
     if (!proId) return;
     let cancelled = false;
     (async () => {
-      const promises: Promise<unknown>[] = [
-        supabase
-          .from("pros")
-          .select("business,trade,service_area,phone,stripe_charges_enabled,google_place_id")
-          .eq("id", proId)
-          .maybeSingle(),
-      ];
-      if (jobsCount === undefined) {
-        promises.push(
-          supabase
-            .from("jobs")
-            .select("id", { count: "exact", head: true })
-            .eq("pro_id", proId),
-        );
-      }
-      const results = (await Promise.all(promises)) as Array<{
-        data: unknown;
-        count?: number | null;
-      }>;
+      const proQuery = supabase
+        .from("pros")
+        .select("business,trade,service_area,phone,stripe_charges_enabled,google_place_id")
+        .eq("id", proId)
+        .maybeSingle();
+      const jobsQuery =
+        jobsCount === undefined
+          ? supabase
+              .from("jobs")
+              .select("id", { count: "exact", head: true })
+              .eq("pro_id", proId)
+          : null;
+      const [proRes, jobsRes] = await Promise.all([
+        proQuery,
+        jobsQuery ?? Promise.resolve(null),
+      ]);
+      const results = [
+        { data: proRes.data },
+        jobsRes ? { count: jobsRes.count } : null,
+      ] as Array<{ data?: unknown; count?: number | null } | null>;
       if (cancelled) return;
       setRow(
         (results[0].data as {
