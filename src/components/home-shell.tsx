@@ -17,6 +17,8 @@ export type HomeownerRow = {
   sms_opt_out?: boolean;
   respect_quiet_hrs?: boolean;
   marketing_consent?: boolean;
+  consent_at?: string | null;
+  setup_completed_at?: string | null;
 };
 
 export type HomeRow = {
