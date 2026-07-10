@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, X, Check } from "lucide-react";
 import { Btn, Field, Input, PageLoader, PhoneInput, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent, TRADES, isGoogleUrl } from "@/lib/hb";
+import { logEvent, TRADES, isGoogleUrl, proTrades } from "@/lib/hb";
 import { Logo, TradeIcon } from "@/components/svg";
 import { GoogleConnect } from "@/components/google-connect";
 import { startStripeOnboarding } from "@/lib/stripe-connect";
@@ -33,12 +33,13 @@ function ProSetupWizard() {
   const [pro, setPro] = useState<ProRow | null>(null);
 
   const [business, setBusiness] = useState("");
-  const [trade, setTrade] = useState("");
+  const [trades, setTrades] = useState<string[]>([]);
   const [area, setArea] = useState("");
   const [phone, setPhone] = useState("");
   const [stripeConnecting, setStripeConnecting] = useState(false);
 
   const [stepIdx, setStepIdx] = useState(0);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -52,7 +53,7 @@ function ProSetupWizard() {
       const { data: p } = await supabase
         .from("pros")
         .select(
-          "id,business,owner_first_name,trade,service_area,logo,google_place_id,google_rating,plan,phone,stripe_charges_enabled",
+          "id,business,owner_first_name,trade,trades,service_area,logo,google_place_id,google_rating,plan,phone,stripe_charges_enabled",
         )
         .eq("auth_user_id", user.id)
         .maybeSingle();
@@ -64,19 +65,20 @@ function ProSetupWizard() {
       setProId(p.id);
       setPro(p as unknown as ProRow);
       setBusiness((p.business ?? "").trim());
-      setTrade((p.trade ?? "").trim());
+      setTrades(proTrades(p));
       setArea((p.service_area ?? "").trim());
       setPhone(((p as { phone?: string | null }).phone ?? "").trim());
 
       // Pick first incomplete step, or the requested step.
       const done: Record<StepKey, boolean> = {
         business: !!p.business?.trim(),
-        trade: !!p.trade?.trim(),
+        trade: proTrades(p).length > 0,
         service_area: !!p.service_area?.trim(),
         phone: !!(p as { phone?: string | null }).phone?.trim(),
         payments: !!(p as { stripe_charges_enabled?: boolean }).stripe_charges_enabled,
         google: isGoogleUrl(p.google_place_id),
       };
+
       let idx = 0;
       if (initialStep) {
         idx = STEP_KEYS.indexOf(initialStep);
@@ -100,7 +102,7 @@ function ProSetupWizard() {
       case "business":
         return business.trim().length > 1;
       case "trade":
-        return trade.length > 0;
+        return trades.length > 0;
       case "service_area":
         return area.trim().length > 0;
       case "phone":
@@ -111,7 +113,8 @@ function ProSetupWizard() {
       default:
         return true;
     }
-  }, [step, business, trade, area, phone]);
+  }, [step, business, trades, area, phone]);
+
 
   async function persistCurrent(): Promise<boolean> {
     if (!proId) return false;
@@ -127,9 +130,14 @@ function ProSetupWizard() {
         break;
       }
       case "trade": {
-        ({ error } = await supabase.from("pros").update({ trade }).eq("id", proId));
+        // Keep legacy `trade` scalar in sync as the primary (first) selection.
+        ({ error } = await supabase
+          .from("pros")
+          .update({ trades, trade: trades[0] ?? null })
+          .eq("id", proId));
         break;
       }
+
       case "service_area": {
         ({ error } = await supabase
           .from("pros")
@@ -233,8 +241,9 @@ function ProSetupWizard() {
           step={step}
           business={business}
           setBusiness={setBusiness}
-          trade={trade}
-          setTrade={setTrade}
+          trades={trades}
+          setTrades={setTrades}
+
           area={area}
           setArea={setArea}
           phone={phone}
@@ -315,8 +324,8 @@ function StepView(props: {
   step: StepKey;
   business: string;
   setBusiness: (v: string) => void;
-  trade: string;
-  setTrade: (v: string) => void;
+  trades: string[];
+  setTrades: (v: string[]) => void;
   area: string;
   setArea: (v: string) => void;
   phone: string;
@@ -331,8 +340,8 @@ function StepView(props: {
     step,
     business,
     setBusiness,
-    trade,
-    setTrade,
+    trades,
+    setTrades,
     area,
     setArea,
     phone,
@@ -364,18 +373,24 @@ function StepView(props: {
   }
 
   if (step === "trade") {
+    function toggle(id: string) {
+      setTrades(trades.includes(id) ? trades.filter((t) => t !== id) : [...trades, id]);
+    }
     return (
-      <StepFrame title="What do you do?" sub="Pick your trade so we tailor forms and reminders.">
+      <StepFrame
+        title="What do you do?"
+        sub="Pick every trade you offer. You can select more than one."
+      >
         <div className="grid grid-cols-2 gap-3">
           {TRADES.map((t) => {
-            const selected = trade === t.id;
+            const selected = trades.includes(t.id);
             return (
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTrade(t.id)}
+                onClick={() => toggle(t.id)}
                 aria-pressed={selected}
-                className={`pressable text-left rounded-2xl border px-4 py-5 text-base font-semibold transition-all duration-200 flex items-center gap-3 ${
+                className={`pressable text-left rounded-2xl border px-4 py-4 text-sm font-semibold transition-all duration-200 flex items-center gap-3 ${
                   selected
                     ? "border-indigo bg-indigobg text-indigo shadow-sm"
                     : "border-line bg-white text-ink hover:bg-soft hover:border-ink/20"
@@ -383,17 +398,24 @@ function StepView(props: {
               >
                 <TradeIcon
                   trade={t.id}
-                  size={24}
+                  size={22}
                   className={selected ? "text-indigo" : "text-muted"}
                 />
-                {t.label}
+                <span className="min-w-0 truncate">{t.label}</span>
+                {selected && <Check size={16} className="ml-auto text-indigo shrink-0" />}
               </button>
             );
           })}
         </div>
+        {trades.length > 0 && (
+          <p className="mt-4 text-xs text-muted">
+            {trades.length} selected. The first one is your primary trade.
+          </p>
+        )}
       </StepFrame>
     );
   }
+
 
   if (step === "service_area") {
     return (
