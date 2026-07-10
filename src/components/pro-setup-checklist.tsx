@@ -10,6 +10,8 @@ import {
   ClipboardList,
   Check,
   ChevronRight,
+  ChevronDown,
+  Minus,
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,7 +153,7 @@ export function useProSetup(proId: string | null, jobsCount: number): ProSetupSt
 }
 
 const DONE_KEY = "hb_pro_setup_done";
-const HIDDEN_KEY = "hb_pro_setup_hidden";
+const COLLAPSED_KEY = "hb_pro_setup_collapsed";
 
 function readFlag(key: string): boolean {
   if (typeof window === "undefined") return false;
@@ -179,31 +181,34 @@ export function ProSetupChecklist({
   jobsCount: number;
 }) {
   const { loading, items, completed, total, allDone } = useProSetup(proId, jobsCount);
-  const [hidden, setHidden] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [dismissedDone, setDismissedDone] = useState(false);
   const [celebrated, setCelebrated] = useState(false);
+  // Track whether we've observed an incomplete state this session, so we only
+  // celebrate on a real incomplete→complete transition.
+  const [sawIncomplete, setSawIncomplete] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHidden(readFlag(HIDDEN_KEY));
+    setCollapsed(readFlag(COLLAPSED_KEY));
     setDismissedDone(readFlag(DONE_KEY));
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (allDone && !dismissedDone) {
+    if (!hydrated || loading) return;
+    if (!allDone) {
+      setSawIncomplete(true);
+    } else if (sawIncomplete && !dismissedDone) {
       setCelebrated(true);
       writeFlag(DONE_KEY, true);
-      // Clear any stale "hide for now" once fully complete.
-      writeFlag(HIDDEN_KEY, false);
     }
-  }, [allDone, dismissedDone]);
+  }, [allDone, hydrated, loading, sawIncomplete, dismissedDone]);
 
-  if (loading || !proId) return null;
+  if (loading || !proId || !hydrated) return null;
 
-  // Fully set up + already celebrated once → don't nag.
-  if (allDone && dismissedDone && !celebrated) return null;
-
-  // "Hide for now" only applies when still incomplete.
-  if (!allDone && hidden) return null;
+  // Fully set up and we never saw an incomplete state this session → render nothing.
+  if (allDone && !celebrated) return null;
 
   if (allDone) {
     return (
@@ -227,6 +232,36 @@ export function ProSetupChecklist({
           Dismiss
         </button>
       </Card>
+    );
+  }
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          writeFlag(COLLAPSED_KEY, false);
+          setCollapsed(false);
+        }}
+        className="anim-fade-up mb-5 w-full pressable flex items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 hover:bg-soft transition-colors"
+        aria-label="Expand setup checklist"
+      >
+        <ProgressRing
+          value={completed / total}
+          size={32}
+          strokeWidth={4}
+          label={`${completed} of ${total} steps done`}
+        />
+        <div className="flex-1 min-w-0 text-left">
+          <div className="text-sm font-semibold text-ink truncate">
+            Finish setting up your account
+          </div>
+        </div>
+        <Pill accent="indigo">
+          {completed} of {total}
+        </Pill>
+        <ChevronDown size={16} className="text-muted shrink-0" aria-hidden="true" />
+      </button>
     );
   }
 
@@ -257,14 +292,17 @@ export function ProSetupChecklist({
         </div>
         <button
           onClick={() => {
-            writeFlag(HIDDEN_KEY, true);
-            setHidden(true);
+            writeFlag(COLLAPSED_KEY, true);
+            setCollapsed(true);
           }}
-          className="pressable shrink-0 text-xs font-semibold text-muted hover:text-ink"
+          className="pressable shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-ink"
+          aria-label="Minimize setup checklist"
         >
-          Hide for now
+          <Minus size={14} aria-hidden="true" />
+          Minimize
         </button>
       </div>
+
 
       <ul className="mt-4 divide-y divide-line">
         {items.map((item) => {
