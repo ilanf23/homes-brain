@@ -241,7 +241,11 @@ function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => 
               <Avatar name={pro.business} accent="indigo" size={36} />
               <div className="min-w-0">
                 <div className="text-sm font-bold text-ink truncate">{pro.business}</div>
-                <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
+                <div className="text-xs text-muted truncate">
+                  {(pro.trades?.length ? pro.trades : pro.trade ? [pro.trade] : [])
+                    .map((t) => tradeLabel(t))
+                    .join(" · ")}
+                </div>
               </div>
             </div>
             <div className="p-1.5">
