@@ -116,10 +116,15 @@ function ProSettings() {
     );
   }
 
+  const currentTrades = proTrades(pro);
+  const tradesDirty =
+    trades.length !== currentTrades.length ||
+    trades.some((t, i) => t !== currentTrades[i]);
+
   const dirty =
     business !== pro.business ||
     ownerFirstName !== (pro.owner_first_name ?? "") ||
-    trade !== pro.trade ||
+    tradesDirty ||
     area !== (pro.service_area ?? "") ||
     email !== (prefs?.email ?? "") ||
     phone !== (prefs?.phone ?? "");
@@ -127,10 +132,12 @@ function ProSettings() {
   async function saveProfile() {
     setSaving(true);
     setProfileErr(null);
+    const primary = trades[0] ?? "";
     const patch = {
       business,
       owner_first_name: ownerFirstName.trim() || null,
-      trade,
+      trade: primary,
+      trades,
       service_area: area,
       email: email.trim() || null,
       phone: phone.trim() || null,
@@ -139,11 +146,19 @@ function ProSettings() {
     if (error || !data?.length) {
       setProfileErr(error?.message ?? "Couldn't save. Try again.");
     } else {
-      setPro({ ...pro!, business, owner_first_name: patch.owner_first_name, trade, service_area: area });
+      setPro({
+        ...pro!,
+        business,
+        owner_first_name: patch.owner_first_name,
+        trade: primary,
+        trades,
+        service_area: area,
+      });
       if (prefs) setPrefs({ ...prefs, email: patch.email, phone: patch.phone });
       setToast("Saved");
     }
     setSaving(false);
+
   }
 
   /* Optimistic toggle: flip first, revert on failure. Silent on success -
