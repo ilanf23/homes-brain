@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Btn, Field, Input, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { isGoogleUrl, logEvent, normalizeGoogleUrl } from "@/lib/hb";
+import { findBusiness, type BusinessCandidate } from "@/lib/geo";
 import { ShieldCheck } from "@/components/svg";
 import type { ProRow } from "@/components/pro-shell";
 
-/* Paste-your-Google-link connect flow, shared by /pro/reviews and /pro/settings.
-   Stores the normalized URL in pros.google_place_id and the manually entered
-   rating in pros.google_rating (see the 2026-07-06 design spec). */
+/* Search-first Google connect flow, shared by /pro/setup, /pro/reviews and
+   /pro/settings. Auto-matches the pro's Google Business listing from their
+   business name + service area (geo edge fn `findBusiness` op). Confirming a
+   match stores the listing's Google Maps URL in pros.google_place_id and the
+   live Google rating in pros.google_rating. Paste-a-link remains as the
+   fallback and stores no rating (we only show ratings that came from Google). */
 export function GoogleConnect({
   proId,
   pro,
@@ -22,20 +26,98 @@ export function GoogleConnect({
 }) {
   const connected = !!pro.google_place_id;
   const [editing, setEditing] = useState(false);
-  const [link, setLink] = useState("");
-  const [rating, setRating] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  function openForm() {
-    setLink(isGoogleUrl(pro.google_place_id) ? pro.google_place_id : "");
-    setRating(pro.google_rating != null ? String(pro.google_rating) : "");
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [candidates, setCandidates] = useState<BusinessCandidate[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const [showPaste, setShowPaste] = useState(false);
+  const [link, setLink] = useState("");
+
+  /* Which listing was confirmed, session-only: there is no DB column for the
+     listing name/address, so this only shows right after confirming. */
+  const [confirmedListing, setConfirmedListing] = useState<{
+    name: string;
+    address: string | null;
+  } | null>(null);
+
+  const showSearch = !connected || editing;
+
+  async function runSearch(q: string) {
+    const trimmed = q.trim();
+    if (trimmed.length < 2) return;
+    setSearching(true);
     setErr(null);
-    setEditing(true);
+    const results = await findBusiness(trimmed, pro.service_area);
+    setCandidates(results);
+    setSearched(true);
+    setSearching(false);
   }
 
-  async function save() {
+  /* Auto-search once per open of the search UI, seeded from the business name
+     the pro already entered. */
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!showSearch || autoRan.current) return;
+    autoRan.current = true;
+    const initial = (pro.business ?? "").trim();
+    setQuery(initial);
+    if (initial.length >= 2) {
+      void runSearch(initial);
+    } else {
+      setSearched(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSearch]);
+
+  async function saveConnection(args: {
+    url: string;
+    rating: number | null;
+    method: "matched" | "pasted";
+    placeId?: string;
+  }): Promise<boolean> {
+    setBusy(true);
     setErr(null);
+    const patch = { google_place_id: args.url, google_rating: args.rating };
+    /* .select("id") so an RLS-filtered update (0 rows) fails loudly instead of
+       reporting success - same guard as the settings page saves. */
+    const { data, error } = await supabase.from("pros").update(patch).eq("id", proId).select("id");
+    setBusy(false);
+    setSavingId(null);
+    if (error || !data?.length) {
+      setErr(error?.message ?? "Couldn't save. Try again.");
+      return false;
+    }
+    onUpdated(patch);
+    setEditing(false);
+    setShowPaste(false);
+    onToast?.(connected ? "Google connection updated" : "Google connected");
+    logEvent(`pro:${proId}`, "google_connected", {
+      url: args.url,
+      rating: args.rating,
+      method: args.method,
+      place_id: args.placeId ?? null,
+    });
+    return true;
+  }
+
+  async function confirmCandidate(c: BusinessCandidate) {
+    setSavingId(c.placeId);
+    const rating = c.rating != null ? Math.round(c.rating * 10) / 10 : null;
+    const ok = await saveConnection({
+      url: c.mapsUrl,
+      rating,
+      method: "matched",
+      placeId: c.placeId,
+    });
+    if (ok) setConfirmedListing({ name: c.name, address: c.address });
+  }
+
+  async function savePasted() {
     const url = normalizeGoogleUrl(link);
     if (!url) {
       setErr(
@@ -43,29 +125,8 @@ export function GoogleConnect({
       );
       return;
     }
-    let ratingValue: number | null = null;
-    if (rating.trim()) {
-      const n = Number(rating.trim());
-      if (!Number.isFinite(n) || n < 0 || n > 5) {
-        setErr("Rating should be a number between 0 and 5, like 4.8.");
-        return;
-      }
-      ratingValue = Math.round(n * 10) / 10;
-    }
-    setBusy(true);
-    const patch = { google_place_id: url, google_rating: ratingValue };
-    /* .select("id") so an RLS-filtered update (0 rows) fails loudly instead of
-       reporting success - same guard as the settings page saves. */
-    const { data, error } = await supabase.from("pros").update(patch).eq("id", proId).select("id");
-    if (error || !data?.length) {
-      setErr(error?.message ?? "Couldn't save. Try again.");
-    } else {
-      onUpdated(patch);
-      setEditing(false);
-      onToast?.(connected ? "Google connection updated" : "Google connected");
-      logEvent(`pro:${proId}`, "google_connected", { url, rating: ratingValue });
-    }
-    setBusy(false);
+    const ok = await saveConnection({ url, rating: null, method: "pasted" });
+    if (ok) setConfirmedListing(null);
   }
 
   async function disconnect() {
@@ -73,15 +134,21 @@ export function GoogleConnect({
     setErr(null);
     const patch = { google_place_id: null, google_rating: null };
     const { data, error } = await supabase.from("pros").update(patch).eq("id", proId).select("id");
+    setBusy(false);
     if (error || !data?.length) {
       setErr(error?.message ?? "Couldn't save. Try again.");
-    } else {
-      onUpdated(patch);
-      setEditing(false);
-      onToast?.("Google disconnected");
-      logEvent(`pro:${proId}`, "google_disconnected");
+      return;
     }
-    setBusy(false);
+    onUpdated(patch);
+    setEditing(false);
+    setConfirmedListing(null);
+    setShowPaste(false);
+    setLink("");
+    setCandidates([]);
+    setSearched(false);
+    autoRan.current = false;
+    onToast?.("Google disconnected");
+    logEvent(`pro:${proId}`, "google_disconnected");
   }
 
   if (connected && !editing) {
@@ -91,9 +158,16 @@ export function GoogleConnect({
           <div className="flex items-center gap-3 min-w-0">
             <ShieldCheck size={22} className="text-indigo shrink-0" />
             <div className="min-w-0">
-              <div className="font-semibold text-ink">Connected</div>
+              <div className="font-semibold text-ink truncate">
+                {confirmedListing ? confirmedListing.name : "Connected"}
+              </div>
+              {confirmedListing?.address && (
+                <div className="text-xs text-muted truncate">{confirmedListing.address}</div>
+              )}
               <div className="text-xs text-muted tnum">
-                {pro.google_rating != null ? `Rating ${pro.google_rating} ★` : "No rating entered"}
+                {pro.google_rating != null
+                  ? `Rating ${pro.google_rating} ★ from Google`
+                  : "No rating on file"}
               </div>
             </div>
           </div>
@@ -119,7 +193,10 @@ export function GoogleConnect({
         )}
         <div className="mt-3 flex items-center gap-4">
           <button
-            onClick={openForm}
+            onClick={() => {
+              setErr(null);
+              setEditing(true);
+            }}
             disabled={busy}
             className="text-xs font-semibold text-muted hover:text-ink transition-colors"
           >
@@ -144,44 +221,128 @@ export function GoogleConnect({
           Route review asks to your Google profile and show your rating on every record.
         </p>
       )}
+
       <Field
-        label="Your Google link"
-        hint="In Google Maps, open your business, tap Share, and copy the link."
+        label="Find your business on Google"
+        hint="We search Google with your business name and service area."
       >
-        <Input
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
-          placeholder="https://maps.app.goo.gl/…"
-          inputMode="url"
-          autoComplete="off"
-        />
+        <div className="flex gap-2">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Aqua Works"
+            autoComplete="off"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !searching) void runSearch(query);
+            }}
+          />
+          <Btn
+            variant="indigo"
+            loading={searching}
+            disabled={query.trim().length < 2 || busy}
+            onClick={() => void runSearch(query)}
+          >
+            Search
+          </Btn>
+        </div>
       </Field>
-      <Field
-        label="Current Google rating (optional)"
-        hint="We show it on your records until ratings sync automatically."
-      >
-        <Input
-          value={rating}
-          onChange={(e) => setRating(e.target.value)}
-          placeholder="4.8"
-          inputMode="decimal"
-        />
-      </Field>
+
+      {searching && <div className="text-sm text-muted">Searching Google…</div>}
+
+      {!searching && candidates.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Is this your business?
+          </div>
+          {candidates.map((c) => (
+            <div
+              key={c.placeId}
+              className="rounded-xl border border-line bg-white p-4 flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <div className="font-semibold text-ink truncate">{c.name}</div>
+                {c.address && <div className="text-xs text-muted truncate">{c.address}</div>}
+                <div className="mt-1 text-xs text-muted tnum">
+                  {c.rating != null
+                    ? `${c.rating.toFixed(1)} ★${
+                        c.ratingCount != null
+                          ? ` (${c.ratingCount} review${c.ratingCount === 1 ? "" : "s"})`
+                          : ""
+                      }`
+                    : "No rating yet"}
+                </div>
+              </div>
+              <Btn
+                variant="indigo"
+                loading={savingId === c.placeId}
+                disabled={busy}
+                onClick={() => void confirmCandidate(c)}
+              >
+                This is me
+              </Btn>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!searching && searched && candidates.length === 0 && (
+        <div className="text-sm text-muted">
+          No matches found. Try a different spelling, or paste your Google link below.
+        </div>
+      )}
+
+      {!showPaste ? (
+        <button
+          type="button"
+          onClick={() => {
+            setErr(null);
+            setShowPaste(true);
+          }}
+          className="text-xs font-semibold text-indigo hover:underline"
+        >
+          Can&apos;t find it? Paste your Google link
+        </button>
+      ) : (
+        <div className="space-y-3 rounded-xl border border-line bg-soft p-4">
+          <Field
+            label="Your Google link"
+            hint="In Google Maps, open your business, tap Share, and copy the link. Your rating won't show until the listing is matched on Google."
+          >
+            <Input
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="https://maps.app.goo.gl/…"
+              inputMode="url"
+              autoComplete="off"
+            />
+          </Field>
+          <div className="flex items-center gap-3">
+            <Btn
+              variant="indigo"
+              className="flex-1"
+              loading={busy && savingId === null}
+              onClick={savePasted}
+            >
+              Connect with this link
+            </Btn>
+            <Btn variant="ghost" onClick={() => setShowPaste(false)} disabled={busy}>
+              Cancel
+            </Btn>
+          </div>
+        </div>
+      )}
+
       {err && (
         <div role="alert" className="anim-fade-in text-sm text-red bg-redbg rounded-xl px-3 py-2">
           {err}
         </div>
       )}
-      <div className="flex items-center gap-3">
-        <Btn variant="indigo" className="flex-1" loading={busy} onClick={save}>
-          {connected ? "Save changes" : "Connect Google"}
+
+      {editing && (
+        <Btn variant="ghost" onClick={() => setEditing(false)} disabled={busy}>
+          Cancel
         </Btn>
-        {editing && (
-          <Btn variant="ghost" onClick={() => setEditing(false)} disabled={busy}>
-            Cancel
-          </Btn>
-        )}
-      </div>
+      )}
     </div>
   );
 }
