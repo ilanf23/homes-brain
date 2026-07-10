@@ -228,7 +228,6 @@ export type Database = {
           notify_sms: boolean
           phone: string | null
           respect_quiet_hrs: boolean
-          setup_completed_at: string | null
           sms_opt_out: boolean
         }
         Insert: {
@@ -243,7 +242,6 @@ export type Database = {
           notify_sms?: boolean
           phone?: string | null
           respect_quiet_hrs?: boolean
-          setup_completed_at?: string | null
           sms_opt_out?: boolean
         }
         Update: {
@@ -258,7 +256,6 @@ export type Database = {
           notify_sms?: boolean
           phone?: string | null
           respect_quiet_hrs?: boolean
-          setup_completed_at?: string | null
           sms_opt_out?: boolean
         }
         Relationships: []
@@ -941,8 +938,6 @@ export type Database = {
         }
         Returns: string
       }
-      homeowner_complete_setup: { Args: never; Returns: undefined }
-      homeowner_confirm_contact: { Args: never; Returns: undefined }
       homeowner_create_invite: {
         Args: {
           p_to_pro_email: string
