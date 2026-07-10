@@ -220,11 +220,9 @@ function HomeownerSettings() {
                 />
               </Field>
               <Field label="Phone">
-                <Input
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  type="tel"
-                  placeholder="904-555-0182"
+                  onChange={(v) => setPhone(v)}
                 />
               </Field>
               <Field label="Email">
