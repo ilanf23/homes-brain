@@ -212,6 +212,17 @@ function RecordDetail() {
           )}
         </div>
       </div>
+
+      {qrOpen && job?.customers && (
+        <ClaimQRModal
+          customerId={job.customers.id}
+          proId={pro.id}
+          recordId={record.id}
+          proBusiness={pro.business}
+          proLogo={pro.logo ?? null}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
     </ProShell>
   );
 }
