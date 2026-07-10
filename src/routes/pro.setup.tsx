@@ -130,9 +130,14 @@ function ProSetupWizard() {
         break;
       }
       case "trade": {
-        ({ error } = await supabase.from("pros").update({ trade }).eq("id", proId));
+        // Keep legacy `trade` scalar in sync as the primary (first) selection.
+        ({ error } = await supabase
+          .from("pros")
+          .update({ trades, trade: trades[0] ?? null })
+          .eq("id", proId));
         break;
       }
+
       case "service_area": {
         ({ error } = await supabase
           .from("pros")
