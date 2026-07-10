@@ -688,7 +688,7 @@ function CustomerDetail() {
               </div>
               {homeowner ? (
                 <div className="mt-2">
-                  <KV k="Phone" v={homeowner.phone ?? "-"} />
+                  <KV k="Phone" v={homeowner.phone ? formatPhone(homeowner.phone) : "-"} />
                   <KV k="Email" v={homeowner.email ?? "-"} />
                   <KV k="Joined" v={formatDate(homeowner.created_at)} />
                 </div>
