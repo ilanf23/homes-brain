@@ -1,9 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Avatar, Btn, Card, Field, Input, PhoneInput, Pill, StepBar, Textarea, Toast } from "@/lib/ui";
+import {
+  Avatar,
+  Btn,
+  Card,
+  Field,
+  Input,
+  PhoneInput,
+  Pill,
+  StepBar,
+  Textarea,
+  Toast,
+} from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
+import { Celebration } from "@/components/celebration";
 import { QrCode } from "lucide-react";
 import {
   buildRecordUrl,
@@ -20,7 +32,13 @@ import { createInvoice, formatMoney } from "@/lib/invoices";
 
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
-import { extractFromNotes, extractFullJob, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
+import {
+  extractFromNotes,
+  extractFullJob,
+  scanNameplate,
+  useDictation,
+  useMicLevel,
+} from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 import { Select } from "@/lib/ui";
@@ -415,9 +433,7 @@ function NewJob() {
           model: (r.model as string | null) ?? null,
           warranty_until: (r.warranty_until as string | null) ?? null,
           attributes:
-            attrs && typeof attrs === "object"
-              ? (attrs as Record<string, string | boolean>)
-              : null,
+            attrs && typeof attrs === "object" ? (attrs as Record<string, string | boolean>) : null,
           last_job_at: last,
           job_count: jobs.length,
         } satisfies ApplianceOpt;
@@ -555,11 +571,7 @@ function NewJob() {
         setEqModel(r.model);
         filled.push("model");
       }
-      if (
-        r.next_service_date &&
-        /^\d{4}-\d{2}-\d{2}$/.test(r.next_service_date) &&
-        !nextService
-      ) {
+      if (r.next_service_date && /^\d{4}-\d{2}-\d{2}$/.test(r.next_service_date) && !nextService) {
         setNextService(r.next_service_date);
         filled.push("next service");
       }
@@ -586,8 +598,6 @@ function NewJob() {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [whatDone, dictation.listening, stage]);
-
-
 
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
@@ -1111,7 +1121,6 @@ function NewJob() {
     </Field>
   );
 
-
   if (!proId) {
     return (
       <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
@@ -1188,101 +1197,101 @@ function NewJob() {
                     HomesBrain AI is reading what you said…
                   </div>
                 )}
-              <Card className="space-y-3">
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search a customer by name or address, or type a new name…"
-                  autoFocus
-                  aria-label="Search customers or type a new name"
-                />
+                <Card className="space-y-3">
+                  <Input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search a customer by name or address, or type a new name…"
+                    autoFocus
+                    aria-label="Search customers or type a new name"
+                  />
 
-                <div className="max-h-[560px] overflow-auto -mx-1 px-1">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {q && !hasExactMatch && (
-                      <button
-                        type="button"
-                        onClick={() => startNewCustomer(query.trim())}
-                        className="pressable flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/60 sm:col-span-2"
-                      >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
-                          <UserPlusIcon size={18} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-base font-semibold text-indigo">
-                            Add "{query.trim()}"
-                          </div>
-                          <div className="mt-0.5 text-sm text-muted">New customer</div>
-                        </div>
-                      </button>
-                    )}
-
-                    {filteredCustomers.map((c) => {
-                      const isMatch = !!locationMatch && c.id === locationMatch.id;
-                      return (
+                  <div className="max-h-[560px] overflow-auto -mx-1 px-1">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {q && !hasExactMatch && (
                         <button
-                          key={c.id}
                           type="button"
-                          onClick={() => pickExisting(c)}
-                          className={`group pressable flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
-                            isMatch
-                              ? "border-indigo/40 bg-indigobg hover:bg-indigobg/80"
-                              : "border-line bg-paper hover:border-indigo/30 hover:bg-indigobg/40"
-                          }`}
+                          onClick={() => startNewCustomer(query.trim())}
+                          className="pressable flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/60 sm:col-span-2"
                         >
-                          <Avatar name={c.name || "?"} accent="indigo" size={40} />
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
+                            <UserPlusIcon size={18} />
+                          </span>
                           <div className="min-w-0 flex-1">
-                            <div
-                              className={`truncate text-base font-semibold ${
-                                isMatch ? "text-indigo" : "text-ink"
-                              }`}
-                            >
-                              {c.name}
+                            <div className="truncate text-base font-semibold text-indigo">
+                              Add "{query.trim()}"
                             </div>
-                            {isMatch ? (
-                              <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
-                                Matches your address
-                              </div>
-                            ) : (
-                              <div className="mt-0.5 truncate text-sm text-muted">
-                                {c.homes?.address}
-                              </div>
-                            )}
+                            <div className="mt-0.5 text-sm text-muted">New customer</div>
                           </div>
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            aria-hidden="true"
-                            className={`shrink-0 transition-all duration-200 group-hover:translate-x-0.5 ${
-                              isMatch ? "text-indigo" : "text-muted group-hover:text-indigo"
+                        </button>
+                      )}
+
+                      {filteredCustomers.map((c) => {
+                        const isMatch = !!locationMatch && c.id === locationMatch.id;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => pickExisting(c)}
+                            className={`group pressable flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
+                              isMatch
+                                ? "border-indigo/40 bg-indigobg hover:bg-indigobg/80"
+                                : "border-line bg-paper hover:border-indigo/30 hover:bg-indigobg/40"
                             }`}
                           >
-                            <path
-                              d="M9 6l6 6-6 6"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {!q && existing.length === 0 && (
-                    <div className="px-1 py-3 text-sm text-muted">
-                      No customers yet. Type a name to add your first.
+                            <Avatar name={c.name || "?"} accent="indigo" size={40} />
+                            <div className="min-w-0 flex-1">
+                              <div
+                                className={`truncate text-base font-semibold ${
+                                  isMatch ? "text-indigo" : "text-ink"
+                                }`}
+                              >
+                                {c.name}
+                              </div>
+                              {isMatch ? (
+                                <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
+                                  Matches your address
+                                </div>
+                              ) : (
+                                <div className="mt-0.5 truncate text-sm text-muted">
+                                  {c.homes?.address}
+                                </div>
+                              )}
+                            </div>
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden="true"
+                              className={`shrink-0 transition-all duration-200 group-hover:translate-x-0.5 ${
+                                isMatch ? "text-indigo" : "text-muted group-hover:text-indigo"
+                              }`}
+                            >
+                              <path
+                                d="M9 6l6 6-6 6"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        );
+                      })}
                     </div>
-                  )}
 
-                  {q && filteredCustomers.length === 0 && hasExactMatch && (
-                    <div className="px-1 py-3 text-sm text-muted">No other matches.</div>
-                  )}
-                </div>
-              </Card>
+                    {!q && existing.length === 0 && (
+                      <div className="px-1 py-3 text-sm text-muted">
+                        No customers yet. Type a name to add your first.
+                      </div>
+                    )}
+
+                    {q && filteredCustomers.length === 0 && hasExactMatch && (
+                      <div className="px-1 py-3 text-sm text-muted">No other matches.</div>
+                    )}
+                  </div>
+                </Card>
               </div>
             )}
 
@@ -1465,7 +1474,6 @@ function NewJob() {
                   )}
                 </Field>
 
-
                 {/* Photo (optional) */}
                 <div>
                   <input
@@ -1515,7 +1523,8 @@ function NewJob() {
                           )}
                           {scanState === "done" && (
                             <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                              <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the unit details
+                              <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the
+                              unit details
                             </div>
                           )}
                           {scanState === "error" && (
@@ -1845,6 +1854,7 @@ function NewJob() {
 
             {stage === "done" && (
               <Card className="anim-scale-in text-center py-12 max-w-xl mx-auto">
+                <Celebration variant="burst" />
                 <CheckBurst className="mx-auto" />
                 <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
                 <p className="mt-2 text-sm text-muted">
@@ -1876,7 +1886,6 @@ function NewJob() {
                     <Btn variant="secondary">Back to dashboard</Btn>
                   </Link>
                 </div>
-
               </Card>
             )}
           </div>

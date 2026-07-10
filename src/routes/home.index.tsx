@@ -7,6 +7,7 @@ import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
+import { Celebration, consumeCelebration } from "@/components/celebration";
 import {
   HomePageHead,
   HomeShell,
@@ -36,6 +37,13 @@ function HomeOverview() {
   } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Claim landing without a record id falls back here: play the one-time
+  // celebration queued by /claim. Set in effect so SSR markup stays clean.
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => {
+    if (consumeCelebration("home_claimed")) setCelebrate(true);
+  }, []);
 
   useEffect(() => {
     if (!home) return;
@@ -92,6 +100,7 @@ function HomeOverview() {
 
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
+      {celebrate && <Celebration variant="grand" />}
       <HomePageHead
         eyebrow="My home"
         title={home.address}

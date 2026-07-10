@@ -552,6 +552,68 @@
   animation: hb-sway 9s ease-in-out infinite;
 }
 
+/* ---------- Celebration (confetti + balloons) ----------
+   One-shot overlay for the two payoff moments: record sent (pro) and home
+   claimed (homeowner). Confetti uses the classic split-axis trick: the outer
+   div drifts X linearly, the middle div arcs Y (decelerate to apex, then
+   gravity), the inner rect tumbles. All transform/opacity only. Per-piece
+   trajectories arrive as CSS custom properties from the component. */
+
+@keyframes hb-confetti-x {
+  to {
+    transform: translateX(var(--cx));
+  }
+}
+@keyframes hb-confetti-y {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.16, 0.9, 0.4, 1);
+  }
+  52% {
+    transform: translateY(var(--cy-up));
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.85, 0.4);
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(var(--cy-down));
+    opacity: 0;
+  }
+}
+@keyframes hb-confetti-spin {
+  to {
+    transform: rotate3d(var(--crx, 1), var(--cry, 0.4), 0.2, var(--cturns, 540deg));
+  }
+}
+@keyframes hb-balloon-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  7% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(-100vh - 200px));
+    opacity: 0;
+  }
+}
+@keyframes hb-balloon-sway {
+  0%,
+  100% {
+    transform: translateX(0) rotate(-2.5deg);
+  }
+  50% {
+    transform: translateX(var(--bsway, 14px)) rotate(2.5deg);
+  }
+}
+
 /* Frantic wobble for the forgetting-scene's most panicked bubbles. */
 @keyframes hb-jitter {
   0%,

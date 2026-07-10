@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Field, Input, KV, PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
+import { queueCelebration } from "@/components/celebration";
 
 export const Route = createFileRoute("/claim/$token")({
   head: () => ({
@@ -140,6 +141,7 @@ function ClaimByToken() {
         });
       }
       setPhase("done");
+      queueCelebration("home_claimed");
       const rid = resp.record_id ?? preview?.record_id ?? null;
       if (rid) {
         navigate({ to: "/home/records/$recordId", params: { recordId: rid } });

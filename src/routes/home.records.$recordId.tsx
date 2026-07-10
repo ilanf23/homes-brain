@@ -4,13 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
+import { Celebration, consumeCelebration } from "@/components/celebration";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
-import {
-  formatMoney,
-  isOverdue,
-  listInvoicesForHome,
-  type HomeInvoice,
-} from "@/lib/invoices";
+import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
 
 export const Route = createFileRoute("/home/records/$recordId")({
@@ -22,32 +18,31 @@ function RecordDetail() {
   const { recordId } = Route.useParams();
 
   const navigate = useNavigate();
-  const {
-    homeowner,
-    home,
-    records,
-    jobs,
-    equipment,
-    pros,
-    loading,
-  } = useHomeownerGuard();
+  const { homeowner, home, records, jobs, equipment, pros, loading } = useHomeownerGuard();
 
   const record = useMemo(() => records.find((r) => r.id === recordId) ?? null, [records, recordId]);
   const job = useMemo(
-    () => (record ? jobs.find((j) => j.id === record.job_id) ?? null : null),
+    () => (record ? (jobs.find((j) => j.id === record.job_id) ?? null) : null),
     [record, jobs],
   );
   const item = useMemo(
-    () => (job?.equipment_id ? equipment.find((e) => e.id === job.equipment_id) ?? null : null),
+    () => (job?.equipment_id ? (equipment.find((e) => e.id === job.equipment_id) ?? null) : null),
     [job, equipment],
   );
   const pro = useMemo(
-    () => (job ? pros.find((p) => p.id === job.pro_id) ?? null : null),
+    () => (job ? (pros.find((p) => p.id === job.pro_id) ?? null) : null),
     [job, pros],
   );
 
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [payErr, setPayErr] = useState<string | null>(null);
+
+  // Play the claim celebration exactly once, on the page the new homeowner
+  // lands on. Set in effect (not render) so SSR markup stays clean.
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => {
+    if (consumeCelebration("home_claimed")) setCelebrate(true);
+  }, []);
 
   useEffect(() => {
     if (!home) return;
@@ -62,7 +57,6 @@ function RecordDetail() {
   useEffect(() => {
     if (!loading && !home) navigate({ to: "/home" });
   }, [loading, home, navigate]);
-
 
   if (loading) return <PageLoader label="Loading record" />;
   if (!home) return <PageLoader label="Setting up your home" />;
@@ -87,6 +81,7 @@ function RecordDetail() {
 
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
+      {celebrate && <Celebration variant="grand" />}
       <Link
         to="/home"
         className="anim-fade-up inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors mb-4"
@@ -112,9 +107,7 @@ function RecordDetail() {
             <KV k="Address" v={home.address} mono={false} />
             <KV k="Work done" v={job.what_done} mono={false} />
             <KV k="Date" v={formatDate(job.created_at)} />
-            {job.next_service_date && (
-              <KV k="Next service" v={formatDate(job.next_service_date)} />
-            )}
+            {job.next_service_date && <KV k="Next service" v={formatDate(job.next_service_date)} />}
             {pro && (
               <KV
                 k="Serviced by"
@@ -146,7 +139,9 @@ function RecordDetail() {
               {invoice.items.map((it, i) => (
                 <div key={i} className="flex justify-between text-sm">
                   <span className="text-ink">{it.description}</span>
-                  <span className="text-ink font-semibold tnum">{formatMoney(Number(it.amount))}</span>
+                  <span className="text-ink font-semibold tnum">
+                    {formatMoney(Number(it.amount))}
+                  </span>
                 </div>
               ))}
               <div className="flex justify-between border-t border-line pt-2 mt-2 text-sm font-bold">
@@ -197,7 +192,6 @@ function RecordDetail() {
             )}
           </Card>
         )}
-
 
         {item && (
           <Card className="anim-fade-up d-2">
