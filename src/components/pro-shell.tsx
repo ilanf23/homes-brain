@@ -30,13 +30,17 @@ export type ProRow = {
   id: string;
   business: string;
   owner_first_name: string | null;
+  /* Legacy single trade — kept as the primary trade for backwards-compatible surfaces. */
   trade: string;
+  /* Multi-trade selection. Source of truth for the trade set; `trade` mirrors trades[0]. */
+  trades: string[];
   service_area: string | null;
   logo: string | null;
   google_place_id: string | null;
   google_rating: number | null;
   plan: string;
 };
+
 
 /* Real Supabase auth guard for every /pro/* page (except signup).
    Redirects to /login when there's no session or the user isn't a pro. */
