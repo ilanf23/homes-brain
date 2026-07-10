@@ -171,6 +171,12 @@ function ProHome() {
         )}
       </div>
 
+      <div className="mt-6">
+        <ProSetupChecklist proId={proId} />
+      </div>
+
+
+
       {/* Hero action: the one thing this screen exists to make easy. */}
       <Link to="/pro/jobs/new" className="anim-fade-up d-1 block mt-6">
         <button
