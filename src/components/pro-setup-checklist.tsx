@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, ChevronDown, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isGoogleUrl } from "@/lib/hb";
+import { isGoogleUrl, proTrades } from "@/lib/hb";
 
 type StepKey = "business" | "trade" | "service_area" | "phone" | "payments" | "google";
 
@@ -24,6 +24,7 @@ export function useProSetup(proId: string | null): ProSetupState {
   const [row, setRow] = useState<{
     business: string | null;
     trade: string | null;
+    trades: string[] | null;
     service_area: string | null;
     phone: string | null;
     stripe_charges_enabled: boolean | null;
@@ -37,7 +38,7 @@ export function useProSetup(proId: string | null): ProSetupState {
     (async () => {
       const { data } = await supabase
         .from("pros")
-        .select("business,trade,service_area,phone,stripe_charges_enabled,google_place_id")
+        .select("business,trade,trades,service_area,phone,stripe_charges_enabled,google_place_id")
         .eq("id", proId)
         .maybeSingle();
       if (cancelled) return;
@@ -45,6 +46,7 @@ export function useProSetup(proId: string | null): ProSetupState {
         (data as {
           business: string | null;
           trade: string | null;
+          trades: string[] | null;
           service_area: string | null;
           phone: string | null;
           stripe_charges_enabled: boolean | null;
@@ -60,7 +62,7 @@ export function useProSetup(proId: string | null): ProSetupState {
 
   const items: ChecklistItem[] = [
     { key: "business", label: "Business name", done: !!row?.business?.trim() },
-    { key: "trade", label: "Choose your trade", done: !!row?.trade?.trim() },
+    { key: "trade", label: "Choose your trades", done: proTrades(row ?? {}).length > 0 },
     { key: "service_area", label: "Service area", done: !!row?.service_area?.trim() },
     { key: "phone", label: "Contact phone", done: !!row?.phone?.trim() },
     { key: "payments", label: "Set up payments", done: !!row?.stripe_charges_enabled },
@@ -70,6 +72,7 @@ export function useProSetup(proId: string | null): ProSetupState {
       done: isGoogleUrl(row?.google_place_id ?? null),
     },
   ];
+
 
   const completed = items.filter((i) => i.done).length;
   return {

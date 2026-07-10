@@ -30,13 +30,17 @@ export type ProRow = {
   id: string;
   business: string;
   owner_first_name: string | null;
+  /* Legacy single trade — kept as the primary trade for backwards-compatible surfaces. */
   trade: string;
+  /* Multi-trade selection. Source of truth for the trade set; `trade` mirrors trades[0]. */
+  trades: string[];
   service_area: string | null;
   logo: string | null;
   google_place_id: string | null;
   google_rating: number | null;
   plan: string;
 };
+
 
 /* Real Supabase auth guard for every /pro/* page (except signup).
    Redirects to /login when there's no session or the user isn't a pro. */
@@ -56,7 +60,7 @@ export function useProGuard() {
       }
       const { data } = await supabase
         .from("pros")
-        .select("id,business,owner_first_name,trade,service_area,logo,google_place_id,google_rating,plan")
+        .select("id,business,owner_first_name,trade,trades,service_area,logo,google_place_id,google_rating,plan")
         .eq("auth_user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
@@ -237,7 +241,11 @@ function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => 
               <Avatar name={pro.business} accent="indigo" size={36} />
               <div className="min-w-0">
                 <div className="text-sm font-bold text-ink truncate">{pro.business}</div>
-                <div className="text-xs text-muted truncate">{tradeLabel(pro.trade)}</div>
+                <div className="text-xs text-muted truncate">
+                  {(pro.trades?.length ? pro.trades : pro.trade ? [pro.trade] : [])
+                    .map((t) => tradeLabel(t))
+                    .join(" · ")}
+                </div>
               </div>
             </div>
             <div className="p-1.5">

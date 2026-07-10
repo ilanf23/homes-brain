@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Check, Copy, LogOut } from "lucide-react";
 import { Avatar, Btn, Field, Input, PhoneInput, Pill, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent, TRADES } from "@/lib/hb";
+import { logEvent, TRADES, proTrades } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
 import { GoogleConnect } from "@/components/google-connect";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
@@ -63,8 +63,9 @@ function ProSettings() {
 
   const [business, setBusiness] = useState("");
   const [ownerFirstName, setOwnerFirstName] = useState("");
-  const [trade, setTrade] = useState("");
+  const [trades, setTrades] = useState<string[]>([]);
   const [area, setArea] = useState("");
+
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
@@ -97,7 +98,7 @@ function ProSettings() {
     if (!pro) return;
     setBusiness(pro.business);
     setOwnerFirstName(pro.owner_first_name ?? "");
-    setTrade(pro.trade);
+    setTrades(proTrades(pro));
     setArea(pro.service_area ?? "");
   }, [pro]);
 
@@ -115,10 +116,15 @@ function ProSettings() {
     );
   }
 
+  const currentTrades = proTrades(pro);
+  const tradesDirty =
+    trades.length !== currentTrades.length ||
+    trades.some((t, i) => t !== currentTrades[i]);
+
   const dirty =
     business !== pro.business ||
     ownerFirstName !== (pro.owner_first_name ?? "") ||
-    trade !== pro.trade ||
+    tradesDirty ||
     area !== (pro.service_area ?? "") ||
     email !== (prefs?.email ?? "") ||
     phone !== (prefs?.phone ?? "");
@@ -126,10 +132,12 @@ function ProSettings() {
   async function saveProfile() {
     setSaving(true);
     setProfileErr(null);
+    const primary = trades[0] ?? "";
     const patch = {
       business,
       owner_first_name: ownerFirstName.trim() || null,
-      trade,
+      trade: primary,
+      trades,
       service_area: area,
       email: email.trim() || null,
       phone: phone.trim() || null,
@@ -138,11 +146,19 @@ function ProSettings() {
     if (error || !data?.length) {
       setProfileErr(error?.message ?? "Couldn't save. Try again.");
     } else {
-      setPro({ ...pro!, business, owner_first_name: patch.owner_first_name, trade, service_area: area });
+      setPro({
+        ...pro!,
+        business,
+        owner_first_name: patch.owner_first_name,
+        trade: primary,
+        trades,
+        service_area: area,
+      });
       if (prefs) setPrefs({ ...prefs, email: patch.email, phone: patch.phone });
       setToast("Saved");
     }
     setSaving(false);
+
   }
 
   /* Optimistic toggle: flip first, revert on failure. Silent on success -
@@ -243,30 +259,44 @@ function ProSettings() {
                 />
               </Field>
               <div>
-                <div className="text-sm font-semibold text-ink mb-2">Trade</div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <div className="text-sm font-semibold text-ink">Trades</div>
+                  <div className="text-xs text-muted">
+                    Pick every trade you offer. First one is your primary.
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {TRADES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTrade(t.id)}
-                      aria-pressed={trade === t.id}
-                      className={`pressable text-left rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2.5 ${
-                        trade === t.id
-                          ? "border-indigo bg-indigobg text-indigo shadow-sm"
-                          : "border-line bg-paper text-ink hover:bg-soft hover:border-ink/20"
-                      }`}
-                    >
-                      <TradeIcon
-                        trade={t.id}
-                        size={18}
-                        className={trade === t.id ? "text-indigo" : "text-muted"}
-                      />
-                      {t.label}
-                    </button>
-                  ))}
+                  {TRADES.map((t) => {
+                    const selected = trades.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setTrades(
+                            selected ? trades.filter((x) => x !== t.id) : [...trades, t.id],
+                          )
+                        }
+                        aria-pressed={selected}
+                        className={`pressable text-left rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2.5 ${
+                          selected
+                            ? "border-indigo bg-indigobg text-indigo shadow-sm"
+                            : "border-line bg-paper text-ink hover:bg-soft hover:border-ink/20"
+                        }`}
+                      >
+                        <TradeIcon
+                          trade={t.id}
+                          size={18}
+                          className={selected ? "text-indigo" : "text-muted"}
+                        />
+                        <span className="min-w-0 truncate">{t.label}</span>
+                        {selected && <Check size={14} className="ml-auto text-indigo shrink-0" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
               <Field label="Service area" hint="City or ZIP.">
                 <Input value={area} onChange={(e) => setArea(e.target.value)} />
               </Field>
