@@ -10,6 +10,8 @@ import {
   ClipboardList,
   Check,
   ChevronRight,
+  ChevronDown,
+  Minus,
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
