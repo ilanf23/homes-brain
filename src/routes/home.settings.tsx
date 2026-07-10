@@ -1,7 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { Btn, Field, Input, KV, PageLoader, PhoneInput, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
+import {
+  Btn,
+  Field,
+  Input,
+  KV,
+  PageLoader,
+  PhoneInput,
+  SettingRow,
+  Skeleton,
+  Toast,
+  Toggle,
+} from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent } from "@/lib/hb";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
@@ -191,8 +202,6 @@ function HomeownerSettings() {
     navigate({ to: "/" });
   }
 
-
-
   if (guardLoading) return <PageLoader label="Loading settings" />;
   if (!home) return <PageLoader label="Setting up your home" />;
 
@@ -220,10 +229,7 @@ function HomeownerSettings() {
                 />
               </Field>
               <Field label="Phone">
-                <PhoneInput
-                  value={phone}
-                  onChange={(v) => setPhone(v)}
-                />
+                <PhoneInput value={phone} onChange={(v) => setPhone(v)} />
               </Field>
               <Field label="Email">
                 <Input
@@ -454,7 +460,10 @@ function AccountPasswordRow({ onDone }: { onDone: (msg: string) => void }) {
     if (pw.length < 8) return setErr("Use at least 8 characters.");
     if (pw !== confirm) return setErr("Passwords don't match.");
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: pw });
+    const { error } = await supabase.auth.updateUser({
+      password: pw,
+      data: { has_password: true },
+    });
     setBusy(false);
     if (error) {
       setErr(error.message);

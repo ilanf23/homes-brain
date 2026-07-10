@@ -139,11 +139,6 @@ function ClaimByToken() {
           via: "branded_claim",
         });
       }
-      try {
-        sessionStorage.setItem("hb_prompt_secure", "1");
-      } catch {
-        // ignore
-      }
       setPhase("done");
       const rid = resp.record_id ?? preview?.record_id ?? null;
       if (rid) {

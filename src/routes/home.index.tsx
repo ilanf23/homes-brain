@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
@@ -28,24 +28,13 @@ function HomeOverview() {
     equipment,
     jobs,
     pros,
+    invites,
     records,
     loading: guardLoading,
     refresh,
   } = useHomeownerGuard();
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const [showSetPassword, setShowSetPassword] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      if (sessionStorage.getItem("hb_prompt_secure") === "1") {
-        setShowSetPassword(true);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   useEffect(() => {
     if (!home) return;
@@ -85,6 +74,8 @@ function HomeOverview() {
 
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const verifiedCount = equipment.filter((e) => e.source === "pro").length;
+  const addedAppliance = equipment.some((e) => e.source === "homeowner");
+  const invitedPro = invites.length > 0;
 
   if (guardLoading) return <PageLoader label="Loading your home" />;
   if (!home)
@@ -106,21 +97,24 @@ function HomeOverview() {
         sub="Your pros write the record. You own it."
       />
 
-      {showSetPassword && (
-        <SetPasswordCard
-          onDone={(msg) => {
-            try {
-              sessionStorage.removeItem("hb_prompt_secure");
-            } catch {
-              // ignore
-            }
-            setShowSetPassword(false);
-            if (msg) setToast(msg);
-          }}
-        />
+      {homeowner && !homeowner.setup_completed_at && (
+        <Card className="anim-fade-up mb-6 border-indigo/30">
+          <Eyebrow accent="indigo">Finish setting up</Eyebrow>
+          <p className="mt-2 text-sm text-ink">
+            Confirm your details so reminders reach you, and set a password so you can sign back in
+            any time.
+          </p>
+          <div className="mt-3">
+            <Link to="/home/setup">
+              <Btn variant="indigo">Finish setup</Btn>
+            </Link>
+          </div>
+        </Card>
       )}
 
-
+      {homeowner?.setup_completed_at && (!addedAppliance || !invitedPro) && (
+        <NextStepsCard addedAppliance={addedAppliance} invitedPro={invitedPro} />
+      )}
 
       {openInvoices.length > 0 && (
         <Card className="anim-fade-up mb-6 border-indigo/30">
@@ -362,7 +356,6 @@ function ActivityCard({
     return [...fromRecords, ...fromJobs].slice(0, 8);
   }, [records, jobs, jobById, proById, onView]);
 
-
   return (
     <Card className="anim-fade-up d-1">
       <div className="flex items-center justify-between">
@@ -399,14 +392,26 @@ function ActivityCard({
               "flex items-center justify-between gap-3 rounded-xl bg-paper border border-line px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper";
             if (row.href?.to === "/home/records/$recordId") {
               return (
-                <Link key={row.key} to="/home/records/$recordId" params={row.href.params} onClick={row.onTap} className={cls}>
+                <Link
+                  key={row.key}
+                  to="/home/records/$recordId"
+                  params={row.href.params}
+                  onClick={row.onTap}
+                  className={cls}
+                >
                   {inner}
                 </Link>
               );
             }
             if (row.href?.to === "/home/items/$itemId") {
               return (
-                <Link key={row.key} to="/home/items/$itemId" params={row.href.params} onClick={row.onTap} className={cls}>
+                <Link
+                  key={row.key}
+                  to="/home/items/$itemId"
+                  params={row.href.params}
+                  onClick={row.onTap}
+                  className={cls}
+                >
                   {inner}
                 </Link>
               );
@@ -481,69 +486,68 @@ function AmountDueRow({
   );
 }
 
-function SetPasswordCard({ onDone }: { onDone: (msg?: string) => void }) {
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  async function save() {
-    if (password.length < 8) {
-      setErr("Use at least 8 characters.");
-      return;
-    }
-    setBusy(true);
-    setErr(null);
-    const { error } = await supabase.auth.updateUser({ password });
-    setBusy(false);
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-    onDone("Password saved");
-  }
-
+/* Post-setup checklist: the trust-gated loop items. Data-derived, no
+   dismissal state; the card disappears when both are done. */
+function NextStepsCard({
+  addedAppliance,
+  invitedPro,
+}: {
+  addedAppliance: boolean;
+  invitedPro: boolean;
+}) {
   return (
-    <Card className="anim-fade-up mb-6 border-indigo/30">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Eyebrow accent="indigo">Optional · faster sign in next time</Eyebrow>
-          <p className="mt-2 text-sm text-ink">
-            Set a password so you can sign in without waiting for a magic-link email. You can
-            always keep using the emailed link if you'd rather.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => onDone()}
-          className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
-        >
-          Not now
-        </button>
-      </div>
-      <div className="mt-3 flex flex-col sm:flex-row gap-2">
-        <Input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="New password"
-          autoComplete="new-password"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && password && !busy) save();
-          }}
+    <Card className="anim-fade-up mb-6">
+      <Eyebrow accent="indigo">Make your record complete</Eyebrow>
+      <div className="mt-3 space-y-2">
+        <ChecklistRow
+          done={addedAppliance}
+          label="Add your appliances"
+          sub="Warranty and recall checks start with a model number."
+          to="/home/add"
         />
-        <Btn variant="indigo" onClick={save} disabled={!password || busy} loading={busy}>
-          Save password
-        </Btn>
+        <ChecklistRow
+          done={invitedPro}
+          label="Invite your other pros"
+          sub="Every trade you add deepens your home's record."
+          to="/home/pros"
+        />
       </div>
-      {err && (
-        <div role="alert" className="mt-2 text-sm text-red bg-redbg rounded-xl px-3 py-2">
-          {err}
-        </div>
-      )}
     </Card>
   );
 }
 
+function ChecklistRow({
+  done,
+  label,
+  sub,
+  to,
+}: {
+  done: boolean;
+  label: string;
+  sub: string;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`flex items-center gap-3 rounded-2xl border border-line px-4 py-3 transition ${
+        done ? "bg-soft opacity-60" : "bg-white hover:bg-soft"
+      }`}
+    >
+      <span
+        className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+          done ? "bg-indigo text-white" : "border border-line text-transparent"
+        }`}
+      >
+        <Check size={14} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-ink">{label}</span>
+        <span className="block text-xs text-muted">{sub}</span>
+      </span>
+    </Link>
+  );
+}
 
 function OnboardingNoHome({
   homeownerId,
