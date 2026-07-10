@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, X, Check } from "lucide-react";
 import { Btn, Field, Input, PageLoader, PhoneInput, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent, TRADES, isGoogleUrl } from "@/lib/hb";
+import { logEvent, TRADES, isGoogleUrl, proTrades } from "@/lib/hb";
 import { Logo, TradeIcon } from "@/components/svg";
 import { GoogleConnect } from "@/components/google-connect";
 import { startStripeOnboarding } from "@/lib/stripe-connect";
