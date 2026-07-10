@@ -158,7 +158,7 @@ export function useProSetup(proId: string | null, jobsCount?: number): ProSetupS
       label: "Log your first job",
       hint: "About 30 seconds. Sends a branded record.",
       icon: ClipboardList,
-      done: jobsCount > 0,
+      done: effectiveJobsCount > 0,
       to: "/pro/jobs/new",
     },
   ];
