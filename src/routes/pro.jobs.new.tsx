@@ -1044,6 +1044,10 @@ function NewJob() {
     dictation.listening && dictation.interim
       ? (whatDone ? whatDone.replace(/\s+$/, "") + " " : "") + dictation.interim
       : whatDone;
+  const liveFullNote =
+    fullDictation.listening && fullDictation.interim
+      ? (fullNote ? fullNote.replace(/\s+$/, "") + " " : "") + fullDictation.interim
+      : fullNote;
 
   // Manual unit fields, shared by the repeat-home picker (shown when adding a
   // new unit or correcting one) and the new-home drawer (always shown there,
