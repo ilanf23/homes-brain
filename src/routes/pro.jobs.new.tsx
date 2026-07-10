@@ -667,6 +667,82 @@ function NewJob() {
     setStage("location");
   }
 
+  /* "Speak the whole job" done handler: one AI extract fills the customer,
+     address, and work fields, then jumps straight to Review so the pro only
+     has to eyeball it and send. */
+  async function finishFullVoice() {
+    const note = fullNote.trim();
+    if (!note) {
+      closeVoice();
+      return;
+    }
+    setFullBusy(true);
+    let extract;
+    try {
+      extract = await extractFullJob(note, proTrade);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Couldn't read that. Try again.";
+      setFullBusy(false);
+      setToast(msg);
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    // Stop mic/dictation now that we have the transcript in hand.
+    closeVoice();
+    setFullBusy(false);
+
+    // Match by name against existing customers (case-insensitive, whole-string).
+    const nm = (extract.customer_name ?? "").trim().toLowerCase();
+    const match = nm ? existing.find((c) => c.name.trim().toLowerCase() === nm) : undefined;
+
+    if (match) {
+      setSelectedCustomerId(match.id);
+      const onFile = match.homes?.address ?? "";
+      const addr = extract.address?.trim() || onFile;
+      setLocAddress(addr);
+      addressTouched.current = true;
+      setResolved(null);
+    } else {
+      setSelectedCustomerId("");
+      setNewCustomer({
+        name: extract.customer_name ?? "",
+        address: extract.address ?? "",
+        phone: extract.customer_phone ?? "",
+        email: extract.customer_email ?? "",
+      });
+      if (extract.address) {
+        setLocAddress(extract.address);
+        addressTouched.current = true;
+        setResolved(null);
+      }
+    }
+
+    // Work fields — only fill blanks, but here they always start blank on a
+    // fresh flow. what_done_clean is the tidy version; fall back to the raw
+    // transcript so the pro still has their words if the AI returned nothing.
+    if (extract.type) setEqType(extract.type);
+    if (extract.make) setEqMake(extract.make);
+    if (extract.model) setEqModel(extract.model);
+    setWhatDone(extract.what_done_clean ?? note);
+    if (extract.next_service_date) setNextService(extract.next_service_date);
+
+    logEvent("job_voice_full_captured", {
+      filled: [
+        extract.customer_name && "customer_name",
+        extract.address && "address",
+        extract.customer_phone && "phone",
+        extract.customer_email && "email",
+        extract.type && "type",
+        extract.make && "make",
+        extract.model && "model",
+        extract.next_service_date && "next_service",
+      ].filter(Boolean),
+      matched_existing: !!match,
+    });
+
+    setStage("review");
+  }
+
   /* Coords to store for a home, but only when we actually have them for THIS
      exact address (GPS reverse-geocode or a Places pick). Otherwise null, so
      geocodeHome forward-geocodes the typed string instead. */
