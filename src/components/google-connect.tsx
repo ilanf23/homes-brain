@@ -68,8 +68,6 @@ export function GoogleConnect({
     setQuery(initial);
     if (initial.length >= 2) {
       void runSearch(initial);
-    } else {
-      setSearched(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSearch]);
@@ -233,7 +231,7 @@ export function GoogleConnect({
             placeholder="Aqua Works"
             autoComplete="off"
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !searching) void runSearch(query);
+              if (e.key === "Enter" && !searching && !busy) void runSearch(query);
             }}
           />
           <Btn
@@ -321,6 +319,7 @@ export function GoogleConnect({
               variant="indigo"
               className="flex-1"
               loading={busy && savingId === null}
+              disabled={busy}
               onClick={savePasted}
             >
               Connect with this link

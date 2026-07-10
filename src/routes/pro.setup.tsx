@@ -160,6 +160,19 @@ function ProSetupWizard() {
       setErr(error.message);
       return false;
     }
+    switch (step) {
+      case "business":
+        setPro((p) => (p ? { ...p, business: business.trim() } : p));
+        break;
+      case "service_area":
+        setPro((p) => (p ? { ...p, service_area: area.trim() } : p));
+        break;
+      case "phone":
+        setPro((p) => (p ? ({ ...p, phone: phone.trim() } as ProRow) : p));
+        break;
+      default:
+        break;
+    }
     return true;
   }
 
