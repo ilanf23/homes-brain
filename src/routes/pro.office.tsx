@@ -11,6 +11,7 @@ import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/ac
 import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLockCompact } from "@/components/plan-lock";
+import { ProSetupChecklist } from "@/components/pro-setup-checklist";
 
 export const Route = createFileRoute("/pro/office")({
   head: () => ({ meta: [{ title: "Office - HomesBrain" }] }),
