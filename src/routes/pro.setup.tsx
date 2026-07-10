@@ -241,8 +241,9 @@ function ProSetupWizard() {
           step={step}
           business={business}
           setBusiness={setBusiness}
-          trade={trade}
-          setTrade={setTrade}
+          trades={trades}
+          setTrades={setTrades}
+
           area={area}
           setArea={setArea}
           phone={phone}
