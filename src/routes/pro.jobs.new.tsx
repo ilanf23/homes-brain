@@ -1731,6 +1731,11 @@ function NewJob() {
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {sentCustomerId && (
+                    <Btn variant="secondary" onClick={() => setQrOpen(true)}>
+                      <QrCode size={15} /> Show claim QR
+                    </Btn>
+                  )}
                   <Btn variant="indigo" onClick={logAnother}>
                     Log another
                   </Btn>
@@ -1738,6 +1743,7 @@ function NewJob() {
                     <Btn variant="secondary">Back to dashboard</Btn>
                   </Link>
                 </div>
+
               </Card>
             )}
           </div>
