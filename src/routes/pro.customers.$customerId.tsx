@@ -485,7 +485,7 @@ function CustomerDetail() {
             <h1 className="mt-3 text-2xl tracking-tight">{customer.name}</h1>
             <div className="mt-1 text-sm text-muted">{customer.homes?.address}</div>
             {customer.phone && (
-              <div className="mt-1.5 text-xs text-muted font-mono tnum">{customer.phone}</div>
+              <div className="mt-1.5 text-xs text-muted font-mono tnum">{formatPhone(customer.phone)}</div>
             )}
             {customer.email && (
               <div className="text-xs text-muted font-mono tnum">{customer.email}</div>
