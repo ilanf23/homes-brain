@@ -77,7 +77,7 @@ export function useProSetup(proId: string | null, jobsCount?: number): ProSetupS
       ] as Array<{ data?: unknown; count?: number | null } | null>;
       if (cancelled) return;
       setRow(
-        (results[0].data as {
+        (results[0]?.data as {
           business: string | null;
           trade: string | null;
           service_area: string | null;
