@@ -837,7 +837,7 @@ function CustomersList() {
               )}
             </div>
             <div className="mt-4">
-              <KV k="Phone" v={previewRow.c.phone ?? "-"} />
+              <KV k="Phone" v={previewRow.c.phone ? formatPhone(previewRow.c.phone) : "-"} />
               <KV k="Email" v={previewRow.c.email ?? "-"} />
               <KV k="Jobs" v={String(previewRow.jobCount)} />
               <KV
