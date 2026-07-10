@@ -102,7 +102,7 @@ function ProSetupWizard() {
       case "business":
         return business.trim().length > 1;
       case "trade":
-        return trade.length > 0;
+        return trades.length > 0;
       case "service_area":
         return area.trim().length > 0;
       case "phone":
@@ -113,7 +113,8 @@ function ProSetupWizard() {
       default:
         return true;
     }
-  }, [step, business, trade, area, phone]);
+  }, [step, business, trades, area, phone]);
+
 
   async function persistCurrent(): Promise<boolean> {
     if (!proId) return false;
