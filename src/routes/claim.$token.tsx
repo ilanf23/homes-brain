@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Field, Input, KV, PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { homeownerNeedsSetup, logEvent } from "@/lib/hb";
+import { logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/claim/$token")({
   head: () => ({
@@ -173,8 +173,7 @@ function ClaimByToken() {
     const { error: ensureHoErr } = await supabase.rpc("get_home_view");
     if (ensureHoErr) console.error("get_home_view failed", ensureHoErr);
     setPhase("done");
-    const needsSetup = await homeownerNeedsSetup();
-    navigate({ to: needsSetup ? "/home/setup" : "/home" });
+    navigate({ to: "/home" });
   }
 
   useEffect(() => {

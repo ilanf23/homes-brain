@@ -102,18 +102,6 @@ export async function logEvent(
   }
 }
 
-/* True when the signed-in homeowner has not finished /home/setup.
-   get_home_view auto-creates the homeowners row for authed users, so this
-   is safe to call right after login. Fails open (false) so a transient
-   error never blocks someone out of /home. */
-export async function homeownerNeedsSetup(): Promise<boolean> {
-  const { data, error } = await supabase.rpc("get_home_view");
-  if (error) return false;
-  const ho = (data as { homeowner?: { setup_completed_at?: string | null } | null } | null)
-    ?.homeowner;
-  return !!ho && !ho.setup_completed_at;
-}
-
 export type NotificationType =
   | "connect_request"
   | "rebook_request"

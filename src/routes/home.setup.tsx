@@ -85,7 +85,7 @@ function HomeSetupWizard() {
     const done: Record<StepKey, boolean> = {
       name: !!homeowner.name?.trim(),
       password: isGoogle || hasPassword,
-      contact: !!homeowner.consent_at,
+      contact: !!homeowner.contact_confirmed_at,
       home: !!homeowner.setup_completed_at,
     };
     let idx = 0;
@@ -143,17 +143,21 @@ function HomeSetupWizard() {
           break;
         }
         case "contact": {
-          const { error } = await supabase.rpc("homeowner_update_profile", {
-            p_phone: validPhone ? phone.trim() : undefined,
-            p_email: validEmail ? email.trim() : undefined,
+          // Atomic contact confirmation: sets phone/email verbatim, stamps
+          // contact_confirmed_at, and only stamps consent_at on marketing opt-in.
+          const { error } = await supabase.rpc("homeowner_setup_contact", {
+            p_phone: validPhone ? phone.trim() : null,
+            p_email: validEmail ? email.trim() : null,
             p_notify_sms: notifySms,
             p_notify_email: notifyEmail,
-            p_respect_quiet_hrs: quietHrs,
             p_marketing_consent: marketing,
           });
           if (error) throw error;
-          const { error: confirmErr } = await supabase.rpc("homeowner_confirm_contact");
-          if (confirmErr) throw confirmErr;
+          // Quiet hours is a plain preference, outside the atomic contact RPC.
+          const { error: prefErr } = await supabase.rpc("homeowner_update_profile", {
+            p_respect_quiet_hrs: quietHrs,
+          });
+          if (prefErr) throw prefErr;
           break;
         }
         case "home":

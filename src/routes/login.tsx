@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/auth-shell";
 import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { homeownerNeedsSetup, logEvent } from "@/lib/hb";
+import { logEvent } from "@/lib/hb";
 
 type LoginSearch = { email?: string; claim?: string; note?: string };
 
@@ -217,8 +217,7 @@ function Login() {
       });
       if (claimErr) console.error("claim_home failed", claimErr);
     }
-    const needsSetup = await homeownerNeedsSetup();
-    navigate({ to: needsSetup ? "/home/setup" : "/home" });
+    navigate({ to: "/home" });
   }
 
   async function proLogin() {

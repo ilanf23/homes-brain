@@ -19,6 +19,7 @@ export type HomeownerRow = {
   marketing_consent?: boolean;
   consent_at?: string | null;
   setup_completed_at?: string | null;
+  contact_confirmed_at?: string | null;
 };
 
 export type HomeRow = {
@@ -121,6 +122,7 @@ export function useHomeownerGuard() {
       });
       if (view.homeowner) setHomeownerId(view.homeowner.id);
     }
+    return view;
   };
 
   const refresh = async () => {
@@ -136,7 +138,8 @@ export function useHomeownerGuard() {
         return;
       }
       await load();
-      if (!cancelled) setLoading(false);
+      if (cancelled) return;
+      setLoading(false);
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") navigate({ to: "/login" });
@@ -145,7 +148,6 @@ export function useHomeownerGuard() {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   return {

@@ -14,6 +14,7 @@ import {
   type HomeownerRow,
 } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
+import { HomeSetupChecklist } from "@/components/home-setup-checklist";
 
 export const Route = createFileRoute("/home/")({
   head: () => ({ meta: [{ title: "My home - HomesBrain" }] }),
@@ -97,20 +98,7 @@ function HomeOverview() {
         sub="Your pros write the record. You own it."
       />
 
-      {homeowner && !homeowner.setup_completed_at && (
-        <Card className="anim-fade-up mb-6 border-indigo/30">
-          <Eyebrow accent="indigo">Finish setting up</Eyebrow>
-          <p className="mt-2 text-sm text-ink">
-            Confirm your details so reminders reach you, and set a password so you can sign back in
-            any time.
-          </p>
-          <div className="mt-3">
-            <Link to="/home/setup">
-              <Btn variant="indigo">Finish setup</Btn>
-            </Link>
-          </div>
-        </Card>
-      )}
+      <HomeSetupChecklist homeowner={homeowner} />
 
       {homeowner?.setup_completed_at && (!addedAppliance || !invitedPro) && (
         <NextStepsCard addedAppliance={addedAppliance} invitedPro={invitedPro} />

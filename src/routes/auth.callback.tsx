@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { homeownerNeedsSetup, logEvent } from "@/lib/hb";
+import { logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Signing you in - HomesBrain" }] }),
@@ -141,8 +141,7 @@ function AuthCallback() {
         else await logEvent(`user:${user.id}`, "home_claimed", { record_id: claimRecordId });
       }
       await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
-      const needsSetup = await homeownerNeedsSetup();
-      navigate({ to: needsSetup ? "/home/setup" : "/home" });
+      navigate({ to: "/home" });
     })();
   }, [navigate]);
   return <PageLoader label="Signing you in" />;
