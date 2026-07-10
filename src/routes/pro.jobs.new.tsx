@@ -20,7 +20,7 @@ import { createInvoice, formatMoney } from "@/lib/invoices";
 
 import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
-import { extractFromNotes, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
+import { extractFromNotes, extractFullJob, scanNameplate, useDictation, useMicLevel } from "@/lib/capture";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 import { Select } from "@/lib/ui";
@@ -224,15 +224,33 @@ function NewJob() {
   });
   const micLevel = useMicLevel();
   const [voiceOpen, setVoiceOpen] = useState(false);
+  // "work" mode = classic dictation into the "what was done" note on the work
+  // step. "full" mode = the pro talks through the whole job on the customer
+  // step; on Done we run one AI extract and pre-fill every downstream field.
+  const [voiceMode, setVoiceMode] = useState<"work" | "full">("work");
+  const [fullNote, setFullNote] = useState("");
+  const [fullBusy, setFullBusy] = useState(false);
+  const fullDictation = useDictation((text) => {
+    setFullNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
+  });
 
   function openVoice() {
     // start() must run inside this tap so the AudioContext can resume.
+    setVoiceMode("work");
     micLevel.start();
     dictation.start();
     setVoiceOpen(true);
   }
+  function openVoiceFull() {
+    setVoiceMode("full");
+    setFullNote("");
+    micLevel.start();
+    fullDictation.start();
+    setVoiceOpen(true);
+  }
   function closeVoice() {
     dictation.stop();
+    fullDictation.stop();
     micLevel.stop();
     setVoiceOpen(false);
   }
@@ -649,6 +667,82 @@ function NewJob() {
     setStage("location");
   }
 
+  /* "Speak the whole job" done handler: one AI extract fills the customer,
+     address, and work fields, then jumps straight to Review so the pro only
+     has to eyeball it and send. */
+  async function finishFullVoice() {
+    const note = fullNote.trim();
+    if (!note) {
+      closeVoice();
+      return;
+    }
+    setFullBusy(true);
+    let extract;
+    try {
+      extract = await extractFullJob(note, proTrade);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Couldn't read that. Try again.";
+      setFullBusy(false);
+      setToast(msg);
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    // Stop mic/dictation now that we have the transcript in hand.
+    closeVoice();
+    setFullBusy(false);
+
+    // Match by name against existing customers (case-insensitive, whole-string).
+    const nm = (extract.customer_name ?? "").trim().toLowerCase();
+    const match = nm ? existing.find((c) => c.name.trim().toLowerCase() === nm) : undefined;
+
+    if (match) {
+      setSelectedCustomerId(match.id);
+      const onFile = match.homes?.address ?? "";
+      const addr = extract.address?.trim() || onFile;
+      setLocAddress(addr);
+      addressTouched.current = true;
+      setResolved(null);
+    } else {
+      setSelectedCustomerId("");
+      setNewCustomer({
+        name: extract.customer_name ?? "",
+        address: extract.address ?? "",
+        phone: extract.customer_phone ?? "",
+        email: extract.customer_email ?? "",
+      });
+      if (extract.address) {
+        setLocAddress(extract.address);
+        addressTouched.current = true;
+        setResolved(null);
+      }
+    }
+
+    // Work fields — only fill blanks, but here they always start blank on a
+    // fresh flow. what_done_clean is the tidy version; fall back to the raw
+    // transcript so the pro still has their words if the AI returned nothing.
+    if (extract.type) setEqType(extract.type);
+    if (extract.make) setEqMake(extract.make);
+    if (extract.model) setEqModel(extract.model);
+    setWhatDone(extract.what_done_clean ?? note);
+    if (extract.next_service_date) setNextService(extract.next_service_date);
+
+    logEvent(proId, "job_voice_full_captured", {
+      filled: [
+        extract.customer_name && "customer_name",
+        extract.address && "address",
+        extract.customer_phone && "phone",
+        extract.customer_email && "email",
+        extract.type && "type",
+        extract.make && "make",
+        extract.model && "model",
+        extract.next_service_date && "next_service",
+      ].filter(Boolean),
+      matched_existing: !!match,
+    });
+
+    setStage("review");
+  }
+
   /* Coords to store for a home, but only when we actually have them for THIS
      exact address (GPS reverse-geocode or a Places pick). Otherwise null, so
      geocodeHome forward-geocodes the typed string instead. */
@@ -950,6 +1044,10 @@ function NewJob() {
     dictation.listening && dictation.interim
       ? (whatDone ? whatDone.replace(/\s+$/, "") + " " : "") + dictation.interim
       : whatDone;
+  const liveFullNote =
+    fullDictation.listening && fullDictation.interim
+      ? (fullNote ? fullNote.replace(/\s+$/, "") + " " : "") + fullDictation.interim
+      : fullNote;
 
   // Manual unit fields, shared by the repeat-home picker (shown when adding a
   // new unit or correcting one) and the new-home drawer (always shown there,
@@ -1059,6 +1157,37 @@ function NewJob() {
         <div>
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
+              <div className="space-y-4">
+                {fullDictation.supported && (
+                  <button
+                    type="button"
+                    onClick={openVoiceFull}
+                    aria-label="Talk to HomesBrain AI and it fills in the job"
+                    className="pressable group w-full rounded-3xl bg-indigo px-6 py-6 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/15">
+                        <MicIcon size={26} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-80">
+                          HomesBrain AI
+                        </div>
+                        <div className="mt-0.5 text-lg font-extrabold tracking-tight">
+                          Just tell me about the job
+                        </div>
+                        <div className="mt-0.5 text-sm opacity-90">
+                          Who it's for, where, when, what you did. HomesBrain AI fills it all in.
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                )}
+                {fullBusy && (
+                  <div className="rounded-2xl border border-indigo/20 bg-indigobg px-4 py-3 text-sm font-semibold text-indigo">
+                    HomesBrain AI is reading what you said…
+                  </div>
+                )}
               <Card className="space-y-3">
                 <Input
                   value={query}
@@ -1154,6 +1283,7 @@ function NewJob() {
                   )}
                 </div>
               </Card>
+              </div>
             )}
 
             {stage === "location" &&
@@ -1293,10 +1423,15 @@ function NewJob() {
                       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/70">
                         <MicIcon size={36} />
                       </div>
-                      <div className="mt-4 text-lg font-bold tracking-tight">
+                      <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] opacity-70">
+                        HomesBrain AI
+                      </div>
+                      <div className="mt-1 text-lg font-bold tracking-tight">
                         Tap and tell me what you did
                       </div>
-                      <div className="mt-1 text-xs opacity-80">Your words fill in the record.</div>
+                      <div className="mt-1 text-xs opacity-80">
+                        HomesBrain AI turns your words into the record.
+                      </div>
                     </button>
                   ) : (
                     <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
@@ -1319,13 +1454,13 @@ function NewJob() {
                   {extractState === "working" && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
                       <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                      Reading your note…
+                      HomesBrain AI reading your note…
                     </div>
                   )}
                   {extractState === "done" && extractFilled.length > 0 && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
                       <ShieldCheck size={13} animate={false} />
-                      Auto-filled {extractFilled.join(", ")} below
+                      HomesBrain AI filled {extractFilled.join(", ")} below
                     </div>
                   )}
                 </Field>
@@ -1358,7 +1493,7 @@ function NewJob() {
                         </span>
                       </div>
                       <div className="mt-1 text-xs text-muted">
-                        We'll fill in make, model, and warranty for you.
+                        HomesBrain AI reads the make, model, and warranty for you.
                       </div>
                     </button>
                   ) : (
@@ -1375,12 +1510,12 @@ function NewJob() {
                           {scanState === "scanning" && (
                             <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
                               <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                              Reading the photo…
+                              HomesBrain AI reading the photo…
                             </div>
                           )}
                           {scanState === "done" && (
                             <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                              <ShieldCheck size={16} animate={false} /> Auto-filled unit details
+                              <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the unit details
                             </div>
                           )}
                           {scanState === "error" && (
@@ -1752,8 +1887,8 @@ function NewJob() {
         <VoiceCaptureOverlay
           levelRef={micLevel.levelRef}
           bandsRef={micLevel.bandsRef}
-          text={liveWhatDone}
-          onDone={closeVoice}
+          text={voiceMode === "full" ? liveFullNote : liveWhatDone}
+          onDone={voiceMode === "full" ? finishFullVoice : closeVoice}
         />
       )}
 

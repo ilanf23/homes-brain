@@ -1,5 +1,10 @@
 /* Extract equipment fields + next-service date from a pro's free-text note
-   ("What was done") via the Lovable AI gateway. Same pattern as scan-nameplate. */
+   ("What was done") via the Lovable AI gateway. Same pattern as scan-nameplate.
+
+   Two modes:
+   - default: extracts equipment + next-service + a clean whatDone sentence.
+   - mode: "full": also extracts the customer (name, phone, email) and the
+     service address, for the "speak the whole job on one screen" flow. */
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -18,7 +23,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const SYSTEM = `You are helping a home-services pro fill out a service record from a short free-text note about the work they just did.
+const SYSTEM_WORK = `You are helping a home-services pro fill out a service record from a short free-text note about the work they just did.
 Extract ONLY what the note clearly says or strongly implies. Never invent brands, models, or dates.
 Respond with strict JSON, no markdown, using exactly these keys:
 {
@@ -29,10 +34,25 @@ Respond with strict JSON, no markdown, using exactly these keys:
   "what_done_clean": a tidy one-to-two sentence version of the work performed, in past tense, professional tone, no fluff. Preserve the pro's meaning. Do not add facts.
 }`;
 
+const SYSTEM_FULL = `You are helping a home-services pro fill out a whole service record from ONE spoken note that describes who the customer is, where the job was, and what was done.
+Extract ONLY what the note clearly says or strongly implies. Never invent names, addresses, brands, models, phone numbers, or dates.
+Respond with strict JSON, no markdown, using exactly these keys:
+{
+  "customer_name": the homeowner's name if mentioned (e.g. "Jane Smith", "the Millers"), else null,
+  "customer_phone": phone number if mentioned, digits only or in a normal format, else null,
+  "customer_email": email address if mentioned, else null,
+  "address": the service street address if mentioned (e.g. "123 Maple St", "123 Maple Street, Austin TX"), else null,
+  "type": short equipment type (e.g. "Water softener", "Water heater", "Furnace", "AC condenser", "Dishwasher") or null,
+  "make": brand name if mentioned or null,
+  "model": model number/name if mentioned or null,
+  "next_service_date": "YYYY-MM-DD" if the note says when to come back (e.g. "next service in 6 months", "check back in a year"), computed from today = {TODAY}. Only set if a duration or explicit date is present. Otherwise null,
+  "what_done_clean": a tidy one-to-two sentence version of the work performed, in past tense, professional tone, no fluff. Preserve the pro's meaning. Do not add facts.
+}`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { note, trade } = await req.json();
+    const { note, trade, mode } = await req.json();
     if (typeof note !== "string" || note.trim().length < 3) {
       return json({ error: "Note too short" }, 400);
     }
@@ -40,7 +60,8 @@ Deno.serve(async (req) => {
     if (!key) return json({ error: "AI gateway key not configured" }, 500);
 
     const today = new Date().toISOString().slice(0, 10);
-    const prompt = SYSTEM.replace("{TODAY}", today);
+    const full = mode === "full";
+    const prompt = (full ? SYSTEM_FULL : SYSTEM_WORK).replace("{TODAY}", today);
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -78,12 +99,21 @@ Deno.serve(async (req) => {
     const clean = (v: unknown) =>
       typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim() : null;
 
-    return json({
+    const base = {
       type: clean(fields.type),
       make: clean(fields.make),
       model: clean(fields.model),
       next_service_date: clean(fields.next_service_date),
       what_done_clean: clean(fields.what_done_clean),
+    };
+    if (!full) return json(base);
+
+    return json({
+      ...base,
+      customer_name: clean(fields.customer_name),
+      customer_phone: clean(fields.customer_phone),
+      customer_email: clean(fields.customer_email),
+      address: clean(fields.address),
     });
   } catch (e) {
     console.error("extract-job error", e);

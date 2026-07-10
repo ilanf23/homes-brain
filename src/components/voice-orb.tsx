@@ -231,6 +231,9 @@ export function VoiceCaptureOverlay({
         <VoiceOrb levelRef={levelRef} bandsRef={bandsRef} />
 
         <div className="min-h-24 max-w-lg">
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-indigo">
+            HomesBrain AI
+          </div>
           {text ? (
             <p className="text-lg leading-relaxed text-ink">{text}</p>
           ) : (
