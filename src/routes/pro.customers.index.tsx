@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, Search } from "lucide-react";
 import { Avatar, Btn, Card, Input, KV, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, mockSend } from "@/lib/hb";
+import { formatDate, formatPhone, logEvent, mockSend } from "@/lib/hb";
 import { FilterSelect, SlideOver, SortableTh, UnderlineTabs } from "@/components/crm";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
