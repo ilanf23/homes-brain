@@ -4,7 +4,7 @@ import type {
   InputHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
-import { initials } from "./hb";
+import { initials, formatPhone } from "./hb";
 
 /* indigo = brand (default), coral = homeowner + payoff moments,
    teal = pro-world subbrand (pros directory, pro profiles, pros-near-you),
