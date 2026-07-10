@@ -72,3 +72,26 @@ export async function forwardGeocode(
   if (typeof data.lat !== "number" || typeof data.lng !== "number") return null;
   return { lat: data.lat, lng: data.lng };
 }
+
+export type BusinessCandidate = {
+  placeId: string;
+  name: string;
+  address: string | null;
+  rating: number | null;
+  ratingCount: number | null;
+  mapsUrl: string;
+};
+
+/* Google Business listing search for the GoogleConnect flow. Soft-fails to []
+   so the UI degrades to the paste-a-link fallback. */
+export async function findBusiness(
+  query: string,
+  area: string | null,
+): Promise<BusinessCandidate[]> {
+  if (query.trim().length < 2) return [];
+  const data = await call<{ candidates?: BusinessCandidate[] }>(
+    { op: "findBusiness", query: query.trim(), area: area?.trim() || undefined },
+    {},
+  );
+  return data.candidates ?? [];
+}
