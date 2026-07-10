@@ -30,6 +30,10 @@ export function GoogleConnect({
   const [err, setErr] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
+  /* Editable area anchor for the search. Without it, Google Text Search ranks
+     nationally and franchises/generic names return the wrong location, so we
+     surface it instead of silently using pro.service_area. */
+  const [areaQuery, setAreaQuery] = useState((pro.service_area ?? "").trim());
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
   const [candidates, setCandidates] = useState<BusinessCandidate[]>([]);
@@ -52,7 +56,7 @@ export function GoogleConnect({
     if (trimmed.length < 2) return;
     setSearching(true);
     setErr(null);
-    const results = await findBusiness(trimmed, pro.service_area);
+    const results = await findBusiness(trimmed, areaQuery.trim() || null);
     setCandidates(results);
     setSearched(true);
     setSearching(false);
@@ -222,9 +226,9 @@ export function GoogleConnect({
 
       <Field
         label="Find your business on Google"
-        hint="We search Google with your business name and service area."
+        hint="Add your city so we find YOUR listing, not one with the same name elsewhere."
       >
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -234,14 +238,25 @@ export function GoogleConnect({
               if (e.key === "Enter" && !searching && !busy) void runSearch(query);
             }}
           />
-          <Btn
-            variant="indigo"
-            loading={searching}
-            disabled={query.trim().length < 2 || busy}
-            onClick={() => void runSearch(query)}
-          >
-            Search
-          </Btn>
+          <div className="flex gap-2">
+            <Input
+              value={areaQuery}
+              onChange={(e) => setAreaQuery(e.target.value)}
+              placeholder="City or ZIP"
+              autoComplete="off"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !searching && !busy) void runSearch(query);
+              }}
+            />
+            <Btn
+              variant="indigo"
+              loading={searching}
+              disabled={query.trim().length < 2 || busy}
+              onClick={() => void runSearch(query)}
+            >
+              Search
+            </Btn>
+          </div>
         </div>
       </Field>
 
