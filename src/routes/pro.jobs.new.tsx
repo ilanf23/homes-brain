@@ -1423,10 +1423,15 @@ function NewJob() {
                       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/70">
                         <MicIcon size={36} />
                       </div>
-                      <div className="mt-4 text-lg font-bold tracking-tight">
+                      <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] opacity-70">
+                        HomesBrain AI
+                      </div>
+                      <div className="mt-1 text-lg font-bold tracking-tight">
                         Tap and tell me what you did
                       </div>
-                      <div className="mt-1 text-xs opacity-80">Your words fill in the record.</div>
+                      <div className="mt-1 text-xs opacity-80">
+                        HomesBrain AI turns your words into the record.
+                      </div>
                     </button>
                   ) : (
                     <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
