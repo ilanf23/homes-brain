@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, ChevronUp, Pencil, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Btn, Card, Input } from "@/lib/ui";
-import { formatDate } from "@/lib/hb";
+import { Btn, Card, Input, PhoneInput } from "@/lib/ui";
+import { formatDate, formatPhone } from "@/lib/hb";
 
 /* HubSpot-style CRM primitives, HomesBrain skin. Shared by the customers
    index (table, filters) and the customer record page (three columns). */
