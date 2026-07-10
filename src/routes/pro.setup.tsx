@@ -53,7 +53,7 @@ function ProSetupWizard() {
       const { data: p } = await supabase
         .from("pros")
         .select(
-          "id,business,owner_first_name,trade,service_area,logo,google_place_id,google_rating,plan,phone,stripe_charges_enabled",
+          "id,business,owner_first_name,trade,trades,service_area,logo,google_place_id,google_rating,plan,phone,stripe_charges_enabled",
         )
         .eq("auth_user_id", user.id)
         .maybeSingle();
@@ -65,19 +65,20 @@ function ProSetupWizard() {
       setProId(p.id);
       setPro(p as unknown as ProRow);
       setBusiness((p.business ?? "").trim());
-      setTrade((p.trade ?? "").trim());
+      setTrades(proTrades(p));
       setArea((p.service_area ?? "").trim());
       setPhone(((p as { phone?: string | null }).phone ?? "").trim());
 
       // Pick first incomplete step, or the requested step.
       const done: Record<StepKey, boolean> = {
         business: !!p.business?.trim(),
-        trade: !!p.trade?.trim(),
+        trade: proTrades(p).length > 0,
         service_area: !!p.service_area?.trim(),
         phone: !!(p as { phone?: string | null }).phone?.trim(),
         payments: !!(p as { stripe_charges_enabled?: boolean }).stripe_charges_enabled,
         google: isGoogleUrl(p.google_place_id),
       };
+
       let idx = 0;
       if (initialStep) {
         idx = STEP_KEYS.indexOf(initialStep);
