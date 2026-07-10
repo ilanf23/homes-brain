@@ -169,15 +169,8 @@ function ClaimByToken() {
       if (user) {
         await logEvent(`user:${user.id}`, "pro_signed_in", { via: "magic_link" });
       }
-      const { data: pro } = await supabase
-        .from("pros")
-        .select("business,trade,service_area")
-        .eq("auth_user_id", user?.id ?? "")
-        .maybeSingle();
-      const complete =
-        !!pro?.business?.trim() && !!pro?.trade?.trim() && !!pro?.service_area?.trim();
       setPhase("done");
-      navigate({ to: complete ? "/pro" : "/pro/setup" });
+      navigate({ to: "/pro" });
       return;
     }
     // Default: homeowner login-only. Ensure a homeowners row exists for
