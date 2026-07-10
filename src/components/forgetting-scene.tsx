@@ -4,9 +4,11 @@ import { LogoMark } from "@/components/svg";
 
 /* The forgetting-tax scene, acted out: homeowner questions whip across the
    stage - never more than a few at once - over speed streaks that build with
-   the panic, then the noise clears and the home's record settles in, answering
-   every question row by row. Starts when scrolled into view and loops; reduced
-   motion (and no-JS/SSR) gets the settled resolution instead. */
+   the panic. Then the finale: the biggest question of all, "Where do I even
+   go?", looms slowly into center stage, holds, and cracks apart word by word.
+   As the pieces fall, the home's record comes clearly into view behind them,
+   answering every question row by row. Starts when scrolled into view and
+   loops; reduced motion (and no-JS/SSR) gets the settled resolution instead. */
 
 type Panic = 0 | 1 | 2;
 
@@ -93,7 +95,7 @@ const QUESTIONS: Question[] = [
     panic: 2,
   },
   {
-    text: "WHO do I even call?!?",
+    text: "Did ANYONE write this down?!",
     top: 84,
     left: 28,
     rot: 6,
@@ -107,7 +109,21 @@ const QUESTIONS: Question[] = [
 const CHAOS_MS = 5600;
 const PANIC_1_AT = 2400;
 const PANIC_2_AT = 3900;
+const FINALE_MS = 3100; // keep in sync with the hb-loom duration in styles.css
+const BREAK_MS = 1750;
 const RESOLVED_HOLD = 6500;
+
+/* The finale line, one span per word so it can crack apart piece by piece.
+   Each word comes loose in its own direction; the delays stagger the collapse
+   ("even" gives first, "go?" hangs on longest) so it reads as slowly falling
+   apart rather than one clean exit. */
+const FINALE_WORDS = [
+  { word: "Where", x: -34, rot: -16, delay: 300 },
+  { word: "do", x: 12, rot: 9, delay: 150 },
+  { word: "I", x: -10, rot: -7, delay: 430 },
+  { word: "even", x: 26, rot: 13, delay: 0 },
+  { word: "go?", x: -20, rot: -11, delay: 560 },
+];
 
 const PANIC_STYLES: Record<Panic, string> = {
   0: "bg-paper border border-line text-ink shadow-[0_8px_20px_-12px_rgba(22,22,15,0.25)]",
@@ -173,8 +189,9 @@ function CheckMark({ className = "" }: { className?: string }) {
 
 /* The payoff is the product artifact: the home's record settles in as a calm
    ledger card that answers, row by row, exactly what the panic was asking -
-   ending on the one that stings most, "who do I call". The big brand line
-   ("Your home remembers") stays reserved for the hero and closing sections. */
+   ending on the finale question itself, "where do I even go". The big brand
+   line ("Your home remembers") stays reserved for the hero and closing
+   sections. */
 function Resolution({ animate }: { animate: boolean }) {
   const delay = (ms: number) =>
     animate ? ({ animationDelay: `${ms}ms` } as React.CSSProperties) : undefined;
@@ -224,7 +241,7 @@ function Resolution({ animate }: { animate: boolean }) {
             className={`${animate ? "anim-fade-up" : ""} flex items-center justify-between gap-4 rounded-b-[21px] border-t border-line bg-soft px-5 py-3`}
             style={delay(460)}
           >
-            <span className="text-[13px] text-muted">Who do I even call?</span>
+            <span className="text-[13px] text-muted">Where do I even go?</span>
             <span className="text-[13px] font-bold text-indigo">Mike · ABC Water →</span>
           </div>
         </div>
@@ -243,7 +260,7 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
   const reduced = usePrefersReducedMotion();
   const stageRef = useRef<HTMLDivElement>(null);
   const [started, setStarted] = useState(false);
-  const [phase, setPhase] = useState<"chaos" | "resolved">("chaos");
+  const [phase, setPhase] = useState<"chaos" | "finale" | "break" | "resolved">("chaos");
   const [panic, setPanic] = useState<Panic>(0);
   const [cycle, setCycle] = useState(0);
 
@@ -269,7 +286,8 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
   }, []);
 
   // The loop: one chaos act (bubble flights are pure CSS, keyed by cycle),
-  // the panic level stepping up underneath, then the resolution, then again.
+  // the panic level stepping up underneath, then the finale question looming
+  // in and breaking apart into the resolution, then again.
   useEffect(() => {
     if (!started || reduced) return;
     let cancelled = false;
@@ -289,6 +307,12 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
         if (cancelled) return;
         setPanic(2);
         await wait(CHAOS_MS - PANIC_2_AT);
+        if (cancelled) return;
+        setPhase("finale");
+        await wait(FINALE_MS);
+        if (cancelled) return;
+        setPhase("break");
+        await wait(BREAK_MS);
         if (cancelled) return;
         setPhase("resolved");
         await wait(RESOLVED_HOLD);
@@ -310,7 +334,7 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
     <div
       ref={stageRef}
       role="img"
-      aria-label="Homeowner questions flying past faster and faster (warranty dates, filter sizes, who installed what) until the home's verified record card settles in and answers every one, down to which pro to call"
+      aria-label="Homeowner questions flying past faster and faster (warranty dates, filter sizes, who installed what) until one giant question, where do I even go, fills the stage, breaks apart, and the home's verified record card comes into view answering every one, down to which pro to call"
       className={`relative h-[440px] sm:h-[470px] overflow-hidden ${className}`}
     >
       {/* Speed streaks - the background accelerates as the panic builds. */}
@@ -372,7 +396,43 @@ export function ForgettingScene({ className = "" }: { className?: string }) {
         </div>
       )}
 
-      {(isStatic || phase === "resolved") && <Resolution animate={!isStatic} />}
+      {/* The finale: the biggest question looms slowly into the middle of the
+          stage, holds, then cracks apart word by word. Transforms don't move
+          the layout boxes, so nothing reflows while the words fall in front
+          of the record card arriving underneath (z-20 over the card's z-10). */}
+      {!isStatic && (phase === "finale" || phase === "break") && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6"
+        >
+          <p
+            className={`${phase === "finale" ? "loom" : ""} max-w-[560px] text-center text-[clamp(30px,6vw,52px)] font-extrabold leading-[1.08] tracking-tight text-ink`}
+            style={phase === "finale" ? { animationDuration: `${FINALE_MS}ms` } : undefined}
+          >
+            {FINALE_WORDS.map((w, i) => (
+              <span key={w.word}>
+                <span
+                  className={`inline-block ${phase === "break" ? "word-fall" : ""}`}
+                  style={
+                    {
+                      "--fall-x": `${w.x}px`,
+                      "--fall-rot": `${w.rot}deg`,
+                      animationDelay: phase === "break" ? `${w.delay}ms` : undefined,
+                    } as React.CSSProperties
+                  }
+                >
+                  {w.word}
+                </span>
+                {i < FINALE_WORDS.length - 1 ? " " : null}
+              </span>
+            ))}
+          </p>
+        </div>
+      )}
+
+      {(isStatic || phase === "break" || phase === "resolved") && (
+        <Resolution animate={!isStatic} />
+      )}
     </div>
   );
 }

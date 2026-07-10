@@ -15,7 +15,6 @@
    teal = the pro world subbrand (pros directory, pro profiles, pros-near-you),
    amber = functional warning/status (due soon, pending), red = errors/destructive. */
 
-
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--ink);
@@ -70,14 +69,14 @@
      and public record pages alike. Headlines are the same family at 800.
      Dates/codes (the font-mono spots) share it too, kept aligned via tnum. */
   --font-sans:
-    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-    Arial, sans-serif;
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
   --font-display:
-    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-    Arial, sans-serif;
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
   --font-mono:
-    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-    Arial, sans-serif;
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
 }
 
 :root {
@@ -115,8 +114,8 @@
   /* Portal typeface stack: same Plus Jakarta Sans as everywhere else. The var
      survives so .font-app scoping keeps working if the portal ever diverges. */
   --font-portal:
-    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-    Arial, sans-serif;
+    "Plus Jakarta Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
 }
 
 /* Dark theme: applied by the portal shells on their root div only.
@@ -601,6 +600,59 @@
 @utility fly-through {
   animation-name: hb-fly-through;
   animation-fill-mode: both;
+}
+
+/* Forgetting-scene finale: the last, biggest question looms slowly into
+   center stage - it never fully stops moving, settling to full size right as
+   it breaks. Duration is set inline from FINALE_MS in forgetting-scene.tsx
+   (3.1s); the 3.1s here is the fallback. */
+@keyframes hb-loom {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.55);
+    filter: blur(8px);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(4px) scale(0.94);
+    filter: blur(0);
+    animation-timing-function: cubic-bezier(0.35, 0, 0.3, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@utility loom {
+  animation: hb-loom 3.1s both;
+}
+
+/* ...then it cracks apart: each word lifts loose with a tilt, hangs for a
+   beat, and drops out of frame while the record card comes into view behind
+   it. Direction and spin come from --fall-x / --fall-rot per word; delays are
+   staggered inline so the line falls apart piece by piece. */
+@keyframes hb-word-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+    filter: blur(0);
+    animation-timing-function: ease-out;
+  }
+  22% {
+    opacity: 1;
+    transform: translate(calc(var(--fall-x) * 0.2), -9px) rotate(calc(var(--fall-rot) * 0.35));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--fall-x), 190px) rotate(var(--fall-rot));
+    filter: blur(3px);
+  }
+}
+@utility word-fall {
+  animation: hb-word-fall 1.15s both;
 }
 
 /* Speed streaks behind the flying questions. */
