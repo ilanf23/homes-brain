@@ -17,6 +17,7 @@ import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
 import { MarketingShell, marketingHead, SITE_URL } from "@/components/marketing";
 import { ContactProModal } from "@/components/contact-pro-modal";
 import { getPro, TRADE_LABELS, type Pro } from "@/lib/pros";
+import { formatPhone } from "@/lib/hb";
 
 /* /pro/$slug is a single-segment dynamic route. Static /pro/* routes (jobs,
    customers, office, etc.) take precedence via file-based routing, but we also
