@@ -227,7 +227,7 @@ export function InviteProsCard({
                     <span className="font-semibold">{i.to_pro_name}</span>
                     {i.trade && <span className="text-muted"> · {tradeLabel(i.trade)}</span>}
                     {(i.to_pro_email || i.to_pro_phone) && (
-                      <span className="text-muted"> · {i.to_pro_email ?? i.to_pro_phone}</span>
+                      <span className="text-muted"> · {i.to_pro_email ?? formatPhone(i.to_pro_phone ?? "")}</span>
                     )}
                   </span>
                 </span>
