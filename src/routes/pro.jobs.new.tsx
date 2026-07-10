@@ -1879,8 +1879,8 @@ function NewJob() {
         <VoiceCaptureOverlay
           levelRef={micLevel.levelRef}
           bandsRef={micLevel.bandsRef}
-          text={liveWhatDone}
-          onDone={closeVoice}
+          text={voiceMode === "full" ? liveFullNote : liveWhatDone}
+          onDone={voiceMode === "full" ? finishFullVoice : closeVoice}
         />
       )}
 
