@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Check, Copy, LogOut } from "lucide-react";
 import { Avatar, Btn, Field, Input, PhoneInput, Pill, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent, TRADES } from "@/lib/hb";
+import { logEvent, TRADES, proTrades } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
 import { GoogleConnect } from "@/components/google-connect";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
