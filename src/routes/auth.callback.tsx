@@ -89,11 +89,7 @@ function AuthCallback() {
             business: pending!.business ?? null,
             via: "google",
           });
-          const complete =
-            !!inserted.business?.trim() &&
-            !!inserted.trade?.trim() &&
-            !!inserted.service_area?.trim();
-          navigate({ to: complete ? "/pro" : "/pro/setup" });
+          navigate({ to: "/pro" });
           return;
         }
       }
