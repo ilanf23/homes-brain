@@ -33,12 +33,13 @@ function ProSetupWizard() {
   const [pro, setPro] = useState<ProRow | null>(null);
 
   const [business, setBusiness] = useState("");
-  const [trade, setTrade] = useState("");
+  const [trades, setTrades] = useState<string[]>([]);
   const [area, setArea] = useState("");
   const [phone, setPhone] = useState("");
   const [stripeConnecting, setStripeConnecting] = useState(false);
 
   const [stepIdx, setStepIdx] = useState(0);
+
 
   useEffect(() => {
     let cancelled = false;
