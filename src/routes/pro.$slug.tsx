@@ -140,7 +140,7 @@ function ProProfile() {
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-soft transition-colors"
               >
                 <Phone size={16} strokeWidth={2} />
-                <span className="tnum">{pro.phone}</span>
+                <span className="tnum">{formatPhone(pro.phone)}</span>
               </a>
             )}
           </div>
