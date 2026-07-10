@@ -63,8 +63,9 @@ function ProSettings() {
 
   const [business, setBusiness] = useState("");
   const [ownerFirstName, setOwnerFirstName] = useState("");
-  const [trade, setTrade] = useState("");
+  const [trades, setTrades] = useState<string[]>([]);
   const [area, setArea] = useState("");
+
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
