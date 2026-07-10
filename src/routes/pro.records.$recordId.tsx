@@ -112,12 +112,18 @@ function RecordDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
+          {job?.customers && !claimed && (
+            <Btn variant="secondary" onClick={() => setQrOpen(true)}>
+              <QrCode size={15} /> Show claim QR
+            </Btn>
+          )}
           {job?.customers && (
             <Link to="/pro/invoices/new" search={{ customer: job.customers.id, job: job.id }}>
               <Btn variant="secondary">Create invoice</Btn>
             </Link>
           )}
         </div>
+
       </div>
 
       <div className="grid md:grid-cols-2 gap-5 items-start">
