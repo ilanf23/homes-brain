@@ -726,7 +726,7 @@ function NewJob() {
     setWhatDone(extract.what_done_clean ?? note);
     if (extract.next_service_date) setNextService(extract.next_service_date);
 
-    logEvent("job_voice_full_captured", {
+    logEvent(proId, "job_voice_full_captured", {
       filled: [
         extract.customer_name && "customer_name",
         extract.address && "address",
