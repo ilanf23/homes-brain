@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Field, Input, KV, PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent } from "@/lib/hb";
+import { homeownerNeedsSetup, logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/claim/$token")({
   head: () => ({
@@ -76,9 +76,7 @@ function RecordPreview({ preview }: { preview: Preview }) {
         {preview.address && <KV k="Address" v={preview.address} mono={false} />}
         {preview.what_done && <KV k="Work done" v={preview.what_done} mono={false} />}
         {eqLine && <KV k="Equipment" v={eqLine} mono={false} />}
-        {eq?.warranty_until && (
-          <KV k="Warranty" v={`Through ${eq.warranty_until}`} mono={false} />
-        )}
+        {eq?.warranty_until && <KV k="Warranty" v={`Through ${eq.warranty_until}`} mono={false} />}
       </div>
     </Card>
   );
@@ -87,9 +85,9 @@ function RecordPreview({ preview }: { preview: Preview }) {
 function ClaimByToken() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<
-    "loading" | "need_email" | "claiming" | "error" | "done"
-  >("loading");
+  const [phase, setPhase] = useState<"loading" | "need_email" | "claiming" | "error" | "done">(
+    "loading",
+  );
   const [preview, setPreview] = useState<Preview | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
@@ -180,10 +178,9 @@ function ClaimByToken() {
     const { error: ensureHoErr } = await supabase.rpc("get_home_view");
     if (ensureHoErr) console.error("get_home_view failed", ensureHoErr);
     setPhase("done");
-    navigate({ to: "/home" });
+    const needsSetup = await homeownerNeedsSetup();
+    navigate({ to: needsSetup ? "/home/setup" : "/home" });
   }
-
-
 
   useEffect(() => {
     let cancelled = false;
@@ -251,7 +248,9 @@ function ClaimByToken() {
             </>
           )}
           <div className="mt-6">
-            <PageLoader label={phase === "claiming" ? "Setting up your home" : "Opening your record"} />
+            <PageLoader
+              label={phase === "claiming" ? "Setting up your home" : "Opening your record"}
+            />
           </div>
         </div>
       </div>
@@ -270,7 +269,8 @@ function ClaimByToken() {
               Confirm your email to claim
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Enter the email your service pro has for you. We'll open your record and save this home to your account.
+              Enter the email your service pro has for you. We'll open your record and save this
+              home to your account.
             </p>
             <form onSubmit={submitEmail} className="mt-4 space-y-3">
               <Field label="Email">

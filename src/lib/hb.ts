@@ -50,10 +50,7 @@ export function primaryTrade(input: {
   return input.trade ?? null;
 }
 
-export function proTrades(input: {
-  trades?: string[] | null;
-  trade?: string | null;
-}): string[] {
+export function proTrades(input: { trades?: string[] | null; trade?: string | null }): string[] {
   const arr = input.trades ?? [];
   if (arr.length > 0) return arr;
   return input.trade ? [input.trade] : [];
@@ -63,7 +60,6 @@ export function suggestTradeGaps(have: string[]): TradeId[] {
   const all = TRADES.map((t) => t.id);
   return all.filter((t) => !have.includes(t)) as TradeId[];
 }
-
 
 /* US phone helpers. formatPhone is idempotent - safe on stored formatted values. */
 export function phoneDigits(value: string): string {
@@ -104,6 +100,18 @@ export async function logEvent(
   } catch {
     /* swallow */
   }
+}
+
+/* True when the signed-in homeowner has not finished /home/setup.
+   get_home_view auto-creates the homeowners row for authed users, so this
+   is safe to call right after login. Fails open (false) so a transient
+   error never blocks someone out of /home. */
+export async function homeownerNeedsSetup(): Promise<boolean> {
+  const { data, error } = await supabase.rpc("get_home_view");
+  if (error) return false;
+  const ho = (data as { homeowner?: { setup_completed_at?: string | null } | null } | null)
+    ?.homeowner;
+  return !!ho && !ho.setup_completed_at;
 }
 
 export type NotificationType =

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent } from "@/lib/hb";
+import { homeownerNeedsSetup, logEvent } from "@/lib/hb";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Signing you in - HomesBrain" }] }),
@@ -110,8 +110,7 @@ function AuthCallback() {
       // create one via SECURITY DEFINER RPC. Also honors existing pros.
       if (loginRole === "pro") {
         if (!existingPro) {
-          const firstName =
-            user.user_metadata?.full_name?.toString().split(" ")[0] ?? null;
+          const firstName = user.user_metadata?.full_name?.toString().split(" ")[0] ?? null;
           const { error: ensureErr } = await supabase.rpc("pro_ensure", {
             p_first_name: firstName ?? undefined,
           });
@@ -142,7 +141,8 @@ function AuthCallback() {
         else await logEvent(`user:${user.id}`, "home_claimed", { record_id: claimRecordId });
       }
       await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
-      navigate({ to: "/home" });
+      const needsSetup = await homeownerNeedsSetup();
+      navigate({ to: needsSetup ? "/home/setup" : "/home" });
     })();
   }, [navigate]);
   return <PageLoader label="Signing you in" />;
