@@ -163,7 +163,7 @@ function ProProfile() {
                     href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
                     className="text-ink hover:text-tealdark transition-colors tnum"
                   >
-                    {pro.phone}
+                    {formatPhone(pro.phone)}
                   </a>
                 </ContactRow>
               )}
