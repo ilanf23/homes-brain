@@ -7,6 +7,29 @@ export const TRADES = [
   { id: "plumbing", label: "Plumbing" },
   { id: "electrical", label: "Electrical" },
   { id: "appliance", label: "Appliance repair" },
+  { id: "roofing", label: "Roofing" },
+  { id: "pest_control", label: "Pest control" },
+  { id: "landscaping", label: "Landscaping & lawn" },
+  { id: "pool", label: "Pool & spa" },
+  { id: "garage_door", label: "Garage door" },
+  { id: "solar", label: "Solar" },
+  { id: "chimney", label: "Chimney & fireplace" },
+  { id: "septic", label: "Septic" },
+  { id: "cleaning", label: "Cleaning" },
+  { id: "handyman", label: "Handyman" },
+  { id: "painting", label: "Painting" },
+  { id: "flooring", label: "Flooring" },
+  { id: "window_cleaning", label: "Window cleaning" },
+  { id: "gutter", label: "Gutters" },
+  { id: "pressure_washing", label: "Pressure washing" },
+  { id: "irrigation", label: "Irrigation" },
+  { id: "security", label: "Security & smart home" },
+  { id: "carpentry", label: "Carpentry" },
+  { id: "fencing", label: "Fencing" },
+  { id: "masonry", label: "Masonry" },
+  { id: "insulation", label: "Insulation" },
+  { id: "locksmith", label: "Locksmith" },
+  { id: "tree_care", label: "Tree care" },
 ] as const;
 
 export type TradeId = (typeof TRADES)[number]["id"];
@@ -15,10 +38,32 @@ export function tradeLabel(id?: string | null) {
   return TRADES.find((t) => t.id === id)?.label ?? id ?? "";
 }
 
+/* Pros can now have multiple trades. The `trades` array is the source of truth;
+   the legacy `trade` scalar is kept as the "primary" (first) trade for existing
+   surfaces (SEO route, shell subtitle, log-a-job form) that still expect one. */
+export function primaryTrade(input: {
+  trades?: string[] | null;
+  trade?: string | null;
+}): string | null {
+  const arr = input.trades ?? [];
+  if (arr.length > 0) return arr[0];
+  return input.trade ?? null;
+}
+
+export function proTrades(input: {
+  trades?: string[] | null;
+  trade?: string | null;
+}): string[] {
+  const arr = input.trades ?? [];
+  if (arr.length > 0) return arr;
+  return input.trade ? [input.trade] : [];
+}
+
 export function suggestTradeGaps(have: string[]): TradeId[] {
   const all = TRADES.map((t) => t.id);
   return all.filter((t) => !have.includes(t)) as TradeId[];
 }
+
 
 /* US phone helpers. formatPhone is idempotent - safe on stored formatted values. */
 export function phoneDigits(value: string): string {
