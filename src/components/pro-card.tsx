@@ -87,7 +87,7 @@ export function ProCard({
               className="inline-flex items-center gap-1.5 text-ink hover:text-tealdark transition-colors w-fit"
             >
               <Phone size={14} strokeWidth={2} />
-              <span className="tnum">{pro.phone}</span>
+              <span className="tnum">{formatPhone(pro.phone)}</span>
             </a>
           )}
           {pro.website && (
