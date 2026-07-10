@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Phone, Globe, Star, ShieldCheck, MapPin } from "lucide-react";
 import { Btn, Card, Pill } from "@/lib/ui";
 import type { Pro, TradeKey } from "@/lib/pros";
+import { formatPhone } from "@/lib/hb";
 import { TRADE_LABELS } from "@/lib/pros";
 import { ContactProModal } from "@/components/contact-pro-modal";
 
