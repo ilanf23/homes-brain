@@ -1247,11 +1247,9 @@ function NewJob() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <Field label="Phone (optional)">
-                      <Input
+                      <PhoneInput
                         value={newCustomer.phone}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                        placeholder="555-555-1234"
-                        type="tel"
+                        onChange={(v) => setNewCustomer({ ...newCustomer, phone: v })}
                       />
                     </Field>
                     <Field label="Email (optional)">
