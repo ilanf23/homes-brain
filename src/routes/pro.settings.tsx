@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, Copy, LogOut } from "lucide-react";
-import { Avatar, Btn, Field, Input, Pill, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
+import { Avatar, Btn, Field, Input, PhoneInput, Pill, SettingRow, Skeleton, Toast, Toggle } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent, TRADES } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
