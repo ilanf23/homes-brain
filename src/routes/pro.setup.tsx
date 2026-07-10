@@ -115,27 +115,38 @@ function ProSetupWizard() {
 
   async function persistCurrent(): Promise<boolean> {
     if (!proId) return false;
-    let patch: Record<string, unknown> | null = null;
-    switch (step) {
-      case "business":
-        patch = { business: business.trim() };
-        break;
-      case "trade":
-        patch = { trade };
-        break;
-      case "service_area":
-        patch = { service_area: area.trim() };
-        break;
-      case "phone":
-        patch = { phone: phone.trim() };
-        break;
-      default:
-        patch = null;
-    }
-    if (!patch) return true;
     setSaving(true);
     setErr(null);
-    const { error } = await supabase.from("pros").update(patch).eq("id", proId);
+    let error: { message: string } | null = null;
+    switch (step) {
+      case "business": {
+        ({ error } = await supabase
+          .from("pros")
+          .update({ business: business.trim() })
+          .eq("id", proId));
+        break;
+      }
+      case "trade": {
+        ({ error } = await supabase.from("pros").update({ trade }).eq("id", proId));
+        break;
+      }
+      case "service_area": {
+        ({ error } = await supabase
+          .from("pros")
+          .update({ service_area: area.trim() })
+          .eq("id", proId));
+        break;
+      }
+      case "phone": {
+        ({ error } = await supabase
+          .from("pros")
+          .update({ phone: phone.trim() })
+          .eq("id", proId));
+        break;
+      }
+      default:
+        break;
+    }
     setSaving(false);
     if (error) {
       setErr(error.message);
