@@ -38,6 +38,7 @@ import { Route as ProDueRouteImport } from './routes/pro.due'
 import { Route as ProSlugRouteImport } from './routes/pro.$slug'
 import { Route as MakeItLastSlugRouteImport } from './routes/make-it-last.$slug'
 import { Route as HomeSignupRouteImport } from './routes/home.signup'
+import { Route as HomeSetupRouteImport } from './routes/home.setup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
 import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
@@ -202,6 +203,11 @@ const HomeSignupRoute = HomeSignupRouteImport.update({
   path: '/home/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeSetupRoute = HomeSetupRouteImport.update({
+  id: '/home/setup',
+  path: '/home/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeSettingsRoute = HomeSettingsRouteImport.update({
   id: '/home/settings',
   path: '/home/settings',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
+  '/home/setup': typeof HomeSetupRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/$slug': typeof ProSlugRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
+  '/home/setup': typeof HomeSetupRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/$slug': typeof ProSlugRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
+  '/home/setup': typeof HomeSetupRoute
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/$slug': typeof ProSlugRoute
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
+    | '/home/setup'
     | '/home/signup'
     | '/make-it-last/$slug'
     | '/pro/$slug'
@@ -514,6 +524,7 @@ export interface FileRouteTypes {
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
+    | '/home/setup'
     | '/home/signup'
     | '/make-it-last/$slug'
     | '/pro/$slug'
@@ -563,6 +574,7 @@ export interface FileRouteTypes {
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
+    | '/home/setup'
     | '/home/signup'
     | '/make-it-last/$slug'
     | '/pro/$slug'
@@ -613,6 +625,7 @@ export interface RootRouteChildren {
   HomeProsRoute: typeof HomeProsRoute
   HomeRemindersRoute: typeof HomeRemindersRoute
   HomeSettingsRoute: typeof HomeSettingsRoute
+  HomeSetupRoute: typeof HomeSetupRoute
   HomeSignupRoute: typeof HomeSignupRoute
   MakeItLastSlugRoute: typeof MakeItLastSlugRoute
   ProSlugRoute: typeof ProSlugRoute
@@ -846,6 +859,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/setup': {
+      id: '/home/setup'
+      path: '/home/setup'
+      fullPath: '/home/setup'
+      preLoaderRoute: typeof HomeSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home/settings': {
       id: '/home/settings'
       path: '/home/settings'
@@ -997,6 +1017,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeProsRoute: HomeProsRoute,
   HomeRemindersRoute: HomeRemindersRoute,
   HomeSettingsRoute: HomeSettingsRoute,
+  HomeSetupRoute: HomeSetupRoute,
   HomeSignupRoute: HomeSignupRoute,
   MakeItLastSlugRoute: MakeItLastSlugRoute,
   ProSlugRoute: ProSlugRoute,
