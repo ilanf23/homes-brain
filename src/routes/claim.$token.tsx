@@ -157,7 +157,7 @@ function ClaimByToken() {
       return;
     }
     // Login-only token. If this was a pro intent, ensure a pros row exists
-    // via SECURITY DEFINER RPC and route into setup (or straight to /pro if complete).
+    // via SECURITY DEFINER RPC and route straight to /pro.
     // Never call homeowner-side RPCs here — that would create a stray homeowners row.
     if (resp.intent === "pro") {
       const { error: ensureErr } = await supabase.rpc("pro_ensure", {
@@ -169,15 +169,8 @@ function ClaimByToken() {
       if (user) {
         await logEvent(`user:${user.id}`, "pro_signed_in", { via: "magic_link" });
       }
-      const { data: pro } = await supabase
-        .from("pros")
-        .select("business,trade,service_area")
-        .eq("auth_user_id", user?.id ?? "")
-        .maybeSingle();
-      const complete =
-        !!pro?.business?.trim() && !!pro?.trade?.trim() && !!pro?.service_area?.trim();
       setPhase("done");
-      navigate({ to: complete ? "/pro" : "/pro/setup" });
+      navigate({ to: "/pro" });
       return;
     }
     // Default: homeowner login-only. Ensure a homeowners row exists for

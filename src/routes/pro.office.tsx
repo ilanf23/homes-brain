@@ -300,7 +300,11 @@ function ProDashboard() {
   const timeOfDay =
     hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const firstName = pro.owner_first_name?.trim();
-  const greetingName = firstName && firstName.length > 0 ? firstName : pro.business;
+  const businessName = pro.business?.trim();
+  const greetingName =
+    (firstName && firstName.length > 0 && firstName) ||
+    (businessName && businessName.length > 0 && businessName) ||
+    "there";
 
   return (
     <ProShell pro={pro} active="office">

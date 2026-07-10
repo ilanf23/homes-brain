@@ -89,11 +89,7 @@ function AuthCallback() {
             business: pending!.business ?? null,
             via: "google",
           });
-          const complete =
-            !!inserted.business?.trim() &&
-            !!inserted.trade?.trim() &&
-            !!inserted.service_area?.trim();
-          navigate({ to: complete ? "/pro" : "/pro/setup" });
+          navigate({ to: "/pro" });
           return;
         }
       }
@@ -121,15 +117,8 @@ function AuthCallback() {
           });
           if (ensureErr) console.error("pro_ensure failed", ensureErr);
         }
-        const { data: pro } = await supabase
-          .from("pros")
-          .select("business,trade,service_area")
-          .eq("auth_user_id", user.id)
-          .maybeSingle();
-        const complete =
-          !!pro?.business?.trim() && !!pro?.trade?.trim() && !!pro?.service_area?.trim();
         await logEvent(`user:${user.id}`, "pro_signed_in", { via: "google" });
-        navigate({ to: complete ? "/pro" : "/pro/setup" });
+        navigate({ to: "/pro" });
         return;
       }
 
@@ -138,11 +127,7 @@ function AuthCallback() {
       // pros to their dashboard.
       if (existingPro && loginRole !== "homeowner") {
         await logEvent(`pro:${existingPro.id}`, "pro_email_verified", {});
-        const complete =
-          !!existingPro.business?.trim() &&
-          !!existingPro.trade?.trim() &&
-          !!existingPro.service_area?.trim();
-        navigate({ to: complete ? "/pro" : "/pro/setup" });
+        navigate({ to: "/pro" });
         return;
       }
 
