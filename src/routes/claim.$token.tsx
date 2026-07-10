@@ -151,7 +151,7 @@ function ClaimByToken() {
     }
     // Login-only token. If this was a pro intent, ensure a pros row exists
     // via SECURITY DEFINER RPC and route straight to /pro.
-    // Never call homeowner-side RPCs here — that would create a stray homeowners row.
+    // Never call homeowner-side RPCs here: that would create a stray homeowners row.
     if (resp.intent === "pro") {
       const { error: ensureErr } = await supabase.rpc("pro_ensure", {
         p_first_name: resp.first_name ?? undefined,

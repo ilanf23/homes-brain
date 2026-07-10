@@ -85,7 +85,10 @@ function HomeownerSignup() {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: `${window.location.origin}/home` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/home`,
+        data: { has_password: true },
+      },
     });
     if (error) {
       setErr(error.message);

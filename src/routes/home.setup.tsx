@@ -34,7 +34,7 @@ function isValidEmail(s: string) {
 function HomeSetupWizard() {
   const navigate = useNavigate();
   const { step: initialStep } = Route.useSearch();
-  const { homeowner, home, loading: guardLoading, refresh } = useHomeownerGuard();
+  const { homeowner, home, loading: guardLoading } = useHomeownerGuard();
 
   const [userLoading, setUserLoading] = useState(true);
   const [isGoogle, setIsGoogle] = useState(false);
@@ -88,12 +88,15 @@ function HomeSetupWizard() {
       contact: !!homeowner.contact_confirmed_at,
       home: !!homeowner.setup_completed_at,
     };
-    let idx = 0;
+    const firstIncomplete = keys.findIndex((k) => !done[k]);
+    const firstIncompleteIdx = firstIncomplete === -1 ? keys.length - 1 : firstIncomplete;
+    // Only honor a URL step up to the first incomplete step: an earlier or
+    // equal step is fine, but a later one (e.g. ?step=home skipping contact)
+    // is clamped back so Done can't stamp setup_completed_at with nothing
+    // actually persisted.
+    let idx = firstIncompleteIdx;
     if (initialStep && keys.includes(initialStep)) {
-      idx = keys.indexOf(initialStep);
-    } else {
-      const firstIncomplete = keys.findIndex((k) => !done[k]);
-      idx = firstIncomplete === -1 ? 0 : firstIncomplete;
+      idx = Math.min(keys.indexOf(initialStep), firstIncompleteIdx);
     }
     setStepIdx(Math.max(0, idx));
     setInitialized(true);
@@ -113,13 +116,15 @@ function HomeSetupWizard() {
       case "password":
         return password.length >= 8;
       case "contact":
-        return reachable;
+        return (
+          (phone.trim() === "" || validPhone) && (email.trim() === "" || validEmail) && reachable
+        );
       case "home":
         return true;
       default:
         return true;
     }
-  }, [step, name, password, reachable]);
+  }, [step, name, password, phone, email, validPhone, validEmail, reachable]);
 
   async function persistCurrent(): Promise<boolean> {
     setSaving(true);
@@ -146,8 +151,8 @@ function HomeSetupWizard() {
           // Atomic contact confirmation: sets phone/email verbatim, stamps
           // contact_confirmed_at, and only stamps consent_at on marketing opt-in.
           const { error } = await supabase.rpc("homeowner_setup_contact", {
-            p_phone: validPhone ? phone.trim() : null,
-            p_email: validEmail ? email.trim() : null,
+            p_phone: phone.trim(),
+            p_email: email.trim(),
             p_notify_sms: notifySms,
             p_notify_email: notifyEmail,
             p_marketing_consent: marketing,
@@ -187,7 +192,6 @@ function HomeSetupWizard() {
           skipped_password: !isGoogle && !hasPassword,
         });
       }
-      await refresh();
       navigate({ to: "/home" });
       return;
     }
