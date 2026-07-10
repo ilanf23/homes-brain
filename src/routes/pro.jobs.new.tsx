@@ -224,15 +224,33 @@ function NewJob() {
   });
   const micLevel = useMicLevel();
   const [voiceOpen, setVoiceOpen] = useState(false);
+  // "work" mode = classic dictation into the "what was done" note on the work
+  // step. "full" mode = the pro talks through the whole job on the customer
+  // step; on Done we run one AI extract and pre-fill every downstream field.
+  const [voiceMode, setVoiceMode] = useState<"work" | "full">("work");
+  const [fullNote, setFullNote] = useState("");
+  const [fullBusy, setFullBusy] = useState(false);
+  const fullDictation = useDictation((text) => {
+    setFullNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
+  });
 
   function openVoice() {
     // start() must run inside this tap so the AudioContext can resume.
+    setVoiceMode("work");
     micLevel.start();
     dictation.start();
     setVoiceOpen(true);
   }
+  function openVoiceFull() {
+    setVoiceMode("full");
+    setFullNote("");
+    micLevel.start();
+    fullDictation.start();
+    setVoiceOpen(true);
+  }
   function closeVoice() {
     dictation.stop();
+    fullDictation.stop();
     micLevel.stop();
     setVoiceOpen(false);
   }
