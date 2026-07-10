@@ -1454,13 +1454,13 @@ function NewJob() {
                   {extractState === "working" && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
                       <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                      Reading your note…
+                      HomesBrain AI reading your note…
                     </div>
                   )}
                   {extractState === "done" && extractFilled.length > 0 && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
                       <ShieldCheck size={13} animate={false} />
-                      Auto-filled {extractFilled.join(", ")} below
+                      HomesBrain AI filled {extractFilled.join(", ")} below
                     </div>
                   )}
                 </Field>
