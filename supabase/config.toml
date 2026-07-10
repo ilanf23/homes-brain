@@ -42,6 +42,13 @@ verify_jwt = false
 [functions.claim-exchange]
 verify_jwt = false
 
+# claim-qr mints a short-lived (20-min) single-use claim token and returns
+# the branded /claim/:token URL so the pro can render it as a QR on-screen.
+# Same rationale as invite-claim: mocked sessions in v0, so we validate the
+# caller by pro_id + customer ownership server-side.
+[functions.claim-qr]
+verify_jwt = false
+
 # homeowner-login mints a hashed, single-use, 30-min claim token and
 # emails a homesbrain.com/claim link via Resend. Only ever emails an
 # address that already has a homeowners row.
