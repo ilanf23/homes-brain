@@ -1112,8 +1112,8 @@ function HowItWorks() {
         sub="It takes a pro 30 seconds to give a home its memory."
       >
         <Link to="/pro/signup">
-          <Btn variant="indigo" size="lg">
-            Start free, no card
+          <Btn variant="teal" size="lg">
+            Claim your profile
           </Btn>
         </Link>
         <Link to="/for-pros">
