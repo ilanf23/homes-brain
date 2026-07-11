@@ -19,9 +19,9 @@ import {
 export const Route = createFileRoute("/for-homeowners")({
   head: () =>
     marketingHead({
-      title: "HomesBrain for homeowners: your home, finally remembered.",
+      title: "HomesBrain for homeowners: your home, finally protected.",
       description:
-        "Every repair, appliance, and warranty in one place. It fills itself when a pro does the work, so you never start from zero again. Free for homeowners.",
+        "Your home warns you before the water heater floods the garage or the AC line soaks the ceiling. Free for life.",
       path: "/for-homeowners",
     }),
   component: ForHomeowners,
