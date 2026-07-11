@@ -190,7 +190,9 @@ function ProHome() {
             <div className="min-w-0">
               <div className="text-2xl sm:text-3xl font-bold leading-tight">Log a job</div>
               <div className="mt-1 text-sm sm:text-base text-white/85">
-                30 seconds. Just talk and tap.
+                {jobCount === 0
+                  ? "Start with one you already did — 30 seconds."
+                  : "30 seconds. Just talk and tap."}
               </div>
             </div>
           </div>
