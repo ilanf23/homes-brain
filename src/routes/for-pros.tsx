@@ -217,21 +217,17 @@ const PRO_FEATURES = [
 
 const INTEGRATIONS = [
   {
-    emoji: "💳",
-    title: "On QuickBooks or Square?",
-    body: "We sync your jobs and add the homeowner record on top. Nothing to switch.",
-  },
-  {
-    emoji: "📱",
-    title: "On Jobber or Housecall Pro?",
-    body: "They keep your record. We give your customer one they own across every pro.",
-  },
-  {
     emoji: "🖋️",
-    title: "On paper or texts?",
+    title: "On paper or texts today?",
     body: "You are exactly who this is built for. Free, and finally a record your customer keeps.",
   },
+  {
+    emoji: "🧾",
+    title: "Already using QuickBooks, Jobber, or Housecall Pro?",
+    body: "Keep them. HomesBrain sits on top as the homeowner owned record. Direct sync is coming later.",
+  },
 ];
+
 
 function ForPros() {
   return (
