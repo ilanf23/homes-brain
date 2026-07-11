@@ -528,7 +528,7 @@ function ForPros() {
           ))}
         </div>
         <p className="mx-auto mt-8 max-w-md text-center text-[15px] text-muted">
-          An invoice is not a record. We are the homeowner owned record that sits on top of whatever
+          An invoice is not a record. We are the homeowner-owned record that sits on top of whatever
           you already use.
         </p>
       </section>
