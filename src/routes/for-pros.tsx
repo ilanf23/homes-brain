@@ -235,42 +235,43 @@ function ForPros() {
     <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero */}
       <section className={`${CONTAINER} pt-14 pb-16`}>
-        <div className="anim-fade-up">
-          <div className="eyebrow text-indigo">For pros</div>
-        </div>
-        <h1 className={`${H_SANS} anim-fade-up d-1 mt-4 text-4xl sm:text-5xl leading-[1.08]`}>
-          Never lose a customer again.
-        </h1>
-        <p className="anim-fade-up d-2 mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-          Homeowners set a maintenance reminder after the job. When it's due, they come back to
-          you, and we tell you the second it happens. Reviews and the branded record are automatic.
-          Free to start, no card.
-        </p>
-        <div className="anim-fade-up d-3 mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-          <Link to="/pro/signup" className="w-full sm:w-auto">
-            <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-              Claim your profile
-            </Btn>
-          </Link>
-          <Link
-            to="/how-it-works"
-            className="pressable inline-flex min-h-12 items-center justify-center rounded-full border border-dashed border-ink/25 bg-paper px-6 py-3 text-base font-semibold text-ink hover:bg-soft"
-          >
-            See how it works
-          </Link>
-        </div>
+        <div className="grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+          <div>
+            <div className="anim-fade-up">
+              <div className="eyebrow text-teal">For pros</div>
+            </div>
+            <h1 className={`${H_SANS} anim-fade-up d-1 mt-4 text-4xl sm:text-5xl leading-[1.08]`}>
+              Never lose a customer again.
+            </h1>
+            <p className="anim-fade-up d-2 mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+              Homeowners set a maintenance reminder after the job. When it's due, they come back to
+              you, and we tell you the second it happens. Reviews and the branded record are automatic.
+              Free to start, no card.
+            </p>
+            <div className="anim-fade-up d-3 mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+              <Link to="/pro/signup" className="w-full sm:w-auto">
+                <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+                  Claim your profile
+                </Btn>
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="pressable inline-flex min-h-12 items-center justify-center rounded-full border border-dashed border-ink/25 bg-paper px-6 py-3 text-base font-semibold text-ink hover:bg-soft"
+              >
+                See how it works
+              </Link>
+            </div>
+            <p className="anim-fade-up d-5 mt-6 text-sm text-muted">
+              Your pipeline starts the first time a customer sets a reminder.
+            </p>
+          </div>
 
-        <div className="anim-fade-up d-4 mt-14 flex justify-center">
-          <div className="w-full max-w-[270px]">
-            <LogJobPhone doneLabel="Done in 30 sec" showReviewRow />
+          <div className="anim-fade-up d-4">
+            <PipelinePhone />
           </div>
         </div>
 
-        {/* Truth line: the pipeline starts when a real customer sets a reminder,
-            not from a staged demo. */}
-        <p className="anim-fade-up d-5 mt-8 text-center text-sm text-muted">
-          Your pipeline starts the first time a customer sets a reminder.
-        </p>
+
 
 
         {/* Stat card */}
