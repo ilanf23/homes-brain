@@ -974,7 +974,7 @@ function HowItWorks() {
             <div className="reveal rd-1 h-full">
               <Card className="h-full border-t-4 border-t-indigo">
                 <Pill accent="indigo">The pro's side</Pill>
-                <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
+                <h3 className="mt-4 text-2xl font-semibold tracking-tight font-sans font-extrabold">
                   Aqua Works logs the job
                 </h3>
                 <div className="mt-4">
@@ -992,7 +992,7 @@ function HowItWorks() {
             <div className="reveal rd-2 h-full">
               <Card className="h-full border-t-4 border-t-indigo">
                 <Pill accent="indigo">The homeowner's side</Pill>
-                <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
+                <h3 className="mt-4 text-2xl font-semibold tracking-tight font-sans font-extrabold">
                   Dana claims the record
                 </h3>
                 <div className="mt-4">
@@ -1052,7 +1052,7 @@ function HowItWorks() {
                       />
                     </svg>
                   </span>
-                  <h3 className="mt-4 text-lg font-semibold tracking-tight font-display">
+                  <h3 className="mt-4 text-lg font-semibold tracking-tight font-sans font-extrabold">
                     {d.title}
                   </h3>
                   <p className="mt-2 text-sm text-muted">{d.body}</p>
@@ -1069,7 +1069,7 @@ function HowItWorks() {
           <div className="reveal rd-1 h-full">
             <Card lift className="h-full text-center py-10">
               <Pill accent="indigo">For pros</Pill>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight font-sans font-extrabold">
                 Never lose a customer again.
               </h3>
               <p className="mt-2 text-sm text-muted max-w-xs mx-auto">
@@ -1077,8 +1077,8 @@ function HowItWorks() {
               </p>
               <div className="mt-6">
                 <Link to="/pro/signup">
-                  <Btn variant="indigo" size="lg">
-                    I'm a pro, start free
+                  <Btn variant="teal" size="lg">
+                    Claim your profile
                   </Btn>
                 </Link>
               </div>
@@ -1087,7 +1087,7 @@ function HowItWorks() {
           <div className="reveal rd-2 h-full">
             <Card lift className="h-full text-center py-10">
               <Pill accent="indigo">For homeowners</Pill>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight font-display">
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight font-sans font-extrabold">
                 Your home, finally remembered.
               </h3>
               <p className="mt-2 text-sm text-muted max-w-xs mx-auto">
@@ -1112,8 +1112,8 @@ function HowItWorks() {
         sub="It takes a pro 30 seconds to give a home its memory."
       >
         <Link to="/pro/signup">
-          <Btn variant="indigo" size="lg">
-            Start free, no card
+          <Btn variant="teal" size="lg">
+            Claim your profile
           </Btn>
         </Link>
         <Link to="/for-pros">

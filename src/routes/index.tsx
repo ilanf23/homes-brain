@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
 import { Btn, Eyebrow } from "@/lib/ui";
 import { Scribble, ShieldCheck } from "@/components/svg";
-import { MarketingShell, marketingHead } from "@/components/marketing";
+import { MarketingShell, marketingHead, PipelinePhone } from "@/components/marketing";
 import { MiniLifespansPicker } from "@/components/mini-lifespans";
 import { allBrowseEntries, useCountUp } from "@/lib/make-it-last-visuals";
 
@@ -165,41 +165,68 @@ function Landing() {
   return (
     <MarketingShell mobileCta={{ label: "Get my record", to: "/home/signup", variant: "coral" }}>
       {/* Hero */}
-      <section className="mx-auto max-w-3xl px-5 pt-10 sm:pt-14 pb-10 text-center">
-        <div className="anim-fade-up eyebrow text-indigo">The living record for every home.</div>
-        <h1
-          className={`anim-fade-up d-1 mt-4 text-4xl sm:text-6xl leading-[1.05] ${H_SANS}`}
-        >
-          Every home{" "}
-          <span className="relative inline-block">
-            remembers.
-            <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
-          </span>
-        </h1>
-        <p className="anim-fade-up d-2 mt-5 text-lg text-muted max-w-xl mx-auto">
-          So it can warn you before something breaks. A pro logs the work in 30 seconds, your home
-          keeps the record and starts catching the quiet failures before they flood or burn.
-        </p>
-        <div className="anim-fade-up d-3 mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
-          <Link to="/home/signup" className="block">
-            <Btn variant="coral" size="lg" className="w-full min-h-12">
-              Get my record
-            </Btn>
-          </Link>
-          <Link to="/pro/signup" className="block">
-            <Btn variant="indigo" size="lg" className="w-full min-h-12">
-              Claim your profile
-            </Btn>
-          </Link>
-        </div>
-        <div className="anim-fade-up d-4 mt-5 flex items-center justify-center gap-3 text-xs text-muted">
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck size={14} className="text-indigo" animate={false} /> Free for homeowners
-          </span>
-          <span aria-hidden="true">·</span>
-          <span>Recall checks included</span>
+      <section className="mx-auto max-w-6xl px-5 pt-10 sm:pt-14 pb-10">
+        <div className="grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+          <div className="text-center lg:text-left">
+            <div className="anim-fade-up eyebrow text-indigo">The living record for every home.</div>
+            <h1
+              className={`anim-fade-up d-1 mt-4 text-4xl sm:text-6xl leading-[1.05] ${H_SANS}`}
+            >
+              Every home{" "}
+              <span className="relative inline-block">
+                remembers.
+                <Scribble className="absolute -bottom-2 left-0 w-full h-3" />
+              </span>
+            </h1>
+            <p className="anim-fade-up d-2 mt-5 text-lg text-muted max-w-xl mx-auto lg:mx-0">
+              So it can warn you before something breaks. A pro logs the work in 30 seconds, your home
+              keeps the record and starts catching the quiet failures before they flood or burn.
+            </p>
+            <div className="anim-fade-up d-3 mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto lg:mx-0">
+              <Link to="/home/signup" className="block">
+                <Btn variant="coral" size="lg" className="w-full min-h-12">
+                  Get my record
+                </Btn>
+              </Link>
+              <Link to="/pro/signup" className="block">
+                <Btn variant="teal" size="lg" className="w-full min-h-12">
+                  Claim your profile
+                </Btn>
+              </Link>
+            </div>
+            <div className="anim-fade-up d-4 mt-5 flex items-center justify-center lg:justify-start gap-3 text-xs text-muted">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-indigo" animate={false} /> Free for homeowners
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>Recall checks included</span>
+            </div>
+          </div>
+
+          {/* Hero visual: aspirational home with the record writing itself on top */}
+          <div className="anim-scale-in d-2 relative">
+            <img
+              src="/images/homeowners/hero-home.jpg"
+              alt="A warm, well-kept family home"
+              className="aspect-[4/3.2] w-full rounded-[26px] object-cover shadow-[0_36px_64px_-36px_rgba(22,22,15,0.5)]"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-28 rounded-b-[26px] bg-gradient-to-t from-ink/45 to-transparent" aria-hidden="true" />
+            <div className="absolute left-4 top-4 rounded-2xl bg-paper/95 backdrop-blur border border-line px-3 py-2 shadow-[0_10px_24px_-12px_rgba(22,22,15,0.35)]">
+              <div className="text-[11px] font-extrabold text-ink leading-tight">
+                Water heater · installed 2016
+              </div>
+              <div className="text-[10.5px] text-muted leading-tight">Warning: past year 8 — flush due</div>
+            </div>
+            <div className="absolute right-4 bottom-4 rounded-2xl bg-coralbg border border-coral/25 px-3 py-2 shadow-[0_10px_24px_-12px_rgba(194,70,31,0.35)]">
+              <div className="text-[11px] font-extrabold text-coraldark leading-tight">
+                Softener serviced ✓
+              </div>
+              <div className="text-[10.5px] text-coraldark/80 leading-tight">ABC Water · today · wrote itself</div>
+            </div>
+          </div>
         </div>
       </section>
+
 
       {/* Fork */}
       <section className="mx-auto max-w-4xl px-5 pb-16">
@@ -324,6 +351,47 @@ function Landing() {
           </ol>
         </InView>
       </section>
+
+      {/* Pro pipeline band — one dark section for contrast */}
+      <section className="bg-ink py-20 sm:py-24">
+        <InView className="mx-auto max-w-6xl px-5">
+          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
+            <div className="reveal text-white">
+              <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-teal">
+                For pros
+              </div>
+              <h2 className={`${H_SANS} mt-3 text-3xl sm:text-4xl leading-[1.1] text-white`}>
+                Your customers come back on their own.
+              </h2>
+              <p className="mt-4 text-[15px] sm:text-base text-white/75 max-w-lg">
+                Every job you log becomes a reminder on the homeowner's record. When it's due,
+                they come back to you — and we tell you the moment they do. The callbacks stack up.
+              </p>
+              <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                <Link to="/pro/signup" className="block sm:inline-block">
+                  <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+                    Claim your profile
+                  </Btn>
+                </Link>
+                <Link
+                  to="/for-pros"
+                  className="pressable inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 bg-white/5 px-6 py-3 text-base font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  See how it works for pros
+                </Link>
+              </div>
+              <div className="mt-5 text-[13px] text-white/60">
+                Founding price $19/mo, locked for life for the first 1,000 pros. Reviews always free.
+              </div>
+            </div>
+            <div className="reveal rd-1">
+              <PipelinePhone />
+            </div>
+          </div>
+        </InView>
+      </section>
+
+
 
       {/* Make it Last teaser */}
       <MakeItLastTeaser />

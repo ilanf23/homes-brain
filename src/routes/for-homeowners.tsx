@@ -570,30 +570,33 @@ function PhotoChip({
 
 function ForHomeowners() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your home", to: "/login", variant: "indigo" }}>
+    <MarketingShell mobileCta={{ label: "Get my record", to: "/home/signup", variant: "coral" }}>
       {/* Hero - copy beside the home itself, with the record floating on top */}
       <section className="relative overflow-hidden">
         <HeroWaves />
         <div className="relative mx-auto max-w-6xl px-5 pt-16 pb-20 lg:pt-20 grid lg:grid-cols-[1.05fr_1fr] gap-12 items-center">
           <div className="text-center lg:text-left">
             <div className="anim-fade-up">
-              <Eyebrow accent="indigo">For homeowners</Eyebrow>
+              <Eyebrow accent="coral">For homeowners</Eyebrow>
             </div>
-            <h1 className="anim-fade-up d-1 mt-4 text-[2.6rem] leading-[1.04] sm:text-6xl text-ink">
+            <div className="anim-fade-up mt-3 text-[13px] font-bold uppercase tracking-[0.14em] text-indigo">
+              Every home remembers.
+            </div>
+            <h1 className="anim-fade-up d-1 mt-3 text-[2.6rem] leading-[1.04] sm:text-6xl text-ink font-sans font-extrabold tracking-[-0.02em]">
               Your home, finally{" "}
               <span className="relative inline-block">
-                remembered.
+                protected.
                 <HeroUnderline />
               </span>
             </h1>
             <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-2xl mx-auto lg:mx-0">
-              Every repair, appliance, and warranty in one place. It fills itself when a pro does
-              the work, so you never start from zero again. Free for homeowners.
+              It remembers every appliance and every service, then warns you before the water
+              heater floods the garage or the AC line soaks the ceiling. Free for life.
             </p>
             <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
-              <Link to="/login">
-                <Btn variant="indigo" size="lg">
-                  Claim your home
+              <Link to="/home/signup">
+                <Btn variant="coral" size="lg">
+                  Get my record
                 </Btn>
               </Link>
               <a href="#how-it-works">
@@ -604,12 +607,13 @@ function ForHomeowners() {
             </div>
             <div className="anim-fade-up d-4 mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 text-[13px] font-semibold text-muted">
               <span>Free forever</span>
-              <span className="w-1 h-1 rounded-full bg-indigo/60" aria-hidden="true" />
+              <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
               <span>No typing</span>
-              <span className="w-1 h-1 rounded-full bg-indigo/60" aria-hidden="true" />
+              <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
               <span>Yours for life</span>
             </div>
           </div>
+
 
           {/* The home, with its record writing itself on top */}
           <div className="anim-scale-in d-2 persp">
