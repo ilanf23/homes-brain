@@ -7,12 +7,16 @@ import { DemoNotice } from "@/components/plan-lock";
 import {
   fetchPlans,
   fetchPlanFeatures,
+  fetchFoundingSlots,
+  fetchMyPlanInfo,
   mockSetPlan,
   useCurrentPlan,
   DEMO_NOTICE,
   DEMO_SHORT,
   type Plan,
   type PlanFeature,
+  type FoundingSlots,
+  type MyPlanInfo,
 } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/plan")({
