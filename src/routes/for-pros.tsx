@@ -109,7 +109,7 @@ function LogJobPhone({
 const HERO_STATS = [
   { value: "30 sec", caption: "to log a job", warm: false },
   { value: "$0", caption: "to start, no card", warm: false },
-  { value: "1 rebook", caption: "covers the year", warm: true },
+  { value: "Warm callbacks", caption: "come back on their own", warm: true },
 ];
 
 /* Demo-strip primitives for the capture cards: raw input (dashed) becomes a
