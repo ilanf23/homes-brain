@@ -154,6 +154,7 @@ function recordEmail(opts: {
       <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">One tap opens your record and signs you in. This link only works from your inbox.</p>
     </div>
     <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} services your home at ${a}. HomesBrain hosts the record on their behalf.</p>
+    ${complianceFooterHtml(unsubUrl)}
   </div>
 </body></html>`;
   return {
