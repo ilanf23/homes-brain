@@ -210,6 +210,14 @@ Deno.serve(async (req) => {
     const home = Array.isArray(customer.homes) ? customer.homes[0] : customer.homes;
     if (!customer.email) return json({ ok: false, code: "no_email" });
 
+    // Honor CAN-SPAM opt-outs before doing any send-side work.
+    if (await isEmailOptedOut(admin, customer.email)) {
+      return json({ ok: false, code: "opted_out" });
+    }
+    const unsubToken = await getUnsubToken(admin, customer.email);
+    if (!unsubToken) return json({ ok: false, code: "unsub_token_failed" }, 500);
+    const unsubUrl = buildUnsubUrl(unsubToken);
+
     // Per-pro daily cap protects the sending domain reputation.
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const { count: sentToday } = await admin
