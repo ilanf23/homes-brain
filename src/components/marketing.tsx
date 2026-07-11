@@ -415,19 +415,10 @@ export function MarketingShell({
             ))}
           </div>
 
-          <div className="mt-14 pt-6 border-t border-line flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted">
+          <div className="mt-14 pt-6 border-t border-line flex items-center text-sm text-muted">
             <div className="flex items-center gap-2">
               <LogoMark size={18} />
               <span>© {new Date().getFullYear()} HomesBrain, Inc.</span>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <span className="italic text-ink/60">Every home remembers.</span>
-              <Link
-                to="/privacy"
-                className="text-muted hover:text-ink transition-colors"
-              >
-                Do Not Sell or Share
-              </Link>
             </div>
           </div>
         </div>
