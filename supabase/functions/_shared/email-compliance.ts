@@ -4,6 +4,8 @@
 export const POSTAL_ADDRESS =
   "HomesBrain — Story Equity Inc., [STREET ADDRESS], [CITY, STATE ZIP]";
 
+export const CONTACT_EMAIL = "ilan@maverich.ai";
+
 export const SENDER_NAME = "HomesBrain";
 
 const APP_ORIGIN = "https://homesbrain.com";
@@ -21,7 +23,7 @@ export function buildOneClickUrl(token: string): string {
 
 export function listUnsubscribeHeaders(token: string): Record<string, string> {
   return {
-    "List-Unsubscribe": `<${buildOneClickUrl(token)}>, <mailto:unsubscribe@homesbrain.com>`,
+    "List-Unsubscribe": `<${buildOneClickUrl(token)}>, <mailto:${CONTACT_EMAIL}?subject=unsubscribe>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
 }
@@ -45,6 +47,9 @@ export function complianceFooterHtml(unsubUrl: string, reason?: string): string 
       <a href="${esc(unsubUrl)}" style="color:#473fb0;text-decoration:underline;">Unsubscribe</a>
       · You can opt out of these emails at any time.
     </p>
+    <p style="margin:0 0 6px;font-size:12px;line-height:1.55;color:#73706a;">
+      Questions? Email <a href="mailto:${esc(CONTACT_EMAIL)}" style="color:#473fb0;text-decoration:underline;">${esc(CONTACT_EMAIL)}</a>.
+    </p>
     <p style="margin:0;font-size:12px;line-height:1.55;color:#73706a;">
       ${esc(SENDER_NAME)}<br/>${esc(POSTAL_ADDRESS)}
     </p>
@@ -55,6 +60,7 @@ export function complianceFooterText(unsubUrl: string, reason?: string): string 
   const parts = ["", "----"];
   if (reason) parts.push(reason);
   parts.push(`Unsubscribe: ${unsubUrl}`);
+  parts.push(`Questions? Email ${CONTACT_EMAIL}`);
   parts.push(SENDER_NAME);
   parts.push(POSTAL_ADDRESS);
   return parts.join("\n");
