@@ -978,7 +978,7 @@ function HowItWorks() {
                   Aqua Works logs the job
                 </h3>
                 <div className="mt-4">
-                  <KV k="Time to log" v="28 seconds" />
+                  <KV k="Time to log" v="30 seconds" />
                   <KV k="Record sent" v="Text + email, branded" />
                   <KV k="Review ask" v="Sent automatically" />
                   <KV k="Next service" v="Mar 2027 - reminder set" />
