@@ -46,6 +46,8 @@ export type Guide = {
 export const GUIDES: Record<string, Guide> = {
   "water-heater": {
     slug: "water-heater",
+    hiddenRisk:
+      "Left too long the tank rusts through and lets go all at once, flooding the garage or closet. Water damage is the most common home claim, over $15,000 on average.",
     label: "Water heater",
     h1: "How long does a water heater last, and how do you make it last longer?",
     metaDescription:
@@ -103,6 +105,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "central-ac": {
     slug: "central-ac",
+    hiddenRisk:
+      "In Florida humidity the condensate drain line clogs and overflows into the ceiling or wall, growing mold behind the drywall before a stain ever shows.",
     label: "Central AC",
     h1: "How long does a central AC last in Florida, and how do you extend it?",
     metaDescription:
@@ -161,6 +165,8 @@ export const GUIDES: Record<string, Guide> = {
 
   roof: {
     slug: "roof",
+    hiddenRisk:
+      "Lifted or missing shingles let water in quietly, rotting the deck and staining ceilings, and a weak roof is the first thing a hurricane peels off.",
     label: "Roof",
     h1: "How long does a shingle roof last in Florida, and how do you make it last?",
     metaDescription:
@@ -217,6 +223,8 @@ export const GUIDES: Record<string, Guide> = {
 
   dryer: {
     slug: "dryer",
+    hiddenRisk:
+      "Lint packs the vent line, one of the leading causes of house fires, and a blocked vent cooks the machine and can push exhaust back inside.",
     label: "Dryer",
     h1: "How long does a clothes dryer last, and how do you extend it?",
     metaDescription:
@@ -269,6 +277,8 @@ export const GUIDES: Record<string, Guide> = {
 
   dishwasher: {
     slug: "dishwasher",
+    hiddenRisk:
+      "The supply line or door seal leaks slowly under the cabinet, warping the floor and growing mold you cannot see until it spreads.",
     label: "Dishwasher",
     h1: "How long does a dishwasher last, and how do you make it last longer?",
     metaDescription:
@@ -320,6 +330,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "water-softener": {
     slug: "water-softener",
+    hiddenRisk:
+      "Untreated Florida hard water scales the water heater and every pipe and appliance downstream, quietly aging the whole home's plumbing, and a stuck softener can overflow.",
     label: "Water softener",
     h1: "How long does a water softener last, and how do you extend it?",
     metaDescription:
@@ -372,6 +384,8 @@ export const GUIDES: Record<string, Guide> = {
 
   refrigerator: {
     slug: "refrigerator",
+    hiddenRisk:
+      "The ice-maker water line is a slow leak waiting to happen behind the fridge, and clogged coils overwork the compressor until it dies.",
     label: "Refrigerator",
     h1: "How long does a refrigerator last, and how do you make it last longer?",
     metaDescription:
@@ -423,6 +437,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "pool-equipment": {
     slug: "pool-equipment",
+    hiddenRisk:
+      "A failing pump or heater seal leaks and can short the equipment on the pad, and stagnant water turns a pool green fast in the Florida heat.",
     label: "Pool equipment",
     h1: "How long does pool equipment last in Florida, and how do you extend it?",
     metaDescription:
@@ -477,6 +493,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "heat-pump": {
     slug: "heat-pump",
+    hiddenRisk:
+      "Skip service and the condensate line clogs and overflows like any AC, while low refrigerant burns out the compressor, the most expensive part.",
     label: "Heat pump",
     h1: "How long does a heat pump last, and how do you extend it?",
     metaDescription:
@@ -522,6 +540,8 @@ export const GUIDES: Record<string, Guide> = {
 
   furnace: {
     slug: "furnace",
+    hiddenRisk:
+      "A cracked heat exchanger can leak carbon monoxide into the home, which is why the yearly safety check matters.",
     label: "Furnace",
     h1: "How long does a furnace last, and how do you extend it?",
     metaDescription:
@@ -568,6 +588,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "tankless-water-heater": {
     slug: "tankless-water-heater",
+    hiddenRisk:
+      "Florida's hard water scales the heat exchanger, and without annual descaling the unit fails early and can leak.",
     label: "Tankless water heater",
     h1: "How long does a tankless water heater last, and how do you extend it?",
     metaDescription:
@@ -612,6 +634,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "well-pump": {
     slug: "well-pump",
+    hiddenRisk:
+      "When the pump or pressure tank fails you lose water entirely, and short-cycling burns out the motor with little warning.",
     label: "Well pump",
     h1: "How long does a well pump last, and how do you extend it?",
     metaDescription:
@@ -657,6 +681,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "sump-pump": {
     slug: "sump-pump",
+    hiddenRisk:
+      "It sits idle for months, then fails the one storm you need it, and the low area floods. Test it before the season, not during it.",
     label: "Sump pump",
     h1: "How long does a sump pump last, and how do you extend it?",
     metaDescription:
@@ -701,6 +727,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "garbage-disposal": {
     slug: "garbage-disposal",
+    hiddenRisk:
+      "A worn bottom seal leaks under the sink, quietly soaking the cabinet, and a jam can crack the housing.",
     label: "Garbage disposal",
     h1: "How long does a garbage disposal last, and how do you extend it?",
     metaDescription:
@@ -746,6 +774,8 @@ export const GUIDES: Record<string, Guide> = {
 
   faucets: {
     slug: "faucets",
+    hiddenRisk:
+      "A failing supply line under the sink becomes a slow leak that rots the cabinet and floor, and a burst braided line can flood a room fast.",
     label: "Faucets and fixtures",
     h1: "How long do faucets and fixtures last, and how do you extend them?",
     metaDescription:
@@ -791,6 +821,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "range-oven": {
     slug: "range-oven",
+    hiddenRisk:
+      "Gas models can develop a leak at the connector, and worn seals or wiring are a fire risk, so keep the connection and burners maintained.",
     label: "Range or oven",
     h1: "How long does a range or oven last, and how do you extend it?",
     metaDescription:
@@ -837,6 +869,8 @@ export const GUIDES: Record<string, Guide> = {
 
   microwave: {
     slug: "microwave",
+    hiddenRisk:
+      "Failing door seals can leak, and running it empty damages the magnetron; mostly a replace item, but never run it empty.",
     label: "Microwave",
     h1: "How long does a microwave last, and how do you extend it?",
     metaDescription:
@@ -882,6 +916,8 @@ export const GUIDES: Record<string, Guide> = {
 
   washer: {
     slug: "washer",
+    hiddenRisk:
+      "The rubber supply hose weakens and can burst at 650 gallons an hour, a $15 part behind the machine that drives some of the most expensive water claims. Replace it every 3 to 5 years.",
     label: "Washing machine",
     h1: "How long does a washing machine last, and how do you extend it?",
     metaDescription:
@@ -928,6 +964,8 @@ export const GUIDES: Record<string, Guide> = {
 
   gutters: {
     slug: "gutters",
+    hiddenRisk:
+      "Clogged gutters overflow against the foundation and fascia, rotting wood and pushing water toward the slab, a slow driver of foundation damage.",
     label: "Gutters",
     h1: "How long do gutters last, and how do you extend them?",
     metaDescription:
@@ -974,6 +1012,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "garage-door": {
     slug: "garage-door",
+    hiddenRisk:
+      "A worn spring or cable can snap under tension and is a real injury risk, and a failed opener can drop the door.",
     label: "Garage door",
     h1: "How long does a garage door last, and how do you extend it?",
     metaDescription:
@@ -1020,6 +1060,8 @@ export const GUIDES: Record<string, Guide> = {
 
   windows: {
     slug: "windows",
+    hiddenRisk:
+      "Failed seals and cracked caulk let water into the wall, feeding mold and wood rot behind the frame you never see until it spreads.",
     label: "Windows",
     h1: "How long do windows last, and how do you extend them?",
     metaDescription:
@@ -1066,6 +1108,8 @@ export const GUIDES: Record<string, Guide> = {
 
   irrigation: {
     slug: "irrigation",
+    hiddenRisk:
+      "A stuck valve or broken head can run for days unnoticed, spiking the bill and undermining the foundation and driveway.",
     label: "Irrigation and sprinklers",
     h1: "How long does an irrigation system last, and how do you extend it?",
     metaDescription:
@@ -1112,6 +1156,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "standby-generator": {
     slug: "standby-generator",
+    hiddenRisk:
+      "The unit you never test is the one that will not start when the power goes out in a storm, failing exactly when you need it.",
     label: "Standby generator",
     h1: "How long does a standby generator last, and how do you extend it?",
     metaDescription:
@@ -1158,6 +1204,8 @@ export const GUIDES: Record<string, Guide> = {
 
   toilet: {
     slug: "toilet",
+    hiddenRisk:
+      "The fill valve and supply line are cheap parts that fail, and a burst toilet supply line is a classic overnight flood.",
     label: "Toilet",
     h1: "How long does a toilet last, and how do you extend it?",
     metaDescription:
@@ -1207,6 +1255,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "electrical-panel": {
     slug: "electrical-panel",
+    hiddenRisk:
+      "An old, undersized, or recalled panel, plus Florida's coastal corrosion, is a fire and shock risk; some brands are known hazards. A do-not-DIY safety item.",
     label: "Electrical panel",
     h1: "How long does an electrical panel last, and when should it be replaced?",
     metaDescription:
@@ -1259,6 +1309,8 @@ export const GUIDES: Record<string, Guide> = {
 
   "pest-termite": {
     slug: "pest-termite",
+    hiddenRisk:
+      "In Florida termites never stop, and a lapse in coverage lets an active colony do structural damage silently for months. The state is among the highest risk in the country.",
     label: "Pest and termite protection",
     h1: "How often does pest and termite protection need attention?",
     metaDescription:
