@@ -606,11 +606,9 @@ function ForHomeowners() {
               </a>
             </div>
             <div className="anim-fade-up d-4 mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 text-[13px] font-semibold text-muted">
-              <span>Free forever</span>
+              <span>Free, owned for life</span>
               <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
               <span>No typing</span>
-              <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
-              <span>Yours for life</span>
             </div>
           </div>
 
