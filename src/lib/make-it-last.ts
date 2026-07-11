@@ -36,7 +36,11 @@ export type Guide = {
   cadenceOnly?: boolean;
   /* Human sentence about expected life, used when expectedLifeOnly is true. */
   expectedLife?: string;
+  /* Calm, factual one-paragraph "loss" beat surfaced under the lifespan bars
+     on the guide page. Loss-aversion framing done quietly - no icons, no red. */
+  hiddenRisk?: string;
 };
+
 
 
 export const GUIDES: Record<string, Guide> = {
