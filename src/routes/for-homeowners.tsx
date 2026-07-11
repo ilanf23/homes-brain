@@ -755,7 +755,7 @@ function ForHomeowners() {
                     </div>
                     <div className="seq" style={seq(1.5)}>
                       <Btn variant="indigo" className="w-full">
-                        Claim your home
+                        Get my record
                       </Btn>
                     </div>
                   </Phone>
