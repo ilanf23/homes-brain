@@ -265,45 +265,6 @@ function Landing() {
       </section>
 
 
-      {/* Fork */}
-      <section className="mx-auto max-w-4xl px-5 pb-16">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[26px] bg-coralbg p-6 sm:p-8 flex flex-col">
-            <Eyebrow accent="coral">Homeowner</Eyebrow>
-            <h3 className={`${H_SANS} mt-3 text-2xl sm:text-[28px] leading-[1.15]`}>
-              A home that protects itself.
-            </h3>
-            <p className="mt-3 text-[15px] text-coraldark">
-              Free for life. It remembers every appliance and warns you before the next one fails.
-            </p>
-            <div className="mt-6">
-              <Link to="/home/signup" className="block">
-                <Btn variant="coral" size="lg" className="w-full min-h-12 sm:w-auto">
-                  Get my record
-                </Btn>
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-[26px] bg-tealbg p-6 sm:p-8 flex flex-col">
-            <Eyebrow accent="teal">Pro</Eyebrow>
-            <h3 className={`${H_SANS} mt-3 text-2xl sm:text-[28px] leading-[1.15]`}>
-              Never get forgotten again.
-            </h3>
-            <p className="mt-3 text-[15px] text-tealdark">
-              Your customers come back on their own. We tell you the moment they do.
-            </p>
-            <div className="mt-6">
-              <Link to="/pro/signup" className="block">
-                <span className="pressable inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-full bg-teal px-6 py-3 text-base font-bold text-white hover:bg-tealdark transition-colors">
-                  Claim your profile
-                </span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Problems you can't see */}
       <section className="border-t border-line bg-soft py-20 sm:py-24">
         <InView className="mx-auto max-w-4xl px-5">
