@@ -201,6 +201,7 @@ export function HomeShell({
 
   async function signOut() {
     await supabase.auth.signOut();
+    phReset();
     navigate({ to: "/" });
   }
 
