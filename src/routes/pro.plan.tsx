@@ -32,15 +32,26 @@ function PlanPage() {
   const { plan, isPro, reload } = useCurrentPlan();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [features, setFeatures] = useState<PlanFeature[] | null>(null);
+  const [slots, setSlots] = useState<FoundingSlots | null>(null);
+  const [myInfo, setMyInfo] = useState<MyPlanInfo | null>(null);
   const [busy, setBusy] = useState<"pro" | "free" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  const reloadAll = async () => {
+    const [p, f, s, mi] = await Promise.all([
+      fetchPlans(),
+      fetchPlanFeatures(),
+      fetchFoundingSlots(),
+      fetchMyPlanInfo(),
+    ]);
+    setPlans(p);
+    setFeatures(f);
+    setSlots(s);
+    setMyInfo(mi);
+  };
+
   useEffect(() => {
-    void (async () => {
-      const [p, f] = await Promise.all([fetchPlans(), fetchPlanFeatures()]);
-      setPlans(p);
-      setFeatures(f);
-    })();
+    void reloadAll();
   }, []);
 
   useEffect(() => {
