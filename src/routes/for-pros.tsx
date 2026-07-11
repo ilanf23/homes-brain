@@ -531,17 +531,41 @@ function ForPros() {
         </p>
       </section>
 
+      {/* For homeowners: why they value the record */}
+      <section className={`${CONTAINER} border-t border-line py-16`}>
+        <div className="rounded-[24px] bg-coralbg p-7 sm:p-9">
+          <div className="eyebrow text-coraldark">For homeowners</div>
+          <h2 className={`${H_SANS} mt-3 text-2xl sm:text-3xl leading-[1.15] text-coraldark`}>
+            Homeowners keep the record. That's why your name stays on it.
+          </h2>
+          <p className="mt-3 text-[15px] text-coraldark/90 max-w-xl">
+            Your customer owns their home's living record for life. Every appliance, every job,
+            every warranty, kept and searchable. When something is due, your name is the one they
+            see. That's the reminder, and the rebook.
+          </p>
+        </div>
+
+        {/* Cold start: honest, "seeding" framing */}
+        <div className="mt-8 rounded-[20px] border border-dashed border-ink/20 bg-paper p-6 text-center">
+          <p className="text-[15px] text-ink">
+            We're seeding St. Johns pro by pro.{" "}
+            <span className="font-bold">Claim early and rank first.</span>
+          </p>
+        </div>
+      </section>
+
       {/* Closing CTA */}
       <section className={`${CONTAINER} border-t border-line py-24 text-center`}>
         <h2 className={`${H_SANS} text-3xl sm:text-4xl`}>Snap a photo. Keep your customer.</h2>
         <div className="mt-8 flex justify-center">
-          <Link to="/pro/signup">
-            <Btn variant="indigo" size="lg">
-              Start free
+          <Link to="/pro/signup" className="w-full sm:w-auto">
+            <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
+              Claim your profile
             </Btn>
           </Link>
         </div>
       </section>
+
     </MarketingShell>
   );
 }
