@@ -302,7 +302,7 @@ function GuidePage() {
 
 
   return (
-    <MarketingShell mobileCta={{ label: "Start free record", to: "/home/signup", variant: "coral" }}>
+    <MarketingShell mobileCta={{ label: "Get my record", to: "/home/signup", variant: "coral" }}>
       {/* Mobile sticky sub-nav */}
       <div className="lg:hidden sticky top-14 z-30 bg-bg/95 backdrop-blur border-b border-line">
         <nav aria-label="On this page" className="overflow-x-auto no-scrollbar">
