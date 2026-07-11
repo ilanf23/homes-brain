@@ -342,8 +342,9 @@ function ForPros() {
             </div>
             <h3 className={`${H_SANS} mt-4 text-lg`}>Bring your customers</h3>
             <p className="mx-auto mt-2 max-w-[240px] text-sm text-muted">
-              Import your list or add as you go. Every home gets a profile.
+              Add customers as you go. Every home gets a profile.
             </p>
+
             <Phone title="Your customers" className="mt-6">
               {(
                 [
