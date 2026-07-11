@@ -139,8 +139,15 @@ export function useHomeownerGuard() {
         navigate({ to: "/login" });
         return;
       }
-      await load();
+      const view = await load();
       if (cancelled) return;
+      if (view?.homeowner) {
+        phIdentify(userData.user.id, {
+          role: "homeowner",
+          homeowner_id: view.homeowner.id,
+          email: userData.user.email ?? undefined,
+        });
+      }
       setLoading(false);
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
