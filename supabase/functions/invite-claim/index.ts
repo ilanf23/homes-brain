@@ -95,8 +95,9 @@ function recordEmail(opts: {
   equipment: EquipmentPreview | null;
   ctaUrl: string;
   claimed: boolean;
+  unsubUrl: string;
 }) {
-  const { business, logo, address, whatDone, equipment, ctaUrl, claimed } = opts;
+  const { business, logo, address, whatDone, equipment, ctaUrl, claimed, unsubUrl } = opts;
   const cta = claimed ? "Open my home" : "Claim your home record";
   const eqLine = equipmentLine(equipment);
   const warranty = equipment?.warranty_until ? `Warranty through ${equipment.warranty_until}` : null;
