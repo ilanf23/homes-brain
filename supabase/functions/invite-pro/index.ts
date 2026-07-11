@@ -165,6 +165,11 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // Honor CAN-SPAM opt-outs before any send-side work.
+    if (await isEmailOptedOut(admin, toEmail)) {
+      return json({ ok: false, code: "opted_out" });
+    }
+
     // Per-recipient daily cap protects deliverability and prevents spam.
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const { count: sentToday } = await admin
@@ -183,12 +188,17 @@ Deno.serve(async (req) => {
     const fromName =
       (ho?.name && typeof ho.name === "string" && ho.name.trim()) || "A homeowner";
 
+    const unsubToken = await getUnsubToken(admin, toEmail);
+    if (!unsubToken) return json({ ok: false, code: "unsub_token_failed" }, 500);
+    const unsubUrl = buildUnsubUrl(unsubToken);
+
     const email = inviteEmail({
       fromName,
       address: home.address,
       toName,
       trade: trade || null,
       ctaUrl: `${originUrl}/pro/signup`,
+      unsubUrl,
     });
 
     const resp = await fetch("https://api.resend.com/emails", {
@@ -200,6 +210,7 @@ Deno.serve(async (req) => {
         subject: email.subject,
         html: email.html,
         text: email.text,
+        headers: listUnsubscribeHeaders(unsubToken),
       }),
     });
     if (!resp.ok) {
