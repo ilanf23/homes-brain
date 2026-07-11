@@ -1077,8 +1077,8 @@ function HowItWorks() {
               </p>
               <div className="mt-6">
                 <Link to="/pro/signup">
-                  <Btn variant="indigo" size="lg">
-                    I'm a pro, start free
+                  <Btn variant="teal" size="lg">
+                    Claim your profile
                   </Btn>
                 </Link>
               </div>
