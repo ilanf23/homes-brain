@@ -297,9 +297,9 @@ function ForPros() {
           eyebrow="Logging a job"
           title={
             <>
-              You never type. Snap,
+              You never type. Just
               <br />
-              speak, or sync.
+              snap or speak.
             </>
           }
         />
