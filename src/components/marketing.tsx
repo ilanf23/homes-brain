@@ -652,7 +652,7 @@ export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
       ))}
 
       <div className="rounded-xl bg-teal px-3 py-2.5 text-center text-[12.5px] font-bold text-white">
-        Call Mike · log the job →
+        Call Mike, log the job →
       </div>
     </Phone>
   );
