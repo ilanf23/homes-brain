@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Btn } from "@/lib/ui";
 import { MarketingShell, marketingHead, Phone, PhoneBtn, PhoneKV } from "@/components/marketing";
-import { CameraIcon, MicIcon, SyncIcon } from "@/components/svg";
+import { CameraIcon, MicIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/for-pros")({
   head: () =>
@@ -196,29 +196,14 @@ const LOG_WAYS = [
       </>
     ),
   },
-  {
-    icon: SyncIcon,
-    title: "Sync your tools",
-    body: "Already on Jobber or QuickBooks. Jobs flow in automatically, zero new entry.",
-    demo: (
-      <>
-        <InToken>Jobber</InToken>
-        <InToken>QuickBooks</InToken>
-        <DemoArrow />
-        <OutToken k="Job #1042" v="Record sent" />
-      </>
-    ),
-  },
 ];
 
 const FREE_FEATURES = [
   "30 second job logging",
   "Branded record sent to the homeowner",
-  "Get paid on the spot, card and tap to pay",
   "Automatic Google review requests",
   "Appliance summary and recall check",
   "Your own customer and job list",
-  "Works with QuickBooks and Jobber",
 ];
 
 const PRO_FEATURES = [
@@ -227,26 +212,22 @@ const PRO_FEATURES = [
   "Recall driven lead lists",
   "New owner leads at resale",
   "Analytics on records, reviews, rebooks",
-  "Lower payment processing rate",
 ];
+
 
 const INTEGRATIONS = [
   {
-    emoji: "💳",
-    title: "On QuickBooks or Square?",
-    body: "We sync your jobs and add the homeowner record on top. Nothing to switch.",
-  },
-  {
-    emoji: "📱",
-    title: "On Jobber or Housecall Pro?",
-    body: "They keep your record. We give your customer one they own across every pro.",
-  },
-  {
     emoji: "🖋️",
-    title: "On paper or texts?",
+    title: "On paper or texts today?",
     body: "You are exactly who this is built for. Free, and finally a record your customer keeps.",
   },
+  {
+    emoji: "🧾",
+    title: "Already using QuickBooks, Jobber, or Housecall Pro?",
+    body: "Keep them. HomesBrain sits on top as the homeowner owned record. Direct sync is coming later.",
+  },
 ];
+
 
 function ForPros() {
   return (
@@ -357,8 +338,9 @@ function ForPros() {
             </div>
             <h3 className={`${H_SANS} mt-4 text-lg`}>Bring your customers</h3>
             <p className="mx-auto mt-2 max-w-[240px] text-sm text-muted">
-              Import your list or add as you go. Every home gets a profile.
+              Add customers as you go. Every home gets a profile.
             </p>
+
             <Phone title="Your customers" className="mt-6">
               {(
                 [
@@ -378,7 +360,7 @@ function ForPros() {
                   <span className={`text-[11px] font-semibold ${tone}`}>{status}</span>
                 </div>
               ))}
-              <PhoneBtn>Import from QuickBooks</PhoneBtn>
+              <PhoneBtn>Add your first customer</PhoneBtn>
             </Phone>
           </div>
 
@@ -515,13 +497,14 @@ function ForPros() {
           eyebrow="Works with what you have"
           title={
             <>
-              Already on QuickBooks or
+              Keep the tools you
               <br />
-              Jobber? Keep them.
+              already use.
             </>
           }
           titleClassName="max-w-lg"
         />
+
         <div className="mt-10 space-y-5">
           {INTEGRATIONS.map((c) => (
             <div key={c.title} className="rounded-[20px] bg-soft p-7">
