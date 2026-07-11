@@ -115,7 +115,7 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
 
 /* indigo = default brand CTA; coral = payoff / homeowner CTAs;
    teal = pro-world CTAs (contact a pro, find a pro). */
-type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "teal" | "ghost";
+type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "teal" | "amber" | "ghost";
 
 /* Fill text tokens instead of text-white so dark mode stays AA: ink fills
    flip light (text follows --bg), accent fills brighten (text follows
@@ -130,6 +130,7 @@ const btnStyles: Record<BtnVariant, string> = {
   indigo:
     "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)] active:translate-y-px",
   teal: "bg-teal text-(--on-accent) hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)] active:translate-y-px",
+  amber: "bg-amber text-(--on-accent) hover:bg-amber/90 hover:shadow-[0_10px_24px_-12px_rgba(138,82,8,0.55)] active:translate-y-px",
   ghost: "bg-transparent text-ink hover:bg-soft active:translate-y-px",
 };
 
