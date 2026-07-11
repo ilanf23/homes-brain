@@ -7,6 +7,8 @@ import { Btn, Card, PageLoader } from "@/lib/ui";
 export const POSTAL_ADDRESS =
   "HomesBrain — Story Equity Inc., [STREET ADDRESS], [CITY, STATE ZIP]";
 
+const CONTACT_EMAIL = "ilan@maverich.ai";
+
 const search = z.object({ token: z.string().optional() });
 
 export const Route = createFileRoute("/unsubscribe")({
@@ -96,8 +98,14 @@ function UnsubscribePage() {
               </h1>
               <p className="mt-3 text-[15px] leading-relaxed text-[var(--muted)]">
                 The unsubscribe link may have expired or been changed. If you keep
-                receiving unwanted emails, reply to any HomesBrain email and we'll remove
-                you manually.
+                receiving unwanted emails, email{" "}
+                <a
+                  href={`mailto:${CONTACT_EMAIL}?subject=unsubscribe`}
+                  className="font-semibold text-[var(--indigo)] underline underline-offset-2"
+                >
+                  {CONTACT_EMAIL}
+                </a>{" "}
+                and we'll remove you manually.
               </p>
             </>
           )}
