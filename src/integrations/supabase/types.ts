@@ -132,6 +132,45 @@ export type Database = {
           },
         ]
       }
+      email_optouts: {
+        Row: {
+          email: string
+          opted_out_at: string
+          resubscribed_at: string | null
+          source: string | null
+        }
+        Insert: {
+          email: string
+          opted_out_at?: string
+          resubscribed_at?: string | null
+          source?: string | null
+        }
+        Update: {
+          email?: string
+          opted_out_at?: string
+          resubscribed_at?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      email_unsub_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          token?: string
+        }
+        Relationships: []
+      }
       equipment: {
         Row: {
           attributes: Json
@@ -929,6 +968,7 @@ export type Database = {
         Args: { p_business: string; p_trade: string }
         Returns: Json
       }
+      get_unsub_token: { Args: { p_email: string }; Returns: string }
       homeowner_add_equipment: {
         Args: {
           p_label?: string
@@ -990,6 +1030,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_email_opted_out: { Args: { p_email: string }; Returns: boolean }
       is_pro: { Args: never; Returns: boolean }
       lookup_login_method: { Args: { p_email: string }; Returns: string }
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
