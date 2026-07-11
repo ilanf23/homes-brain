@@ -204,7 +204,7 @@ const STEPS: { title: string; body: string; accent: "indigo" | "coral" }[] = [
 const PROBLEM_STATS = [
   { value: "~$15B", caption: "the forgetting tax, every year" },
   { value: "~6M", caption: "homes change hands a year" },
-  { value: "0", caption: "service records survive the sale" },
+  { value: "almost none", caption: "service records survive the sale" },
 ];
 
 /* ---- Hero visual: the record card outliving three owners of the same home ---- */
