@@ -363,7 +363,7 @@ function ForPros() {
                   <span className={`text-[11px] font-semibold ${tone}`}>{status}</span>
                 </div>
               ))}
-              <PhoneBtn>Import from QuickBooks</PhoneBtn>
+              <PhoneBtn>Add your first customer</PhoneBtn>
             </Phone>
           </div>
 
