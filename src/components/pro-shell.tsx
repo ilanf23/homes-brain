@@ -25,6 +25,7 @@ import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
 import { Logo } from "@/components/svg";
+import { phIdentify, phReset } from "@/lib/posthog";
 
 export type ProRow = {
   id: string;
