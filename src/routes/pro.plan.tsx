@@ -7,12 +7,16 @@ import { DemoNotice } from "@/components/plan-lock";
 import {
   fetchPlans,
   fetchPlanFeatures,
+  fetchFoundingSlots,
+  fetchMyPlanInfo,
   mockSetPlan,
   useCurrentPlan,
   DEMO_NOTICE,
   DEMO_SHORT,
   type Plan,
   type PlanFeature,
+  type FoundingSlots,
+  type MyPlanInfo,
 } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/plan")({
@@ -28,15 +32,26 @@ function PlanPage() {
   const { plan, isPro, reload } = useCurrentPlan();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [features, setFeatures] = useState<PlanFeature[] | null>(null);
+  const [slots, setSlots] = useState<FoundingSlots | null>(null);
+  const [myInfo, setMyInfo] = useState<MyPlanInfo | null>(null);
   const [busy, setBusy] = useState<"pro" | "free" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  const reloadAll = async () => {
+    const [p, f, s, mi] = await Promise.all([
+      fetchPlans(),
+      fetchPlanFeatures(),
+      fetchFoundingSlots(),
+      fetchMyPlanInfo(),
+    ]);
+    setPlans(p);
+    setFeatures(f);
+    setSlots(s);
+    setMyInfo(mi);
+  };
+
   useEffect(() => {
-    void (async () => {
-      const [p, f] = await Promise.all([fetchPlans(), fetchPlanFeatures()]);
-      setPlans(p);
-      setFeatures(f);
-    })();
+    void reloadAll();
   }, []);
 
   useEffect(() => {
@@ -50,6 +65,7 @@ function PlanPage() {
     try {
       await mockSetPlan(target);
       await reload();
+      await reloadAll();
       if (pro) setPro({ ...pro, plan: target });
       setToast(
         target === "pro"
@@ -128,10 +144,18 @@ function PlanPage() {
             features={[...freeFeatures, ...proFeatures]}
             currentPlan={plan}
             highlight
+            slots={slots}
+            myInfo={myInfo}
             action={
               isPro ? (
                 <div className="space-y-2">
-                  <Pill accent="indigo">Your plan — demo (not billed)</Pill>
+                  {myInfo?.founding_member ? (
+                    <Pill accent="coral">
+                      Founding · ${myInfo.locked_price ?? 19}/mo locked for life
+                    </Pill>
+                  ) : (
+                    <Pill accent="indigo">Your plan — demo (not billed)</Pill>
+                  )}
                 </div>
               ) : (
                 <Btn
@@ -141,7 +165,7 @@ function PlanPage() {
                   loading={busy === "pro"}
                   onClick={() => switchTo("pro")}
                 >
-                  Upgrade to Pro — ${proPlan?.price_monthly}/mo ({DEMO_SHORT})
+                  Upgrade to Pro — ${proPlan?.founding_price ?? proPlan?.price_monthly}/mo ({DEMO_SHORT})
                 </Btn>
               )
             }
@@ -164,14 +188,27 @@ function PlanCard({
   currentPlan,
   highlight,
   action,
+  slots,
+  myInfo,
 }: {
   plan: Plan;
   features: PlanFeature[];
   currentPlan: string | null;
   highlight: boolean;
   action: React.ReactNode;
+  slots?: FoundingSlots | null;
+  myInfo?: MyPlanInfo | null;
 }) {
   const isCurrent = currentPlan === plan.id;
+  const isPro = plan.id === "pro";
+  const displayPrice =
+    isPro && myInfo?.founding_member && myInfo.locked_price != null
+      ? myInfo.locked_price
+      : isPro
+        ? (plan.founding_price ?? plan.price_monthly)
+        : plan.price_monthly;
+  const anchorPrice = isPro ? (plan.standard_price ?? 59) : null;
+  const showAnchor = isPro && anchorPrice != null && displayPrice < anchorPrice;
   return (
     <Card
       className={
@@ -186,17 +223,22 @@ function PlanCard({
       </div>
       <div className="mt-3 flex items-baseline gap-2 flex-wrap">
         <span className="text-4xl font-extrabold tracking-tight text-ink tnum">
-          ${plan.price_monthly}
+          ${displayPrice}
         </span>
         <span className="text-sm text-muted">/mo</span>
-        {plan.id === "pro" && (
-          <span className="text-sm text-muted line-through tnum">$59</span>
+        {showAnchor && (
+          <span className="text-sm text-muted line-through tnum">${anchorPrice}</span>
         )}
         {plan.price_monthly > 0 && (
           <Pill accent="indigo">{DEMO_SHORT}</Pill>
         )}
       </div>
-      {plan.id === "pro" && (
+      {isPro && myInfo?.founding_member && (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-coralbg px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-coral-dark">
+          Your founding price · locked for life
+        </div>
+      )}
+      {isPro && !myInfo?.founding_member && (
         <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-coralbg px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-coral-dark">
           Founding · locked for life
         </div>
@@ -204,9 +246,16 @@ function PlanCard({
       {plan.tagline && (
         <p className="mt-2 text-sm text-muted">{plan.tagline}</p>
       )}
-      {plan.id === "pro" && (
+      {isPro && (
         <p className="mt-1 text-xs text-muted">
-          Founding price for the first 1,000 pros. $59/mo after. Reviews are always free.
+          {myInfo?.founding_member
+            ? `Your founding price: $${myInfo.locked_price ?? 19}/mo — locked for life. Reviews are always free.`
+            : `Founding price for the first ${slots?.cap ?? 1000} pros. $${anchorPrice ?? 59}/mo after. Reviews are always free.`}
+        </p>
+      )}
+      {isPro && !myInfo?.founding_member && slots && (
+        <p className="mt-1 text-xs font-semibold text-coral-dark tnum">
+          {slots.remaining} of {slots.cap} founding spots left
         </p>
       )}
       <ul className="mt-4 space-y-2.5">

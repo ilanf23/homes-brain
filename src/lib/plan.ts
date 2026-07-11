@@ -9,7 +9,12 @@ export type Plan = {
   tagline: string | null;
   sort_order: number;
   active: boolean;
+  founding_price: number | null;
+  standard_price: number | null;
+  founding_cap: number | null;
 };
+
+export type FoundingSlots = { taken: number; cap: number; remaining: number };
 
 export type PlanFeature = {
   id: string;
@@ -47,6 +52,44 @@ export async function mockSetPlan(plan: "free" | "pro"): Promise<string> {
   const { data, error } = await supabase.rpc("mock_set_plan", { p_plan: plan });
   if (error) throw error;
   return data as string;
+}
+
+export async function fetchFoundingSlots(): Promise<FoundingSlots> {
+  const { data } = await supabase.rpc("founding_slots");
+  const raw = (data ?? { taken: 0, cap: 1000, remaining: 1000 }) as {
+    taken?: number;
+    cap?: number;
+    remaining?: number;
+  };
+  return {
+    taken: raw.taken ?? 0,
+    cap: raw.cap ?? 1000,
+    remaining: raw.remaining ?? 1000,
+  };
+}
+
+export type MyPlanInfo = {
+  plan: string;
+  founding_member: boolean;
+  locked_price: number | null;
+};
+
+export async function fetchMyPlanInfo(): Promise<MyPlanInfo | null> {
+  const { data: sess } = await supabase.auth.getSession();
+  const uid = sess.session?.user?.id;
+  if (!uid) return null;
+  const { data } = await supabase
+    .from("pros")
+    .select("plan,plan_status,founding_member,locked_price")
+    .eq("auth_user_id", uid)
+    .maybeSingle();
+  if (!data) return null;
+  const isPro = data.plan === "pro" && data.plan_status === "active";
+  return {
+    plan: isPro ? "pro" : "free",
+    founding_member: !!(data as { founding_member?: boolean }).founding_member,
+    locked_price: (data as { locked_price?: number | null }).locked_price ?? null,
+  };
 }
 
 /** Read the current pro's plan reactively. Returns null while loading. */
