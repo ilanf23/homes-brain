@@ -664,6 +664,39 @@ function GuidePage() {
             </section>
           )}
 
+          {/* Risk + action beat. Calm, factual loss framing surfaced right
+              after the lifespan bars, only when hiddenRisk exists. */}
+          {g.hiddenRisk && (
+            <section className="mt-6 space-y-4" aria-labelledby="risk-heading">
+              <div className="rounded-3xl bg-coralbg border border-coral/20 p-6 sm:p-8">
+                <div
+                  id="risk-heading"
+                  className="text-[11px] font-bold uppercase tracking-wider text-coraldark"
+                >
+                  The risk you can't see
+                </div>
+                <p className="mt-2 text-base sm:text-lg leading-relaxed text-coraldark">
+                  {g.hiddenRisk}
+                </p>
+              </div>
+              <div className="rounded-3xl bg-indigobg border border-indigo/20 p-6 sm:p-8">
+                <p className="text-base sm:text-lg font-bold text-indigodark leading-snug">
+                  HomesBrain remembers it, and warns you before it's due.
+                </p>
+                <p className="mt-1.5 text-sm text-muted">
+                  Your record tracks its age so the fix happens before the failure.
+                </p>
+                <div className="mt-4">
+                  <Link to="/home/signup">
+                    <Btn variant="coral">Get my free record</Btn>
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
+
+
+
           {/* Overview */}
           {g.overview && (
             <>
