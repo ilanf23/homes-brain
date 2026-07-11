@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
 import { Btn, Eyebrow } from "@/lib/ui";
-import { Scribble, ShieldCheck } from "@/components/svg";
-import { MarketingShell, marketingHead, PipelinePhone } from "@/components/marketing";
+import { CameraIcon, Scribble, ShieldCheck } from "@/components/svg";
+import { MarketingShell, marketingHead, MsgBubble, Phone, PhoneBtn, PhoneKV, PipelinePhone } from "@/components/marketing";
 import { MiniLifespansPicker } from "@/components/mini-lifespans";
 import { allBrowseEntries, useCountUp } from "@/lib/make-it-last-visuals";
 
@@ -311,7 +311,7 @@ function Landing() {
 
       {/* How it works */}
       <section className="py-20 sm:py-24">
-        <InView className="mx-auto max-w-4xl px-5">
+        <InView className="mx-auto max-w-6xl px-5">
           <div className="reveal text-center">
             <Eyebrow accent="indigo">How it works</Eyebrow>
             <h2 className={`${H_SANS} mt-4 text-3xl sm:text-4xl leading-[1.1] max-w-2xl mx-auto`}>
@@ -319,34 +319,79 @@ function Landing() {
             </h2>
           </div>
 
-          <ol className="reveal rd-1 mt-12 grid gap-6 md:grid-cols-3">
+          <ol className="reveal rd-1 mt-12 grid gap-6 lg:grid-cols-3">
             {[
               {
                 n: 1,
                 title: "A pro does the work",
-                body: "They snap the nameplate or speak a note. 30 seconds, no forms.",
+                phone: (
+                  <Phone title="Log this job" titleRight="AquaPure Water">
+                    <div className="rounded-xl border border-line border-dashed bg-paper px-3.5 py-3 flex flex-col items-center justify-center gap-1 text-center">
+                      <CameraIcon size={22} className="text-indigo" />
+                      <span className="text-[11px] font-bold text-ink">Snap the nameplate</span>
+                      <span className="text-[9.5px] text-muted">Auto-detects make & model</span>
+                    </div>
+                    <PhoneKV k="Make" v="Bradford White" accentV />
+                    <PhoneKV k="Warranty" v="to 2031" accentV />
+                    <PhoneBtn>Done in 30 sec</PhoneBtn>
+                  </Phone>
+                ),
               },
               {
                 n: 2,
                 title: "Your home updates itself",
-                body: "Every appliance, warranty, and service date lands in your record, verified at the source.",
+                phone: (
+                  <Phone>
+                    <MsgBubble sender="AquaPure Water" align="left">
+                      Your home record is ready ✓
+                    </MsgBubble>
+                    <MsgBubble align="left">
+                      <div className="rounded-xl border border-line/70 bg-white/70 px-3 py-2 -mx-1 -my-1">
+                        <div className="text-[11px] font-bold text-ink">Water softener</div>
+                        <div className="mt-0.5 text-[10px] text-muted">Installed today · warranty to 2031</div>
+                        <div className="mt-1.5 text-[10px] font-bold text-indigo">View record →</div>
+                      </div>
+                    </MsgBubble>
+                    <MsgBubble sender="HomesBrain" align="left" tone="indigo">
+                      Owned by you, free for life.
+                    </MsgBubble>
+                  </Phone>
+                ),
               },
               {
                 n: 3,
                 title: "It watches your back",
-                body: "It warns you before the next failure and helps everything last years longer.",
+                phone: (
+                  <Phone>
+                    <MsgBubble sender="HomesBrain" align="left">
+                      Heads up — your water heater is past year 8. A flush now beats a flood later.
+                    </MsgBubble>
+                    <MsgBubble align="left">Want your pro back to handle it?</MsgBubble>
+                    <MsgBubble align="right" tone="coral">
+                      Yes please
+                    </MsgBubble>
+                    <MsgBubble align="left" tone="indigo">
+                      <span className="flex items-center gap-1">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                          <path d="M2 5.2l2 2 3.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Reminder set
+                      </span>
+                    </MsgBubble>
+                  </Phone>
+                ),
               },
             ].map((s) => (
-              <li key={s.n} className="rounded-[22px] border border-line bg-paper p-6 sm:p-7">
-                <span
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold text-white ${
-                    s.n === 3 ? "bg-coral" : "bg-indigo"
-                  }`}
-                >
-                  {s.n}
-                </span>
-                <h3 className={`${H_SANS} mt-4 text-xl`}>{s.title}</h3>
-                <p className="mt-2 text-[15px] text-muted">{s.body}</p>
+              <li key={s.n} className="rounded-[22px] border border-line bg-paper p-5 sm:p-6 flex flex-col">
+                <div className="flex-1 min-h-0 flex items-center justify-center py-2">
+                  {s.phone}
+                </div>
+                <div className="mt-5 flex items-center gap-3">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-extrabold text-white bg-indigo">
+                    {s.n}
+                  </span>
+                  <h3 className={`${H_SANS} text-lg`}>{s.title}</h3>
+                </div>
               </li>
             ))}
           </ol>
