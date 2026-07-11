@@ -309,6 +309,7 @@ Deno.serve(async (req) => {
       equipment,
       ctaUrl,
       claimed,
+      unsubUrl,
     });
 
     // Display name is the pro; sending address stays on the verified
@@ -323,6 +324,7 @@ Deno.serve(async (req) => {
         subject: email.subject,
         html: email.html,
         text: email.text,
+        headers: listUnsubscribeHeaders(unsubToken),
       }),
     });
     if (!resp.ok) {
