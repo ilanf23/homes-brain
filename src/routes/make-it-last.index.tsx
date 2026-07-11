@@ -302,7 +302,7 @@ function MakeItLast() {
       >
         <Link to="/home/signup" className="block">
           <Btn variant="coral" size="lg" className="w-full">
-            Start your free record
+            Get my record
           </Btn>
         </Link>
         <div className="mt-1.5 text-center">
