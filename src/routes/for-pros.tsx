@@ -497,13 +497,14 @@ function ForPros() {
           eyebrow="Works with what you have"
           title={
             <>
-              Already on QuickBooks or
+              Keep the tools you
               <br />
-              Jobber? Keep them.
+              already use.
             </>
           }
           titleClassName="max-w-lg"
         />
+
         <div className="mt-10 space-y-5">
           {INTEGRATIONS.map((c) => (
             <div key={c.title} className="rounded-[20px] bg-soft p-7">
