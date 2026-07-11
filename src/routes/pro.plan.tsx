@@ -65,6 +65,7 @@ function PlanPage() {
     try {
       await mockSetPlan(target);
       await reload();
+      await reloadAll();
       if (pro) setPro({ ...pro, plan: target });
       setToast(
         target === "pro"
