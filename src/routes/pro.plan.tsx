@@ -184,17 +184,30 @@ function PlanCard({
         <Eyebrow accent={highlight ? "indigo" : "ink"}>{plan.name}</Eyebrow>
         {isCurrent && <Pill accent="indigo">Current</Pill>}
       </div>
-      <div className="mt-3 flex items-baseline gap-1.5">
+      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
         <span className="text-4xl font-extrabold tracking-tight text-ink tnum">
           ${plan.price_monthly}
         </span>
         <span className="text-sm text-muted">/mo</span>
+        {plan.id === "pro" && (
+          <span className="text-sm text-muted line-through tnum">$59</span>
+        )}
         {plan.price_monthly > 0 && (
           <Pill accent="indigo">{DEMO_SHORT}</Pill>
         )}
       </div>
+      {plan.id === "pro" && (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-coralbg px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-coral-dark">
+          Founding · locked for life
+        </div>
+      )}
       {plan.tagline && (
         <p className="mt-2 text-sm text-muted">{plan.tagline}</p>
+      )}
+      {plan.id === "pro" && (
+        <p className="mt-1 text-xs text-muted">
+          Founding price for the first 1,000 pros. $59/mo after. Reviews are always free.
+        </p>
       )}
       <ul className="mt-4 space-y-2.5">
         {features.map((f) => (
