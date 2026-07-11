@@ -92,6 +92,8 @@ export async function logEvent(
   props: Record<string, unknown> = {},
 ) {
   console.log("[event]", type, { actor, ...props });
+  // Mirror to PostHog when enabled (no-op otherwise).
+  phCapture(type, { actor, ...props });
   // Events insert is authenticated-only (RLS); anonymous callers get a silent
   // 401 that we swallow so analytics never breaks a user flow.
   try {
