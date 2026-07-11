@@ -95,6 +95,7 @@ function ProHome() {
         }));
       setDue(rows);
       setReviewAsks7d(rv?.length ?? 0);
+      setJobCount(totalJobCount ?? 0);
       setLoading(false);
     })();
     return () => {
