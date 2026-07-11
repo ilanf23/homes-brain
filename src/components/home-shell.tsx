@@ -7,6 +7,7 @@ import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 import { LanguageToggle, useT, type TKey } from "@/lib/i18n";
+import { phIdentify, phReset } from "@/lib/posthog";
 
 export type HomeownerRow = {
   id: string;
