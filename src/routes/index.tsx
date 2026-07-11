@@ -352,6 +352,47 @@ function Landing() {
         </InView>
       </section>
 
+      {/* Pro pipeline band — one dark section for contrast */}
+      <section className="bg-ink py-20 sm:py-24">
+        <InView className="mx-auto max-w-6xl px-5">
+          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
+            <div className="reveal text-white">
+              <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-teal">
+                For pros
+              </div>
+              <h2 className={`${H_SANS} mt-3 text-3xl sm:text-4xl leading-[1.1] text-white`}>
+                Your customers come back on their own.
+              </h2>
+              <p className="mt-4 text-[15px] sm:text-base text-white/75 max-w-lg">
+                Every job you log becomes a reminder on the homeowner's record. When it's due,
+                they come back to you — and we tell you the moment they do. The callbacks stack up.
+              </p>
+              <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                <Link to="/pro/signup" className="block sm:inline-block">
+                  <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+                    Claim your profile
+                  </Btn>
+                </Link>
+                <Link
+                  to="/for-pros"
+                  className="pressable inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 bg-white/5 px-6 py-3 text-base font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  See how it works for pros
+                </Link>
+              </div>
+              <div className="mt-5 text-[13px] text-white/60">
+                Founding price $19/mo, locked for life for the first 1,000 pros. Reviews always free.
+              </div>
+            </div>
+            <div className="reveal rd-1">
+              <PipelinePhone />
+            </div>
+          </div>
+        </InView>
+      </section>
+
+
+
       {/* Make it Last teaser */}
       <MakeItLastTeaser />
 
