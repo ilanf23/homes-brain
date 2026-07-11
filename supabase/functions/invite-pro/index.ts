@@ -60,10 +60,12 @@ function inviteEmail(opts: {
   toName: string;
   trade: string | null;
   ctaUrl: string;
+  unsubUrl: string;
 }) {
-  const { fromName, address, toName, trade, ctaUrl } = opts;
+  const { fromName, address, toName, trade, ctaUrl, unsubUrl } = opts;
   const tradeLine = trade ? ` (${trade})` : "";
   const subject = `A homeowner invited you to HomesBrain`;
+  const reason = `You're receiving this because a HomesBrain homeowner invited you. If this wasn't for you, ignore this email.`;
   const text = [
     `Hi ${toName},`,
     "",
@@ -76,6 +78,7 @@ function inviteEmail(opts: {
     "Free to start. No card.",
     "",
     "— HomesBrain",
+    complianceFooterText(unsubUrl, reason),
   ].join("\n");
 
   const b = esc(fromName);
@@ -98,7 +101,8 @@ function inviteEmail(opts: {
       </div>
       <p style="margin:14px 0 0;font-size:12px;line-height:1.55;color:#73706a;">Free to start. No card.</p>
     </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because a HomesBrain homeowner invited you. If this wasn't for you, ignore this email.</p>
+    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">${esc(reason)}</p>
+    ${complianceFooterHtml(unsubUrl)}
   </div>
 </body></html>`;
 
