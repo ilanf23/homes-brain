@@ -183,7 +183,7 @@ const es: Partial<Record<TKey, string>> = {
   "login.continuePro": "Continuar como profesional",
   "login.continueHomeowner": "Continuar como propietario",
   "login.newHere": "¿Nuevo por aquí?",
-  "login.startFreePro": "Empieza gratis como profesional",
+  "login.startFreePro": "Reclama tu perfil",
   "login.createHomeAccountLink": "crea tu cuenta de hogar",
   "login.createHomeAccountBtn": "Crea tu cuenta de hogar",
   "login.forgotPassword": "¿Olvidaste tu contraseña?",
