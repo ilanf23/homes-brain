@@ -196,29 +196,14 @@ const LOG_WAYS = [
       </>
     ),
   },
-  {
-    icon: SyncIcon,
-    title: "Sync your tools",
-    body: "Already on Jobber or QuickBooks. Jobs flow in automatically, zero new entry.",
-    demo: (
-      <>
-        <InToken>Jobber</InToken>
-        <InToken>QuickBooks</InToken>
-        <DemoArrow />
-        <OutToken k="Job #1042" v="Record sent" />
-      </>
-    ),
-  },
 ];
 
 const FREE_FEATURES = [
   "30 second job logging",
   "Branded record sent to the homeowner",
-  "Get paid on the spot, card and tap to pay",
   "Automatic Google review requests",
   "Appliance summary and recall check",
   "Your own customer and job list",
-  "Works with QuickBooks and Jobber",
 ];
 
 const PRO_FEATURES = [
@@ -227,8 +212,8 @@ const PRO_FEATURES = [
   "Recall driven lead lists",
   "New owner leads at resale",
   "Analytics on records, reviews, rebooks",
-  "Lower payment processing rate",
 ];
+
 
 const INTEGRATIONS = [
   {
