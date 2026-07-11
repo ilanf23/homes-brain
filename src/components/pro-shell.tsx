@@ -291,6 +291,7 @@ export function ProShell({
 
   async function signOut() {
     await supabase.auth.signOut();
+    phReset();
     navigate({ to: "/" });
   }
 
