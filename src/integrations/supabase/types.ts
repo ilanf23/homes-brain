@@ -687,28 +687,37 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          founding_cap: number | null
+          founding_price: number | null
           id: string
           name: string
           price_monthly: number
           sort_order: number
+          standard_price: number | null
           tagline: string | null
         }
         Insert: {
           active?: boolean
           created_at?: string
+          founding_cap?: number | null
+          founding_price?: number | null
           id: string
           name: string
           price_monthly?: number
           sort_order?: number
+          standard_price?: number | null
           tagline?: string | null
         }
         Update: {
           active?: boolean
           created_at?: string
+          founding_cap?: number | null
+          founding_price?: number | null
           id?: string
           name?: string
           price_monthly?: number
           sort_order?: number
+          standard_price?: number | null
           tagline?: string | null
         }
         Relationships: []
@@ -719,10 +728,12 @@ export type Database = {
           business: string | null
           created_at: string
           email: string | null
+          founding_member: boolean
           google_place_id: string | null
           google_rating: number | null
           id: string
           jobber_connected: boolean
+          locked_price: number | null
           logo: string | null
           notify_email: boolean
           notify_sms: boolean
@@ -748,10 +759,12 @@ export type Database = {
           business?: string | null
           created_at?: string
           email?: string | null
+          founding_member?: boolean
           google_place_id?: string | null
           google_rating?: number | null
           id?: string
           jobber_connected?: boolean
+          locked_price?: number | null
           logo?: string | null
           notify_email?: boolean
           notify_sms?: boolean
@@ -777,10 +790,12 @@ export type Database = {
           business?: string | null
           created_at?: string
           email?: string | null
+          founding_member?: boolean
           google_place_id?: string | null
           google_rating?: number | null
           id?: string
           jobber_connected?: boolean
+          locked_price?: number | null
           logo?: string | null
           notify_email?: boolean
           notify_sms?: boolean
@@ -962,6 +977,7 @@ export type Database = {
       }
       export_my_homeowner_data: { Args: never; Returns: Json }
       export_my_pro_data: { Args: never; Returns: Json }
+      founding_slots: { Args: never; Returns: Json }
       generate_referral_code: { Args: never; Returns: string }
       get_home_view: { Args: never; Returns: Json }
       get_public_pro_profile: {
