@@ -94,7 +94,7 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
 
 export function MarketingShell({
   children,
-  mobileCta = { label: "Start free", to: "/start", variant: "indigo" as const },
+  mobileCta = { label: "Get my record", to: "/home/signup", variant: "coral" as const },
 }: {
   children: ReactNode;
   /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide. */
