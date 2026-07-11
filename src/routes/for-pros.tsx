@@ -231,7 +231,7 @@ const INTEGRATIONS = [
 
 function ForPros() {
   return (
-    <MarketingShell mobileCta={{ label: "Start free", to: "/pro/signup", variant: "indigo" }}>
+    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero */}
       <section className={`${CONTAINER} pt-14 pb-16`}>
         <div className="anim-fade-up">
@@ -241,14 +241,14 @@ function ForPros() {
           Never lose a customer again.
         </h1>
         <p className="anim-fade-up d-2 mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-          Log a job in 30 seconds, send a branded record, and get more five star Google reviews,
-          automatically. We flag recalls too. It replaces the $75 to $599 a month review tool you
-          may already pay for. Free to start, no card.
+          Homeowners set a maintenance reminder after the job. When it's due, they come back to
+          you, and we tell you the second it happens. Reviews and the branded record are automatic.
+          Free to start, no card.
         </p>
-        <div className="anim-fade-up d-3 mt-8 flex flex-wrap gap-3">
-          <Link to="/pro/signup">
-            <Btn variant="indigo" size="lg">
-              Start free
+        <div className="anim-fade-up d-3 mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+          <Link to="/pro/signup" className="w-full sm:w-auto">
+            <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
+              Claim your profile
             </Btn>
           </Link>
           <Link
@@ -264,6 +264,13 @@ function ForPros() {
             <LogJobPhone doneLabel="Done in 30 sec" showReviewRow />
           </div>
         </div>
+
+        {/* Truth line: the pipeline starts when a real customer sets a reminder,
+            not from a staged demo. */}
+        <p className="anim-fade-up d-5 mt-8 text-center text-sm text-muted">
+          Your pipeline starts the first time a customer sets a reminder.
+        </p>
+
 
         {/* Stat card */}
         <div className="anim-fade-up d-5 mt-12 divide-y divide-line rounded-[22px] border border-line bg-paper">
