@@ -225,7 +225,7 @@ const INTEGRATIONS = [
   {
     emoji: "🧾",
     title: "Already using QuickBooks, Jobber, or Housecall Pro?",
-    body: "Keep them. HomesBrain sits on top as the homeowner owned record. Direct sync is coming later.",
+    body: "Keep them. HomesBrain sits on top as the homeowner-owned record. Direct sync is coming later.",
   },
 ];
 
