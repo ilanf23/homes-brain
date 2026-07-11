@@ -88,7 +88,7 @@ function UnsubscribePage() {
           </div>
         </div>
 
-        <Card accent="indigo">
+        <Card>
           {status === "invalid" && (
             <>
               <h1 className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
@@ -116,7 +116,7 @@ function UnsubscribePage() {
                 can access your record.
               </p>
               <div className="mt-5">
-                <Btn accent="indigo" onClick={() => act("unsubscribe")} disabled={busy}>
+                <Btn variant="indigo" onClick={() => act("unsubscribe")} disabled={busy}>
                   {busy ? "Working…" : "Unsubscribe"}
                 </Btn>
               </div>
