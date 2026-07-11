@@ -53,7 +53,7 @@ function ProHome() {
     if (!proId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: j }, { data: rv }] = await Promise.all([
+      const [{ data: j }, { data: rv }, { count: totalJobCount }] = await Promise.all([
         supabase
           .from("jobs")
           .select(
@@ -68,6 +68,10 @@ function ProHome() {
           .eq("actor", `pro:${proId}`)
           .eq("type", "review_requested")
           .gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
+        supabase
+          .from("jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("pro_id", proId),
       ]);
       if (cancelled) return;
       const rows: DueRow[] = ((j ?? []) as unknown as Array<{
