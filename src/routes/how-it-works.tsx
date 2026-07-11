@@ -1176,7 +1176,7 @@ const STATS = [
   { value: 28, suffix: "s", label: "to log a job" },
   { value: 1, suffix: " tap", label: "to claim the home" },
   { value: 0, suffix: "$", prefix: true, label: "for homeowners, forever" },
-  { value: 5, suffix: " trades", label: "on one shared record" },
+  { value: 4, suffix: " trades", label: "on one shared record" },
 ];
 
 function StatBand() {
