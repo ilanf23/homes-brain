@@ -39,6 +39,8 @@ function AuthCallback() {
         return;
       }
 
+      phIdentify(user.id, { email: user.email ?? undefined });
+
       // If Google signup path stashed pro-signup intent, create the pros row.
       let pending: {
         intent?: string;
