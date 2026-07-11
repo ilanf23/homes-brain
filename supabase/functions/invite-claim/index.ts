@@ -111,6 +111,8 @@ function recordEmail(opts: {
   if (eqLine) textLines.push(`Equipment: ${eqLine}`);
   if (warranty) textLines.push(warranty);
   textLines.push("", `${cta}: ${ctaUrl}`, "", "Every visit builds your home's living record. Free for life.", "", "via HomesBrain");
+  const reason = `You're receiving this because ${business} services your home at ${address}. HomesBrain hosts the record on their behalf.`;
+  textLines.push(complianceFooterText(unsubUrl, reason));
 
   const b = esc(business);
   const a = esc(address);
