@@ -200,7 +200,7 @@ const LOG_WAYS = [
 ];
 
 const FREE_FEATURES = [
-  "30 second job logging",
+  "30-second job logging",
   "Branded record sent to the homeowner",
   "Automatic Google review requests",
   "Appliance summary and recall check",
@@ -209,8 +209,8 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   "Automated service reminders",
-  "One tap rebooking",
-  "Recall driven lead lists",
+  "One-tap rebooking",
+  "Recall-driven lead lists",
   "New owner leads at resale",
   "Analytics on records, reviews, rebooks",
 ];
