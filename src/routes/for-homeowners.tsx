@@ -1198,12 +1198,12 @@ function ForHomeowners() {
         <InView className="mx-auto max-w-3xl px-5 text-center">
           <ClosingHouse />
           <h2 className="reveal mt-8 text-3xl sm:text-5xl tracking-tight text-ink">
-            Free for homeowners. Owned for life.
+            Free, owned for life.
           </h2>
           <div className="reveal rd-2 mt-9">
-            <Link to="/login">
-              <Btn variant="indigo" size="lg">
-                Claim your home
+            <Link to="/home/signup">
+              <Btn variant="coral" size="lg">
+                Get my record
               </Btn>
             </Link>
           </div>
