@@ -75,6 +75,13 @@ function ProSettings() {
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [planLock, setPlanLock] = useState<{
+    founding_member: boolean;
+    locked_price: number | null;
+  } | null>(null);
+  const [slots, setSlots] = useState<{ taken: number; cap: number; remaining: number } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!proId) return;
@@ -82,7 +89,7 @@ function ProSettings() {
       const { data } = await supabase
         .from("pros")
         .select(
-          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted,quickbooks_connected,jobber_connected,square_connected",
+          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted,quickbooks_connected,jobber_connected,square_connected,founding_member,locked_price",
         )
         .eq("id", proId)
         .maybeSingle();
@@ -90,7 +97,13 @@ function ProSettings() {
         setPrefs(data as ProPrefs);
         setEmail(data.email ?? "");
         setPhone(data.phone ?? "");
+        setPlanLock({
+          founding_member: !!(data as { founding_member?: boolean }).founding_member,
+          locked_price: (data as { locked_price?: number | null }).locked_price ?? null,
+        });
       }
+      const { data: sl } = await supabase.rpc("founding_slots");
+      if (sl) setSlots(sl as { taken: number; cap: number; remaining: number });
     })();
   }, [proId]);
 
