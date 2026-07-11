@@ -27,8 +27,6 @@ export function useProSetup(proId: string | null): ProSetupState {
     trades: string[] | null;
     service_area: string | null;
     phone: string | null;
-    stripe_charges_enabled: boolean | null;
-    google_place_id: string | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +36,7 @@ export function useProSetup(proId: string | null): ProSetupState {
     (async () => {
       const { data } = await supabase
         .from("pros")
-        .select("business,trade,trades,service_area,phone,stripe_charges_enabled,google_place_id")
+        .select("business,trade,trades,service_area,phone")
         .eq("id", proId)
         .maybeSingle();
       if (cancelled) return;
@@ -49,8 +47,6 @@ export function useProSetup(proId: string | null): ProSetupState {
           trades: string[] | null;
           service_area: string | null;
           phone: string | null;
-          stripe_charges_enabled: boolean | null;
-          google_place_id: string | null;
         } | null) ?? null,
       );
       setLoading(false);
@@ -65,12 +61,6 @@ export function useProSetup(proId: string | null): ProSetupState {
     { key: "trade", label: "Choose your trades", done: proTrades(row ?? {}).length > 0 },
     { key: "service_area", label: "Service area", done: !!row?.service_area?.trim() },
     { key: "phone", label: "Contact phone", done: !!row?.phone?.trim() },
-    { key: "payments", label: "Set up payments", done: !!row?.stripe_charges_enabled },
-    {
-      key: "google",
-      label: "Connect Google Business",
-      done: isGoogleUrl(row?.google_place_id ?? null),
-    },
   ];
 
 
