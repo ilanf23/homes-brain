@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { forwardGeocode } from "@/lib/geo";
+import { phCapture } from "@/lib/posthog";
 
 export const TRADES = [
   { id: "water_treatment", label: "Water treatment" },
