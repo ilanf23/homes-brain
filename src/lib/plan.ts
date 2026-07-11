@@ -51,6 +51,26 @@ export async function fetchPlanFeatures(): Promise<PlanFeature[]> {
 export async function mockSetPlan(plan: "free" | "pro"): Promise<string> {
   const { data, error } = await supabase.rpc("mock_set_plan", { p_plan: plan });
   if (error) throw error;
+  if (plan === "pro") {
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user?.id;
+    if (uid) {
+      const { data: p } = await supabase
+        .from("pros")
+        .select("id,founding_member,locked_price")
+        .eq("auth_user_id", uid)
+        .maybeSingle();
+      if (p?.id) {
+        const { logEvent } = await import("@/lib/hb");
+        await logEvent(`pro:${p.id}`, "plan_upgraded", {
+          role: "pro",
+          plan: "pro",
+          founding_member: !!(p as { founding_member?: boolean }).founding_member,
+          locked_price: (p as { locked_price?: number | null }).locked_price ?? null,
+        });
+      }
+    }
+  }
   return data as string;
 }
 

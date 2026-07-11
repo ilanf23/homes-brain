@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
       claim_tokens: {
         Row: {
           created_at: string
@@ -236,6 +251,7 @@ export type Database = {
           created_at: string
           id: string
           props: Json
+          role: string | null
           type: string
         }
         Insert: {
@@ -243,6 +259,7 @@ export type Database = {
           created_at?: string
           id?: string
           props?: Json
+          role?: string | null
           type: string
         }
         Update: {
@@ -250,6 +267,7 @@ export type Database = {
           created_at?: string
           id?: string
           props?: Json
+          role?: string | null
           type?: string
         }
         Relationships: []
@@ -971,6 +989,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_homeowner_funnel: { Args: never; Returns: Json }
+      admin_kpis: { Args: never; Returns: Json }
+      admin_pro_funnel: { Args: never; Returns: Json }
+      admin_recent_events: { Args: { p_limit?: number }; Returns: Json }
+      admin_timeseries: {
+        Args: { p_grain?: string; p_metric: string }
+        Returns: Json
+      }
       claim_home: {
         Args: { p_marketing_consent?: boolean; p_record_id: string }
         Returns: string
@@ -1046,6 +1072,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_admin: { Args: never; Returns: boolean }
       is_email_opted_out: { Args: { p_email: string }; Returns: boolean }
       is_pro: { Args: never; Returns: boolean }
       lookup_login_method: { Args: { p_email: string }; Returns: string }

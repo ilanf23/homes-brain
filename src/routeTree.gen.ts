@@ -21,6 +21,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForProsRouteImport } from './routes/for-pros'
 import { Route as ForHomeownersRouteImport } from './routes/for-homeowners'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProsIndexRouteImport } from './routes/pros.index'
@@ -117,6 +118,11 @@ const ForProsRoute = ForProsRouteImport.update({
 const ForHomeownersRoute = ForHomeownersRouteImport.update({
   id: '/for-homeowners',
   path: '/for-homeowners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -308,6 +314,7 @@ const ProCityTradeBusinessRoute = ProCityTradeBusinessRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/for-homeowners': typeof ForHomeownersRoute
   '/for-pros': typeof ForProsRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/for-homeowners': typeof ForHomeownersRoute
   '/for-pros': typeof ForProsRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/for-homeowners': typeof ForHomeownersRoute
   '/for-pros': typeof ForProsRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/for-homeowners'
     | '/for-pros'
     | '/how-it-works'
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin'
     | '/for-homeowners'
     | '/for-pros'
     | '/how-it-works'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
     | '/for-homeowners'
     | '/for-pros'
     | '/how-it-works'
@@ -618,6 +630,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRoute
   ForHomeownersRoute: typeof ForHomeownersRoute
   ForProsRoute: typeof ForProsRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -751,6 +764,13 @@ declare module '@tanstack/react-router' {
       path: '/for-homeowners'
       fullPath: '/for-homeowners'
       preLoaderRoute: typeof ForHomeownersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -1018,6 +1038,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRoute,
   ForHomeownersRoute: ForHomeownersRoute,
   ForProsRoute: ForProsRoute,
   HowItWorksRoute: HowItWorksRoute,
