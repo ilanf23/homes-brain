@@ -345,12 +345,12 @@ function HandoffTimeline({ className = "" }: { className?: string }) {
             gone by the second sale
           </text>
           {/* lane 2: the HomesBrain record, unbroken */}
-          <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--indigo)">
+          <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--amber)">
             The HomesBrain record
           </text>
           <path
             d="M24 154 H696"
-            stroke="var(--indigo)"
+            stroke="var(--amber)"
             strokeWidth={3.5}
             strokeLinecap="round"
             strokeDasharray={672}
@@ -359,7 +359,7 @@ function HandoffTimeline({ className = "" }: { className?: string }) {
             style={{ transitionDuration: "1.4s" }}
           />
           {[150, 380, 610].map((x) => (
-            <circle key={x} cx={x} cy={154} r={5.5} fill="var(--indigo)" />
+            <circle key={x} cx={x} cy={154} r={5.5} fill="var(--amber)" />
           ))}
         </svg>
       </div>
