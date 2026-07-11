@@ -144,10 +144,18 @@ function PlanPage() {
             features={[...freeFeatures, ...proFeatures]}
             currentPlan={plan}
             highlight
+            slots={slots}
+            myInfo={myInfo}
             action={
               isPro ? (
                 <div className="space-y-2">
-                  <Pill accent="indigo">Your plan — demo (not billed)</Pill>
+                  {myInfo?.founding_member ? (
+                    <Pill accent="coral">
+                      Founding · ${myInfo.locked_price ?? 19}/mo locked for life
+                    </Pill>
+                  ) : (
+                    <Pill accent="indigo">Your plan — demo (not billed)</Pill>
+                  )}
                 </div>
               ) : (
                 <Btn
@@ -157,7 +165,7 @@ function PlanPage() {
                   loading={busy === "pro"}
                   onClick={() => switchTo("pro")}
                 >
-                  Upgrade to Pro — ${proPlan?.price_monthly}/mo ({DEMO_SHORT})
+                  Upgrade to Pro — ${proPlan?.founding_price ?? proPlan?.price_monthly}/mo ({DEMO_SHORT})
                 </Btn>
               )
             }
