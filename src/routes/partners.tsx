@@ -137,7 +137,7 @@ function StepBadge({ n, accent }: { n: number; accent: "indigo" | "coral" }) {
 }
 
 /* Animated check used by the become-a-partner list. */
-function DrawnCheck({ color = "var(--indigo)", delay = 0 }: { color?: string; delay?: number }) {
+function DrawnCheck({ color = "var(--amber)", delay = 0 }: { color?: string; delay?: number }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0 mt-1">
       <path
