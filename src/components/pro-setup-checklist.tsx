@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, ChevronDown, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isGoogleUrl, proTrades } from "@/lib/hb";
+import { proTrades } from "@/lib/hb";
 
-type StepKey = "business" | "trade" | "service_area" | "phone" | "payments" | "google";
+type StepKey = "business" | "trade" | "service_area" | "phone";
 
 type ChecklistItem = {
   key: StepKey;
