@@ -632,10 +632,10 @@ function ForHomeowners() {
                     <LogoMark size={16} className="shrink-0" />
                     <div>
                       <div className="text-xs font-extrabold leading-tight text-ink">
-                        Softener serviced ✓
+                        Dryer vent cleared ✓
                       </div>
                       <div className="text-[10.5px] leading-tight text-muted">
-                        ABC Water · today · wrote itself
+                        Coastal Vent · today · wrote itself
                       </div>
                     </div>
                   </div>
