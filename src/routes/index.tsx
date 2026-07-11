@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
 import { Btn, Eyebrow } from "@/lib/ui";
 import { Scribble, ShieldCheck } from "@/components/svg";
-import { MarketingShell, marketingHead } from "@/components/marketing";
+import { MarketingShell, marketingHead, PipelinePhone } from "@/components/marketing";
 import { MiniLifespansPicker } from "@/components/mini-lifespans";
 import { allBrowseEntries, useCountUp } from "@/lib/make-it-last-visuals";
 
