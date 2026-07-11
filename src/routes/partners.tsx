@@ -126,7 +126,7 @@ function StatNumber({ value }: { value: number }) {
 
 /* Colored step numeral, same as the landing how-it-works. */
 function StepBadge({ n, accent }: { n: number; accent: "indigo" | "coral" }) {
-  const bg = { indigo: "bg-indigo", coral: "bg-coral" }[accent];
+  const bg = { indigo: "bg-amber", coral: "bg-coral" }[accent];
   return (
     <span
       className={`relative z-10 inline-flex items-center justify-center w-9 h-9 rounded-full ${bg} text-white text-sm font-extrabold ring-4 ring-background`}
@@ -221,7 +221,7 @@ function HandoffScene({ className = "" }: { className?: string }) {
                 {label}
               </span>
               {i < 2 && (
-                <svg viewBox="0 0 34 12" className="w-7 shrink-0 text-indigo" aria-hidden="true">
+                <svg viewBox="0 0 34 12" className="w-7 shrink-0 text-amber" aria-hidden="true">
                   <path
                     d="M2 6h24"
                     stroke="currentColor"
@@ -250,15 +250,15 @@ function HandoffScene({ className = "" }: { className?: string }) {
               <LogoMark size={18} />
               <span className="text-sm font-extrabold text-ink">14 Palm Row</span>
             </div>
-            <Pill accent="indigo">Verified</Pill>
+            <Pill accent="amber">Verified</Pill>
           </div>
           <div className="mt-4 space-y-2">
             <PhoneKV k="HVAC" v="Trane XR14 · 2021" />
             <PhoneKV k="Inspection" v="Clear · 2024" accentV />
             <PhoneKV k="Water heater" v="Serviced · 2029" />
           </div>
-          <div className="mt-4 flex items-center gap-2 text-xs font-bold text-indigodark">
-            <span className="pulse-dot h-2 w-2 rounded-full bg-indigo" aria-hidden="true" />
+          <div className="mt-4 flex items-center gap-2 text-xs font-bold text-amberdark">
+            <span className="pulse-dot h-2 w-2 rounded-full bg-amber" aria-hidden="true" />
             The record stays with the home
           </div>
         </div>
@@ -399,7 +399,7 @@ function Partners() {
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
         <div className="text-center lg:text-left">
           <div className="anim-fade-up">
-            <Eyebrow accent="indigo">For everyone who touches the home</Eyebrow>
+            <Eyebrow accent="amber">For everyone who touches the home</Eyebrow>
           </div>
           <h1 className="anim-fade-up d-1 mt-4 text-5xl sm:text-6xl tracking-tight text-ink leading-[1.04]">
             Every home you touch{" "}
@@ -414,7 +414,7 @@ function Partners() {
           </p>
           <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
             <a href="#become-a-partner">
-              <Btn variant="indigo" size="lg">
+              <Btn variant="amber" size="lg">
                 Become a partner
               </Btn>
             </a>
@@ -426,7 +426,7 @@ function Partners() {
           </div>
           <div className="anim-fade-up d-4 mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 text-xs text-muted">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck size={16} className="text-indigo" animate={false} /> Free to start
+              <ShieldCheck size={16} className="text-amber" animate={false} /> Free to start
             </span>
             <span>·</span>
             <span>The homeowner owns the record</span>
@@ -442,7 +442,7 @@ function Partners() {
         <InView className="mx-auto max-w-5xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="indigo"
+              accent="amber"
               eyebrow="The handoff problem"
               title="Every closing wipes the home's memory."
               sub="The builder's binder gets lost in a garage. The inspection PDF dies in a download folder. The insurer underwrites blind. The new owner starts from zero."
@@ -484,7 +484,7 @@ function Partners() {
           <InView>
             <div className="reveal">
               <SectionHead
-                accent="indigo"
+                accent="amber"
                 eyebrow="Who we work with"
                 title="Five doors into the same record."
                 sub="Wherever you meet the home, the record starts there, and your name goes on it."
@@ -497,7 +497,7 @@ function Partners() {
             <InView>
               <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
                 <div className="reveal">
-                  <Pill accent="indigo">Builders</Pill>
+                  <Pill accent="amber">Builders</Pill>
                   <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
                     Hand over the keys and the memory.
                   </h3>
@@ -522,7 +522,7 @@ function Partners() {
                       <PhoneKV k="Warranty" v="to 2032" accentV />
                     </div>
                     <div className="seq" style={seq(1.5)}>
-                      <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-xs font-bold text-indigodark">
+                      <div className="rounded-xl bg-amberbg px-3.5 py-2.5 text-center text-xs font-bold text-amberdark">
                         Handed over with the keys
                       </div>
                     </div>
@@ -535,7 +535,7 @@ function Partners() {
             <InView>
               <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
                 <div className="reveal md:order-2">
-                  <Pill accent="indigo">Realtors</Pill>
+                  <Pill accent="amber">Realtors</Pill>
                   <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
                     List the home with its history attached.
                   </h3>
@@ -557,7 +557,7 @@ function Partners() {
                       aria-hidden="true"
                     />
                     <PhotoChip className="left-4 top-4" float>
-                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo">
+                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber">
                         <ShieldCheck size={15} animate={false} /> Verified record
                       </div>
                     </PhotoChip>
@@ -578,7 +578,7 @@ function Partners() {
             <InView>
               <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
                 <div className="reveal">
-                  <Pill accent="indigo">Inspectors</Pill>
+                  <Pill accent="amber">Inspectors</Pill>
                   <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
                     Your inspection outlives the PDF.
                   </h3>
@@ -608,7 +608,7 @@ function Partners() {
                       />
                     </div>
                     <div className="seq" style={seq(1.2)}>
-                      <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-xs font-bold text-indigodark">
+                      <div className="rounded-xl bg-amberbg px-3.5 py-2.5 text-center text-xs font-bold text-amberdark">
                         34 findings became record rows
                       </div>
                     </div>
@@ -621,7 +621,7 @@ function Partners() {
             <InView>
               <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
                 <div className="reveal md:order-2">
-                  <Pill accent="indigo">Insurers</Pill>
+                  <Pill accent="amber">Insurers</Pill>
                   <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
                     Underwrite the home you can actually see.
                   </h3>
@@ -634,7 +634,7 @@ function Partners() {
                   <Card className="max-w-md mx-auto w-full">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-extrabold text-ink">14 Palm Row</span>
-                      <Pill accent="indigo">Verified history</Pill>
+                      <Pill accent="amber">Verified history</Pill>
                     </div>
                     <div className="mt-3">
                       <KV k="Last service" v="Apr 2026" />
@@ -651,7 +651,7 @@ function Partners() {
             <InView>
               <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
                 <div className="reveal">
-                  <Pill accent="indigo">Home-watch firms</Pill>
+                  <Pill accent="amber">Home-watch firms</Pill>
                   <h3 className="mt-4 text-2xl sm:text-3xl tracking-tight text-ink">
                     Every visit, on the record.
                   </h3>
@@ -680,7 +680,7 @@ function Partners() {
                       </div>
                     </div>
                     <div className="seq" style={seq(1.2)}>
-                      <div className="rounded-xl bg-indigobg px-3.5 py-2.5 text-center text-xs font-bold text-indigodark">
+                      <div className="rounded-xl bg-amberbg px-3.5 py-2.5 text-center text-xs font-bold text-amberdark">
                         Owner sees every visit
                       </div>
                     </div>
@@ -697,7 +697,7 @@ function Partners() {
               talk.{" "}
               <a
                 href="#become-a-partner"
-                className="font-semibold text-indigo underline underline-offset-4 hover:text-indigodark"
+                className="font-semibold text-amber underline underline-offset-4 hover:text-amberdark"
               >
                 Tell us who you are below.
               </a>
@@ -711,26 +711,26 @@ function Partners() {
         <InView className="mx-auto max-w-5xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="indigo"
+              accent="amber"
               eyebrow="The partner math"
               title="Almost nothing to give. Years to get."
             />
           </div>
           <div className="mt-12 grid gap-4 sm:grid-cols-3">
             <div className="reveal rd-1 rounded-2xl border border-line bg-white px-5 py-8 text-center">
-              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo tnum">
+              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-amber tnum">
                 <StatNumber value={30} /> sec
               </div>
               <div className="mt-1.5 text-sm text-muted">for a pro to log a job</div>
             </div>
             <div className="reveal rd-2 rounded-2xl border border-line bg-white px-5 py-8 text-center">
-              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo tnum">
+              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-amber tnum">
                 <StatNumber value={1} /> link
               </div>
               <div className="mt-1.5 text-sm text-muted">handed over at closing</div>
             </div>
             <div className="reveal rd-3 rounded-2xl border border-line bg-white px-5 py-8 text-center">
-              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo">
+              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-amber">
                 Life of the home
               </div>
               <div className="mt-1.5 text-sm text-muted">
@@ -746,7 +746,7 @@ function Partners() {
         <InView className="mx-auto max-w-6xl px-5">
           <div className="reveal">
             <SectionHead
-              accent="indigo"
+              accent="amber"
               eyebrow="How it works"
               title="Three steps, and the record starts working for you."
             />
@@ -767,7 +767,7 @@ function Partners() {
       <section className="bg-soft border-y border-line py-24">
         <InView className="mx-auto max-w-4xl px-5">
           <div className="reveal">
-            <SectionHead accent="indigo" eyebrow="FAQ" title="Short answers, straight." />
+            <SectionHead accent="amber" eyebrow="FAQ" title="Short answers, straight." />
           </div>
           <dl className="mt-12 space-y-3">
             {FAQ_ITEMS.map((f, i) => (
@@ -778,7 +778,7 @@ function Partners() {
                 <dt className="flex items-center gap-3 font-bold text-ink sm:w-2/5 sm:shrink-0">
                   <span
                     aria-hidden="true"
-                    className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-indigobg text-sm font-extrabold text-indigodark"
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-amberbg text-sm font-extrabold text-amberdark"
                   >
                     ?
                   </span>
@@ -800,7 +800,7 @@ function Partners() {
             <div className="reveal">
               <SectionHead
                 center={false}
-                accent="indigo"
+                accent="amber"
                 eyebrow="Become a partner"
                 title="Tell us where you fit"
                 sub="A short note is all it takes."
@@ -820,7 +820,7 @@ function Partners() {
             <Card className="reveal rd-2">
               {done ? (
                 <div className="anim-scale-in text-center py-8">
-                  <CheckBurst size={64} className="mx-auto text-indigo" />
+                  <CheckBurst size={64} className="mx-auto text-amber" />
                   <h3 className="mt-4 text-xl font-semibold tracking-tight font-display">
                     Thanks, we'll be in touch.
                   </h3>
@@ -882,7 +882,7 @@ function Partners() {
                   )}
                   <Btn
                     type="submit"
-                    variant="indigo"
+                    variant="amber"
                     size="lg"
                     loading={submitting}
                     className="w-full"
@@ -902,7 +902,7 @@ function Partners() {
         sub="If your business touches the home, you can start its record and stay part of its story."
       >
         <a href="#become-a-partner">
-          <Btn variant="indigo" size="lg">
+          <Btn variant="amber" size="lg">
             Become a partner
           </Btn>
         </a>
