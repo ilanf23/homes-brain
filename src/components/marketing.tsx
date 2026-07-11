@@ -600,6 +600,63 @@ export function PhoneBtn({ children }: { children: ReactNode }) {
   );
 }
 
+/* Pipeline mockup: shows a pro's inbound callback stream. Used on for-pros and index. */
+export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
+  return (
+    <Phone floatDelay={floatDelay}>
+      {/* push notification */}
+      <div className="rounded-2xl bg-white border border-line px-3 py-2.5 flex items-start gap-2.5 shadow-[0_6px_16px_-10px_rgba(22,22,15,0.25)]">
+        <div className="mt-0.5 h-7 w-7 shrink-0 rounded-lg bg-indigo grid place-items-center text-white text-[11px] font-extrabold">
+          HB
+        </div>
+        <div className="min-w-0">
+          <div className="text-[11.5px] font-extrabold text-ink leading-tight">
+            Karen is now in your pipeline
+          </div>
+          <div className="mt-0.5 text-[10.5px] text-muted leading-snug">
+            3 warm callbacks waiting. We'll ping you the day she's due.
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-2 px-1">
+        <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-teal">
+          Your pipeline
+        </div>
+        <div className="mt-1 text-[22px] font-extrabold leading-tight text-ink">
+          <span className="text-teal">3</span> callbacks coming
+        </div>
+      </div>
+
+      {[
+        { name: "Karen M.", detail: "Water softener · due Jun", pill: "Reminder set", tone: "teal" as const },
+        { name: "Mike R.", detail: "AC tune up · due now", pill: "Call today", tone: "coral" as const },
+        { name: "Dana P.", detail: "Water heater · due Aug", pill: "Reminder set", tone: "teal" as const },
+      ].map((r) => (
+        <div
+          key={r.name}
+          className="rounded-xl border border-line bg-paper px-3 py-2 flex items-center justify-between gap-2"
+        >
+          <div className="min-w-0">
+            <div className="text-[12px] font-bold text-ink truncate">{r.name}</div>
+            <div className="text-[10.5px] text-muted truncate">{r.detail}</div>
+          </div>
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold ${
+              r.tone === "coral" ? "bg-coralbg text-coraldark" : "bg-tealbg text-tealdark"
+            }`}
+          >
+            {r.pill}
+          </span>
+        </div>
+      ))}
+
+      <div className="rounded-xl bg-teal px-3 py-2.5 text-center text-[12.5px] font-bold text-white">
+        Call Mike · log the job →
+      </div>
+    </Phone>
+  );
+
 /* Dual- or single-CTA closing band used at the bottom of marketing pages. */
 export function CtaBand({
   eyebrow,
