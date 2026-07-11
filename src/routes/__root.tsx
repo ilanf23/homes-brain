@@ -139,6 +139,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { locale } = Route.useLoaderData();
+  useEffect(() => {
+    initPosthog();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider initialLocale={locale}>
