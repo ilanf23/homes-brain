@@ -454,9 +454,10 @@ function ForPros() {
             </ul>
             <Link to="/pro/signup" className="mt-7 block">
               <span className="pressable flex min-h-13 w-full items-center justify-center rounded-2xl bg-indigobg px-6 py-3.5 text-base font-bold text-indigo hover:bg-indigo hover:text-white transition-colors">
-                Start free
+                Claim your profile
               </span>
             </Link>
+
           </div>
 
           {/* Pro */}
