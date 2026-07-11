@@ -339,12 +339,12 @@ export function MarketingShell({
             style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
           >
             <Link
-              to="/start"
+              to="/home/signup"
               onClick={() => setMenuOpen(false)}
               className="block w-full"
             >
               <Btn variant="coral" size="lg" className="w-full">
-                Start your free record
+                Get my record
               </Btn>
             </Link>
           </div>
