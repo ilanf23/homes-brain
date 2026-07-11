@@ -656,6 +656,8 @@ export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
       </div>
     </Phone>
   );
+}
+
 
 /* Dual- or single-CTA closing band used at the bottom of marketing pages. */
 export function CtaBand({
