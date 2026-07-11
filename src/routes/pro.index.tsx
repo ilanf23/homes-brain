@@ -46,6 +46,7 @@ function ProHome() {
   const [toast, setToast] = useState<string | null>(null);
   const [reminded, setReminded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+  const [jobCount, setJobCount] = useState<number | null>(null);
 
   // Load only what this screen needs: upcoming/overdue jobs and a review count.
   useEffect(() => {
