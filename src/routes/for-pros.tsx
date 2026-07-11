@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Btn } from "@/lib/ui";
 import { MarketingShell, marketingHead, Phone, PhoneBtn, PhoneKV } from "@/components/marketing";
-import { CameraIcon, MicIcon, SyncIcon } from "@/components/svg";
+import { CameraIcon, MicIcon } from "@/components/svg";
 
 export const Route = createFileRoute("/for-pros")({
   head: () =>
