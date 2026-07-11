@@ -472,13 +472,23 @@ function ForPros() {
 
           {/* Pro */}
           <div className="rounded-[24px] bg-indigo p-7 text-white sm:p-8">
-            <div className="eyebrow text-white/70">Pro · brings them back</div>
-            <div className="mt-3 font-sans text-5xl font-extrabold tracking-tight tnum">
-              $99
-              <span className="text-base font-medium text-white/70"> /mo</span>
+            <div className="flex items-center gap-2">
+              <div className="eyebrow text-white/70">Pro · brings them back</div>
+              <span className="rounded-full bg-coral px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+                Founding
+              </span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-3">
+              <div className="font-sans text-5xl font-extrabold tracking-tight tnum">
+                $19
+                <span className="text-base font-medium text-white/70"> /mo</span>
+              </div>
+              <div className="text-base font-medium text-white/60 line-through tnum">
+                $59
+              </div>
             </div>
             <p className="mt-3 text-[15px] text-white/80">
-              Everything in Free, plus the engine that wins repeat work.
+              Founding price. Locked for life for the first 1,000 pros. $59/mo after.
             </p>
             <ul className="mt-5 border-t border-white/15">
               {PRO_FEATURES.map((f) => (
@@ -494,7 +504,9 @@ function ForPros() {
             </Link>
           </div>
         </div>
-        <p className="mt-8 text-center text-sm text-muted">One saved rebook covers the year.</p>
+        <p className="mt-8 text-center text-sm text-muted">
+          Reviews are always free. One saved rebook covers the year.
+        </p>
       </section>
 
       {/* Works with what you have */}
