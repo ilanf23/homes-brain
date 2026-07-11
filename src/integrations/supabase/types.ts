@@ -219,7 +219,6 @@ export type Database = {
         Row: {
           auth_user_id: string | null
           consent_at: string | null
-          contact_confirmed_at: string | null
           created_at: string
           email: string | null
           id: string
@@ -235,7 +234,6 @@ export type Database = {
         Insert: {
           auth_user_id?: string | null
           consent_at?: string | null
-          contact_confirmed_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -251,7 +249,6 @@ export type Database = {
         Update: {
           auth_user_id?: string | null
           consent_at?: string | null
-          contact_confirmed_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -945,6 +942,7 @@ export type Database = {
         Returns: string
       }
       homeowner_complete_setup: { Args: never; Returns: undefined }
+      homeowner_confirm_contact: { Args: never; Returns: undefined }
       homeowner_create_invite: {
         Args: {
           p_to_pro_email: string
@@ -961,16 +959,6 @@ export type Database = {
       homeowner_ensure: {
         Args: { p_marketing_consent?: boolean }
         Returns: string
-      }
-      homeowner_setup_contact: {
-        Args: {
-          p_email?: string
-          p_marketing_consent?: boolean
-          p_notify_email?: boolean
-          p_notify_sms?: boolean
-          p_phone?: string
-        }
-        Returns: undefined
       }
       homeowner_signup: {
         Args: { p_address?: string; p_marketing_consent?: boolean }

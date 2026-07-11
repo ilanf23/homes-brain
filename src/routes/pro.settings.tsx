@@ -414,10 +414,14 @@ function ProSettings() {
                         <div>
                           <div className="text-sm font-semibold text-ink">
                             Pro — <span className="tnum">$19</span>/mo{" "}
+                            <span className="text-muted line-through tnum">$59</span>{" "}
                             <span className="text-muted font-normal">(demo — not charged)</span>
                           </div>
+                          <div className="text-xs text-coral-dark font-semibold mt-0.5">
+                            Founding price · locked for life for the first 1,000 pros.
+                          </div>
                           <div className="text-xs text-muted mt-0.5">
-                            Invoicing, rebooking, review automation, CRM, analytics, team seats.
+                            Invoicing, rebooking, review automation, CRM, analytics, team seats. Reviews always free.
                           </div>
                         </div>
                         <Link to="/pro/plan" className="shrink-0">
