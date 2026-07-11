@@ -152,6 +152,7 @@ function HomeOverview() {
           pros={pros}
           onView={async (recordId) => {
             await supabase.rpc("mark_record_viewed", { p_record_id: recordId });
+            await logEvent("system", "record_viewed", { role: "system", record_id: recordId });
             refresh();
           }}
         />
