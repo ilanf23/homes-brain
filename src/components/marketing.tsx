@@ -191,9 +191,9 @@ export function MarketingShell({
             >
               Log in
             </Link>
-            <Link to="/start">
+            <Link to="/home/signup">
               <Btn variant="coral" size="sm">
-                Start free
+                Get my record
               </Btn>
             </Link>
           </div>
