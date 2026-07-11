@@ -5,7 +5,7 @@ import { Btn, Card, PageLoader } from "@/lib/ui";
 
 // Keep in sync with supabase/functions/_shared/email-compliance.ts.
 export const POSTAL_ADDRESS =
-  "HomesBrain — Story Equity Inc., [STREET ADDRESS], [CITY, STATE ZIP]";
+  "HomesBrain — Story Equity Inc., 72 Sunshine Bass Ct, Ponte Vedra, FL 32081";
 
 const CONTACT_EMAIL = "ilan@maverich.ai";
 
