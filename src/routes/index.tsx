@@ -219,8 +219,7 @@ function Landing() {
               </span>
             </h1>
             <p className="anim-fade-up d-2 mt-5 text-lg text-muted max-w-xl mx-auto lg:mx-0">
-              So it can warn you before something breaks. A pro logs the work in 30 seconds, your home
-              keeps the record and starts catching the quiet failures before they flood or burn.
+              A pro logs the work in 30 seconds. Your home keeps the record and catches the quiet failures before they flood or burn.
             </p>
             <div className="anim-fade-up d-3 mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto lg:mx-0">
               <Link to="/home/signup" className="block">
@@ -238,8 +237,6 @@ function Landing() {
               <span className="flex items-center gap-1.5">
                 <ShieldCheck size={14} className="text-indigo" animate={false} /> Free for homeowners
               </span>
-              <span aria-hidden="true">·</span>
-              <span>Recall checks included</span>
             </div>
           </div>
 
