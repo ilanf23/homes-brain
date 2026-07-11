@@ -137,7 +137,7 @@ function StepBadge({ n, accent }: { n: number; accent: "indigo" | "coral" }) {
 }
 
 /* Animated check used by the become-a-partner list. */
-function DrawnCheck({ color = "var(--indigo)", delay = 0 }: { color?: string; delay?: number }) {
+function DrawnCheck({ color = "var(--amber)", delay = 0 }: { color?: string; delay?: number }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0 mt-1">
       <path
@@ -204,7 +204,7 @@ const STEPS: { title: string; body: string; accent: "indigo" | "coral" }[] = [
 const PROBLEM_STATS = [
   { value: "~$15B", caption: "the forgetting tax, every year" },
   { value: "~6M", caption: "homes change hands a year" },
-  { value: "0", caption: "service records survive the sale" },
+  { value: "almost none", caption: "service records survive the sale" },
 ];
 
 /* ---- Hero visual: the record card outliving three owners of the same home ---- */
@@ -345,12 +345,12 @@ function HandoffTimeline({ className = "" }: { className?: string }) {
             gone by the second sale
           </text>
           {/* lane 2: the HomesBrain record, unbroken */}
-          <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--indigo)">
+          <text x={24} y={132} fontSize={12} fontWeight={700} fill="var(--amber)">
             The HomesBrain record
           </text>
           <path
             d="M24 154 H696"
-            stroke="var(--indigo)"
+            stroke="var(--amber)"
             strokeWidth={3.5}
             strokeLinecap="round"
             strokeDasharray={672}
@@ -359,7 +359,7 @@ function HandoffTimeline({ className = "" }: { className?: string }) {
             style={{ transitionDuration: "1.4s" }}
           />
           {[150, 380, 610].map((x) => (
-            <circle key={x} cx={x} cy={154} r={5.5} fill="var(--indigo)" />
+            <circle key={x} cx={x} cy={154} r={5.5} fill="var(--amber)" />
           ))}
         </svg>
       </div>
@@ -473,7 +473,7 @@ function Partners() {
             </div>
           </div>
           <p className="reveal rd-3 mt-4 text-center text-xs text-muted">
-            Illustrative estimates of the US home-services forgetting tax.
+            Illustrative estimates.
           </p>
         </InView>
       </section>

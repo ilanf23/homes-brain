@@ -59,20 +59,60 @@ function InView({
 /* One type system: sans, weight 800, tight tracking. */
 const H_SANS = "font-sans font-extrabold tracking-[-0.02em] text-ink";
 
+/* Small, calm line-art icons for the silent-risk cards. */
+function WaterHeaterIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className={className}>
+      <rect x="14" y="6" width="20" height="34" rx="4" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="24" cy="16" r="2.2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M18 24h12M18 30h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M18 40v3M30 40v3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+function HoseIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className={className}>
+      <path
+        d="M8 34c4-8 10-8 14-4s10 4 14-4"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <rect x="4" y="30" width="6" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="38" y="20" width="6" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M20 40l1.5 3M28 40l1.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+function AcDrainIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className={className}>
+      <rect x="6" y="10" width="28" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M10 16h20M10 20h20" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M34 20h5v14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M37 36l1 3M35 38l0.5 2M39 38l-0.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* ---- Page data: the three failures homeowners never see coming ---- */
 const HIDDEN_FAILURES = [
   {
     tag: "Water heater",
+    Icon: WaterHeaterIcon,
     body: "Fails between year 8 and 12. When it lets go, it empties into the garage or the utility closet.",
     truth: "Your record knows its age and warns you before it goes.",
   },
   {
     tag: "Washing-machine hose",
+    Icon: HoseIcon,
     body: "A $15 rubber part. When it bursts it releases up to 650 gallons an hour into the laundry room.",
     truth: "Your record knows when the hose is due for replacement.",
   },
   {
     tag: "AC drain line",
+    Icon: AcDrainIcon,
     body: "Clogs quietly in Florida humidity. The overflow soaks the ceiling below the air handler.",
     truth: "Your record reminds you to flush it every season.",
   },
@@ -82,7 +122,7 @@ const FAQ = [
   { q: "Is it really free for homeowners?", a: "Yes. Free forever, owned for life." },
   {
     q: "Do I have to enter anything?",
-    a: "No. Sign up with your address and the record fills itself as your pros do the work. Prefer to start now? Add your appliances yourself anytime.",
+    a: "No. Get your record with your address and it fills itself as your pros do the work. Prefer to start now? Add your appliances yourself anytime.",
   },
   { q: "What if I change pros?", a: "The record stays with your home, not the contractor." },
   { q: "Is my data mine?", a: "Always. Yours to keep, export, and share." },
@@ -179,8 +219,7 @@ function Landing() {
               </span>
             </h1>
             <p className="anim-fade-up d-2 mt-5 text-lg text-muted max-w-xl mx-auto lg:mx-0">
-              So it can warn you before something breaks. A pro logs the work in 30 seconds, your home
-              keeps the record and starts catching the quiet failures before they flood or burn.
+              A pro logs the work in 30 seconds. Your home keeps the record and catches the quiet failures before they flood or burn.
             </p>
             <div className="anim-fade-up d-3 mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto lg:mx-0">
               <Link to="/home/signup" className="block">
@@ -198,8 +237,6 @@ function Landing() {
               <span className="flex items-center gap-1.5">
                 <ShieldCheck size={14} className="text-indigo" animate={false} /> Free for homeowners
               </span>
-              <span aria-hidden="true">·</span>
-              <span>Recall checks included</span>
             </div>
           </div>
 
@@ -228,45 +265,6 @@ function Landing() {
       </section>
 
 
-      {/* Fork */}
-      <section className="mx-auto max-w-4xl px-5 pb-16">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[26px] bg-coralbg p-6 sm:p-8 flex flex-col">
-            <Eyebrow accent="coral">Homeowner</Eyebrow>
-            <h3 className={`${H_SANS} mt-3 text-2xl sm:text-[28px] leading-[1.15]`}>
-              A home that protects itself.
-            </h3>
-            <p className="mt-3 text-[15px] text-coraldark">
-              Free for life. It remembers every appliance and warns you before the next one fails.
-            </p>
-            <div className="mt-6">
-              <Link to="/home/signup" className="block">
-                <Btn variant="coral" size="lg" className="w-full min-h-12 sm:w-auto">
-                  Get my record
-                </Btn>
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-[26px] bg-tealbg p-6 sm:p-8 flex flex-col">
-            <Eyebrow accent="teal">Pro</Eyebrow>
-            <h3 className={`${H_SANS} mt-3 text-2xl sm:text-[28px] leading-[1.15]`}>
-              Never get forgotten again.
-            </h3>
-            <p className="mt-3 text-[15px] text-tealdark">
-              Your customers come back on their own. We tell you the moment they do.
-            </p>
-            <div className="mt-6">
-              <Link to="/pro/signup" className="block">
-                <span className="pressable inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-full bg-teal px-6 py-3 text-base font-bold text-white hover:bg-tealdark transition-colors">
-                  Claim your profile
-                </span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Problems you can't see */}
       <section className="border-t border-line bg-soft py-20 sm:py-24">
         <InView className="mx-auto max-w-4xl px-5">
@@ -276,7 +274,7 @@ function Landing() {
               It always breaks without warning. Yours won't.
             </h2>
             <p className="mt-4 text-[16px] text-muted max-w-2xl mx-auto">
-              The water heater quietly past year ten. The washing-machine hose one spike from
+              The water heater quietly past year 8. The washing-machine hose one spike from
               letting go. The AC drain line clogging in Florida humidity. Nobody was watching
               them. Now your home is.
             </p>
@@ -288,10 +286,13 @@ function Landing() {
                 key={f.tag}
                 className="rounded-[22px] border border-line bg-paper p-6 flex flex-col"
               >
-                <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amberbg px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-amberdark">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigobg text-indigo">
+                  <f.Icon className="h-6 w-6" />
+                </span>
+                <div className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-amberbg px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-amberdark">
                   {f.tag}
                 </div>
-                <p className="mt-4 text-[15px] text-ink leading-relaxed">{f.body}</p>
+                <p className="mt-3 text-[15px] text-ink leading-relaxed">{f.body}</p>
                 <div className="mt-5 flex items-start gap-2 rounded-xl bg-indigobg px-3 py-3">
                   <ShieldCheck size={16} animate={false} className="mt-0.5 shrink-0 text-indigo" />
                   <p className="text-[13px] font-semibold text-indigodark leading-snug">{f.truth}</p>

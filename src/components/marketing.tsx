@@ -415,19 +415,10 @@ export function MarketingShell({
             ))}
           </div>
 
-          <div className="mt-14 pt-6 border-t border-line flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted">
+          <div className="mt-14 pt-6 border-t border-line flex items-center text-sm text-muted">
             <div className="flex items-center gap-2">
               <LogoMark size={18} />
               <span>© {new Date().getFullYear()} HomesBrain, Inc.</span>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <span className="italic text-ink/60">Every home remembers.</span>
-              <Link
-                to="/privacy"
-                className="text-muted hover:text-ink transition-colors"
-              >
-                Do Not Sell or Share
-              </Link>
             </div>
           </div>
         </div>
@@ -611,10 +602,10 @@ export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
         </div>
         <div className="min-w-0">
           <div className="text-[11.5px] font-extrabold text-ink leading-tight">
-            Karen is now in your pipeline
+            Mike is due today
           </div>
           <div className="mt-0.5 text-[10.5px] text-muted leading-snug">
-            3 warm callbacks waiting. We'll ping you the day she's due.
+            He set a reminder for an AC tune-up. Tap to call and log it.
           </div>
         </div>
       </div>
@@ -652,7 +643,7 @@ export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
       ))}
 
       <div className="rounded-xl bg-teal px-3 py-2.5 text-center text-[12.5px] font-bold text-white">
-        Call Mike · log the job →
+        Call Mike, log the job →
       </div>
     </Phone>
   );

@@ -109,7 +109,7 @@ function LogJobPhone({
 const HERO_STATS = [
   { value: "30 sec", caption: "to log a job", warm: false },
   { value: "$0", caption: "to start, no card", warm: false },
-  { value: "1 rebook", caption: "covers the year", warm: true },
+  { value: "Warm callbacks", caption: "come back on their own", warm: true },
 ];
 
 /* Demo-strip primitives for the capture cards: raw input (dashed) becomes a
@@ -200,7 +200,7 @@ const LOG_WAYS = [
 ];
 
 const FREE_FEATURES = [
-  "30 second job logging",
+  "30-second job logging",
   "Branded record sent to the homeowner",
   "Automatic Google review requests",
   "Appliance summary and recall check",
@@ -209,8 +209,8 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   "Automated service reminders",
-  "One tap rebooking",
-  "Recall driven lead lists",
+  "One-tap rebooking",
+  "Recall-driven lead lists",
   "New owner leads at resale",
   "Analytics on records, reviews, rebooks",
 ];
@@ -225,7 +225,7 @@ const INTEGRATIONS = [
   {
     emoji: "🧾",
     title: "Already using QuickBooks, Jobber, or Housecall Pro?",
-    body: "Keep them. HomesBrain sits on top as the homeowner owned record. Direct sync is coming later.",
+    body: "Keep them. HomesBrain sits on top as the homeowner-owned record. Direct sync is coming later.",
   },
 ];
 
@@ -297,9 +297,9 @@ function ForPros() {
           eyebrow="Logging a job"
           title={
             <>
-              You never type. Snap,
+              You never type. Just
               <br />
-              speak, or sync.
+              snap or speak.
             </>
           }
         />
@@ -528,7 +528,7 @@ function ForPros() {
           ))}
         </div>
         <p className="mx-auto mt-8 max-w-md text-center text-[15px] text-muted">
-          An invoice is not a record. We are the homeowner owned record that sits on top of whatever
+          An invoice is not a record. We are the homeowner-owned record that sits on top of whatever
           you already use.
         </p>
       </section>

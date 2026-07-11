@@ -19,9 +19,9 @@ import {
 export const Route = createFileRoute("/for-homeowners")({
   head: () =>
     marketingHead({
-      title: "HomesBrain for homeowners: your home, finally remembered.",
+      title: "HomesBrain for homeowners: your home, finally protected.",
       description:
-        "Every repair, appliance, and warranty in one place. It fills itself when a pro does the work, so you never start from zero again. Free for homeowners.",
+        "Your home warns you before the water heater floods the garage or the AC line soaks the ceiling. Free for life.",
       path: "/for-homeowners",
     }),
   component: ForHomeowners,
@@ -606,11 +606,9 @@ function ForHomeowners() {
               </a>
             </div>
             <div className="anim-fade-up d-4 mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 text-[13px] font-semibold text-muted">
-              <span>Free forever</span>
+              <span>Free, owned for life</span>
               <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
               <span>No typing</span>
-              <span className="w-1 h-1 rounded-full bg-coral/60" aria-hidden="true" />
-              <span>Yours for life</span>
             </div>
           </div>
 
@@ -634,10 +632,10 @@ function ForHomeowners() {
                     <LogoMark size={16} className="shrink-0" />
                     <div>
                       <div className="text-xs font-extrabold leading-tight text-ink">
-                        Softener serviced ✓
+                        Dryer vent cleared ✓
                       </div>
                       <div className="text-[10.5px] leading-tight text-muted">
-                        ABC Water · today · wrote itself
+                        Coastal Vent · today · wrote itself
                       </div>
                     </div>
                   </div>
@@ -757,7 +755,7 @@ function ForHomeowners() {
                     </div>
                     <div className="seq" style={seq(1.5)}>
                       <Btn variant="indigo" className="w-full">
-                        Claim your home
+                        Get my record
                       </Btn>
                     </div>
                   </Phone>
@@ -1200,12 +1198,12 @@ function ForHomeowners() {
         <InView className="mx-auto max-w-3xl px-5 text-center">
           <ClosingHouse />
           <h2 className="reveal mt-8 text-3xl sm:text-5xl tracking-tight text-ink">
-            Free for homeowners. Owned for life.
+            Free, owned for life.
           </h2>
           <div className="reveal rd-2 mt-9">
-            <Link to="/login">
-              <Btn variant="indigo" size="lg">
-                Claim your home
+            <Link to="/home/signup">
+              <Btn variant="coral" size="lg">
+                Get my record
               </Btn>
             </Link>
           </div>
