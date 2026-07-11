@@ -148,21 +148,17 @@ function HomeSetupWizard() {
           break;
         }
         case "contact": {
-          // Atomic contact confirmation: sets phone/email verbatim, stamps
-          // contact_confirmed_at, and only stamps consent_at on marketing opt-in.
-          const { error } = await supabase.rpc("homeowner_setup_contact", {
+          const { error } = await supabase.rpc("homeowner_update_profile", {
             p_phone: phone.trim(),
             p_email: email.trim(),
             p_notify_sms: notifySms,
             p_notify_email: notifyEmail,
             p_marketing_consent: marketing,
-          });
-          if (error) throw error;
-          // Quiet hours is a plain preference, outside the atomic contact RPC.
-          const { error: prefErr } = await supabase.rpc("homeowner_update_profile", {
             p_respect_quiet_hrs: quietHrs,
           });
-          if (prefErr) throw prefErr;
+          if (error) throw error;
+          const { error: stampErr } = await supabase.rpc("homeowner_confirm_contact");
+          if (stampErr) throw stampErr;
           break;
         }
         case "home":
