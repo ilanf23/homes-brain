@@ -489,9 +489,10 @@ function ForPros() {
             </ul>
             <Link to="/pro/signup" className="mt-7 block">
               <span className="pressable flex min-h-13 w-full items-center justify-center rounded-2xl bg-paper px-6 py-3.5 text-base font-bold text-indigo hover:bg-white/90">
-                Start free, upgrade anytime
+                Claim your profile
               </span>
             </Link>
+
           </div>
         </div>
         <p className="mt-8 text-center text-sm text-muted">
