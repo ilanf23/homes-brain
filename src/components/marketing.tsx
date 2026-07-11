@@ -591,6 +591,46 @@ export function PhoneBtn({ children }: { children: ReactNode }) {
   );
 }
 
+/* iMessage-style text bubble used inside the Phone mockup for the "How it works"
+   cards. Incoming (left) uses a light neutral surface; outgoing (right) uses indigo
+   or coral to show the homeowner or brand reply. */
+export function MsgBubble({
+  align = "left",
+  sender,
+  children,
+  tone = "neutral",
+  className = "",
+}: {
+  align?: "left" | "right";
+  sender?: string;
+  children: ReactNode;
+  tone?: "neutral" | "indigo" | "coral";
+  className?: string;
+}) {
+  const isLeft = align === "left";
+  const toneClass = {
+    neutral: "bg-paper text-ink border border-line",
+    indigo: "bg-indigo text-white",
+    coral: "bg-coral text-white",
+  }[tone];
+  return (
+    <div className={`flex flex-col ${isLeft ? "items-start" : "items-end"} ${className}`}>
+      {sender && (
+        <span className="mb-1 px-1 text-[9px] font-bold uppercase tracking-[0.12em] text-muted">
+          {sender}
+        </span>
+      )}
+      <div
+        className={`max-w-[92%] rounded-2xl px-3.5 py-2.5 text-[12px] leading-snug shadow-sm ${
+          isLeft ? "rounded-tl-sm" : "rounded-tr-sm"
+        } ${toneClass}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* Pipeline mockup: shows a pro's inbound callback stream. Used on for-pros and index. */
 export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
   return (
