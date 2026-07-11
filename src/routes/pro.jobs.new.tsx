@@ -895,6 +895,20 @@ function NewJob() {
       .select("id")
       .single();
 
+    // First / second job milestones for the funnel dashboard.
+    if (job?.id) {
+      const { count: jobCount } = await supabase
+        .from("jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("pro_id", proId);
+      if (jobCount === 1) {
+        await logEvent(`pro:${proId}`, "pro_first_job", { role: "pro", job_id: job.id });
+      } else if (jobCount === 2) {
+        await logEvent(`pro:${proId}`, "pro_second_job", { role: "pro", job_id: job.id });
+      }
+    }
+
+
     // Optional invoice: if the pro entered a charge amount, create an open
     // invoice tied to this job so the homeowner can pay through /home.
     const chargeNum = parseFloat(chargeAmount);
