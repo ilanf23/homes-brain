@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "../lib/i18n";
 import { getLocaleServerFn } from "../lib/i18n-server";
+import { initPosthog } from "../lib/posthog";
 
 function NotFoundComponent() {
   return (
