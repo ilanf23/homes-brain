@@ -7,10 +7,11 @@ import { CameraIcon, MicIcon } from "@/components/svg";
 export const Route = createFileRoute("/for-pros")({
   head: () =>
     marketingHead({
-      title: "HomesBrain for pros: never lose a customer again.",
+      title: "HomesBrain for pros: never get forgotten again.",
       description:
-        "Log a job in 30 seconds, send a branded record, and get more five star Google reviews, automatically. Free to start, no card.",
+        "Homeowners set a reminder after the job. When it's due, they come back to you, and we tell you the moment they do. Free to start, no card.",
       path: "/for-pros",
+
     }),
   component: ForPros,
 });
