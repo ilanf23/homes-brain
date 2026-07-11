@@ -473,7 +473,7 @@ function Partners() {
             </div>
           </div>
           <p className="reveal rd-3 mt-4 text-center text-xs text-muted">
-            Illustrative estimates of the US home-services forgetting tax.
+            Illustrative estimates.
           </p>
         </InView>
       </section>
