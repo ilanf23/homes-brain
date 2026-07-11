@@ -11,6 +11,14 @@
    the pro_id in the body and check that the customer belongs to them. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  buildUnsubUrl,
+  complianceFooterHtml,
+  complianceFooterText,
+  getUnsubToken,
+  isEmailOptedOut,
+  listUnsubscribeHeaders,
+} from "../_shared/email-compliance.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
