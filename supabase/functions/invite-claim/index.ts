@@ -11,6 +11,14 @@
    the pro_id in the body and check that the customer belongs to them. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  buildUnsubUrl,
+  complianceFooterHtml,
+  complianceFooterText,
+  getUnsubToken,
+  isEmailOptedOut,
+  listUnsubscribeHeaders,
+} from "../_shared/email-compliance.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -87,8 +95,9 @@ function recordEmail(opts: {
   equipment: EquipmentPreview | null;
   ctaUrl: string;
   claimed: boolean;
+  unsubUrl: string;
 }) {
-  const { business, logo, address, whatDone, equipment, ctaUrl, claimed } = opts;
+  const { business, logo, address, whatDone, equipment, ctaUrl, claimed, unsubUrl } = opts;
   const cta = claimed ? "Open my home" : "Claim your home record";
   const eqLine = equipmentLine(equipment);
   const warranty = equipment?.warranty_until ? `Warranty through ${equipment.warranty_until}` : null;
@@ -102,6 +111,8 @@ function recordEmail(opts: {
   if (eqLine) textLines.push(`Equipment: ${eqLine}`);
   if (warranty) textLines.push(warranty);
   textLines.push("", `${cta}: ${ctaUrl}`, "", "Every visit builds your home's living record. Free for life.", "", "via HomesBrain");
+  const reason = `You're receiving this because ${business} services your home at ${address}. HomesBrain hosts the record on their behalf.`;
+  textLines.push(complianceFooterText(unsubUrl, reason));
 
   const b = esc(business);
   const a = esc(address);
@@ -143,6 +154,7 @@ function recordEmail(opts: {
       <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">One tap opens your record and signs you in. This link only works from your inbox.</p>
     </div>
     <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because ${b} services your home at ${a}. HomesBrain hosts the record on their behalf.</p>
+    ${complianceFooterHtml(unsubUrl)}
   </div>
 </body></html>`;
   return {
@@ -197,6 +209,14 @@ Deno.serve(async (req) => {
 
     const home = Array.isArray(customer.homes) ? customer.homes[0] : customer.homes;
     if (!customer.email) return json({ ok: false, code: "no_email" });
+
+    // Honor CAN-SPAM opt-outs before doing any send-side work.
+    if (await isEmailOptedOut(admin, customer.email)) {
+      return json({ ok: false, code: "opted_out" });
+    }
+    const unsubToken = await getUnsubToken(admin, customer.email);
+    if (!unsubToken) return json({ ok: false, code: "unsub_token_failed" }, 500);
+    const unsubUrl = buildUnsubUrl(unsubToken);
 
     // Per-pro daily cap protects the sending domain reputation.
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
@@ -289,6 +309,7 @@ Deno.serve(async (req) => {
       equipment,
       ctaUrl,
       claimed,
+      unsubUrl,
     });
 
     // Display name is the pro; sending address stays on the verified
@@ -303,6 +324,7 @@ Deno.serve(async (req) => {
         subject: email.subject,
         html: email.html,
         text: email.text,
+        headers: listUnsubscribeHeaders(unsubToken),
       }),
     });
     if (!resp.ok) {

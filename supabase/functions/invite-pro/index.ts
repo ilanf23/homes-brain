@@ -9,6 +9,14 @@
    messages log — never for identity. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  buildUnsubUrl,
+  complianceFooterHtml,
+  complianceFooterText,
+  getUnsubToken,
+  isEmailOptedOut,
+  listUnsubscribeHeaders,
+} from "../_shared/email-compliance.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -52,10 +60,12 @@ function inviteEmail(opts: {
   toName: string;
   trade: string | null;
   ctaUrl: string;
+  unsubUrl: string;
 }) {
-  const { fromName, address, toName, trade, ctaUrl } = opts;
+  const { fromName, address, toName, trade, ctaUrl, unsubUrl } = opts;
   const tradeLine = trade ? ` (${trade})` : "";
   const subject = `A homeowner invited you to HomesBrain`;
+  const reason = `You're receiving this because a HomesBrain homeowner invited you. If this wasn't for you, ignore this email.`;
   const text = [
     `Hi ${toName},`,
     "",
@@ -68,6 +78,7 @@ function inviteEmail(opts: {
     "Free to start. No card.",
     "",
     "— HomesBrain",
+    complianceFooterText(unsubUrl, reason),
   ].join("\n");
 
   const b = esc(fromName);
@@ -90,7 +101,8 @@ function inviteEmail(opts: {
       </div>
       <p style="margin:14px 0 0;font-size:12px;line-height:1.55;color:#73706a;">Free to start. No card.</p>
     </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because a HomesBrain homeowner invited you. If this wasn't for you, ignore this email.</p>
+    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">${esc(reason)}</p>
+    ${complianceFooterHtml(unsubUrl)}
   </div>
 </body></html>`;
 
@@ -153,6 +165,11 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // Honor CAN-SPAM opt-outs before any send-side work.
+    if (await isEmailOptedOut(admin, toEmail)) {
+      return json({ ok: false, code: "opted_out" });
+    }
+
     // Per-recipient daily cap protects deliverability and prevents spam.
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const { count: sentToday } = await admin
@@ -171,12 +188,17 @@ Deno.serve(async (req) => {
     const fromName =
       (ho?.name && typeof ho.name === "string" && ho.name.trim()) || "A homeowner";
 
+    const unsubToken = await getUnsubToken(admin, toEmail);
+    if (!unsubToken) return json({ ok: false, code: "unsub_token_failed" }, 500);
+    const unsubUrl = buildUnsubUrl(unsubToken);
+
     const email = inviteEmail({
       fromName,
       address: home.address,
       toName,
       trade: trade || null,
       ctaUrl: `${originUrl}/pro/signup`,
+      unsubUrl,
     });
 
     const resp = await fetch("https://api.resend.com/emails", {
@@ -188,6 +210,7 @@ Deno.serve(async (req) => {
         subject: email.subject,
         html: email.html,
         text: email.text,
+        headers: listUnsubscribeHeaders(unsubToken),
       }),
     });
     if (!resp.ok) {

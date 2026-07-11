@@ -68,3 +68,8 @@ verify_jwt = false
 verify_jwt = false
 
 
+# email-unsubscribe is a public compliance endpoint (RFC 8058 one-click plus
+# a GET for the /unsubscribe page). Authorization comes from possession of
+# the opaque per-recipient token.
+[functions.email-unsubscribe]
+verify_jwt = false

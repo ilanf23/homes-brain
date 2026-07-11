@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -58,6 +59,11 @@ import { Route as HomeRecordsRecordIdRouteImport } from './routes/home.records.$
 import { Route as HomeItemsItemIdRouteImport } from './routes/home.items.$itemId'
 import { Route as ProCityTradeBusinessRouteImport } from './routes/pro.$city.$trade.$business'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$token': typeof ClaimTokenRoute
@@ -363,6 +370,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$token': typeof ClaimTokenRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/claim/$token': typeof ClaimTokenRoute
@@ -466,6 +475,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/start'
     | '/terms'
+    | '/unsubscribe'
     | '/auth/callback'
     | '/blog/$slug'
     | '/claim/$token'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/start'
     | '/terms'
+    | '/unsubscribe'
     | '/auth/callback'
     | '/blog/$slug'
     | '/claim/$token'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/start'
     | '/terms'
+    | '/unsubscribe'
     | '/auth/callback'
     | '/blog/$slug'
     | '/claim/$token'
@@ -617,6 +629,7 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   StartRoute: typeof StartRoute
   TermsRoute: typeof TermsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogSlugRoute: typeof BlogSlugRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
@@ -656,6 +669,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -1009,6 +1029,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   StartRoute: StartRoute,
   TermsRoute: TermsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogSlugRoute: BlogSlugRoute,
   ClaimTokenRoute: ClaimTokenRoute,
