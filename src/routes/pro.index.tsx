@@ -46,13 +46,14 @@ function ProHome() {
   const [toast, setToast] = useState<string | null>(null);
   const [reminded, setReminded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+  const [jobCount, setJobCount] = useState<number | null>(null);
 
   // Load only what this screen needs: upcoming/overdue jobs and a review count.
   useEffect(() => {
     if (!proId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: j }, { data: rv }] = await Promise.all([
+      const [{ data: j }, { data: rv }, { count: totalJobCount }] = await Promise.all([
         supabase
           .from("jobs")
           .select(
@@ -67,6 +68,10 @@ function ProHome() {
           .eq("actor", `pro:${proId}`)
           .eq("type", "review_requested")
           .gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
+        supabase
+          .from("jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("pro_id", proId),
       ]);
       if (cancelled) return;
       const rows: DueRow[] = ((j ?? []) as unknown as Array<{
@@ -90,6 +95,7 @@ function ProHome() {
         }));
       setDue(rows);
       setReviewAsks7d(rv?.length ?? 0);
+      setJobCount(totalJobCount ?? 0);
       setLoading(false);
     })();
     return () => {
@@ -184,7 +190,9 @@ function ProHome() {
             <div className="min-w-0">
               <div className="text-2xl sm:text-3xl font-bold leading-tight">Log a job</div>
               <div className="mt-1 text-sm sm:text-base text-white/85">
-                30 seconds. Just talk and tap.
+                {jobCount === 0
+                  ? "Start with one you already did — 30 seconds."
+                  : "30 seconds. Just talk and tap."}
               </div>
             </div>
           </div>
