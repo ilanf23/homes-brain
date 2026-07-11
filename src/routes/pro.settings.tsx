@@ -397,6 +397,11 @@ function ProSettings() {
                           <span className="font-semibold">Pro plan — demo.</span>{" "}
                           You're not being billed. Real billing arrives later.
                         </div>
+                        {planLock?.founding_member && (
+                          <div className="rounded-lg bg-coralbg px-3 py-2 text-xs font-semibold text-coral-dark">
+                            Your founding price: ${planLock.locked_price ?? 19}/mo — locked for life. Reviews are always free.
+                          </div>
+                        )}
                         <div className="flex flex-wrap items-center gap-3">
                           <Link
                             to="/pro/plan"
@@ -431,10 +436,11 @@ function ProSettings() {
                             <span className="text-muted font-normal">(demo — not charged)</span>
                           </div>
                           <div className="text-xs text-coral-dark font-semibold mt-0.5">
-                            Founding price · locked for life for the first 1,000 pros.
+                            Founding price · locked for life for the first {slots?.cap ?? 1000} pros.
+                            {slots && ` ${slots.remaining} of ${slots.cap} spots left.`}
                           </div>
                           <div className="text-xs text-muted mt-0.5">
-                            Invoicing, rebooking, review automation, CRM, analytics, team seats. Reviews always free.
+                            Invoicing, rebooking, review automation, CRM, analytics, team seats. Reviews are always free.
                           </div>
                         </div>
                         <Link to="/pro/plan" className="shrink-0">
