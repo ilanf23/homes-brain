@@ -611,10 +611,10 @@ export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
         </div>
         <div className="min-w-0">
           <div className="text-[11.5px] font-extrabold text-ink leading-tight">
-            Karen is now in your pipeline
+            Mike is due today
           </div>
           <div className="mt-0.5 text-[10.5px] text-muted leading-snug">
-            3 warm callbacks waiting. We'll ping you the day she's due.
+            He set a reminder for an AC tune-up. Tap to call and log it.
           </div>
         </div>
       </div>
