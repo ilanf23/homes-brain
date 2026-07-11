@@ -9,7 +9,12 @@ export type Plan = {
   tagline: string | null;
   sort_order: number;
   active: boolean;
+  founding_price: number | null;
+  standard_price: number | null;
+  founding_cap: number | null;
 };
+
+export type FoundingSlots = { taken: number; cap: number; remaining: number };
 
 export type PlanFeature = {
   id: string;
