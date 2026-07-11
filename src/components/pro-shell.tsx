@@ -25,6 +25,7 @@ import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
 import { Logo } from "@/components/svg";
+import { phIdentify, phReset } from "@/lib/posthog";
 
 export type ProRow = {
   id: string;
@@ -71,6 +72,7 @@ export function useProGuard() {
       }
       setProId(data.id);
       setPro(data as ProRow);
+      phIdentify(user.id, { role: "pro", pro_id: data.id, email: user.email ?? undefined });
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") navigate({ to: "/login" });
@@ -289,6 +291,7 @@ export function ProShell({
 
   async function signOut() {
     await supabase.auth.signOut();
+    phReset();
     navigate({ to: "/" });
   }
 

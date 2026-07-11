@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "../lib/i18n";
 import { getLocaleServerFn } from "../lib/i18n-server";
+import { initPosthog } from "../lib/posthog";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { locale } = Route.useLoaderData();
+  useEffect(() => {
+    initPosthog();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider initialLocale={locale}>

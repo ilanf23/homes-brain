@@ -7,6 +7,7 @@ import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 import { LanguageToggle, useT, type TKey } from "@/lib/i18n";
+import { phIdentify, phReset } from "@/lib/posthog";
 
 export type HomeownerRow = {
   id: string;
@@ -138,8 +139,15 @@ export function useHomeownerGuard() {
         navigate({ to: "/login" });
         return;
       }
-      await load();
+      const view = await load();
       if (cancelled) return;
+      if (view?.homeowner) {
+        phIdentify(userData.user.id, {
+          role: "homeowner",
+          homeowner_id: view.homeowner.id,
+          email: userData.user.email ?? undefined,
+        });
+      }
       setLoading(false);
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -193,6 +201,7 @@ export function HomeShell({
 
   async function signOut() {
     await supabase.auth.signOut();
+    phReset();
     navigate({ to: "/" });
   }
 

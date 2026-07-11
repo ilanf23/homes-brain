@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
+import { phIdentify } from "@/lib/posthog";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Signing you in - HomesBrain" }] }),
@@ -37,6 +38,8 @@ function AuthCallback() {
         navigate({ to: "/login", search });
         return;
       }
+
+      phIdentify(user.id, { email: user.email ?? undefined });
 
       // If Google signup path stashed pro-signup intent, create the pros row.
       let pending: {
