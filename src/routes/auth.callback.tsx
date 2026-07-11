@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
+import { phIdentify } from "@/lib/posthog";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Signing you in - HomesBrain" }] }),
