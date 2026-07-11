@@ -274,7 +274,7 @@ function MakeItLast() {
       {/* Closing CTA. Extra bottom padding on mobile so the sticky bar never covers it. */}
       <section className="border-t border-line bg-soft pb-28 min-[880px]:pb-0">
         <div className="mx-auto max-w-3xl px-5 py-20 text-center">
-          <Eyebrow accent="coral">Start free</Eyebrow>
+          <Eyebrow accent="coral">Get my record</Eyebrow>
           <h2 className="mt-3 text-3xl sm:text-4xl tracking-tight text-ink">
             Every home remembers.
           </h2>
@@ -284,7 +284,7 @@ function MakeItLast() {
           <div className="mt-8 flex justify-center">
             <Link to="/home/signup">
               <Btn variant="coral" size="lg">
-                Start your free record
+                Get my record
               </Btn>
             </Link>
           </div>
