@@ -367,12 +367,12 @@ export function MarketingShell({
             style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
           >
             <Link
-              to="/home/signup"
+              to={primaryCta.to}
               onClick={() => setMenuOpen(false)}
               className="block w-full"
             >
-              <Btn variant="coral" size="lg" className="w-full">
-                Get my record
+              <Btn variant={primaryCta.variant} size="lg" className="w-full">
+                {primaryCta.label}
               </Btn>
             </Link>
           </div>
