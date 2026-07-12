@@ -739,16 +739,13 @@ function NewJob() {
     }
     setFullBusy(false);
 
-    // Match by name against existing customers (case-insensitive, whole-string).
-    const nm = (extract.customer_name ?? "").trim().toLowerCase();
-    const match = nm ? existing.find((c) => c.name.trim().toLowerCase() === nm) : undefined;
+    // The AI-extracted name always wins: even if a customer with a different
+    // name lives at the same address, we treat this as a new customer so the
+    // pro can pick who they actually served rather than being auto-merged.
+    const match = undefined as CustomerOpt | undefined;
 
-    const customerLabel = match
-      ? match.name
-      : (extract.customer_name?.trim() || null);
-    const addressLabel = match
-      ? (extract.address?.trim() || match.homes?.address || null)
-      : (extract.address?.trim() || null);
+    const customerLabel = extract.customer_name?.trim() || null;
+    const addressLabel = extract.address?.trim() || null;
     const contactBits = [extract.customer_phone, extract.customer_email].filter(Boolean) as string[];
     const equipmentBits = [extract.type, extract.make, extract.model].filter(Boolean) as string[];
 
@@ -786,12 +783,10 @@ function NewJob() {
     // build itself in real time before landing on Review.
     const applyStep = (key: string) => {
       if (key === "customer") {
-        if (match) {
-          setSelectedCustomerId(match.id);
-        } else {
-          setSelectedCustomerId("");
-          setNewCustomer((prev) => ({ ...prev, name: extract.customer_name ?? "" }));
-        }
+        setSelectedCustomerId("");
+        const _name = extract.customer_name ?? "";
+        setNewCustomer((prev) => ({ ...prev, name: _name }));
+        if (_name) setQuery(_name);
       } else if (key === "address") {
         const addr = match
           ? (extract.address?.trim() || match.homes?.address || "")
@@ -826,11 +821,9 @@ function NewJob() {
       if (i >= steps.length) {
         setTimeout(() => {
           setFullReveal(null);
-          // Land on the first slide that visibly shows the AI's work so the pro
-          // sees the name/address already filled in. For an existing match the
-          // customer + address are on file, so jump to the work slide; for a
-          // new customer, go to the location slide (customer card + address).
-          setStage(match ? "work" : "location");
+          // Stay on the customer slide - the pro sees the AI-picked name in
+          // the search box with the "Add ..." tile at the top and clicks
+          // through the remaining pre-filled slides themselves.
         }, 420);
         return;
       }
