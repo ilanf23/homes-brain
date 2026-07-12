@@ -821,11 +821,9 @@ function NewJob() {
       if (i >= steps.length) {
         setTimeout(() => {
           setFullReveal(null);
-          // Land on the first slide that visibly shows the AI's work so the pro
-          // sees the name/address already filled in. For an existing match the
-          // customer + address are on file, so jump to the work slide; for a
-          // new customer, go to the location slide (customer card + address).
-          setStage(match ? "work" : "location");
+          // Stay on the customer slide - the pro sees the AI-picked name in
+          // the search box with the "Add ..." tile at the top and clicks
+          // through the remaining pre-filled slides themselves.
         }, 420);
         return;
       }
