@@ -1086,7 +1086,7 @@ function HowItWorks() {
           </div>
           <div className="reveal rd-2 h-full">
             <Card lift className="h-full text-center py-10">
-              <Pill accent="indigo">For homeowners</Pill>
+              <Pill accent="coral">For homeowners</Pill>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight font-sans font-extrabold">
                 Your home, finally remembered.
               </h3>
