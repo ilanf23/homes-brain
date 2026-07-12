@@ -44,20 +44,20 @@ function GoogleGlyph() {
 
 function Landing() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
-      {/* Hero: pro first, with voice phone */}
+    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "teal" }}>
+      {/* Hero: callback led */}
       <section className="mx-auto max-w-6xl px-5 pt-12 sm:pt-16 pb-14">
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
           <div className="text-center lg:text-left">
             <div className="eyebrow text-teal">For pros in St. Johns County</div>
             <h1 className={`${H_SANS} mt-4 text-4xl sm:text-6xl leading-[1.05]`}>
-              Get more Google reviews.
+              Never lose a customer
               <br />
-              <span className="text-teal">Automatically. Free.</span>
+              <span className="text-teal">you already earned.</span>
             </h1>
             <p className="mt-5 max-w-xl mx-auto lg:mx-0 text-lg text-muted">
-              Log a job in 30 seconds. We ask your customer for the review, then tell you when
-              it is time to go back.
+              HomesBrain tells you when each past customer is due and hands you the name to call.
+              Your callback list builds itself.
             </p>
             <div className="mt-8 flex justify-center lg:justify-start">
               <Link to="/pro/signup" className="w-full sm:w-auto">
@@ -67,18 +67,21 @@ function Landing() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-muted">
-              No card. No password. Replaces your $75 to $599 a month review tool.
+              No card. No password. Free to start.
             </p>
           </div>
 
-          {/* Voice phone */}
+          {/* Callback pipeline phone */}
           <div className="order-first lg:order-last">
-            <VoicePhone />
+            <PipelinePhone />
           </div>
         </div>
 
-        {/* Proof card */}
-        <div className="mt-14 mx-auto max-w-md rounded-[22px] border border-line bg-paper p-6 shadow-[0_20px_50px_-30px_rgba(22,22,15,0.35)]">
+        {/* Day-one proof: reviews */}
+        <div className="mt-14 mx-auto max-w-md text-center">
+          <div className="eyebrow text-teal">And it pays you on day one</div>
+        </div>
+        <div className="mt-4 mx-auto max-w-md rounded-[22px] border border-line bg-paper p-6 shadow-[0_20px_50px_-30px_rgba(22,22,15,0.35)]">
           <Stars />
           <p className="mt-3 text-[16px] text-ink leading-snug">
             "Fast, honest, cleaned up after himself. Best plumber in Ponte Vedra."
@@ -88,21 +91,11 @@ function Landing() {
             New Google review, posted for you.
           </div>
         </div>
-
-        {/* Callback chip */}
-        <div className="mt-5 mx-auto max-w-md flex items-center gap-3 rounded-2xl bg-teal/10 border border-teal/20 px-4 py-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal text-white font-extrabold">
-            K
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="text-[14px] font-bold text-ink">Karen, water softener due</div>
-            <div className="text-[12px] text-muted">Serviced 6 months ago</div>
-          </div>
-          <span className="rounded-full bg-teal px-3.5 py-1.5 text-[12px] font-bold text-white">
-            Call
-          </span>
-        </div>
+        <p className="mt-4 mx-auto max-w-md text-center text-sm text-muted">
+          Every job asks your customer for the Google review, automatically. Free.
+        </p>
       </section>
+
 
       {/* HomesBrain AI: voice in, record out */}
       <section className="border-t border-line py-16 sm:py-20">
