@@ -107,15 +107,30 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
 
 export function MarketingShell({
   children,
-  mobileCta = { label: "Get my record", to: "/home/signup", variant: "coral" as const },
+  mobileCta,
 }: {
   children: ReactNode;
-  /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide. */
-  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" } | null;
+  /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide.
+     If omitted, the shell falls back to the persistent primary CTA which
+     is teal (Claim your profile) on pro-oriented routes and coral
+     (Get my record) on homeowner-oriented routes. */
+  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" | "teal" } | null;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  /* The single persistent primary CTA, shown in the desktop header and the
+     mobile overlay pinned bottom. Pro-first by default; homeowner routes
+     get the homeowner CTA. */
+  const primaryCta: { label: string; to: string; variant: "coral" | "teal" } =
+    isHomeownerRoute(pathname)
+      ? { label: "Get my record", to: "/home/signup", variant: "coral" }
+      : { label: "Claim your profile", to: "/pro/signup", variant: "teal" };
+
+  const resolvedMobileCta =
+    mobileCta === undefined ? { ...primaryCta } : mobileCta;
+
 
   // Close the menu on navigation and keep the page from scrolling behind it.
   useEffect(() => setMenuOpen(false), [pathname]);
