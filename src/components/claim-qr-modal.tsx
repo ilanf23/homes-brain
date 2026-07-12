@@ -83,7 +83,7 @@ export function ClaimQRModal({
       role="dialog"
       aria-modal="true"
       aria-label="Scan to claim your home record"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4 anim-fade-up"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/70 p-4 anim-fade-up"
       onClick={onClose}
     >
       <div
