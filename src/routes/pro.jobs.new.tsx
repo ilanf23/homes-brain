@@ -950,14 +950,15 @@ function NewJob() {
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
     const hidden = Array.from(hiddenFields).filter((k) => presentKeys.has(k));
 
-    const tempUrl = buildRecordUrl("pending");
-    // Only reference hidden_fields when the pro actually excluded a row, so a
-    // normal send never touches the new column before the migration syncs.
+    // Persist the record without pre-stamping sent_* timestamps. A record is
+    // "sent" only when invite-claim actually delivered the email; SMS is not
+    // live yet, so sent_sms_at stays null.
+    const publicUrl = buildRecordUrl("pending");
     const recordPayload = {
       job_id: job!.id,
-      public_url: tempUrl,
-      sent_sms_at: new Date().toISOString(),
-      sent_email_at: new Date().toISOString(),
+      public_url: publicUrl,
+      sent_sms_at: null,
+      sent_email_at: null,
       ...(hidden.length ? { hidden_fields: hidden } : {}),
     };
     const { data: rec } = await supabase
@@ -967,46 +968,68 @@ function NewJob() {
       .insert(recordPayload as never)
       .select("id")
       .single();
-    const finalUrl = buildRecordUrl(rec!.id);
-    await supabase.from("records").update({ public_url: finalUrl }).eq("id", rec!.id);
-    setRecordUrl(finalUrl);
     setSentCustomerId(customerId);
     setSentRecordId(rec!.id);
 
-    if (toContact) {
-      const body = `${proName}: Your service record is ready. ${finalUrl} (Reply STOP to opt out.)`;
-      if (newCustomer.phone || existing.find((x) => x.id === customerId)?.phone) {
-        await mockSend({ channel: "sms", to: toContact, body, kind: "record" });
-      }
-      const emailAddr = newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
-      if (emailAddr) {
-        const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+    const emailAddr =
+      newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
+    const phoneAddr =
+      newCustomer.phone || existing.find((x) => x.id === customerId)?.phone || "";
+    setSentTo({ name: toName, email: emailAddr || null, phone: phoneAddr || null });
+
+    let delivered = false;
+    if (emailAddr) {
+      const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+        body: {
+          customer_id: customerId,
+          pro_id: proId,
+          origin: window.location.origin,
+          record_id: rec!.id,
+        },
+      });
+      const respOk =
+        !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+      if (respOk) {
+        delivered = true;
+        await supabase
+          .from("records")
+          .update({ sent_email_at: new Date().toISOString() })
+          .eq("id", rec!.id);
+        // Mint a real single-use claim URL for the "Copy link" button. If
+        // this fails we simply hide the button - never fall back to /home.
+        const { data: qr } = await supabase.functions.invoke("claim-qr", {
           body: {
             customer_id: customerId,
             pro_id: proId,
-            origin: window.location.origin,
             record_id: rec!.id,
+            origin: window.location.origin,
           },
         });
-        if (sendErr || (sendResp && sendResp.ok === false)) {
-          const code = (sendResp && sendResp.code) || sendErr?.message || "send_failed";
-          await mockSend({
-            channel: "email",
-            to: emailAddr,
-            body: `Subject: Your service record from ${proName}\n\n(Fallback preview. Real send failed: ${code})\n\nHi ${toName},\n\nYour service record is ready: ${finalUrl}\n\nThanks,\n${proName}`,
-            kind: "record",
-          });
-          setToast(`Email preview saved (${code})`);
-          setTimeout(() => setToast(null), 3500);
-        }
+        const qrOk =
+          !!qr && (qr as { ok?: boolean; claim_url?: string }).ok === true &&
+          typeof (qr as { claim_url?: string }).claim_url === "string";
+        if (qrOk) setClaimUrl((qr as { claim_url: string }).claim_url);
+      } else {
+        const code =
+          (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed";
+        setSendErrorCode(code);
       }
-      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec!.id });
     }
 
-    if (askReview && toContact) {
-      const body = `${proName}: Thanks for choosing us! Mind leaving a Google review? It really helps. (Reply STOP to opt out.)`;
-      await mockSend({ channel: "sms", to: toContact, body, kind: "review_request" });
-      await logEvent(`pro:${proId}`, "review_requested", { customer_id: customerId });
+    if (delivered) {
+      setDeliveryState("sent");
+      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec!.id });
+      // Google review ask: only fires on a real delivery, so the Reviews page
+      // count reflects reality. No mock SMS - texting is not live yet.
+      if (askReview) {
+        await logEvent(`pro:${proId}`, "review_requested", { customer_id: customerId });
+      }
+    } else if (emailAddr) {
+      setDeliveryState("send_failed");
+    } else if (phoneAddr) {
+      setDeliveryState("phone_only");
+    } else {
+      setDeliveryState("no_contact");
     }
 
     if (existing.length === 0) {
@@ -1015,7 +1038,71 @@ function NewJob() {
 
     setSubmitting(false);
     setStage("done");
-    setToast("Record sent");
+    if (delivered) {
+      setToast(`Sent to ${emailAddr}`);
+    } else {
+      setToast("Job saved");
+    }
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  /* When the pro adds an email on the done screen for a phone-only customer,
+     persist it, then run the same real send path. */
+  async function retryWithEmail() {
+    const email = addEmail.trim();
+    if (!email || !sentCustomerId || !sentRecordId || !proId) return;
+    setRetrying(true);
+    const { error: updErr } = await supabase
+      .from("customers")
+      .update({ email })
+      .eq("id", sentCustomerId);
+    if (updErr) {
+      setRetrying(false);
+      setToast("Could not save that email");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+      body: {
+        customer_id: sentCustomerId,
+        pro_id: proId,
+        origin: window.location.origin,
+        record_id: sentRecordId,
+      },
+    });
+    const respOk = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+    if (!respOk) {
+      const code =
+        (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed";
+      setSendErrorCode(code);
+      setDeliveryState("send_failed");
+      setRetrying(false);
+      return;
+    }
+    await supabase
+      .from("records")
+      .update({ sent_email_at: new Date().toISOString() })
+      .eq("id", sentRecordId);
+    const { data: qr } = await supabase.functions.invoke("claim-qr", {
+      body: {
+        customer_id: sentCustomerId,
+        pro_id: proId,
+        record_id: sentRecordId,
+        origin: window.location.origin,
+      },
+    });
+    const qrOk =
+      !!qr && (qr as { ok?: boolean; claim_url?: string }).ok === true &&
+      typeof (qr as { claim_url?: string }).claim_url === "string";
+    if (qrOk) setClaimUrl((qr as { claim_url: string }).claim_url);
+    setSentTo((prev) => ({ ...prev, email }));
+    setDeliveryState("sent");
+    await logEvent(`pro:${proId}`, "record_sent", { record_id: sentRecordId });
+    if (askReview) {
+      await logEvent(`pro:${proId}`, "review_requested", { customer_id: sentCustomerId });
+    }
+    setRetrying(false);
+    setToast(`Sent to ${email}`);
     setTimeout(() => setToast(null), 3500);
   }
 
