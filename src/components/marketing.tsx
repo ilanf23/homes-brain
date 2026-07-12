@@ -371,7 +371,7 @@ export function MarketingShell({
       )}
 
 
-      <main className="flex-1">{children}</main>
+      <main className={`flex-1 ${resolvedMobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}>{children}</main>
 
       {/* Fixed thumb-reachable CTA on mobile. Footer padding below makes room for it. */}
       {resolvedMobileCta && !menuOpen && (

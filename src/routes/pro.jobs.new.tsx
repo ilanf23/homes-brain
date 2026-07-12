@@ -680,7 +680,10 @@ function NewJob() {
       setLocAddress("");
       setResolved(null);
     }
-    setStage("location");
+    // Existing customer: address is already on file. Skip the standalone
+    // "location" step and drop straight into the work capture. The pro can
+    // still back-edit the address from Review if it's a different property.
+    setStage("work");
   }
 
   function startNewCustomer(name: string) {
@@ -1272,7 +1275,26 @@ function NewJob() {
               <span aria-hidden>&larr;</span>
               Back to dashboard
             </Link>
-            <StepBar steps={STAGE_LABELS} current={STAGES.indexOf(stage)} accent="indigo" />
+            {(() => {
+              // Existing-customer flow skips the standalone location step, so
+              // the step bar honestly reflects a 3-tap path (Customer → Work →
+              // Send). New customers still see 4 steps because address entry
+              // is essential up front.
+              const flowStages: Stage[] = selectedCustomerId
+                ? ["customer", "work", "review"]
+                : ["customer", "location", "work", "review"];
+              const flowLabels = selectedCustomerId
+                ? ["Customer", "The work", "Send"]
+                : STAGE_LABELS;
+              const idx = flowStages.indexOf(stage);
+              return (
+                <StepBar
+                  steps={flowLabels}
+                  current={idx < 0 ? 0 : idx}
+                  accent="indigo"
+                />
+              );
+            })()}
             <h1 className="mt-6 text-2xl tracking-tight text-center">
               {stage === "customer"
                 ? "Who is this for?"
@@ -1826,7 +1848,10 @@ function NewJob() {
                 )}
 
                 <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStage("location")}>
+                  <Btn
+                    variant="secondary"
+                    onClick={() => setStage(selectedCustomerId ? "customer" : "location")}
+                  >
                     Back
                   </Btn>
                   <Btn
