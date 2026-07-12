@@ -422,6 +422,9 @@ function Landing() {
               <p className="mt-4 text-[15px] sm:text-base text-white/75 max-w-lg">
                 When the work is due, they rebook you, and you get the ping. The callbacks stack up.
               </p>
+              <p className="mt-3 text-[15px] sm:text-base text-white/75 max-w-lg">
+                Log a job by voice in 30 seconds. Just talk, we fill it in.
+              </p>
 
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <Link to="/pro/signup" className="block sm:inline-block">
