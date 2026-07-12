@@ -43,7 +43,7 @@ function GoogleGlyph() {
 
 function Landing() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "teal" }}>
+    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero: pro first */}
       <section className="mx-auto max-w-3xl px-5 pt-12 sm:pt-16 pb-14 text-center">
         <div className="eyebrow text-teal">For pros in St. Johns County</div>
