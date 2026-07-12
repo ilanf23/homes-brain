@@ -334,3 +334,43 @@ export function formatDate(iso?: string | null) {
     day: "numeric",
   });
 }
+
+/** Turn a snake/kebab/space string into Title Case. */
+function toTitleCase(s: string): string {
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0]?.toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+/**
+ * Clean, human, title-cased headline for a service record.
+ * Prefers "<Equipment type> service" when equipment exists; otherwise
+ * a trimmed, title-cased version of the pro's raw note.
+ */
+export function recordTitle(
+  whatDone: string | null | undefined,
+  equipmentType?: string | null,
+): string {
+  const eq = equipmentType?.trim();
+  if (eq) return `${toTitleCase(eq)} service`;
+  const raw = (whatDone ?? "").trim();
+  if (!raw) return "Service record";
+  const cleaned = raw.replace(/\s+/g, " ");
+  const short = cleaned.length > 80 ? cleaned.slice(0, 77).trimEnd() + "…" : cleaned;
+  // Sentence-ish title case: capitalize each word but preserve common
+  // small words lowercase (except first).
+  const small = new Set(["a", "an", "and", "of", "the", "for", "to", "on", "in", "with"]);
+  const words = short.split(" ").filter(Boolean);
+  return words
+    .map((w, i) => {
+      const lower = w.toLowerCase();
+      if (i > 0 && small.has(lower)) return lower;
+      return lower[0]?.toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
