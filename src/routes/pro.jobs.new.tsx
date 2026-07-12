@@ -680,7 +680,10 @@ function NewJob() {
       setLocAddress("");
       setResolved(null);
     }
-    setStage("location");
+    // Existing customer: address is already on file. Skip the standalone
+    // "location" step and drop straight into the work capture. The pro can
+    // still back-edit the address from Review if it's a different property.
+    setStage("work");
   }
 
   function startNewCustomer(name: string) {
