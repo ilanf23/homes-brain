@@ -270,18 +270,24 @@ export function HomeShell({
 
       {/* Content column (with mobile header + nav) */}
       <div className="flex-1 min-w-0">
-        <header className="md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
-          <div className="px-4 h-14 flex items-center justify-between">
-            <Link to="/" className="flex items-center">
+        <header
+          className="md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="px-3 h-14 flex items-center justify-between gap-2 min-w-0">
+            <Link to="/" className="flex items-center shrink-0">
               <Logo size={24} />
             </Link>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 shrink-0">
               <Link to="/home/add">
                 <Btn variant="indigo" size="sm">
-                  <Plus size={14} /> {t("nav.add")}
+                  <Plus size={14} />
+                  <span className="hidden xs:inline">{t("nav.add")}</span>
                 </Btn>
               </Link>
-              <Pill accent="indigo">{t("chrome.homeowner")}</Pill>
+              <span className="hidden sm:inline-flex">
+                <Pill accent="indigo">{t("chrome.homeowner")}</Pill>
+              </span>
               <LanguageToggle />
               <ThemeToggle />
               <button
