@@ -79,8 +79,9 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
     links: [
+      { to: "/for-pros", label: "For pros", accent: "teal" },
       { to: "/make-it-last", label: "Make it last", accent: "coral" },
-      { to: "/pros", label: "Find a pro", accent: "teal" },
+      { to: "/pros", label: "Find a pro" },
       { to: "/how-it-works", label: "How it works" },
     ],
   },
@@ -88,7 +89,6 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
     title: "Company",
     links: [
       { to: "/about", label: "About" },
-      { to: "/for-pros", label: "For pros" },
       { to: "/for-homeowners", label: "For homeowners" },
       { to: "/partners", label: "Partners" },
     ],
