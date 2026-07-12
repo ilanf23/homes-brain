@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
-import { formatDate, tradeLabel } from "@/lib/hb";
+import { formatDate, recordTitle, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { Celebration, consumeCelebration } from "@/components/celebration";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
