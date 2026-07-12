@@ -783,12 +783,10 @@ function NewJob() {
     // build itself in real time before landing on Review.
     const applyStep = (key: string) => {
       if (key === "customer") {
-        if (match) {
-          setSelectedCustomerId(match.id);
-        } else {
-          setSelectedCustomerId("");
-          setNewCustomer((prev) => ({ ...prev, name: extract.customer_name ?? "" }));
-        }
+        setSelectedCustomerId("");
+        const _name = extract.customer_name ?? "";
+        setNewCustomer((prev) => ({ ...prev, name: _name }));
+        if (_name) setQuery(_name);
       } else if (key === "address") {
         const addr = match
           ? (extract.address?.trim() || match.homes?.address || "")
