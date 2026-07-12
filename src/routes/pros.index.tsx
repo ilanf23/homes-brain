@@ -292,7 +292,7 @@ function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
               fontWeight="600"
               fill={isSelected ? "var(--tealdark, #0a5f5c)" : "var(--muted, #6b6862)"}
             >
-              {p.label ?? key}
+              {key}
             </text>
           </g>
         );
