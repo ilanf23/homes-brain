@@ -101,22 +101,26 @@ const HIDDEN_FAILURES = [
   {
     tag: "Water heater",
     Icon: WaterHeaterIcon,
-    body: "Fails between year 8 and 12. When it lets go, it empties into the garage or the utility closet.",
-    truth: "Your record knows its age and warns you before it goes.",
+    stat: "Year 8+",
+    line: "When it lets go, it empties into your garage.",
+    truth: "Your record warns you before it goes.",
   },
   {
     tag: "Washing-machine hose",
     Icon: HoseIcon,
-    body: "A $15 rubber part. When it bursts it releases up to 650 gallons an hour into the laundry room.",
-    truth: "Your record knows when the hose is due for replacement.",
+    stat: "650 gal/hr",
+    line: "A $15 part, one spike from bursting.",
+    truth: "Your record knows when it is due.",
   },
   {
     tag: "AC drain line",
     Icon: AcDrainIcon,
-    body: "Clogs quietly in Florida humidity. The overflow soaks the ceiling below the air handler.",
-    truth: "Your record reminds you to flush it every season.",
+    stat: "Every season",
+    line: "Clogs in Florida humidity, soaks the ceiling.",
+    truth: "Your record reminds you to flush it.",
   },
 ];
+
 
 const FAQ = [
   { q: "Is it really free for homeowners?", a: "Yes. Free forever, owned for life." },
