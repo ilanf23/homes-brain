@@ -76,8 +76,8 @@ export function SlideOver({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-ink/30" onClick={onClose} />
+    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="absolute inset-0 bg-ink/60" onClick={onClose} />
       <div className="absolute right-0 top-0 h-full w-full max-w-md bg-paper border-l border-line shadow-[0_0_48px_-12px_rgba(22,22,15,0.4)] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-line shrink-0">
           <div className="eyebrow text-indigo">{title}</div>
