@@ -200,7 +200,7 @@ const LOG_WAYS = [
 ];
 
 const FREE_FEATURES = [
-  "30-second job logging",
+  "30 second job logging",
   "Branded record sent to the homeowner",
   "Automatic Google review requests",
   "Appliance summary and recall check",
@@ -209,8 +209,8 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   "Automated service reminders",
-  "One-tap rebooking",
-  "Recall-driven lead lists",
+  "One tap rebooking",
+  "Recall driven lead lists",
   "New owner leads at resale",
   "Analytics on records, reviews, rebooks",
 ];
@@ -225,7 +225,7 @@ const INTEGRATIONS = [
   {
     emoji: "🧾",
     title: "Already using QuickBooks, Jobber, or Housecall Pro?",
-    body: "Keep them. HomesBrain sits on top as the homeowner-owned record. Direct sync is coming later.",
+    body: "Keep them. HomesBrain sits on top as the record the homeowner owns. Direct sync is coming later.",
   },
 ];
 
@@ -532,7 +532,7 @@ function ForPros() {
           ))}
         </div>
         <p className="mx-auto mt-8 max-w-md text-center text-[15px] text-muted">
-          An invoice is not a record. We are the homeowner-owned record that sits on top of whatever
+          An invoice is not a record. We are the record the homeowner owns, sitting on top of whatever
           you already use.
         </p>
       </section>
