@@ -1095,7 +1095,7 @@ function HowItWorks() {
               </p>
               <div className="mt-6">
                 <Link to="/for-homeowners">
-                  <Btn variant="indigo" size="lg">
+                  <Btn variant="coral" size="lg">
                     I own a home, see how
                   </Btn>
                 </Link>
