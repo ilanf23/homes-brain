@@ -277,12 +277,30 @@ function NewJob() {
   // Google review ask is optional.
   const [askReview, setAskReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [recordUrl, setRecordUrl] = useState<string | null>(null);
+  // Real single-use claim URL minted via claim-qr on a successful email send.
+  // Only populated when the record actually reached the customer's inbox;
+  // used by the done-screen "Copy link" button.
+  const [claimUrl, setClaimUrl] = useState<string | null>(null);
   // Captured on submit so the "Show claim QR" button on the done screen can
   // open ClaimQRModal for the same customer + record we just sent.
   const [sentCustomerId, setSentCustomerId] = useState<string | null>(null);
   const [sentRecordId, setSentRecordId] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  // Honest post-send state driving the done screen. "sent" only when the email
+  // actually went out; "phone_only" / "no_contact" surface the truth instead
+  // of the old "inbox and texts" lie. SMS delivery is not live yet.
+  type DeliveryState = "sent" | "send_failed" | "phone_only" | "no_contact";
+  const [deliveryState, setDeliveryState] = useState<DeliveryState>("no_contact");
+  const [sentTo, setSentTo] = useState<{ name: string; email: string | null; phone: string | null }>({
+    name: "",
+    email: null,
+    phone: null,
+  });
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
+  // Inline "add email" affordance on the done screen when the customer has a
+  // phone but no email; lets the pro fix the missing contact and actually send.
+  const [addEmail, setAddEmail] = useState("");
+  const [retrying, setRetrying] = useState(false);
   // Optional "bill this customer" amount entered on the review slide. String so
   // the input can be empty; parsed to a number at submit time. When >0 we also
   // create an open invoice so the homeowner can pay it via the existing flow.
