@@ -277,11 +277,6 @@ function Landing() {
             <h2 className={`${H_SANS} mt-4 text-3xl sm:text-4xl leading-[1.1] max-w-2xl mx-auto`}>
               It always breaks without warning. Yours won't.
             </h2>
-            <p className="mt-4 text-[16px] text-muted max-w-2xl mx-auto">
-              The water heater quietly past year 8. The washing-machine hose one spike from
-              letting go. The AC drain line clogging in Florida humidity. Nobody was watching
-              them. Now your home is.
-            </p>
           </div>
 
           <div className="reveal rd-1 mt-10 grid gap-4 md:grid-cols-3">
@@ -290,13 +285,18 @@ function Landing() {
                 key={f.tag}
                 className="rounded-[22px] border border-line bg-paper p-6 flex flex-col"
               >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigobg text-indigo">
-                  <f.Icon className="h-6 w-6" />
-                </span>
-                <div className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-amberbg px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-amberdark">
-                  {f.tag}
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigobg text-indigo">
+                    <f.Icon className="h-6 w-6" />
+                  </span>
+                  <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amberbg px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-amberdark">
+                    {f.tag}
+                  </div>
                 </div>
-                <p className="mt-3 text-[15px] text-ink leading-relaxed">{f.body}</p>
+                <div className="mt-5 text-3xl sm:text-4xl font-extrabold text-indigo leading-none tnum">
+                  {f.stat}
+                </div>
+                <p className="mt-3 text-[15px] text-ink leading-snug">{f.line}</p>
                 <div className="mt-5 flex items-start gap-2 rounded-xl bg-indigobg px-3 py-3">
                   <ShieldCheck size={16} animate={false} className="mt-0.5 shrink-0 text-indigo" />
                   <p className="text-[13px] font-semibold text-indigodark leading-snug">{f.truth}</p>
@@ -305,13 +305,17 @@ function Landing() {
             ))}
           </div>
 
-          <p className="reveal rd-2 mt-10 text-center text-[15px] sm:text-base text-muted max-w-2xl mx-auto">
-            The average water-damage claim runs over{" "}
-            <span className="font-bold text-ink tnum">$15,000</span> — and almost all of it was
-            preventable.
-          </p>
+          <div className="reveal rd-2 mt-16 text-center">
+            <div className="text-4xl sm:text-5xl font-extrabold text-ink leading-none tnum">
+              $15,000
+            </div>
+            <p className="mt-3 text-base sm:text-lg text-muted max-w-md mx-auto">
+              the average water damage claim. Almost all preventable.
+            </p>
+          </div>
         </InView>
       </section>
+
 
       {/* How it works */}
       <section className="py-20 sm:py-24">
