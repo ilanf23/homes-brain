@@ -1275,7 +1275,26 @@ function NewJob() {
               <span aria-hidden>&larr;</span>
               Back to dashboard
             </Link>
-            <StepBar steps={STAGE_LABELS} current={STAGES.indexOf(stage)} accent="indigo" />
+            {(() => {
+              // Existing-customer flow skips the standalone location step, so
+              // the step bar honestly reflects a 3-tap path (Customer → Work →
+              // Send). New customers still see 4 steps because address entry
+              // is essential up front.
+              const flowStages: Stage[] = selectedCustomerId
+                ? ["customer", "work", "review"]
+                : ["customer", "location", "work", "review"];
+              const flowLabels = selectedCustomerId
+                ? ["Customer", "The work", "Send"]
+                : STAGE_LABELS;
+              const idx = flowStages.indexOf(stage);
+              return (
+                <StepBar
+                  steps={flowLabels}
+                  current={idx < 0 ? 0 : idx}
+                  accent="indigo"
+                />
+              );
+            })()}
             <h1 className="mt-6 text-2xl tracking-tight text-center">
               {stage === "customer"
                 ? "Who is this for?"
