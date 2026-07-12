@@ -312,6 +312,103 @@ function ForPros() {
         </p>
       </section>
 
+      {/* Just talk: voice in, record out */}
+      <section className={`${CONTAINER} border-t border-line py-16`}>
+        <div className="text-center">
+          <div className="eyebrow text-indigo">HomesBrain AI · free for every pro</div>
+          <h2 className={`${H_SANS} mt-4 text-3xl sm:text-[34px] leading-[1.15]`}>
+            Just talk. It fills itself in.
+          </h2>
+          <p className="mt-4 mx-auto max-w-xl text-[15px] sm:text-base text-muted">
+            You never type. Talk through the job, HomesBrain AI writes the record. Faster than your notebook.
+          </p>
+        </div>
+
+        <div className="mt-10 rounded-[24px] border border-line bg-paper p-6 sm:p-8">
+          <div className="grid items-center gap-6 sm:gap-4 sm:grid-cols-[1fr_auto_1fr]">
+            {/* Voice */}
+            <div className="flex flex-col items-center text-center">
+              <div className="relative flex h-24 w-24 items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-indigo/20 animate-ping" aria-hidden="true" />
+                <span className="absolute inset-2 rounded-full bg-indigo/15" aria-hidden="true" />
+                <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-indigo text-white shadow-lg">
+                  <MicIcon size={26} />
+                </span>
+              </div>
+              <div className="mt-4 flex items-end gap-[3px] h-6" aria-hidden="true">
+                {[10, 18, 14, 22, 12, 20, 16, 24, 12, 18].map((h, i) => (
+                  <span
+                    key={i}
+                    className="w-[3px] rounded-full bg-indigo/70 animate-pulse"
+                    style={{ height: h, animationDelay: `${i * 90}ms`, animationDuration: "900ms" }}
+                  />
+                ))}
+              </div>
+              <div className="mt-4 eyebrow text-indigo">HomesBrain AI</div>
+              <p className="mt-2 max-w-[240px] text-[14px] italic text-ink">
+                "Swapped the water heater at the Patels. Bradford White, warranty to 2031."
+              </p>
+              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                10 seconds of talking
+              </div>
+            </div>
+
+            {/* Arrow */}
+            <div className="flex items-center justify-center text-indigo/60">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                className="rotate-90 sm:rotate-0"
+              >
+                <path
+                  d="M4 12h14m0 0-5-5m5 5-5 5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            {/* Record */}
+            <div className="rounded-2xl border border-line bg-soft p-5">
+              <div className="flex items-center justify-between">
+                <div className={`${H_SANS} text-base`}>Job record</div>
+                <span className="rounded-full bg-teal/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal">
+                  Done in 12 sec
+                </span>
+              </div>
+              <ul className="mt-4 space-y-2">
+                {[
+                  ["Customer", "The Patels"],
+                  ["Work", "Water heater swap"],
+                  ["Make", "Bradford White"],
+                  ["Warranty", "to 2031"],
+                ].map(([k, v], i) => (
+                  <li
+                    key={k}
+                    className={`anim-fade-up d-${i + 1} flex items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2.5`}
+                  >
+                    <Check className="text-teal" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{k}</span>
+                    <span className="ml-auto text-[13px] font-bold text-ink">{v}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-6 mx-auto max-w-xl text-center text-[15px] text-muted">
+          Keep your notebook. This is just faster, and it lands you the review and the rebook.
+        </p>
+      </section>
+
+
+
       {/* Logging a job */}
       <section className={`${CONTAINER} border-t border-line py-16`}>
         <SectionHeadC
