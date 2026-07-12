@@ -53,6 +53,19 @@ const NAV_LINKS = [
   { to: "/pros", label: "Find a pro" },
 ] as const;
 
+/* Homeowner-oriented routes get the coral homeowner CTA. Everything else
+   (including /, /for-pros, /how-it-works) gets the teal pro CTA. */
+function isHomeownerRoute(pathname: string): boolean {
+  if (pathname.startsWith("/home")) return true;
+  return (
+    pathname === "/for-homeowners" ||
+    pathname === "/make-it-last" ||
+    pathname.startsWith("/make-it-last/") ||
+    pathname === "/pros" ||
+    pathname.startsWith("/pros/")
+  );
+}
+
 
 type FooterLink = {
   to: string;
@@ -66,8 +79,9 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
     links: [
+      { to: "/for-pros", label: "For pros", accent: "teal" },
       { to: "/make-it-last", label: "Make it last", accent: "coral" },
-      { to: "/pros", label: "Find a pro", accent: "teal" },
+      { to: "/pros", label: "Find a pro" },
       { to: "/how-it-works", label: "How it works" },
     ],
   },
@@ -75,7 +89,6 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
     title: "Company",
     links: [
       { to: "/about", label: "About" },
-      { to: "/for-pros", label: "For pros" },
       { to: "/for-homeowners", label: "For homeowners" },
       { to: "/partners", label: "Partners" },
     ],
@@ -94,15 +107,30 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
 
 export function MarketingShell({
   children,
-  mobileCta = { label: "Get my record", to: "/home/signup", variant: "coral" as const },
+  mobileCta,
 }: {
   children: ReactNode;
-  /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide. */
-  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" } | null;
+  /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide.
+     If omitted, the shell falls back to the persistent primary CTA which
+     is teal (Claim your profile) on pro-oriented routes and coral
+     (Get my record) on homeowner-oriented routes. */
+  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" | "teal" } | null;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  /* The single persistent primary CTA, shown in the desktop header and the
+     mobile overlay pinned bottom. Pro-first by default; homeowner routes
+     get the homeowner CTA. */
+  const primaryCta: { label: string; to: string; variant: "coral" | "teal" } =
+    isHomeownerRoute(pathname)
+      ? { label: "Get my record", to: "/home/signup", variant: "coral" }
+      : { label: "Claim your profile", to: "/pro/signup", variant: "teal" };
+
+  const resolvedMobileCta =
+    mobileCta === undefined ? { ...primaryCta } : mobileCta;
+
 
   // Close the menu on navigation and keep the page from scrolling behind it.
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -159,15 +187,15 @@ export function MarketingShell({
           <nav aria-label="Main" className="hidden min-[880px]:flex items-center gap-1">
             {NAV_LINKS.map((l) => {
               const isMakeItLast = l.to === "/make-it-last";
-              const isFindPro = l.to === "/pros";
+              const isForPros = l.to === "/for-pros";
               const emphasis = isMakeItLast
                 ? "text-sm font-bold text-coral hover:text-coraldark transition-colors px-3 py-2 rounded-full"
-                : isFindPro
+                : isForPros
                   ? "text-sm font-bold text-teal hover:text-tealdark transition-colors px-3 py-2 rounded-full"
                   : "text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full";
               const activeClass = isMakeItLast
                 ? "text-coraldark"
-                : isFindPro
+                : isForPros
                   ? "text-tealdark"
                   : "text-ink";
               return (
@@ -183,7 +211,7 @@ export function MarketingShell({
             })}
           </nav>
 
-          {/* Desktop actions: one primary (coral), one quiet text link */}
+          {/* Desktop actions: one primary CTA (pathname-derived), one quiet log-in link */}
           <div className="hidden min-[880px]:flex items-center gap-3">
             <Link
               to="/login"
@@ -191,9 +219,9 @@ export function MarketingShell({
             >
               Log in
             </Link>
-            <Link to="/home/signup">
-              <Btn variant="coral" size="sm">
-                Get my record
+            <Link to={primaryCta.to}>
+              <Btn variant={primaryCta.variant} size="sm">
+                {primaryCta.label}
               </Btn>
             </Link>
           </div>
@@ -339,12 +367,12 @@ export function MarketingShell({
             style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
           >
             <Link
-              to="/home/signup"
+              to={primaryCta.to}
               onClick={() => setMenuOpen(false)}
               className="block w-full"
             >
-              <Btn variant="coral" size="lg" className="w-full">
-                Get my record
+              <Btn variant={primaryCta.variant} size="lg" className="w-full">
+                {primaryCta.label}
               </Btn>
             </Link>
           </div>
@@ -355,21 +383,21 @@ export function MarketingShell({
       <main className="flex-1">{children}</main>
 
       {/* Fixed thumb-reachable CTA on mobile. Footer padding below makes room for it. */}
-      {mobileCta && !menuOpen && (
+      {resolvedMobileCta && !menuOpen && (
         <div
           className="min-[880px]:hidden fixed bottom-0 inset-x-0 z-30 border-t border-line bg-background/92 backdrop-blur-md px-5 py-3"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <Link to={mobileCta.to} className="block">
-            <Btn variant={mobileCta.variant} size="lg" className="w-full">
-              {mobileCta.label}
+          <Link to={resolvedMobileCta.to} className="block">
+            <Btn variant={resolvedMobileCta.variant} size="lg" className="w-full">
+              {resolvedMobileCta.label}
             </Btn>
           </Link>
         </div>
       )}
 
       <footer
-        className={`border-t border-line bg-soft ${mobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
+        className={`border-t border-line bg-soft ${resolvedMobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
       >
         <div className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
 
