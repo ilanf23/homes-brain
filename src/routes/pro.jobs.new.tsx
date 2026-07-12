@@ -826,7 +826,8 @@ function NewJob() {
       if (i >= steps.length) {
         setTimeout(() => {
           setFullReveal(null);
-          setStage("review");
+          // Stay on the customer step so the pro clicks through and reviews
+          // each pre-filled section (location, work, review) themselves.
         }, 420);
         return;
       }
