@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { PlanLock } from "@/components/plan-lock";
+import { DEMO_SHORT } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/due")({
   head: () => ({ meta: [{ title: "Due for service - HomesBrain" }] }),
@@ -90,16 +91,7 @@ function DueForService() {
     );
   }
 
-  if (pro.plan !== "pro") {
-    return (
-      <ProShell pro={pro} active="due">
-        <PlanLock
-          title="Rebooking & retention"
-          description="Automated campaigns that bring past customers back before someone else gets the call. Included with Pro."
-        />
-      </ProShell>
-    );
-  }
+  const isPro = pro.plan === "pro";
 
 
   const byBucket = {
@@ -115,6 +107,34 @@ function DueForService() {
         title="Win the rebook"
         sub="Jobs with a next-service date. Nudge the homeowner before someone else gets the call."
       />
+
+      {!isPro && (
+        <Card className="anim-fade-up mb-4 border-indigo/30 bg-indigobg/40">
+          <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
+              <Sparkles size={16} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Eyebrow accent="indigo">Free vs Pro</Eyebrow>
+                <Pill accent="indigo">{DEMO_SHORT}</Pill>
+              </div>
+              <div className="mt-1 font-semibold text-ink">
+                Free: nudge them one by one. Pro: we work your whole book.
+              </div>
+              <p className="text-sm text-muted mt-0.5">
+                Upgrade for automated seasonal, overdue, and win-back outreach — hands-off.
+              </p>
+            </div>
+            <Link to="/pro/plan" className="shrink-0">
+              <Btn variant="primary" size="sm">
+                Automate rebooking
+              </Btn>
+            </Link>
+          </div>
+        </Card>
+      )}
+
 
       {jobs.length === 0 ? (
         <Card className="anim-fade-up text-center py-14">

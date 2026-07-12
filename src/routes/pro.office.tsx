@@ -319,30 +319,30 @@ function ProDashboard() {
 
 
 
+      <ActionQueue
+        proId={proId!}
+        proBusiness={pro.business}
+        dueJobs={dueQueue}
+        overdueInvoices={overdueInvoices}
+        staleHomes={staleHomes}
+        onInvoicePaid={(invoiceId) =>
+          setInvoices((prev) =>
+            prev.map((i) =>
+              i.id === invoiceId
+                ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
+                : i,
+            ),
+          )
+        }
+        onToast={setToast}
+      />
+
       {pro.plan === "pro" ? (
         <>
           <MoneyRow
             invoices={invoices}
             rebooksThisMonth={rebooksThisMonth}
             rebooksAllTime={rebooks.length}
-          />
-
-          <ActionQueue
-            proId={proId!}
-            proBusiness={pro.business}
-            dueJobs={dueQueue}
-            overdueInvoices={overdueInvoices}
-            staleHomes={staleHomes}
-            onInvoicePaid={(invoiceId) =>
-              setInvoices((prev) =>
-                prev.map((i) =>
-                  i.id === invoiceId
-                    ? { ...i, status: "paid" as const, paid_at: new Date().toISOString() }
-                    : i,
-                ),
-              )
-            }
-            onToast={setToast}
           />
 
           <CustomerMap pins={pins} geocodingCount={geocodingCount} />
@@ -354,8 +354,8 @@ function ProDashboard() {
             description="Revenue, paid invoices, and rebook value at a glance."
           />
           <PlanLockCompact
-            title="Smart action queue"
-            description="Rebook nudges for due jobs, overdue-invoice reminders, and follow-ups on unclaimed homes — all automated."
+            title="Automated rebooking & win-backs"
+            description="We work your whole book — seasonal, overdue, and win-back outreach, automatically."
           />
           <PlanLockCompact
             title="Customer map"

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, QrCode } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, formatPhone } from "@/lib/hb";
+import { formatDate, formatPhone, recordTitle } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 
@@ -106,7 +106,7 @@ function RecordDetail() {
       <div className="anim-fade-up flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
           <div className="eyebrow text-indigo">Record</div>
-          <h1 className="mt-1 text-3xl tracking-tight">{job?.what_done}</h1>
+          <h1 className="mt-1 text-3xl tracking-tight">{recordTitle(job?.what_done, job?.equipment?.type)}</h1>
           <div className="text-sm text-muted mt-1">
             {job?.customers?.name} · {job?.homes?.address}
           </div>
