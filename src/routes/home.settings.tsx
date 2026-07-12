@@ -22,7 +22,7 @@ import {
   SettingsNav,
   SettingsSection,
 } from "@/components/settings";
-import { clearSession } from "@/lib/session";
+
 
 export const Route = createFileRoute("/home/settings")({
   head: () => ({ meta: [{ title: "Settings - HomesBrain" }] }),
