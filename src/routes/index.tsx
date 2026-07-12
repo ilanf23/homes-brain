@@ -42,6 +42,98 @@ function GoogleGlyph() {
   );
 }
 
+function StarCircleIcon() {
+  return (
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tealbg">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" className="text-teal">
+        <path
+          fill="currentColor"
+          d="M10 1.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9L10 15.3l-5.3 2.7 1-5.9L1.4 7.9l5.9-.9L10 1.7z"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function BellCircleIcon() {
+  return (
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tealbg">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="text-teal"
+      >
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+    </div>
+  );
+}
+
+function MiniGoogleReviewCard() {
+  return (
+    <div className="relative rounded-[20px] border border-teal/15 bg-bg p-5 shadow-[0_8px_24px_-12px_rgba(15,110,86,0.18)]">
+      <span className="absolute -top-2.5 -right-2.5 rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-(--on-accent) shadow-sm">
+        +1
+      </span>
+      <div className="flex items-center gap-0.5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <svg
+            key={i}
+            width="16"
+            height="16"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+            className={`anim-fade-in d-${i + 1}`}
+          >
+            <path d="M10 1.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9L10 15.3l-5.3 2.7 1-5.9L1.4 7.9l5.9-.9L10 1.7z" fill="#f5b400" />
+          </svg>
+        ))}
+      </div>
+      <p className="mt-3 text-[15px] leading-snug text-ink">
+        "Fast, honest, best plumber in Ponte Vedra."
+      </p>
+      <div className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-muted">
+        <GoogleGlyph />
+        New review, posted for you.
+      </div>
+    </div>
+  );
+}
+
+function MiniNudgeCard() {
+  return (
+    <div className="relative">
+      {/* stacked cards behind */}
+      <div className="absolute inset-x-4 top-4 h-full rounded-[20px] border border-line bg-soft opacity-60" />
+      <div className="absolute inset-x-2 top-2 h-full rounded-[20px] border border-line bg-soft opacity-80" />
+      {/* main notification */}
+      <div className="relative rounded-[20px] border border-teal/15 bg-bg p-4 shadow-[0_8px_24px_-12px_rgba(15,110,86,0.18)]">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal font-bold text-(--on-accent)">
+            HB
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <div className="text-[15px] font-bold text-ink">Karen is due today</div>
+              <span className="pulse-dot h-2 w-2 rounded-full bg-teal" aria-hidden="true" />
+            </div>
+            <div className="text-[13px] text-muted">Water softener, serviced 6 months ago</div>
+          </div>
+          <span className="rounded-full bg-teal px-3 py-1 text-[11px] font-bold text-(--on-accent)">Call</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Landing() {
   return (
     <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "teal" }}>
@@ -124,18 +216,26 @@ function Landing() {
             Never forgotten. Never forget.
           </h2>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 text-left">
-            <div className="rounded-[22px] border border-line bg-paper p-7">
-              <h3 className={`${H_SANS} text-xl`}>The review</h3>
+            <div className="rounded-[22px] border border-line bg-paper p-7 shadow-[0_1px_2px_rgba(22,22,15,0.04)]">
+              <StarCircleIcon />
+              <h3 className={`${H_SANS} mt-4 text-xl`}>The review</h3>
               <p className="mt-3 text-[15px] text-muted leading-relaxed">
                 Every job turns into a Google review, on its own. The world remembers you.
               </p>
+              <div className="mt-6">
+                <MiniGoogleReviewCard />
+              </div>
             </div>
-            <div className="rounded-[22px] border border-line bg-paper p-7">
-              <h3 className={`${H_SANS} text-xl`}>The nudge</h3>
+            <div className="rounded-[22px] border border-line bg-paper p-7 shadow-[0_1px_2px_rgba(22,22,15,0.04)]">
+              <BellCircleIcon />
+              <h3 className={`${H_SANS} mt-4 text-xl`}>The nudge</h3>
               <p className="mt-3 text-[15px] text-muted leading-relaxed">
                 We tell you when each customer is due. Your callback list builds itself and
                 hands you the name.
               </p>
+              <div className="mt-6">
+                <MiniNudgeCard />
+              </div>
             </div>
           </div>
         </div>
