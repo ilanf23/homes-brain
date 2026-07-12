@@ -91,16 +91,7 @@ function DueForService() {
     );
   }
 
-  if (pro.plan !== "pro") {
-    return (
-      <ProShell pro={pro} active="due">
-        <PlanLock
-          title="Rebooking & retention"
-          description="Automated campaigns that bring past customers back before someone else gets the call. Included with Pro."
-        />
-      </ProShell>
-    );
-  }
+  const isPro = pro.plan === "pro";
 
 
   const byBucket = {
