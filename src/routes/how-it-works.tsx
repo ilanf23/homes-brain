@@ -1068,7 +1068,7 @@ function HowItWorks() {
         <InView className="mx-auto max-w-5xl px-5 grid md:grid-cols-2 gap-6">
           <div className="reveal rd-1 h-full">
             <Card lift className="h-full text-center py-10">
-              <Pill accent="indigo">For pros</Pill>
+              <Pill accent="teal">For pros</Pill>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight font-sans font-extrabold">
                 Never lose a customer again.
               </h3>
