@@ -418,9 +418,9 @@ function Landing() {
                 Your customers come back on their own.
               </h2>
               <p className="mt-4 text-[15px] sm:text-base text-white/75 max-w-lg">
-                Every job you log becomes a reminder on the homeowner's record. When it's due,
-                they come back to you — and we tell you the moment they do. The callbacks stack up.
+                When the work is due, they rebook you, and you get the ping. The callbacks stack up.
               </p>
+
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <Link to="/pro/signup" className="block sm:inline-block">
                   <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
