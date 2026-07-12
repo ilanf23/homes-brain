@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Btn } from "@/lib/ui";
-import { MarketingShell, marketingHead } from "@/components/marketing";
+import { MarketingShell, marketingHead, Phone } from "@/components/marketing";
+import { VoiceToRecord } from "@/components/voice-record-visual";
 
 export const Route = createFileRoute("/for-pros")({
   head: () =>
@@ -75,7 +76,24 @@ function ForPros() {
         <p className="mt-4 text-sm text-muted">Log your first job before you set up anything.</p>
       </section>
 
-      {/* Your pipeline */}
+      {/* Just talk: voice in, record out */}
+      <section className={`${CONTAINER} border-t border-line py-16`}>
+        <div className="text-center">
+          <div className="eyebrow text-indigo">HomesBrain AI, free for every pro</div>
+          <h2 className={`${H_SANS} mt-4 text-3xl sm:text-[34px] leading-[1.15]`}>
+            Just talk. It fills itself in.
+          </h2>
+          <p className="mt-4 mx-auto max-w-xl text-[15px] sm:text-base text-muted">
+            You never type. Talk through the job, HomesBrain AI writes the record. Faster than
+            your notebook.
+          </p>
+        </div>
+        <div className="mt-10">
+          <VoiceToRecord footer="Keep your notebook. This is just faster, and it lands you the review and the rebook." />
+        </div>
+      </section>
+
+      {/* Your pipeline, shown as the pro app */}
       <section className={`${CONTAINER} border-t border-line py-16`}>
         <div className="text-center">
           <div className="eyebrow text-teal">Your pipeline</div>
@@ -83,10 +101,24 @@ function ForPros() {
             Callbacks, with the names attached.
           </h2>
         </div>
-        <div className="mt-10 space-y-3">
-          <CallbackRow initial="K" name="Karen" need="softener due" area="Ponte Vedra" />
-          <CallbackRow initial="M" name="Mike" need="AC drain line due" area="Nocatee" />
-          <CallbackRow initial="R" name="Rosa" need="water heater flush" area="St. Augustine" />
+        <div className="mt-10 flex justify-center">
+          <div className="w-full max-w-[320px]">
+            <Phone>
+              <div className="flex items-center justify-between px-1 pb-1">
+                <div className="text-[13px] font-extrabold text-ink">Your pipeline</div>
+                <span className="flex items-center gap-1.5 text-[10px] font-semibold text-teal">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inset-0 rounded-full bg-teal/60 animate-ping" />
+                    <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-teal" />
+                  </span>
+                  3 due
+                </span>
+              </div>
+              <CallbackRow initial="K" name="Karen" need="softener due" area="Ponte Vedra" />
+              <CallbackRow initial="M" name="Mike" need="AC drain line due" area="Nocatee" />
+              <CallbackRow initial="R" name="Rosa" need="water heater flush" area="St. Augustine" />
+            </Phone>
+          </div>
         </div>
         <p className="mt-6 text-center text-sm text-muted">
           3 callbacks waiting. One saved rebook covers the year.
