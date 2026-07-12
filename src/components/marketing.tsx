@@ -157,11 +157,12 @@ export function MarketingShell({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Marketing nav items minus the two "hero" destinations, which get their
-  // own promoted slot in the mobile overlay.
-  const quietMobileLinks = NAV_LINKS.filter(
-    (l) => l.to !== "/make-it-last" && l.to !== "/pros",
-  );
+  // Quiet mobile links listed explicitly below the two hero destination cards.
+  const quietMobileLinks = [
+    { to: "/how-it-works", label: "How it works" },
+    { to: "/pros", label: "Find a pro" },
+    { to: "/make-it-last", label: "Make it last" },
+  ];
 
   return (
     <div className="min-h-dvh bg-background flex flex-col">
@@ -282,27 +283,27 @@ export function MarketingShell({
             {/* Hero destinations */}
             <div className="space-y-3 anim-fade-up">
               <Link
-                to="/make-it-last"
-                onClick={() => setMenuOpen(false)}
-                className="pressable block rounded-3xl bg-coralbg/70 px-5 py-5 hover:bg-coralbg transition-colors"
-              >
-                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-coraldark">
-                  Make it last
-                </div>
-                <div className="mt-1 text-sm text-ink/70">
-                  Make everything in your home last longer.
-                </div>
-              </Link>
-              <Link
-                to="/pros"
+                to="/for-pros"
                 onClick={() => setMenuOpen(false)}
                 className="pressable block rounded-3xl bg-tealbg/70 px-5 py-5 hover:bg-tealbg transition-colors"
               >
                 <div className="text-[26px] leading-tight font-extrabold tracking-tight text-tealdark">
-                  Find a pro
+                  For pros
                 </div>
                 <div className="mt-1 text-sm text-ink/70">
-                  Find a local pro in St. Johns County.
+                  Claim your profile and turn every job into a review.
+                </div>
+              </Link>
+              <Link
+                to="/for-homeowners"
+                onClick={() => setMenuOpen(false)}
+                className="pressable block rounded-3xl bg-coralbg/70 px-5 py-5 hover:bg-coralbg transition-colors"
+              >
+                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-coraldark">
+                  For homeowners
+                </div>
+                <div className="mt-1 text-sm text-ink/70">
+                  Get the living record for your home.
                 </div>
               </Link>
             </div>
