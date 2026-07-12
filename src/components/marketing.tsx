@@ -53,6 +53,19 @@ const NAV_LINKS = [
   { to: "/pros", label: "Find a pro" },
 ] as const;
 
+/* Homeowner-oriented routes get the coral homeowner CTA. Everything else
+   (including /, /for-pros, /how-it-works) gets the teal pro CTA. */
+function isHomeownerRoute(pathname: string): boolean {
+  if (pathname.startsWith("/home")) return true;
+  return (
+    pathname === "/for-homeowners" ||
+    pathname === "/make-it-last" ||
+    pathname.startsWith("/make-it-last/") ||
+    pathname === "/pros" ||
+    pathname.startsWith("/pros/")
+  );
+}
+
 
 type FooterLink = {
   to: string;
