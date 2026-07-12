@@ -91,7 +91,7 @@ function RecordDetail() {
 
       <HomePageHead
         eyebrow="Service record"
-        title={job.what_done}
+        title={recordTitle(job.what_done, item?.type)}
         sub={pro ? `${pro.business} · ${tradeLabel(pro.trade)}` : undefined}
         action={
           <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
