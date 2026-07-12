@@ -35,15 +35,26 @@ export const TRADE_LABELS: Record<TradeKey, string> = {
   pest: "Pest & termite",
 };
 
-/** St. Johns County towns we organize the public directory around. */
-export type ServiceAreaKey = "Nocatee" | "Ponte Vedra" | "St. Augustine" | "Fruit Cove";
+/** St. Johns County communities we organize the public directory around. */
+export type ServiceAreaKey =
+  | "Nocatee"
+  | "Ponte Vedra Beach"
+  | "Palm Valley"
+  | "World Golf Village"
+  | "Fruit Cove"
+  | "St. Augustine"
+  | "St. Augustine Beach";
 
 export const SERVICE_AREAS: ServiceAreaKey[] = [
   "Nocatee",
-  "Ponte Vedra",
-  "St. Augustine",
+  "Ponte Vedra Beach",
+  "Palm Valley",
+  "World Golf Village",
   "Fruit Cove",
+  "St. Augustine",
+  "St. Augustine Beach",
 ];
+
 
 export type Pro = {
   slug: string;
