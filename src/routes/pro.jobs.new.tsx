@@ -1107,8 +1107,8 @@ function NewJob() {
   }
 
   async function copyUrl() {
-    if (!recordUrl) return;
-    await navigator.clipboard.writeText(recordUrl);
+    if (!claimUrl) return;
+    await navigator.clipboard.writeText(claimUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
