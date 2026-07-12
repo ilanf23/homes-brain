@@ -701,11 +701,24 @@ function NewJob() {
      address, and work fields, then jumps straight to Review so the pro only
      has to eyeball it and send. */
   async function finishFullVoice() {
-    const note = fullNote.trim();
-    if (!note) {
-      closeVoice();
+    // Web Speech often keeps the last utterance in `interim` (never fires
+    // `isFinal`) until stop. Combine the finalized `fullNote` with the current
+    // interim so nothing spoken is lost, then stop the mic so any trailing
+    // final chunk still lands.
+    const combined = `${fullNote} ${fullDictation.interim ?? ""}`.replace(/\s+/g, " ").trim();
+    fullDictation.stop();
+    micLevel.stop();
+    // Give the recognizer one tick to flush a trailing final result on stop.
+    await new Promise((r) => setTimeout(r, 150));
+    const note = combined.length >= 3 ? combined : fullNote.trim();
+    if (note.length < 3) {
+      setVoiceOpen(false);
+      setToast("Didn't catch that. Tap the AI card and try again.");
+      setTimeout(() => setToast(null), 3500);
       return;
     }
+    // Close the overlay so the pro sees the busy indicator on the form.
+    setVoiceOpen(false);
     setFullBusy(true);
     let extract;
     try {
@@ -717,8 +730,6 @@ function NewJob() {
       setTimeout(() => setToast(null), 3500);
       return;
     }
-    // Stop mic/dictation now that we have the transcript in hand.
-    closeVoice();
     setFullBusy(false);
 
     // Match by name against existing customers (case-insensitive, whole-string).
