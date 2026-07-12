@@ -35,17 +35,26 @@ export const TRADE_LABELS: Record<TradeKey, string> = {
   pest: "Pest & termite",
 };
 
+/** St. Johns County towns we organize the public directory around. */
+export type ServiceAreaKey = "Nocatee" | "Ponte Vedra" | "St. Augustine" | "Fruit Cove";
+
+export const SERVICE_AREAS: ServiceAreaKey[] = [
+  "Nocatee",
+  "Ponte Vedra",
+  "St. Augustine",
+  "Fruit Cove",
+];
+
 export type Pro = {
   slug: string;
   name: string;
   trades: TradeKey[];
   /** Free-form city / service area label. */
   city: string;
+  /** St. Johns County towns this pro serves (verified pros). */
+  serviceAreas?: ServiceAreaKey[];
   phone?: string;
   website?: string;
-  /** URL strings when known; boolean true means "the business has a presence
-   *  on that network but we don't have a direct URL yet". Non-string values
-   *  are stored for future linking and are not rendered. */
   socials?: {
     facebook?: string | boolean;
     instagram?: string | boolean;
@@ -55,11 +64,8 @@ export type Pro = {
   googleReviewCount?: number;
   googlePlaceUrl?: string;
   verified: boolean;
-  /** Verified pros only. */
   about?: string;
-  /** Verified pros only. */
   deals?: string[];
-  /** Verified pros only. */
   hours?: string;
 };
 
