@@ -216,18 +216,26 @@ function Landing() {
             Never forgotten. Never forget.
           </h2>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 text-left">
-            <div className="rounded-[22px] border border-line bg-paper p-7">
-              <h3 className={`${H_SANS} text-xl`}>The review</h3>
+            <div className="rounded-[22px] border border-line bg-paper p-7 shadow-[0_1px_2px_rgba(22,22,15,0.04)]">
+              <StarCircleIcon />
+              <h3 className={`${H_SANS} mt-4 text-xl`}>The review</h3>
               <p className="mt-3 text-[15px] text-muted leading-relaxed">
                 Every job turns into a Google review, on its own. The world remembers you.
               </p>
+              <div className="mt-6">
+                <MiniGoogleReviewCard />
+              </div>
             </div>
-            <div className="rounded-[22px] border border-line bg-paper p-7">
-              <h3 className={`${H_SANS} text-xl`}>The nudge</h3>
+            <div className="rounded-[22px] border border-line bg-paper p-7 shadow-[0_1px_2px_rgba(22,22,15,0.04)]">
+              <BellCircleIcon />
+              <h3 className={`${H_SANS} mt-4 text-xl`}>The nudge</h3>
               <p className="mt-3 text-[15px] text-muted leading-relaxed">
                 We tell you when each customer is due. Your callback list builds itself and
                 hands you the name.
               </p>
+              <div className="mt-6">
+                <MiniNudgeCard />
+              </div>
             </div>
           </div>
         </div>
