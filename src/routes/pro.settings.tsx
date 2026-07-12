@@ -239,8 +239,8 @@ function ProSettings() {
     setToast("Your data downloaded");
   }
 
-  function signOut() {
-    clearSession();
+  async function signOut() {
+    await supabase.auth.signOut();
     navigate({ to: "/" });
   }
 
