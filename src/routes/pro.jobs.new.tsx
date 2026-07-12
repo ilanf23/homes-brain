@@ -826,8 +826,11 @@ function NewJob() {
       if (i >= steps.length) {
         setTimeout(() => {
           setFullReveal(null);
-          // Stay on the customer step so the pro clicks through and reviews
-          // each pre-filled section (location, work, review) themselves.
+          // Land on the first slide that visibly shows the AI's work so the pro
+          // sees the name/address already filled in. For an existing match the
+          // customer + address are on file, so jump to the work slide; for a
+          // new customer, go to the location slide (customer card + address).
+          setStage(match ? "work" : "location");
         }, 420);
         return;
       }
