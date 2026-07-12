@@ -220,16 +220,16 @@ const FREE_FEATURES = [
   "30 second job logging",
   "Branded record sent to the homeowner",
   "Automatic Google review requests",
-  "Appliance summary and recall check",
+  "Appliance summary",
   "Your own customer and job list",
 ];
 
 const PRO_FEATURES = [
-  "Automated service reminders",
-  "One tap rebooking",
-  "Recall driven lead lists",
-  "New owner leads at resale",
-  "Analytics on records, reviews, rebooks",
+  { label: "Automated service reminders" },
+  { label: "One tap rebooking" },
+  { label: "Recall driven lead lists", rollingOut: true },
+  { label: "New owner leads at resale", rollingOut: true },
+  { label: "Analytics on records, reviews, rebooks" },
 ];
 
 
