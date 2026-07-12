@@ -117,7 +117,7 @@ function RecordDetail() {
               <QrCode size={15} /> Show claim QR
             </Btn>
           )}
-          {job?.customers && (
+          {job?.customers && pro.plan === "pro" && (
             <Link to="/pro/invoices/new" search={{ customer: job.customers.id, job: job.id }}>
               <Btn variant="secondary">Create invoice</Btn>
             </Link>
