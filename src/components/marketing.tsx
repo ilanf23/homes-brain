@@ -187,15 +187,15 @@ export function MarketingShell({
           <nav aria-label="Main" className="hidden min-[880px]:flex items-center gap-1">
             {NAV_LINKS.map((l) => {
               const isMakeItLast = l.to === "/make-it-last";
-              const isFindPro = l.to === "/pros";
+              const isForPros = l.to === "/for-pros";
               const emphasis = isMakeItLast
                 ? "text-sm font-bold text-coral hover:text-coraldark transition-colors px-3 py-2 rounded-full"
-                : isFindPro
+                : isForPros
                   ? "text-sm font-bold text-teal hover:text-tealdark transition-colors px-3 py-2 rounded-full"
                   : "text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full";
               const activeClass = isMakeItLast
                 ? "text-coraldark"
-                : isFindPro
+                : isForPros
                   ? "text-tealdark"
                   : "text-ink";
               return (
