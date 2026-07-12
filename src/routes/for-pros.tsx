@@ -505,8 +505,8 @@ function ForPros() {
             </p>
             <ul className="mt-5 border-t border-white/15">
               {PRO_FEATURES.map((f) => (
-                <CheckRow key={f} dark>
-                  {f}
+                <CheckRow key={f.label} dark rollingOut={f.rollingOut}>
+                  {f.label}
                 </CheckRow>
               ))}
             </ul>
