@@ -247,6 +247,13 @@ function NewJob() {
   const [voiceMode, setVoiceMode] = useState<"work" | "full">("work");
   const [fullNote, setFullNote] = useState("");
   const [fullBusy, setFullBusy] = useState(false);
+  type RevealStep = {
+    key: string;
+    label: string;
+    value: string | null;
+    status: "pending" | "active" | "done";
+  };
+  const [fullReveal, setFullReveal] = useState<RevealStep[] | null>(null);
   const fullDictation = useDictation((text) => {
     setFullNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
   });
@@ -736,36 +743,111 @@ function NewJob() {
     const nm = (extract.customer_name ?? "").trim().toLowerCase();
     const match = nm ? existing.find((c) => c.name.trim().toLowerCase() === nm) : undefined;
 
-    if (match) {
-      setSelectedCustomerId(match.id);
-      const onFile = match.homes?.address ?? "";
-      const addr = extract.address?.trim() || onFile;
-      setLocAddress(addr);
-      addressTouched.current = true;
-      setResolved(null);
-    } else {
-      setSelectedCustomerId("");
-      setNewCustomer({
-        name: extract.customer_name ?? "",
-        address: extract.address ?? "",
-        phone: extract.customer_phone ?? "",
-        email: extract.customer_email ?? "",
-      });
-      if (extract.address) {
-        setLocAddress(extract.address);
-        addressTouched.current = true;
-        setResolved(null);
-      }
-    }
+    const customerLabel = match
+      ? match.name
+      : (extract.customer_name?.trim() || null);
+    const addressLabel = match
+      ? (extract.address?.trim() || match.homes?.address || null)
+      : (extract.address?.trim() || null);
+    const contactBits = [extract.customer_phone, extract.customer_email].filter(Boolean) as string[];
+    const equipmentBits = [extract.type, extract.make, extract.model].filter(Boolean) as string[];
 
-    // Work fields — only fill blanks, but here they always start blank on a
-    // fresh flow. what_done_clean is the tidy version; fall back to the raw
-    // transcript so the pro still has their words if the AI returned nothing.
-    if (extract.type) setEqType(extract.type);
-    if (extract.make) setEqMake(extract.make);
-    if (extract.model) setEqModel(extract.model);
-    setWhatDone(extract.what_done_clean ?? note);
-    if (extract.next_service_date) setNextService(extract.next_service_date);
+    const steps: RevealStep[] = [
+      { key: "customer", label: "Customer", value: customerLabel, status: "pending" },
+      { key: "address", label: "Location", value: addressLabel, status: "pending" },
+      {
+        key: "contact",
+        label: "Contact",
+        value: contactBits.length ? contactBits.join(" · ") : null,
+        status: "pending",
+      },
+      {
+        key: "equipment",
+        label: "Equipment",
+        value: equipmentBits.length ? equipmentBits.join(" ") : null,
+        status: "pending",
+      },
+      {
+        key: "work",
+        label: "What was done",
+        value: extract.what_done_clean ?? note,
+        status: "pending",
+      },
+      {
+        key: "next",
+        label: "Next service",
+        value: extract.next_service_date,
+        status: "pending",
+      },
+    ];
+    setFullReveal(steps);
+
+    // Apply each field as its step "completes" so the pro watches the record
+    // build itself in real time before landing on Review.
+    const applyStep = (key: string) => {
+      if (key === "customer") {
+        if (match) {
+          setSelectedCustomerId(match.id);
+        } else {
+          setSelectedCustomerId("");
+          setNewCustomer((prev) => ({ ...prev, name: extract.customer_name ?? "" }));
+        }
+      } else if (key === "address") {
+        const addr = match
+          ? (extract.address?.trim() || match.homes?.address || "")
+          : (extract.address ?? "");
+        if (!match) setNewCustomer((prev) => ({ ...prev, address: extract.address ?? "" }));
+        if (addr) {
+          setLocAddress(addr);
+          addressTouched.current = true;
+          setResolved(null);
+        }
+      } else if (key === "contact") {
+        if (!match) {
+          setNewCustomer((prev) => ({
+            ...prev,
+            phone: extract.customer_phone ?? "",
+            email: extract.customer_email ?? "",
+          }));
+        }
+      } else if (key === "equipment") {
+        if (extract.type) setEqType(extract.type);
+        if (extract.make) setEqMake(extract.make);
+        if (extract.model) setEqModel(extract.model);
+      } else if (key === "work") {
+        setWhatDone(extract.what_done_clean ?? note);
+      } else if (key === "next") {
+        if (extract.next_service_date) setNextService(extract.next_service_date);
+      }
+    };
+
+    const STEP_MS = 520;
+    const runStep = (i: number) => {
+      if (i >= steps.length) {
+        setTimeout(() => {
+          setFullReveal(null);
+          setStage("review");
+        }, 420);
+        return;
+      }
+      setFullReveal((cur) =>
+        cur
+          ? cur.map((s, idx) =>
+              idx === i ? { ...s, status: "active" } : s,
+            )
+          : cur,
+      );
+      setTimeout(() => {
+        applyStep(steps[i].key);
+        setFullReveal((cur) =>
+          cur
+            ? cur.map((s, idx) => (idx === i ? { ...s, status: "done" } : s))
+            : cur,
+        );
+        runStep(i + 1);
+      }, STEP_MS);
+    };
+    runStep(0);
 
     logEvent(proId, "job_voice_full_captured", {
       filled: [
@@ -780,8 +862,6 @@ function NewJob() {
       ].filter(Boolean),
       matched_existing: !!match,
     });
-
-    setStage("review");
   }
 
   /* Coords to store for a home, but only when we actually have them for THIS
@@ -2123,6 +2203,79 @@ function NewJob() {
           text={voiceMode === "full" ? liveFullNote : liveWhatDone}
           onDone={voiceMode === "full" ? finishFullVoice : closeVoice}
         />
+      )}
+
+      {fullReveal && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-5 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-line bg-paper p-6 shadow-2xl">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-indigo">
+              <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-indigo" />
+              HomesBrain AI
+            </div>
+            <div className="mt-1 text-lg font-extrabold tracking-tight text-ink">
+              Building the record
+            </div>
+            <ul className="mt-4 space-y-2">
+              {fullReveal.map((s) => {
+                const done = s.status === "done";
+                const active = s.status === "active";
+                return (
+                  <li
+                    key={s.key}
+                    className={`flex items-start gap-3 rounded-2xl border px-3.5 py-3 transition-colors ${
+                      done
+                        ? "border-teal/30 bg-tealbg"
+                        : active
+                          ? "border-indigo/30 bg-indigobg"
+                          : "border-line bg-white"
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                        done
+                          ? "bg-teal text-white"
+                          : active
+                            ? "bg-indigo text-white"
+                            : "bg-line text-muted"
+                      }`}
+                      aria-hidden
+                    >
+                      {done ? (
+                        <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none">
+                          <path
+                            d="M4 10.5l3.5 3.5L16 6"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : active ? (
+                        <span className="h-2 w-2 animate-ping rounded-full bg-white" />
+                      ) : null}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
+                          done ? "text-teal-dark" : active ? "text-indigo" : "text-muted"
+                        }`}
+                      >
+                        {s.label}
+                      </div>
+                      <div
+                        className={`mt-0.5 truncate text-sm font-semibold ${
+                          s.value ? "text-ink" : "text-muted"
+                        }`}
+                      >
+                        {s.value ?? (active || done ? "Not mentioned" : "…")}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
       )}
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
