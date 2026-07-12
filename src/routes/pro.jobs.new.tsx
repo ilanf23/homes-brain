@@ -247,6 +247,13 @@ function NewJob() {
   const [voiceMode, setVoiceMode] = useState<"work" | "full">("work");
   const [fullNote, setFullNote] = useState("");
   const [fullBusy, setFullBusy] = useState(false);
+  type RevealStep = {
+    key: string;
+    label: string;
+    value: string | null;
+    status: "pending" | "active" | "done";
+  };
+  const [fullReveal, setFullReveal] = useState<RevealStep[] | null>(null);
   const fullDictation = useDictation((text) => {
     setFullNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
   });
