@@ -24,7 +24,7 @@ import {
   geocodeHome,
   haversineMeters,
   logEvent,
-  mockSend,
+  logEvent,
   normalizeAddress,
   tradeLabel,
 } from "@/lib/hb";
