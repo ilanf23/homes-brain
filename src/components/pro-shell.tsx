@@ -53,8 +53,10 @@ export function useProGuard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      const user = sess.session?.user;
+      // getUser() re-validates the session with Supabase Auth; a stale
+      // localStorage session on its own is not enough to enter /pro/*.
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const user = !userErr ? userData.user : null;
       if (!user) {
         navigate({ to: "/login" });
         return;
@@ -66,8 +68,9 @@ export function useProGuard() {
         .maybeSingle();
       if (cancelled) return;
       if (!data) {
-        await supabase.auth.signOut();
-        navigate({ to: "/login" });
+        // Authenticated user is not a pro yet — send them through pro signup
+        // instead of showing another pro's data or bouncing to /login.
+        navigate({ to: "/pro/signup" });
         return;
       }
       setProId(data.id);

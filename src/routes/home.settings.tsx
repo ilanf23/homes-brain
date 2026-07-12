@@ -22,7 +22,7 @@ import {
   SettingsNav,
   SettingsSection,
 } from "@/components/settings";
-import { clearSession } from "@/lib/session";
+
 
 export const Route = createFileRoute("/home/settings")({
   head: () => ({ meta: [{ title: "Settings - HomesBrain" }] }),
@@ -198,7 +198,6 @@ function HomeownerSettings() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    clearSession();
     navigate({ to: "/" });
   }
 

@@ -14,7 +14,7 @@ import {
   SettingsSection,
 } from "@/components/settings";
 import { refreshStripeStatus, startStripeOnboarding } from "@/lib/stripe-connect";
-import { clearSession } from "@/lib/session";
+
 import { DemoNotice } from "@/components/plan-lock";
 
 export const Route = createFileRoute("/pro/settings")({
@@ -239,8 +239,8 @@ function ProSettings() {
     setToast("Your data downloaded");
   }
 
-  function signOut() {
-    clearSession();
+  async function signOut() {
+    await supabase.auth.signOut();
     navigate({ to: "/" });
   }
 

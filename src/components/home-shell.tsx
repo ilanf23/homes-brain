@@ -134,8 +134,10 @@ export function useHomeownerGuard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
+      // getUser() re-validates with Supabase Auth; localStorage alone must
+      // never be enough to enter /home/*.
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) {
         navigate({ to: "/login" });
         return;
       }
