@@ -515,7 +515,7 @@ const LOG_FIELDS = [
   {
     icon: <UserPlusIcon size={20} />,
     title: "Customer, once",
-    body: "Name and number the first time only. Texting consent is captured and stored right there - compliance is built into the flow, not bolted on.",
+    body: "Name and number the first time only. Texting consent is captured and stored right there. Compliance is built into the flow, not bolted on.",
   },
   {
     icon: <CameraIcon size={20} />,
@@ -588,7 +588,7 @@ function HowItWorks() {
           <br className="hidden sm:block" /> The record keeps the customer.
         </h1>
         <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-2xl mx-auto">
-          One 30-second log starts a loop: the pro's work becomes the homeowner's record, and the
+          One 30 second log starts a loop: the pro's work becomes the homeowner's record, and the
           record brings the pro back for the next visit. Here it is in slow motion.
         </p>
         <div className="anim-fade-up d-3 mt-8">
@@ -607,7 +607,7 @@ function HowItWorks() {
                 Log the job in 30 seconds, on the driveway
               </h2>
               <p className="mt-4 text-muted">
-                Four fields, most of them filled by a photo. It's faster than writing the invoice -
+                Four fields, most of them filled by a photo. It's faster than writing the invoice,
                 and unlike the invoice, it starts working for you the moment it's sent.
               </p>
             </div>
@@ -738,7 +738,7 @@ function HowItWorks() {
                 A branded record is on its way before the van leaves
               </h2>
               <p className="mt-4 text-muted">
-                The homeowner gets a clean service record carrying the pro's name and logo - by text
+                The homeowner gets a clean service record carrying the pro's name and logo, by text
                 and email, no app, no account. It opens with one tap.
               </p>
             </div>
@@ -781,12 +781,12 @@ function HowItWorks() {
                 One tap to claim, and the home never forgets again
               </h2>
               <p className="mt-4 text-muted">
-                No password, no forms - the record is already filled in. From then on, every visit
+                No password, no forms. The record is already filled in. From then on, every visit
                 from every invited pro writes itself into the same timeline.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  "Claiming is free, forever - the record belongs to the home",
+                  "Claiming is free, forever. The record belongs to the home",
                   "Invite the other pros who work on the house with one tap each",
                   "When the house sells, the record moves with it",
                 ].map((t, i) => (
@@ -981,7 +981,7 @@ function HowItWorks() {
                   <KV k="Time to log" v="30 seconds" />
                   <KV k="Record sent" v="Text + email, branded" />
                   <KV k="Review ask" v="Sent automatically" />
-                  <KV k="Next service" v="Mar 2027 - reminder set" />
+                  <KV k="Next service" v="Mar 2027. Reminder set." />
                 </div>
                 <p className="mt-4 text-sm text-muted">
                   The customer now carries Aqua Works in their pocket. When the resin needs checking

@@ -106,7 +106,7 @@ const HIDDEN_FAILURES = [
     truth: "Your record warns you before it goes.",
   },
   {
-    tag: "Washing-machine hose",
+    tag: "Washing machine hose",
     Icon: HoseIcon,
     stat: "650 gal/hr",
     line: "A $15 part, one spike from bursting.",
@@ -248,7 +248,7 @@ function Landing() {
           <div className="anim-scale-in d-2 relative">
             <img
               src="/images/homeowners/hero-home.jpg"
-              alt="A warm, well-kept family home"
+              alt="A warm, well kept family home"
               className="aspect-[4/3.2] w-full rounded-[26px] object-cover shadow-[0_36px_64px_-36px_rgba(22,22,15,0.5)]"
             />
             <div className="absolute inset-x-0 bottom-0 h-28 rounded-b-[26px] bg-gradient-to-t from-ink/45 to-transparent" aria-hidden="true" />
@@ -256,7 +256,7 @@ function Landing() {
               <div className="text-[11px] font-extrabold text-ink leading-tight">
                 Water heater · installed 2016
               </div>
-              <div className="text-[10.5px] text-muted leading-tight">Warning: past year 8 — flush due</div>
+              <div className="text-[10.5px] text-muted leading-tight">Warning: past year 8. Flush due.</div>
             </div>
             <div className="absolute right-4 bottom-4 rounded-2xl bg-coralbg border border-coral/25 px-3 py-2 shadow-[0_10px_24px_-12px_rgba(194,70,31,0.35)]">
               <div className="text-[11px] font-extrabold text-coraldark leading-tight">
@@ -337,7 +337,7 @@ function Landing() {
                     <div className="rounded-xl border border-line border-dashed bg-paper px-3.5 py-3 flex flex-col items-center justify-center gap-1 text-center">
                       <CameraIcon size={22} className="text-indigo" />
                       <span className="text-[11px] font-bold text-ink">Snap the nameplate</span>
-                      <span className="text-[9.5px] text-muted">Auto-detects make & model</span>
+                      <span className="text-[9.5px] text-muted">Auto detects make & model</span>
                     </div>
                     <PhoneKV k="Make" v="Bradford White" accentV />
                     <PhoneKV k="Warranty" v="to 2031" accentV />
@@ -372,7 +372,7 @@ function Landing() {
                 phone: (
                   <Phone>
                     <MsgBubble sender="HomesBrain" align="left">
-                      Heads up — your water heater is past year 8. A flush now beats a flood later.
+                      Heads up, your water heater is past year 8. A flush now beats a flood later.
                     </MsgBubble>
                     <MsgBubble align="left">Want your pro back to handle it?</MsgBubble>
                     <MsgBubble align="right" tone="coral">
