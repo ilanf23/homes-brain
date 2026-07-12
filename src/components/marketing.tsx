@@ -372,8 +372,6 @@ export function MarketingShell({
         className={`border-t border-line bg-soft ${mobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
       >
         <div className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
-          {/* Slim email capture. No backend: on submit we just acknowledge. */}
-          <FooterSignup />
 
           <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
             <div>
@@ -427,57 +425,6 @@ export function MarketingShell({
   );
 }
 
-function FooterSignup() {
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setDone(true);
-  }
-
-  return (
-    <div className="rounded-3xl border border-line bg-paper px-5 py-5 sm:px-7 sm:py-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
-        <div className="max-w-md">
-          <p className="text-base sm:text-lg font-semibold text-ink leading-snug">
-            Be first when HomesBrain opens in your area.
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            One quiet note when we're live near you. No spam, ever.
-          </p>
-        </div>
-        {done ? (
-          <p className="text-sm font-semibold text-tealdark">
-            You're on the list. We'll be in touch.
-          </p>
-        ) : (
-          <form
-            onSubmit={onSubmit}
-            className="flex flex-col gap-2 sm:flex-row sm:items-center w-full md:w-auto"
-          >
-            <label htmlFor="footer-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="footer-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
-              className="min-w-0 sm:w-72 rounded-full border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:border-ink/40 focus:ring-2 focus:ring-ink/5 transition"
-            />
-            <Btn type="submit" variant="coral" size="md" className="w-full sm:w-auto">
-              Notify me
-            </Btn>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-}
 
 /* ---- Phone mockup - the brand's one product visual, shared by every
    marketing page. Real-handset proportions (screen ≈ 9:19.5), a thin uniform
