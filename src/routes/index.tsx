@@ -404,7 +404,7 @@ function Landing() {
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
             <div className="reveal text-white">
               <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-teal">
-                For pros
+                For pros · Charter Class of 2027
               </div>
               <h2 className={`${H_SANS} mt-3 text-3xl sm:text-4xl leading-[1.1] text-white`}>
                 Your customers come back on their own.
