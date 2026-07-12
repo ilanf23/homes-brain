@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Btn } from "@/lib/ui";
-import { MarketingShell, marketingHead } from "@/components/marketing";
-import { VoicePhone, VoiceToRecord } from "@/components/voice-record-visual";
+import { MarketingShell, marketingHead, PipelinePhone } from "@/components/marketing";
+import { VoiceToRecord } from "@/components/voice-record-visual";
 
 export const Route = createFileRoute("/")({
   head: () =>
