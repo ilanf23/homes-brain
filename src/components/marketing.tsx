@@ -211,7 +211,7 @@ export function MarketingShell({
             })}
           </nav>
 
-          {/* Desktop actions: one primary (coral), one quiet text link */}
+          {/* Desktop actions: one primary CTA (pathname-derived), one quiet log-in link */}
           <div className="hidden min-[880px]:flex items-center gap-3">
             <Link
               to="/login"
@@ -219,9 +219,9 @@ export function MarketingShell({
             >
               Log in
             </Link>
-            <Link to="/home/signup">
-              <Btn variant="coral" size="sm">
-                Get my record
+            <Link to={primaryCta.to}>
+              <Btn variant={primaryCta.variant} size="sm">
+                {primaryCta.label}
               </Btn>
             </Link>
           </div>
