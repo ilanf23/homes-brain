@@ -821,9 +821,9 @@ function NewJob() {
       if (i >= steps.length) {
         setTimeout(() => {
           setFullReveal(null);
-          // Stay on the customer slide - the pro sees the AI-picked name in
-          // the search box with the "Add ..." tile at the top and clicks
-          // through the remaining pre-filled slides themselves.
+          // Once the AI preview animation finishes, jump straight to the live
+          // record review so the pro can eyeball and send in one tap.
+          setStage("review");
         }, 420);
         return;
       }
