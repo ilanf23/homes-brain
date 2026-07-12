@@ -227,76 +227,97 @@ function AreaChip({
   );
 }
 
-const TOWN_POINTS: Record<
-  ServiceAreaKey,
-  { x: number; y: number; lx: number; ly: number; anchor: "start" | "middle" | "end" }
-> = {
-  "Fruit Cove": { x: 96, y: 104, lx: 96, ly: 88, anchor: "middle" },
-  Nocatee: { x: 214, y: 138, lx: 214, ly: 122, anchor: "middle" },
-  "Ponte Vedra": { x: 250, y: 98, lx: 238, ly: 102, anchor: "end" },
-  "St. Augustine": { x: 252, y: 250, lx: 240, ly: 254, anchor: "end" },
+const TOWN_POINTS: Record<ServiceAreaKey, { x: number; y: number }> = {
+  "Fruit Cove": { x: 104, y: 190 },
+  "Palm Valley": { x: 206, y: 172 },
+  "Ponte Vedra Beach": { x: 262, y: 178 },
+  Nocatee: { x: 232, y: 198 },
+  "World Golf Village": { x: 150, y: 236 },
+  "St. Augustine": { x: 250, y: 336 },
+  "St. Augustine Beach": { x: 260, y: 378 },
 };
 
 function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
   return (
     <svg
-      viewBox="0 0 380 440"
+      viewBox="0 0 380 470"
       className="w-full h-auto"
       role="img"
-      aria-label="St. Johns County, Florida"
+      aria-label="Northeast Florida: St. Johns County, now serving. Jacksonville coming soon."
     >
-      {/* Atlantic Ocean, east side */}
+      {/* Atlantic Ocean, east */}
       <path
-        d="M268 58 C286 130 288 222 276 302 C268 352 256 390 250 404 L380 440 L380 36 Z"
+        d="M298 0 L380 0 L380 470 L270 470 C282 418 292 348 298 278 C304 198 304 92 298 0 Z"
         fill="#dcebf1"
-        opacity="0.65"
+        opacity="0.6"
       />
-      {/* County silhouette (realistic proportions: flat north, straight-ish east coast, irregular west) */}
+      {/* Jacksonville region (north) — coming soon, greyed */}
       <path
-        d="M74 80 C120 66 156 60 196 72 C220 58 244 56 258 68 C272 122 276 212 266 294 C260 346 250 386 242 402 C196 412 150 408 120 386 C92 362 80 324 74 278 C68 214 66 142 74 80 Z"
+        d="M66 42 C120 28 190 26 240 42 C262 36 282 44 290 64 C294 96 292 120 286 140 L74 140 C58 116 58 78 66 42 Z"
+        fill="#edeff2"
+        stroke="#cbd0d8"
+        strokeWidth="1.2"
+      />
+      <text x="168" y="88" textAnchor="middle" fontSize="14" fontWeight="700" fill="#9aa0ab">
+        Jacksonville
+      </text>
+      <text x="168" y="107" textAnchor="middle" fontSize="11" fontWeight="600" fill="#aeb4be">
+        Coming soon
+      </text>
+
+      {/* St. Johns County (active, teal) */}
+      <path
+        d="M74 140 L286 140 C294 198 292 296 280 356 C272 402 258 436 248 452 C196 462 150 458 118 440 C90 420 76 384 70 330 C64 262 64 200 74 140 Z"
         fill="var(--tealbg, #e9f6f3)"
         stroke="var(--teal, #0f8a86)"
-        strokeWidth="1.5"
+        strokeWidth="1.6"
       />
-      {/* Coastline hint just inside the east edge */}
+      {/* coastline hint */}
       <path
-        d="M262 76 C278 150 280 232 268 302 C262 346 252 382 246 398"
+        d="M280 150 C290 210 290 300 278 356 C272 400 260 432 250 448"
         fill="none"
         stroke="var(--teal, #0f8a86)"
         strokeWidth="1"
         strokeDasharray="2 5"
-        opacity="0.5"
+        opacity="0.45"
       />
-      {/* Town markers */}
+      <text x="150" y="162" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="var(--tealdark, #0a5f5c)">
+        St. Johns County
+      </text>
+
+      {/* Community dots — label only the selected one */}
       {(Object.keys(TOWN_POINTS) as ServiceAreaKey[]).map((key) => {
         const p = TOWN_POINTS[key];
         const isSelected = selected === key;
         return (
           <g key={key}>
             {isSelected && (
-              <circle cx={p.x} cy={p.y} r={13} fill="var(--teal, #0f8a86)" opacity="0.16" />
+              <circle cx={p.x} cy={p.y} r={12} fill="var(--teal, #0f8a86)" opacity="0.16" />
             )}
             <circle
               cx={p.x}
               cy={p.y}
-              r={isSelected ? 6 : 4}
+              r={isSelected ? 6 : 3.5}
               fill={isSelected ? "var(--teal, #0f8a86)" : "var(--ink, #16160f)"}
               stroke="#fff"
               strokeWidth="1.5"
             />
-            <text
-              x={p.lx}
-              y={p.ly}
-              textAnchor={p.anchor}
-              fontSize="12"
-              fontWeight="600"
-              fill={isSelected ? "var(--tealdark, #0a5f5c)" : "var(--muted, #6b6862)"}
-            >
-              {key}
-            </text>
+            {isSelected && (
+              <text
+                x={p.x}
+                y={p.y - 12}
+                textAnchor="middle"
+                fontSize="12"
+                fontWeight="700"
+                fill="var(--tealdark, #0a5f5c)"
+              >
+                {key}
+              </text>
+            )}
           </g>
         );
       })}
     </svg>
   );
 }
+
