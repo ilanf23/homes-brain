@@ -24,7 +24,6 @@ import {
   geocodeHome,
   haversineMeters,
   logEvent,
-  mockSend,
   normalizeAddress,
   tradeLabel,
 } from "@/lib/hb";
@@ -277,12 +276,30 @@ function NewJob() {
   // Google review ask is optional.
   const [askReview, setAskReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [recordUrl, setRecordUrl] = useState<string | null>(null);
+  // Real single-use claim URL minted via claim-qr on a successful email send.
+  // Only populated when the record actually reached the customer's inbox;
+  // used by the done-screen "Copy link" button.
+  const [claimUrl, setClaimUrl] = useState<string | null>(null);
   // Captured on submit so the "Show claim QR" button on the done screen can
   // open ClaimQRModal for the same customer + record we just sent.
   const [sentCustomerId, setSentCustomerId] = useState<string | null>(null);
   const [sentRecordId, setSentRecordId] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  // Honest post-send state driving the done screen. "sent" only when the email
+  // actually went out; "phone_only" / "no_contact" surface the truth instead
+  // of the old "inbox and texts" lie. SMS delivery is not live yet.
+  type DeliveryState = "sent" | "send_failed" | "phone_only" | "no_contact";
+  const [deliveryState, setDeliveryState] = useState<DeliveryState>("no_contact");
+  const [sentTo, setSentTo] = useState<{ name: string; email: string | null; phone: string | null }>({
+    name: "",
+    email: null,
+    phone: null,
+  });
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
+  // Inline "add email" affordance on the done screen when the customer has a
+  // phone but no email; lets the pro fix the missing contact and actually send.
+  const [addEmail, setAddEmail] = useState("");
+  const [retrying, setRetrying] = useState(false);
   // Optional "bill this customer" amount entered on the review slide. String so
   // the input can be empty; parsed to a number at submit time. When >0 we also
   // create an open invoice so the homeowner can pay it via the existing flow.
@@ -932,14 +949,15 @@ function NewJob() {
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
     const hidden = Array.from(hiddenFields).filter((k) => presentKeys.has(k));
 
-    const tempUrl = buildRecordUrl("pending");
-    // Only reference hidden_fields when the pro actually excluded a row, so a
-    // normal send never touches the new column before the migration syncs.
+    // Persist the record without pre-stamping sent_* timestamps. A record is
+    // "sent" only when invite-claim actually delivered the email; SMS is not
+    // live yet, so sent_sms_at stays null.
+    const publicUrl = buildRecordUrl("pending");
     const recordPayload = {
       job_id: job!.id,
-      public_url: tempUrl,
-      sent_sms_at: new Date().toISOString(),
-      sent_email_at: new Date().toISOString(),
+      public_url: publicUrl,
+      sent_sms_at: null,
+      sent_email_at: null,
       ...(hidden.length ? { hidden_fields: hidden } : {}),
     };
     const { data: rec } = await supabase
@@ -949,46 +967,68 @@ function NewJob() {
       .insert(recordPayload as never)
       .select("id")
       .single();
-    const finalUrl = buildRecordUrl(rec!.id);
-    await supabase.from("records").update({ public_url: finalUrl }).eq("id", rec!.id);
-    setRecordUrl(finalUrl);
     setSentCustomerId(customerId);
     setSentRecordId(rec!.id);
 
-    if (toContact) {
-      const body = `${proName}: Your service record is ready. ${finalUrl} (Reply STOP to opt out.)`;
-      if (newCustomer.phone || existing.find((x) => x.id === customerId)?.phone) {
-        await mockSend({ channel: "sms", to: toContact, body, kind: "record" });
-      }
-      const emailAddr = newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
-      if (emailAddr) {
-        const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+    const emailAddr =
+      newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
+    const phoneAddr =
+      newCustomer.phone || existing.find((x) => x.id === customerId)?.phone || "";
+    setSentTo({ name: toName, email: emailAddr || null, phone: phoneAddr || null });
+
+    let delivered = false;
+    if (emailAddr) {
+      const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+        body: {
+          customer_id: customerId,
+          pro_id: proId,
+          origin: window.location.origin,
+          record_id: rec!.id,
+        },
+      });
+      const respOk =
+        !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+      if (respOk) {
+        delivered = true;
+        await supabase
+          .from("records")
+          .update({ sent_email_at: new Date().toISOString() })
+          .eq("id", rec!.id);
+        // Mint a real single-use claim URL for the "Copy link" button. If
+        // this fails we simply hide the button - never fall back to /home.
+        const { data: qr } = await supabase.functions.invoke("claim-qr", {
           body: {
             customer_id: customerId,
             pro_id: proId,
-            origin: window.location.origin,
             record_id: rec!.id,
+            origin: window.location.origin,
           },
         });
-        if (sendErr || (sendResp && sendResp.ok === false)) {
-          const code = (sendResp && sendResp.code) || sendErr?.message || "send_failed";
-          await mockSend({
-            channel: "email",
-            to: emailAddr,
-            body: `Subject: Your service record from ${proName}\n\n(Fallback preview. Real send failed: ${code})\n\nHi ${toName},\n\nYour service record is ready: ${finalUrl}\n\nThanks,\n${proName}`,
-            kind: "record",
-          });
-          setToast(`Email preview saved (${code})`);
-          setTimeout(() => setToast(null), 3500);
-        }
+        const qrOk =
+          !!qr && (qr as { ok?: boolean; claim_url?: string }).ok === true &&
+          typeof (qr as { claim_url?: string }).claim_url === "string";
+        if (qrOk) setClaimUrl((qr as { claim_url: string }).claim_url);
+      } else {
+        const code =
+          (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed";
+        setSendErrorCode(code);
       }
-      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec!.id });
     }
 
-    if (askReview && toContact) {
-      const body = `${proName}: Thanks for choosing us! Mind leaving a Google review? It really helps. (Reply STOP to opt out.)`;
-      await mockSend({ channel: "sms", to: toContact, body, kind: "review_request" });
-      await logEvent(`pro:${proId}`, "review_requested", { customer_id: customerId });
+    if (delivered) {
+      setDeliveryState("sent");
+      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec!.id });
+      // Google review ask: only fires on a real delivery, so the Reviews page
+      // count reflects reality. No mock SMS - texting is not live yet.
+      if (askReview) {
+        await logEvent(`pro:${proId}`, "review_requested", { customer_id: customerId });
+      }
+    } else if (emailAddr) {
+      setDeliveryState("send_failed");
+    } else if (phoneAddr) {
+      setDeliveryState("phone_only");
+    } else {
+      setDeliveryState("no_contact");
     }
 
     if (existing.length === 0) {
@@ -997,13 +1037,77 @@ function NewJob() {
 
     setSubmitting(false);
     setStage("done");
-    setToast("Record sent");
+    if (delivered) {
+      setToast(`Sent to ${emailAddr}`);
+    } else {
+      setToast("Job saved");
+    }
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  /* When the pro adds an email on the done screen for a phone-only customer,
+     persist it, then run the same real send path. */
+  async function retryWithEmail() {
+    const email = addEmail.trim();
+    if (!email || !sentCustomerId || !sentRecordId || !proId) return;
+    setRetrying(true);
+    const { error: updErr } = await supabase
+      .from("customers")
+      .update({ email })
+      .eq("id", sentCustomerId);
+    if (updErr) {
+      setRetrying(false);
+      setToast("Could not save that email");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+      body: {
+        customer_id: sentCustomerId,
+        pro_id: proId,
+        origin: window.location.origin,
+        record_id: sentRecordId,
+      },
+    });
+    const respOk = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+    if (!respOk) {
+      const code =
+        (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed";
+      setSendErrorCode(code);
+      setDeliveryState("send_failed");
+      setRetrying(false);
+      return;
+    }
+    await supabase
+      .from("records")
+      .update({ sent_email_at: new Date().toISOString() })
+      .eq("id", sentRecordId);
+    const { data: qr } = await supabase.functions.invoke("claim-qr", {
+      body: {
+        customer_id: sentCustomerId,
+        pro_id: proId,
+        record_id: sentRecordId,
+        origin: window.location.origin,
+      },
+    });
+    const qrOk =
+      !!qr && (qr as { ok?: boolean; claim_url?: string }).ok === true &&
+      typeof (qr as { claim_url?: string }).claim_url === "string";
+    if (qrOk) setClaimUrl((qr as { claim_url: string }).claim_url);
+    setSentTo((prev) => ({ ...prev, email }));
+    setDeliveryState("sent");
+    await logEvent(`pro:${proId}`, "record_sent", { record_id: sentRecordId });
+    if (askReview) {
+      await logEvent(`pro:${proId}`, "review_requested", { customer_id: sentCustomerId });
+    }
+    setRetrying(false);
+    setToast(`Sent to ${email}`);
     setTimeout(() => setToast(null), 3500);
   }
 
   async function copyUrl() {
-    if (!recordUrl) return;
-    await navigator.clipboard.writeText(recordUrl);
+    if (!claimUrl) return;
+    await navigator.clipboard.writeText(claimUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -1048,7 +1152,11 @@ function NewJob() {
     setVoiceOpen(false);
     setAskReview(true);
     setHiddenFields(new Set());
-    setRecordUrl(null);
+    setClaimUrl(null);
+    setDeliveryState("no_contact");
+    setSentTo({ name: "", email: null, phone: null });
+    setSendErrorCode(null);
+    setAddEmail("");
     setSentCustomerId(null);
     setSentRecordId(null);
     setQrOpen(false);
@@ -1868,23 +1976,89 @@ function NewJob() {
 
             {stage === "done" && (
               <Card className="anim-scale-in text-center py-12 max-w-xl mx-auto">
-                <Celebration variant="burst" />
-                <CheckBurst className="mx-auto" />
-                <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
-                <p className="mt-2 text-sm text-muted">
-                  Your customer will see it in their inbox and texts.
-                </p>
+                {deliveryState === "sent" && <Celebration variant="burst" />}
+                {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
+                {deliveryState === "sent" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      Sent to {sentTo.email}.
+                    </p>
+                  </>
+                )}
+                {deliveryState === "phone_only" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      We can't reach {sentTo.name || "your customer"} yet. SMS delivery is coming.
+                      Add an email to send the record now, or show the QR.
+                    </p>
+                    <div className="mx-auto mt-4 flex max-w-sm flex-col gap-2 sm:flex-row">
+                      <input
+                        type="email"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="customer@email.com"
+                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                      />
+                      <Btn
+                        variant="indigo"
+                        size="sm"
+                        loading={retrying}
+                        disabled={!addEmail.trim() || retrying}
+                        onClick={retryWithEmail}
+                      >
+                        Send record
+                      </Btn>
+                    </div>
+                  </>
+                )}
+                {deliveryState === "no_contact" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      No way to reach {sentTo.name || "your customer"} yet. Add an email to send their record.
+                    </p>
+                    <div className="mx-auto mt-4 flex max-w-sm flex-col gap-2 sm:flex-row">
+                      <input
+                        type="email"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="customer@email.com"
+                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                      />
+                      <Btn
+                        variant="indigo"
+                        size="sm"
+                        loading={retrying}
+                        disabled={!addEmail.trim() || retrying}
+                        onClick={retryWithEmail}
+                      >
+                        Send record
+                      </Btn>
+                    </div>
+                  </>
+                )}
+                {deliveryState === "send_failed" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      We couldn't deliver the record to {sentTo.email || "the customer"}
+                      {sendErrorCode ? ` (${sendErrorCode})` : ""}. Try again or show the QR.
+                    </p>
+                  </>
+                )}
                 {billedAmount != null && (
                   <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-sm font-semibold text-indigo">
                     Billed {formatMoney(billedAmount)} · they can pay it from their home page
                   </div>
                 )}
-                {recordUrl && (
+                {claimUrl && (
                   <button
                     onClick={copyUrl}
                     className="pressable mt-4 inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-sm font-mono text-ink hover:bg-line transition-colors break-all"
                   >
-                    {copied ? "Copied ✓" : recordUrl}
+                    {copied ? "Copied ✓" : claimUrl}
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
