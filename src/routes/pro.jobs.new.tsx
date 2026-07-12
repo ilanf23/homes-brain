@@ -25,7 +25,6 @@ import {
   haversineMeters,
   logEvent,
   normalizeAddress,
-  normalizeAddress,
   tradeLabel,
 } from "@/lib/hb";
 import { createInvoice, formatMoney } from "@/lib/invoices";
