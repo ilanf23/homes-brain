@@ -32,7 +32,10 @@ export function TradeFieldInputs({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {fields.map((f) => {
-        const label = `${f.label}${f.unit ? ` (${f.unit})` : ""}${f.required ? " *" : ""}`;
+        // These fields live inside an "optional" drawer on the log-a-job form,
+        // so we never render a required asterisk here even if a config row is
+        // flagged required. Label and behavior must agree.
+        const label = `${f.label}${f.unit ? ` (${f.unit})` : ""}`;
         const raw = values[f.key];
         if (f.input_type === "select") {
           const strVal = typeof raw === "string" ? raw : "";
