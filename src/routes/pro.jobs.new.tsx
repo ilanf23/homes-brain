@@ -1977,23 +1977,89 @@ function NewJob() {
 
             {stage === "done" && (
               <Card className="anim-scale-in text-center py-12 max-w-xl mx-auto">
-                <Celebration variant="burst" />
-                <CheckBurst className="mx-auto" />
-                <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
-                <p className="mt-2 text-sm text-muted">
-                  Your customer will see it in their inbox and texts.
-                </p>
+                <Celebration variant={deliveryState === "sent" ? "burst" : "none"} />
+                {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
+                {deliveryState === "sent" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      Sent to {sentTo.email}.
+                    </p>
+                  </>
+                )}
+                {deliveryState === "phone_only" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      We can't reach {sentTo.name || "your customer"} yet. SMS delivery is coming.
+                      Add an email to send the record now, or show the QR.
+                    </p>
+                    <div className="mx-auto mt-4 flex max-w-sm flex-col gap-2 sm:flex-row">
+                      <input
+                        type="email"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="customer@email.com"
+                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                      />
+                      <Btn
+                        variant="indigo"
+                        size="sm"
+                        loading={retrying}
+                        disabled={!addEmail.trim() || retrying}
+                        onClick={retryWithEmail}
+                      >
+                        Send record
+                      </Btn>
+                    </div>
+                  </>
+                )}
+                {deliveryState === "no_contact" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      No way to reach {sentTo.name || "your customer"} yet. Add an email to send their record.
+                    </p>
+                    <div className="mx-auto mt-4 flex max-w-sm flex-col gap-2 sm:flex-row">
+                      <input
+                        type="email"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="customer@email.com"
+                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                      />
+                      <Btn
+                        variant="indigo"
+                        size="sm"
+                        loading={retrying}
+                        disabled={!addEmail.trim() || retrying}
+                        onClick={retryWithEmail}
+                      >
+                        Send record
+                      </Btn>
+                    </div>
+                  </>
+                )}
+                {deliveryState === "send_failed" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      We couldn't deliver the record to {sentTo.email || "the customer"}
+                      {sendErrorCode ? ` (${sendErrorCode})` : ""}. Try again or show the QR.
+                    </p>
+                  </>
+                )}
                 {billedAmount != null && (
                   <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-sm font-semibold text-indigo">
                     Billed {formatMoney(billedAmount)} · they can pay it from their home page
                   </div>
                 )}
-                {recordUrl && (
+                {claimUrl && (
                   <button
                     onClick={copyUrl}
                     className="pressable mt-4 inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-sm font-mono text-ink hover:bg-line transition-colors break-all"
                   >
-                    {copied ? "Copied ✓" : recordUrl}
+                    {copied ? "Copied ✓" : claimUrl}
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
