@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Btn } from "@/lib/ui";
 import { MarketingShell, marketingHead } from "@/components/marketing";
+import { VoicePhone, VoiceToRecord } from "@/components/voice-record-visual";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -44,31 +45,40 @@ function GoogleGlyph() {
 function Landing() {
   return (
     <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
-      {/* Hero: pro first */}
-      <section className="mx-auto max-w-3xl px-5 pt-12 sm:pt-16 pb-14 text-center">
-        <div className="eyebrow text-teal">For pros in St. Johns County</div>
-        <h1 className={`${H_SANS} mt-4 text-4xl sm:text-6xl leading-[1.05]`}>
-          Get more Google reviews.
-          <br />
-          <span className="text-teal">Automatically. Free.</span>
-        </h1>
-        <p className="mt-5 mx-auto max-w-xl text-lg text-muted">
-          Log a job in 30 seconds. We ask your customer for the review, then tell you when it
-          is time to go back.
-        </p>
-        <div className="mt-8 flex justify-center">
-          <Link to="/pro/signup" className="w-full sm:w-auto">
-            <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
-              Claim your profile
-            </Btn>
-          </Link>
+      {/* Hero: pro first, with voice phone */}
+      <section className="mx-auto max-w-6xl px-5 pt-12 sm:pt-16 pb-14">
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
+          <div className="text-center lg:text-left">
+            <div className="eyebrow text-teal">For pros in St. Johns County</div>
+            <h1 className={`${H_SANS} mt-4 text-4xl sm:text-6xl leading-[1.05]`}>
+              Get more Google reviews.
+              <br />
+              <span className="text-teal">Automatically. Free.</span>
+            </h1>
+            <p className="mt-5 max-w-xl mx-auto lg:mx-0 text-lg text-muted">
+              Log a job in 30 seconds. We ask your customer for the review, then tell you when
+              it is time to go back.
+            </p>
+            <div className="mt-8 flex justify-center lg:justify-start">
+              <Link to="/pro/signup" className="w-full sm:w-auto">
+                <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+                  Claim your profile
+                </Btn>
+              </Link>
+            </div>
+            <p className="mt-4 text-sm text-muted">
+              No card. No password. Replaces your $75 to $599 a month review tool.
+            </p>
+          </div>
+
+          {/* Voice phone */}
+          <div className="order-first lg:order-last">
+            <VoicePhone />
+          </div>
         </div>
-        <p className="mt-4 text-sm text-muted">
-          No card. No password. Replaces your $75 to $599 a month review tool.
-        </p>
 
         {/* Proof card */}
-        <div className="mt-12 mx-auto max-w-md rounded-[22px] border border-line bg-paper p-6 text-left shadow-[0_20px_50px_-30px_rgba(22,22,15,0.35)]">
+        <div className="mt-14 mx-auto max-w-md rounded-[22px] border border-line bg-paper p-6 shadow-[0_20px_50px_-30px_rgba(22,22,15,0.35)]">
           <Stars />
           <p className="mt-3 text-[16px] text-ink leading-snug">
             "Fast, honest, cleaned up after himself. Best plumber in Ponte Vedra."
@@ -80,7 +90,7 @@ function Landing() {
         </div>
 
         {/* Callback chip */}
-        <div className="mt-5 mx-auto max-w-md flex items-center gap-3 rounded-2xl bg-teal/10 border border-teal/20 px-4 py-3 text-left">
+        <div className="mt-5 mx-auto max-w-md flex items-center gap-3 rounded-2xl bg-teal/10 border border-teal/20 px-4 py-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal text-white font-extrabold">
             K
           </span>
@@ -91,6 +101,25 @@ function Landing() {
           <span className="rounded-full bg-teal px-3.5 py-1.5 text-[12px] font-bold text-white">
             Call
           </span>
+        </div>
+      </section>
+
+      {/* HomesBrain AI: voice in, record out */}
+      <section className="border-t border-line py-16 sm:py-20">
+        <div className="mx-auto max-w-5xl px-5">
+          <div className="text-center">
+            <div className="eyebrow text-indigo">HomesBrain AI, free for every pro</div>
+            <h2 className={`${H_SANS} mt-4 text-3xl sm:text-4xl leading-[1.1]`}>
+              Just talk. It fills itself in.
+            </h2>
+            <p className="mt-4 mx-auto max-w-xl text-[15px] sm:text-base text-muted">
+              You never type. Talk through the job, HomesBrain AI writes the record. Faster than
+              your notebook.
+            </p>
+          </div>
+          <div className="mt-10">
+            <VoiceToRecord footer="Keep your notebook. This is just faster, and it lands you the review and the rebook." />
+          </div>
         </div>
       </section>
 
