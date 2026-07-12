@@ -97,8 +97,7 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
       { to: "/privacy", label: "Privacy and consent" },
       { to: "/terms", label: "Terms" },
       { to: "/messaging-terms", label: "Messaging terms" },
-      /* No dedicated CCPA page yet - the privacy page covers this today. */
-      { to: "/privacy", label: "Do Not Sell or Share My Information" },
+
     ],
   },
 ];

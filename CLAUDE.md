@@ -57,12 +57,13 @@ There is no test suite. Verify changes by running the dev server and exercising 
 
 ## Brand - use these tokens exactly
 
-**One brand, one payoff color.** The old role-per-audience system (teal = pros, coral = homeowners, amber = partners) is retired - never reintroduce it. Audiences are distinguished by copy and structure, not color.
+**Color carries meaning.** Notion is the canonical source: each color has a fixed role and they are never mixed. A pro CTA is teal; a homeowner CTA is coral; the brand mark, cross-cutting platform UI, and the AI/copilot are indigo; partner surfaces are amber; compliance and destructive states are red. Audiences are distinguished by color, copy, and structure together.
 
-- **Indigo = THE brand color**, on every surface for every audience: buttons, links, eyebrows, chips, prices, nav, focus states. Pro app, homeowner app, marketing, public record - all indigo.
-- **Coral = payoff highlights only**, used sparingly (~10% of color): rebook CTAs/pills, revenue stats ("+$4,200 rebooked"), "win" moments. If in doubt, use indigo.
-- **Amber = functional warning/status only** ("due soon", "pending") - never branding.
-- **Red = errors, destructive, compliance** only.
+- **Indigo** = HomesBrain itself, the platform, the brand mark, cross-cutting UI, and the AI/copilot.
+- **Teal** = pros / vendor side (buttons, accents, chips on pro surfaces).
+- **Coral** = homeowners (buttons, accents, chips on homeowner surfaces).
+- **Amber** = partners.
+- **Red** = compliance, warnings, destructive states.
 
 ```css
 --ink: #16160f;
@@ -72,15 +73,19 @@ There is no test suite. Verify changes by running the dev server and exercising 
 --soft: #f7f6f1;
 --indigo: #473fb0;
 --indigobg: #eeedfd;
---indigo-dark: #2a2470; /* brand - everywhere */
+--indigo-dark: #2a2470; /* brand and platform */
+--teal: #0f6e56;
+--tealbg: #e6f5ee;
+--teal-dark: #0d5d49;  /* pros */
 --coral: #c2461f;
 --coralbg: #fbeae2;
---coral-dark: #9c3a18; /* payoff highlights only */
+--coral-dark: #9c3a18; /* homeowners */
 --amber: #8a5208;
---amberbg: #faf0db; /* functional warning/status */
+--amberbg: #faf0db;    /* partners */
 --red: #a32d2d;
---redbg: #fcebeb; /* errors/compliance */
+--redbg: #fcebeb;      /* compliance / errors */
 ```
+
 
 The warm paper neutrals (ink / soft / line) carry the personality - a beautifully kept ledger. On accent tint backgrounds (`*bg`), use the `*-dark` text tone where the strong tone fails AA.
 

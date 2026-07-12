@@ -754,7 +754,8 @@ function ForHomeowners() {
                       </div>
                     </div>
                     <div className="seq" style={seq(1.5)}>
-                      <Btn variant="indigo" className="w-full">
+                      <Btn variant="coral" className="w-full">
+
                         Get my record
                       </Btn>
                     </div>
@@ -858,7 +859,7 @@ function ForHomeowners() {
                       />
                     </div>
                     <div className="seq" style={seq(4.1)}>
-                      <Btn variant="indigo" className="w-full">
+                      <Btn variant="coral" className="w-full">
                         Share with buyer
                       </Btn>
                     </div>

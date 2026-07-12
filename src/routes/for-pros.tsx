@@ -53,7 +53,7 @@ function Step({ n, title, body }: { n: number; title: string; body: ReactNode })
 
 function ForPros() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
+    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "teal" }}>
       {/* Hero */}
       <section className={`${CONTAINER} pt-14 pb-14 text-center`}>
         <div className="eyebrow text-teal">Charter Pro, Class of 2027</div>
@@ -183,7 +183,7 @@ function ForPros() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-[24px] bg-indigo p-7 sm:p-8 text-white flex flex-col">
+          <div className="rounded-[24px] bg-teal p-7 sm:p-8 text-white flex flex-col">
             <span className="inline-block self-start rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
               Founding price, first 1,000 pros
             </span>
