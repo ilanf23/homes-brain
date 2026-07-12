@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { PlanLock } from "@/components/plan-lock";
+import { DEMO_SHORT } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/due")({
   head: () => ({ meta: [{ title: "Due for service - HomesBrain" }] }),
