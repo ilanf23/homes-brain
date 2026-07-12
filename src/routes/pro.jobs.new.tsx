@@ -24,7 +24,7 @@ import {
   geocodeHome,
   haversineMeters,
   logEvent,
-  logEvent,
+  normalizeAddress,
   normalizeAddress,
   tradeLabel,
 } from "@/lib/hb";
