@@ -1153,7 +1153,11 @@ function NewJob() {
     setVoiceOpen(false);
     setAskReview(true);
     setHiddenFields(new Set());
-    setRecordUrl(null);
+    setClaimUrl(null);
+    setDeliveryState("no_contact");
+    setSentTo({ name: "", email: null, phone: null });
+    setSendErrorCode(null);
+    setAddEmail("");
     setSentCustomerId(null);
     setSentRecordId(null);
     setQrOpen(false);
