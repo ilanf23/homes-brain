@@ -383,21 +383,21 @@ export function MarketingShell({
       <main className="flex-1">{children}</main>
 
       {/* Fixed thumb-reachable CTA on mobile. Footer padding below makes room for it. */}
-      {mobileCta && !menuOpen && (
+      {resolvedMobileCta && !menuOpen && (
         <div
           className="min-[880px]:hidden fixed bottom-0 inset-x-0 z-30 border-t border-line bg-background/92 backdrop-blur-md px-5 py-3"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <Link to={mobileCta.to} className="block">
-            <Btn variant={mobileCta.variant} size="lg" className="w-full">
-              {mobileCta.label}
+          <Link to={resolvedMobileCta.to} className="block">
+            <Btn variant={resolvedMobileCta.variant} size="lg" className="w-full">
+              {resolvedMobileCta.label}
             </Btn>
           </Link>
         </div>
       )}
 
       <footer
-        className={`border-t border-line bg-soft ${mobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
+        className={`border-t border-line bg-soft ${resolvedMobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
       >
         <div className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
 
