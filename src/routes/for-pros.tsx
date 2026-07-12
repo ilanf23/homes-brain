@@ -183,7 +183,7 @@ function ForPros() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-[24px] bg-indigo p-7 sm:p-8 text-white flex flex-col">
+          <div className="rounded-[24px] bg-teal p-7 sm:p-8 text-white flex flex-col">
             <span className="inline-block self-start rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
               Founding price, first 1,000 pros
             </span>
