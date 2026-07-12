@@ -2205,6 +2205,79 @@ function NewJob() {
         />
       )}
 
+      {fullReveal && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-5 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-line bg-paper p-6 shadow-2xl">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-indigo">
+              <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-indigo" />
+              HomesBrain AI
+            </div>
+            <div className="mt-1 text-lg font-extrabold tracking-tight text-ink">
+              Building the record
+            </div>
+            <ul className="mt-4 space-y-2">
+              {fullReveal.map((s) => {
+                const done = s.status === "done";
+                const active = s.status === "active";
+                return (
+                  <li
+                    key={s.key}
+                    className={`flex items-start gap-3 rounded-2xl border px-3.5 py-3 transition-colors ${
+                      done
+                        ? "border-teal/30 bg-tealbg"
+                        : active
+                          ? "border-indigo/30 bg-indigobg"
+                          : "border-line bg-white"
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                        done
+                          ? "bg-teal text-white"
+                          : active
+                            ? "bg-indigo text-white"
+                            : "bg-line text-muted"
+                      }`}
+                      aria-hidden
+                    >
+                      {done ? (
+                        <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none">
+                          <path
+                            d="M4 10.5l3.5 3.5L16 6"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : active ? (
+                        <span className="h-2 w-2 animate-ping rounded-full bg-white" />
+                      ) : null}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
+                          done ? "text-teal-dark" : active ? "text-indigo" : "text-muted"
+                        }`}
+                      >
+                        {s.label}
+                      </div>
+                      <div
+                        className={`mt-0.5 truncate text-sm font-semibold ${
+                          s.value ? "text-ink" : "text-muted"
+                        }`}
+                      >
+                        {s.value ?? (active || done ? "Not mentioned" : "…")}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
 
       {qrOpen && sentCustomerId && proId && pro && (
