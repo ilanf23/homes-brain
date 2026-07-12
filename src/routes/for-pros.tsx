@@ -64,7 +64,15 @@ function Check({ className = "text-indigo" }: { className?: string }) {
   );
 }
 
-function CheckRow({ dark = false, children }: { dark?: boolean; children: ReactNode }) {
+function CheckRow({
+  dark = false,
+  rollingOut = false,
+  children,
+}: {
+  dark?: boolean;
+  rollingOut?: boolean;
+  children: ReactNode;
+}) {
   return (
     <li
       className={`flex items-center gap-3 border-b py-3.5 last:border-b-0 last:pb-0 ${
@@ -73,6 +81,15 @@ function CheckRow({ dark = false, children }: { dark?: boolean; children: ReactN
     >
       <Check className={dark ? "text-white/80" : "text-indigo"} />
       <span className={`text-[15px] ${dark ? "text-white/95" : "text-ink"}`}>{children}</span>
+      {rollingOut && (
+        <span
+          className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+            dark ? "bg-white/15 text-white/75" : "bg-soft text-muted"
+          }`}
+        >
+          Rolling out
+        </span>
+      )}
     </li>
   );
 }
@@ -203,16 +220,16 @@ const FREE_FEATURES = [
   "30 second job logging",
   "Branded record sent to the homeowner",
   "Automatic Google review requests",
-  "Appliance summary and recall check",
+  "Appliance summary",
   "Your own customer and job list",
 ];
 
 const PRO_FEATURES = [
-  "Automated service reminders",
-  "One tap rebooking",
-  "Recall driven lead lists",
-  "New owner leads at resale",
-  "Analytics on records, reviews, rebooks",
+  { label: "Automated service reminders" },
+  { label: "One tap rebooking" },
+  { label: "Recall driven lead lists", rollingOut: true },
+  { label: "New owner leads at resale", rollingOut: true },
+  { label: "Analytics on records, reviews, rebooks" },
 ];
 
 
@@ -488,8 +505,8 @@ function ForPros() {
             </p>
             <ul className="mt-5 border-t border-white/15">
               {PRO_FEATURES.map((f) => (
-                <CheckRow key={f} dark>
-                  {f}
+                <CheckRow key={f.label} dark rollingOut={f.rollingOut}>
+                  {f.label}
                 </CheckRow>
               ))}
             </ul>
