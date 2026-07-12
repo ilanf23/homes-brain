@@ -739,16 +739,13 @@ function NewJob() {
     }
     setFullBusy(false);
 
-    // Match by name against existing customers (case-insensitive, whole-string).
-    const nm = (extract.customer_name ?? "").trim().toLowerCase();
-    const match = nm ? existing.find((c) => c.name.trim().toLowerCase() === nm) : undefined;
+    // The AI-extracted name always wins: even if a customer with a different
+    // name lives at the same address, we treat this as a new customer so the
+    // pro can pick who they actually served rather than being auto-merged.
+    const match = undefined as CustomerOpt | undefined;
 
-    const customerLabel = match
-      ? match.name
-      : (extract.customer_name?.trim() || null);
-    const addressLabel = match
-      ? (extract.address?.trim() || match.homes?.address || null)
-      : (extract.address?.trim() || null);
+    const customerLabel = extract.customer_name?.trim() || null;
+    const addressLabel = extract.address?.trim() || null;
     const contactBits = [extract.customer_phone, extract.customer_email].filter(Boolean) as string[];
     const equipmentBits = [extract.type, extract.make, extract.model].filter(Boolean) as string[];
 
