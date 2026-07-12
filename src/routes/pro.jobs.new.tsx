@@ -1977,7 +1977,7 @@ function NewJob() {
 
             {stage === "done" && (
               <Card className="anim-scale-in text-center py-12 max-w-xl mx-auto">
-                <Celebration variant={deliveryState === "sent" ? "burst" : "none"} />
+                {deliveryState === "sent" && <Celebration variant="burst" />}
                 {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
                 {deliveryState === "sent" && (
                   <>
