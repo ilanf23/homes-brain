@@ -227,89 +227,76 @@ function AreaChip({
   );
 }
 
-/* Stylized focus map of St. Johns County. Hand-drawn silhouette, not
-   geographically precise - a calm marker of place, not a mapping tool.
-   Coordinates are tuned to the 400x300 viewBox. */
-const TOWN_POINTS: Record<ServiceAreaKey, { x: number; y: number; label: string }> = {
-  "Fruit Cove": { x: 110, y: 70, label: "Fruit Cove" },
-  Nocatee: { x: 235, y: 105, label: "Nocatee" },
-  "Ponte Vedra": { x: 305, y: 75, label: "Ponte Vedra" },
-  "St. Augustine": { x: 290, y: 215, label: "St. Augustine" },
+const TOWN_POINTS: Record<
+  ServiceAreaKey,
+  { x: number; y: number; lx: number; ly: number; anchor: "start" | "middle" | "end" }
+> = {
+  "Fruit Cove": { x: 96, y: 104, lx: 96, ly: 88, anchor: "middle" },
+  Nocatee: { x: 214, y: 138, lx: 214, ly: 122, anchor: "middle" },
+  "Ponte Vedra": { x: 250, y: 98, lx: 238, ly: 102, anchor: "end" },
+  "St. Augustine": { x: 252, y: 250, lx: 240, ly: 254, anchor: "end" },
 };
 
 function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
   return (
     <svg
-      viewBox="0 0 400 300"
+      viewBox="0 0 380 440"
       className="w-full h-auto"
       role="img"
-      aria-label="St. Johns County towns we serve"
+      aria-label="St. Johns County, Florida"
     >
-      {/* County silhouette (stylized) */}
+      {/* Atlantic Ocean, east side */}
       <path
-        d="M60,80 C90,50 150,40 200,55 C260,45 320,55 350,90 C365,130 355,180 335,215 C310,255 260,275 210,268 C160,275 110,260 80,225 C55,190 45,130 60,80 Z"
-        fill="var(--tealbg, #e6f5f3)"
+        d="M268 58 C286 130 288 222 276 302 C268 352 256 390 250 404 L380 440 L380 36 Z"
+        fill="#dcebf1"
+        opacity="0.65"
+      />
+      {/* County silhouette (realistic proportions: flat north, straight-ish east coast, irregular west) */}
+      <path
+        d="M74 80 C120 66 156 60 196 72 C220 58 244 56 258 68 C272 122 276 212 266 294 C260 346 250 386 242 402 C196 412 150 408 120 386 C92 362 80 324 74 278 C68 214 66 142 74 80 Z"
+        fill="var(--tealbg, #e9f6f3)"
         stroke="var(--teal, #0f8a86)"
         strokeWidth="1.5"
-        opacity="0.9"
       />
-      {/* Coastline hint */}
+      {/* Coastline hint just inside the east edge */}
       <path
-        d="M340,80 C355,140 350,210 320,255"
+        d="M262 76 C278 150 280 232 268 302 C262 346 252 382 246 398"
         fill="none"
         stroke="var(--teal, #0f8a86)"
         strokeWidth="1"
-        strokeDasharray="3 4"
+        strokeDasharray="2 5"
         opacity="0.5"
       />
-
-      {/* Town dots */}
+      {/* Town markers */}
       {(Object.keys(TOWN_POINTS) as ServiceAreaKey[]).map((key) => {
         const p = TOWN_POINTS[key];
         const isSelected = selected === key;
         return (
           <g key={key}>
             {isSelected && (
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r={14}
-                fill="var(--teal, #0f8a86)"
-                opacity="0.18"
-              />
+              <circle cx={p.x} cy={p.y} r={13} fill="var(--teal, #0f8a86)" opacity="0.16" />
             )}
             <circle
               cx={p.x}
               cy={p.y}
-              r={isSelected ? 6 : 4.5}
+              r={isSelected ? 6 : 4}
               fill={isSelected ? "var(--teal, #0f8a86)" : "var(--ink, #16160f)"}
               stroke="#fff"
               strokeWidth="1.5"
             />
             <text
-              x={p.x}
-              y={p.y - 12}
-              textAnchor="middle"
+              x={p.lx}
+              y={p.ly}
+              textAnchor={p.anchor}
               fontSize="12"
-              fontWeight="700"
-              fill={isSelected ? "var(--tealdark, #0a5f5c)" : "var(--ink, #16160f)"}
+              fontWeight="600"
+              fill={isSelected ? "var(--tealdark, #0a5f5c)" : "var(--muted, #6b6862)"}
             >
-              {p.label}
+              {p.label ?? key}
             </text>
           </g>
         );
       })}
-
-      <text
-        x="200"
-        y="290"
-        textAnchor="middle"
-        fontSize="10"
-        fill="var(--muted, #73706a)"
-        fontStyle="italic"
-      >
-        St. Johns County, Florida
-      </text>
     </svg>
   );
 }
