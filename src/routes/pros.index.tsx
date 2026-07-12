@@ -22,8 +22,9 @@ export const Route = createFileRoute("/pros/")({
     marketingHead({
       title: "Find a local pro in St. Johns County | HomesBrain",
       description:
-        "The top few Charter Pros per trade across Nocatee, Ponte Vedra, St. Augustine, and Fruit Cove. Free to browse.",
+        "The top few Charter Pros per trade across Nocatee, Ponte Vedra Beach, Palm Valley, World Golf Village, Fruit Cove, St. Augustine, and St. Augustine Beach. Free to browse.",
       path: "/pros",
+
       geo: true,
     }),
   component: ProsDirectory,
@@ -70,8 +71,9 @@ function ProsDirectory() {
           The top few pros in <span className="text-teal">St. Johns County</span>.
         </h1>
         <p className="mt-4 text-base sm:text-lg text-muted">
-          Charter Pros, curated by trade and town. Nocatee, Ponte Vedra, St. Augustine, Fruit Cove.
+          Charter Pros, curated by trade and town. Nocatee, Ponte Vedra Beach, Palm Valley, World Golf Village, Fruit Cove, St. Augustine, and St. Augustine Beach.
         </p>
+
       </section>
 
       {/* Town selector */}
