@@ -1848,7 +1848,10 @@ function NewJob() {
                 )}
 
                 <div className="flex gap-2">
-                  <Btn variant="secondary" onClick={() => setStage("location")}>
+                  <Btn
+                    variant="secondary"
+                    onClick={() => setStage(selectedCustomerId ? "customer" : "location")}
+                  >
                     Back
                   </Btn>
                   <Btn
