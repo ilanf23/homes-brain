@@ -241,7 +241,7 @@ function ForPros() {
               <div className="eyebrow text-teal">For pros</div>
             </div>
             <h1 className={`${H_SANS} anim-fade-up d-1 mt-4 text-4xl sm:text-5xl leading-[1.08]`}>
-              Never lose a customer again.
+              You do the best work in St. Johns County. Google barely knows it.
             </h1>
             <p className="anim-fade-up d-2 mt-5 max-w-2xl text-lg leading-relaxed text-muted">
               Homeowners set a maintenance reminder after the job. When it's due, they come back to
@@ -289,6 +289,10 @@ function ForPros() {
             </div>
           ))}
         </div>
+        <p className="anim-fade-up d-5 mt-5 text-center text-sm text-muted">
+          Founding pros of St. Johns County. Claim your profile, tell us the towns you serve, and
+          you show up for every homeowner there.
+        </p>
       </section>
 
       {/* Logging a job */}
@@ -467,7 +471,7 @@ function ForPros() {
             <div className="flex items-center gap-2">
               <div className="eyebrow text-white/70">Pro · brings them back</div>
               <span className="rounded-full bg-coral px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
-                Founding
+                Founding · Charter Class of 2027
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-3">
