@@ -279,11 +279,11 @@ function Landing() {
             </h2>
           </div>
 
-          <div className="reveal rd-1 mt-10 grid gap-4 md:grid-cols-3">
+          <div className="reveal rd-1 mt-10 grid items-stretch gap-4 md:grid-cols-3">
             {HIDDEN_FAILURES.map((f) => (
               <div
                 key={f.tag}
-                className="rounded-[22px] border border-line bg-paper p-6 flex flex-col"
+                className="rounded-[22px] border border-line bg-paper p-6 flex flex-col h-full"
               >
                 <div className="flex items-center gap-3">
                   <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigobg text-indigo">
@@ -293,11 +293,13 @@ function Landing() {
                     {f.tag}
                   </div>
                 </div>
-                <div className="mt-5 text-3xl sm:text-4xl font-extrabold text-indigo leading-none tnum">
-                  {f.stat}
+                <div className="flex flex-1 flex-col">
+                  <div className="mt-5 min-h-[3.75rem] sm:min-h-[4.5rem] text-3xl sm:text-4xl font-extrabold text-indigo leading-none tnum">
+                    {f.stat}
+                  </div>
+                  <p className="mt-3 text-[15px] text-ink leading-snug">{f.line}</p>
                 </div>
-                <p className="mt-3 text-[15px] text-ink leading-snug">{f.line}</p>
-                <div className="mt-5 flex items-start gap-2 rounded-xl bg-indigobg px-3 py-3">
+                <div className="mt-auto flex items-start gap-2 rounded-xl bg-indigobg px-3 py-3">
                   <ShieldCheck size={16} animate={false} className="mt-0.5 shrink-0 text-indigo" />
                   <p className="text-[13px] font-semibold text-indigodark leading-snug">{f.truth}</p>
                 </div>
