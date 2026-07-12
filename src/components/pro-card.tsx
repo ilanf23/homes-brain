@@ -45,12 +45,24 @@ export function ProCard({
           </div>
         </div>
         {pro.verified && (
-          <Pill accent="teal">
-            <ShieldCheck size={11} strokeWidth={2.5} />
-            <span className="ml-0.5">Verified</span>
-          </Pill>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <Pill accent="teal">
+              <ShieldCheck size={11} strokeWidth={2.5} />
+              <span className="ml-0.5">Verified</span>
+            </Pill>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-tealdark">
+              Charter Pro · Class of 2027
+            </span>
+          </div>
         )}
       </div>
+
+      {pro.verified && pro.serviceAreas && pro.serviceAreas.length > 0 && (
+        <div className="mt-2 text-xs text-muted">
+          <span className="font-semibold text-ink/70">Serves:</span>{" "}
+          {pro.serviceAreas.join(" · ")}
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {tradeLabels.map((label) => (
