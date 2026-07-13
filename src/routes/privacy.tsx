@@ -159,7 +159,7 @@ function Privacy() {
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Contact">
+      <LegalSection title="10. Contact">
         <p>
           HomesBrain, Inc.: privacy@homesbrain.com. See also our{" "}
           <Link to="/terms" className="font-semibold text-indigo hover:underline">
