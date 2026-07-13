@@ -374,6 +374,60 @@ function HomeownerSettings() {
                     />
                   </div>
                 </div>
+
+                {/* Web SMS opt-in: unchecked by default, records timestamp. */}
+                <div className="mt-5 rounded-xl border border-line bg-white p-4">
+                  <div className="text-sm font-semibold text-ink">Text updates from HomesBrain</div>
+                  <div className="mt-3 space-y-3">
+                    <Field label="Mobile number (for text updates)">
+                      <PhoneInput value={smsPhone} onChange={setSmsPhone} />
+                    </Field>
+                    <label className="flex items-start gap-2 text-xs text-muted leading-relaxed">
+                      <input
+                        type="checkbox"
+                        checked={smsConsent}
+                        onChange={(e) => setSmsConsent(e.target.checked)}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        Text me my service records and reminders. By checking this box, I agree
+                        to receive recurring automated service and reminder text messages from
+                        HomesBrain at the number I provide. Consent is not a condition of any
+                        purchase or service. Msg &amp; data rates may apply. Message frequency
+                        varies. Reply STOP to opt out, HELP for help. See our{" "}
+                        <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                          Privacy Policy
+                        </Link>{" "}
+                        and{" "}
+                        <Link
+                          to="/messaging-terms"
+                          className="font-semibold text-indigo hover:underline"
+                        >
+                          Messaging Terms
+                        </Link>
+                        .
+                      </span>
+                    </label>
+                    {smsErr && (
+                      <div
+                        role="alert"
+                        className="text-sm text-red bg-redbg rounded-xl px-3 py-2"
+                      >
+                        {smsErr}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs text-muted">
+                        {smsSavedAt
+                          ? `Opted in ${formatDate(smsSavedAt)}`
+                          : "Unchecked by default. Opt in only if you want texts."}
+                      </div>
+                      <Btn variant="indigo" size="sm" loading={smsSaving} onClick={saveSmsConsent}>
+                        Save
+                      </Btn>
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
               <div className="mt-3 space-y-3">
