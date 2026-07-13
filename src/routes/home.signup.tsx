@@ -102,7 +102,13 @@ function HomeownerSignup() {
     setErr(null);
     localStorage.setItem(
       PENDING_KEY,
-      JSON.stringify({ name: name.trim(), address: address.trim(), consent }),
+      JSON.stringify({
+        name: name.trim(),
+        address: address.trim(),
+        consent,
+        phone: phone.trim(),
+        smsConsent,
+      }),
     );
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
