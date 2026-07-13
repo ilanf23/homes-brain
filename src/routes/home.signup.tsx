@@ -169,7 +169,13 @@ function HomeownerSignup() {
                 stashPending={() => {
                   localStorage.setItem(
                     PENDING_KEY,
-                    JSON.stringify({ name: name.trim(), address: address.trim(), consent }),
+                    JSON.stringify({
+                      name: name.trim(),
+                      address: address.trim(),
+                      consent,
+                      phone: phone.trim(),
+                      smsConsent,
+                    }),
                   );
                 }}
               />
