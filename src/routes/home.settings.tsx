@@ -109,6 +109,10 @@ function HomeownerSettings() {
     setPhone(homeowner.phone ?? "");
     setEmail(homeowner.email ?? "");
     setLocalPrefs(loadLocalPrefs());
+    const ho = homeowner as unknown as { sms_consent_at?: string | null };
+    setSmsPhone(homeowner.phone ?? "");
+    setSmsConsent(!!ho.sms_consent_at);
+    setSmsSavedAt(ho.sms_consent_at ?? null);
   }, [homeowner]);
 
   useEffect(() => {
