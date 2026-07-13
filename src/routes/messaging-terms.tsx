@@ -38,23 +38,35 @@ function MessagingTerms() {
         </p>
       </LegalSection>
 
-      <LegalSection title="3. How you consent (opt-in)">
+      <LegalSection title="3. How you opt in (consent)">
+        <p>There are two ways homeowners opt in to the HomesBrain SMS Program:</p>
         <LegalList
           items={[
-            "(a) At the time of service, the professional collects your mobile number and your consent to receive service records and reminders, and confirms it in the HomesBrain app.",
             <>
-              (b) When you create or claim your HomesBrain account at{" "}
+              <strong>(a) On the HomesBrain website</strong> - during account signup at{" "}
               <a
-                href="https://homesbrain.com"
+                href="https://homesbrain.com/home/signup"
                 className="font-semibold text-indigo hover:underline"
               >
-                homesbrain.com
-              </a>
-              , you agree to these Messaging Terms and the Privacy Policy.
+                homesbrain.com/home/signup
+              </a>{" "}
+              or in your account settings, you enter your mobile number and check a consent box
+              (unchecked by default) agreeing to receive recurring automated service and reminder
+              texts from HomesBrain. Consent is not a condition of any purchase.
+            </>,
+            <>
+              <strong>(b) At the time of service</strong> - your home-service professional may
+              collect your mobile number and the same consent, recorded with a timestamp in the
+              HomesBrain app.
             </>,
           ]}
         />
-        <p>Consent is not a condition of purchasing any service.</p>
+        <p>
+          In both paths you consent to receive <strong>recurring automated</strong> service and
+          reminder text messages from HomesBrain. Consent is not a condition of any purchase or
+          service. <strong>Message frequency varies.</strong> <strong>Message and data rates
+          may apply.</strong> <strong>Reply STOP to opt out, HELP for help.</strong>
+        </p>
       </LegalSection>
 
       <LegalSection title="4. Example messages">
