@@ -237,15 +237,6 @@ function HomeownerSignup() {
                   autoComplete="new-password"
                 />
               </Field>
-              <Field label={t("auth.password")}>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("signup.passwordPlaceholder")}
-                  autoComplete="new-password"
-                />
-              </Field>
               <Field label={t("signup.addressLabel")}>
                 <AddressField
                   value={address}
