@@ -196,6 +196,47 @@ function HomeownerSignup() {
                   autoComplete="email"
                 />
               </Field>
+              <Field label="Mobile number (for text updates)">
+                <PhoneInput value={phone} onChange={setPhone} />
+                <p className="mt-1.5 text-xs text-muted">
+                  Optional. Only used if you opt in below.
+                </p>
+              </Field>
+              <label className="flex items-start gap-2 text-xs text-muted leading-relaxed">
+                <input
+                  type="checkbox"
+                  checked={smsConsent}
+                  onChange={(e) => setSmsConsent(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Text me my service records and reminders. By checking this box, I agree to
+                  receive recurring automated service and reminder text messages from HomesBrain
+                  at the number I provide. Consent is not a condition of any purchase or service.
+                  Msg &amp; data rates may apply. Message frequency varies. Reply STOP to opt out,
+                  HELP for help. See our{" "}
+                  <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                    Privacy Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/messaging-terms"
+                    className="font-semibold text-indigo hover:underline"
+                  >
+                    Messaging Terms
+                  </Link>
+                  .
+                </span>
+              </label>
+              <Field label={t("auth.password")}>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t("signup.passwordPlaceholder")}
+                  autoComplete="new-password"
+                />
+              </Field>
               <Field label={t("auth.password")}>
                 <Input
                   type="password"
