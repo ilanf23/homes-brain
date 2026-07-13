@@ -120,21 +120,46 @@ function Privacy() {
         />
       </LegalSection>
 
-      <LegalSection title="7. Children">
+      <LegalSection title="7. Text messaging / SMS">
+        <p>
+          HomesBrain sends service records and reminders about your home via SMS to recipients who
+          have consented.
+        </p>
+        <LegalList
+          items={[
+            "Message frequency varies.",
+            "Message and data rates may apply.",
+            <>
+              Text <strong>STOP</strong> to unsubscribe at any time. Text <strong>HELP</strong> for
+              help, or email support@homesbrain.com.
+            </>,
+            "We do not sell, rent, or share your mobile phone number or SMS opt-in information with third parties or affiliates for their own marketing purposes. Mobile opt-in data is never shared for marketing.",
+          ]}
+        />
+        <p>
+          See our{" "}
+          <Link to="/messaging-terms" className="font-semibold text-indigo hover:underline">
+            Messaging Terms
+          </Link>{" "}
+          for the full SMS program details.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="8. Children">
         <p>
           HomesBrain is not directed to children under 16, and we do not knowingly collect their
           personal information.
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Changes to this policy">
+      <LegalSection title="9. Changes to this policy">
         <p>
           We will post any changes here and update the date above. Material changes will be
           communicated through the service or by email.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Contact">
+      <LegalSection title="10. Contact">
         <p>
           HomesBrain, Inc.: privacy@homesbrain.com. See also our{" "}
           <Link to="/terms" className="font-semibold text-indigo hover:underline">
