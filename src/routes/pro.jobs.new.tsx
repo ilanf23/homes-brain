@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { Celebration } from "@/components/celebration";
-import { QrCode } from "lucide-react";
+import { AlertTriangle, Check, Pencil, QrCode } from "lucide-react";
 import {
   buildRecordUrl,
   checkRecall,
@@ -84,6 +84,55 @@ type ApplianceOpt = {
 };
 type JobHistoryRow = { id: string; what_done: string; created_at: string };
 
+type VoiceCustomerExtract = {
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  address: string | null;
+};
+
+type ReviewEdit = "customer" | "address" | "equipment" | "work" | "next_service" | null;
+
+function normalizedPhone(value?: string | null) {
+  const digits = value?.replace(/\D/g, "") ?? "";
+  return digits.length >= 7 ? digits.slice(-10) : "";
+}
+
+function findVoiceCustomer(existing: CustomerOpt[], extract: VoiceCustomerExtract) {
+  const email = extract.customer_email?.trim().toLowerCase() ?? "";
+  const phone = normalizedPhone(extract.customer_phone);
+  const name = extract.customer_name?.trim().toLowerCase() ?? "";
+  const address = extract.address ? normalizeAddress(extract.address) : "";
+
+  const contactMatches = existing.filter((customer) => {
+    const emailMatches = email && customer.email?.trim().toLowerCase() === email;
+    const phoneMatches = phone && normalizedPhone(customer.phone) === phone;
+    return emailMatches || phoneMatches;
+  });
+  if (contactMatches.length === 1) return contactMatches[0];
+
+  const nameAndAddressMatches = existing.filter(
+    (customer) =>
+      name &&
+      address &&
+      customer.name.trim().toLowerCase() === name &&
+      !!customer.homes?.address &&
+      normalizeAddress(customer.homes.address) === address,
+  );
+  return nameAndAddressMatches.length === 1 ? nameAndAddressMatches[0] : undefined;
+}
+
+function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function deliveryErrorMessage(code: string | null) {
+  if (code === "opted_out") return "This customer has opted out of email.";
+  if (code === "daily_limit") return "Your daily email limit has been reached.";
+  if (code === "not_configured") return "Email delivery is temporarily unavailable.";
+  return "Check your connection and try the email again.";
+}
+
 const STAGES: Stage[] = ["customer", "location", "work", "review"];
 const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
 
@@ -121,39 +170,87 @@ function CheckSquare({ on }: { on: boolean }) {
   );
 }
 
-/* One row of the live record. Tapping toggles whether the customer sees it;
-   excluded rows dim and strike through so the pro sees exactly what is left off. */
+/* One row of the live record. The check controls customer visibility while the
+   value opens its editor; excluded rows dim and strike through. */
 function RecordRow({
   label,
   value,
   included,
   onToggle,
+  onEdit,
 }: {
   label: string;
   value: ReactNode;
   included: boolean;
   onToggle?: () => void;
+  onEdit?: () => void;
 }) {
   const dim = !included;
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={included}
-      className="pressable flex w-full items-start justify-between gap-3 border-b border-line py-3 text-left last:border-b-0"
-    >
-      <div className="flex items-center gap-2.5 shrink-0">
+    <div className="flex w-full items-start justify-between gap-3 border-b border-line py-3 last:border-b-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={included}
+        aria-label={`${included ? "Exclude" : "Include"} ${label}`}
+        className="pressable flex min-h-11 shrink-0 items-center gap-2.5 text-left"
+      >
         <CheckSquare on={included} />
         <span className={`text-sm text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
-      </div>
-      <span
-        className={`text-sm font-semibold text-ink text-right font-mono text-[13px] tnum min-w-0 ${
-          dim ? "opacity-50 line-through" : ""
-        }`}
+      </button>
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={`Edit ${label}`}
+          title={`Edit ${label}`}
+          className="pressable flex min-h-11 min-w-0 items-center justify-end gap-2 text-right"
+        >
+          <span
+            className={`min-w-0 text-[13px] font-semibold text-ink font-mono tnum ${
+              dim ? "opacity-50 line-through" : ""
+            }`}
+          >
+            {value}
+          </span>
+          <Pencil size={16} className="shrink-0 text-muted" aria-hidden="true" />
+        </button>
+      ) : (
+        <span
+          className={`min-w-0 py-3 text-right text-[13px] font-semibold text-ink font-mono tnum ${
+            dim ? "opacity-50 line-through" : ""
+          }`}
+        >
+          {value}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ReviewEditor({
+  children,
+  onDone,
+  doneDisabled = false,
+}: {
+  children: ReactNode;
+  onDone: () => void;
+  doneDisabled?: boolean;
+}) {
+  return (
+    <div className="flex items-end gap-2 border-b border-line bg-soft/60 px-3 py-3">
+      <div className="min-w-0 flex-1">{children}</div>
+      <button
+        type="button"
+        onClick={onDone}
+        disabled={doneDisabled}
+        aria-label="Done editing"
+        title="Done editing"
+        className="pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo text-white disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {value}
-      </span>
-    </button>
+        <Check size={19} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
@@ -282,6 +379,9 @@ function NewJob() {
   // Review. The record always sends (no branded-record toggle in v0); only the
   // Google review ask is optional.
   const [askReview, setAskReview] = useState(true);
+  const [reviewEdit, setReviewEdit] = useState<ReviewEdit>(null);
+  const [reviewName, setReviewName] = useState<string | null>(null);
+  const [reviewEmail, setReviewEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   // Real single-use claim URL minted via claim-qr on a successful email send.
   // Only populated when the record actually reached the customer's inbox;
@@ -295,9 +395,13 @@ function NewJob() {
   // Honest post-send state driving the done screen. "sent" only when the email
   // actually went out; "phone_only" / "no_contact" surface the truth instead
   // of the old "inbox and texts" lie. SMS delivery is not live yet.
-  type DeliveryState = "sent" | "send_failed" | "phone_only" | "no_contact";
+  type DeliveryState = "sent" | "send_failed" | "phone_only" | "no_contact" | "record_failed";
   const [deliveryState, setDeliveryState] = useState<DeliveryState>("no_contact");
-  const [sentTo, setSentTo] = useState<{ name: string; email: string | null; phone: string | null }>({
+  const [sentTo, setSentTo] = useState<{
+    name: string;
+    email: string | null;
+    phone: string | null;
+  }>({
     name: "",
     email: null,
     phone: null,
@@ -312,6 +416,7 @@ function NewJob() {
   // create an open invoice so the homeowner can pay it via the existing flow.
   const [chargeAmount, setChargeAmount] = useState("");
   const [billedAmount, setBilledAmount] = useState<number | null>(null);
+  const [billingError, setBillingError] = useState<string | null>(null);
   // Optional record rows the pro has unchecked (excluded from the customer's
   // record). Keyed by FIELD_* constants; empty rows never enter this set.
   const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
@@ -399,13 +504,13 @@ function NewJob() {
     );
   }, []);
 
-  /* Prefill the location field once GPS resolves, even if it arrives after
-     the pro reached the location slide (high-accuracy GPS can take 5-15s).
+  /* Prefill the address once GPS resolves, even if it arrives after the pro
+     has already reached Review (high-accuracy GPS can take 5-15s).
      Fills a new customer's address, or an existing customer's address when
      nothing is on file. Only fires while the field is still empty and
      untouched, so it never overwrites a typed or picked address. */
   useEffect(() => {
-    if (stage !== "location") return;
+    if (stage !== "location" && stage !== "review") return;
     if (loc.status !== "ready") return;
     if (selectedCustomerId) {
       // Existing customer: only prefill when nothing is on file AND the pro
@@ -625,10 +730,14 @@ function NewJob() {
 
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
-  const previewName = selectedCustomer?.name || newCustomer.name;
-  const previewAddress = selectedCustomerId
-    ? locAddress || selectedCustomer?.homes?.address || ""
-    : newCustomer.address;
+  const previewName = reviewName ?? selectedCustomer?.name ?? newCustomer.name;
+  const previewAddress = selectedCustomerId ? locAddress : newCustomer.address;
+  const trimmedReviewEmail = reviewEmail.trim();
+  const reviewEmailInvalid = !!trimmedReviewEmail && !isEmail(trimmedReviewEmail);
+  const missingReviewAddress = !previewAddress.trim();
+  const missingReviewEmail = !trimmedReviewEmail;
+  const reviewRequiredComplete =
+    !missingReviewAddress && !missingReviewEmail && !reviewEmailInvalid;
 
   // Slide-1 combobox: filter existing by name/address, offer create-new inline.
   const q = query.trim().toLowerCase();
@@ -672,17 +781,19 @@ function NewJob() {
 
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
+    setReviewName(c.name);
+    setReviewEmail(c.email ?? "");
     const onFile = c.homes?.address ?? "";
     addressTouched.current = false;
-    // Prefer the pro's current GPS location as the editable prefill: most jobs
-    // happen where the truck is parked. Fall back to the on-file address, then
-    // empty. The pro can always edit or pick a different place.
-    if (loc.status === "ready") {
-      setLocAddress(loc.address);
-      setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
-    } else if (onFile) {
+    // An existing customer's saved home is the source of truth. GPS is only a
+    // fallback when the customer has no address on file; silently substituting
+    // the truck's location can move the wrong home during submit.
+    if (onFile) {
       setLocAddress(onFile);
       setResolved(null);
+    } else if (loc.status === "ready") {
+      setLocAddress(loc.address);
+      setResolved({ address: loc.address, lat: gps?.lat ?? null, lng: gps?.lng ?? null });
     } else {
       setLocAddress("");
       setResolved(null);
@@ -695,6 +806,8 @@ function NewJob() {
 
   function startNewCustomer(name: string) {
     setSelectedCustomerId("");
+    setReviewName(name);
+    setReviewEmail("");
     addressTouched.current = false;
     setNewCustomer((n) => ({
       ...n,
@@ -739,14 +852,24 @@ function NewJob() {
     }
     setFullBusy(false);
 
-    // The AI-extracted name always wins: even if a customer with a different
-    // name lives at the same address, we treat this as a new customer so the
-    // pro can pick who they actually served rather than being auto-merged.
-    const match = undefined as CustomerOpt | undefined;
+    // Reuse a customer only on a strong contact match or an exact name+address
+    // match. Review is always the next screen; uncertain or missing details are
+    // corrected there instead of sending the pro backward through the funnel.
+    const match = findVoiceCustomer(existing, extract);
+    const extractedName = extract.customer_name?.trim() ?? "";
+    const extractedAddress = extract.address?.trim() ?? "";
+    const savedAddress = match?.homes?.address?.trim() ?? "";
+    const locationAddress = loc.status === "ready" ? loc.address : "";
+    const reviewAddress = extractedAddress || savedAddress || locationAddress;
+    const usedLocationAddress =
+      !!locationAddress && !extractedAddress && !savedAddress && reviewAddress === locationAddress;
 
-    const customerLabel = extract.customer_name?.trim() || null;
-    const addressLabel = extract.address?.trim() || null;
-    const contactBits = [extract.customer_phone, extract.customer_email].filter(Boolean) as string[];
+    const customerLabel = match?.name || extractedName || null;
+    const addressLabel = reviewAddress || null;
+    const contactBits = [
+      extract.customer_phone || match?.phone,
+      extract.customer_email || match?.email,
+    ].filter(Boolean) as string[];
     const equipmentBits = [extract.type, extract.make, extract.model].filter(Boolean) as string[];
 
     const steps: RevealStep[] = [
@@ -783,26 +906,33 @@ function NewJob() {
     // build itself in real time before landing on Review.
     const applyStep = (key: string) => {
       if (key === "customer") {
-        setSelectedCustomerId("");
-        const _name = extract.customer_name ?? "";
-        setNewCustomer((prev) => ({ ...prev, name: _name }));
-        if (_name) setQuery(_name);
-      } else if (key === "address") {
-        const addr = match
-          ? (extract.address?.trim() || match.homes?.address || "")
-          : (extract.address ?? "");
-        if (!match) setNewCustomer((prev) => ({ ...prev, address: extract.address ?? "" }));
-        if (addr) {
-          setLocAddress(addr);
-          addressTouched.current = true;
-          setResolved(null);
+        setReviewName(customerLabel ?? "");
+        if (match) {
+          setSelectedCustomerId(match.id);
+          setNewCustomer({ name: "", address: "", phone: "", email: "" });
+          setQuery(match.name);
+        } else {
+          setSelectedCustomerId("");
+          setNewCustomer((prev) => ({ ...prev, name: extractedName }));
+          if (extractedName) setQuery(extractedName);
         }
+      } else if (key === "address") {
+        if (!match) setNewCustomer((prev) => ({ ...prev, address: reviewAddress }));
+        setLocAddress(reviewAddress);
+        addressTouched.current = !!(extractedAddress || savedAddress);
+        setResolved(
+          usedLocationAddress
+            ? { address: reviewAddress, lat: gps?.lat ?? null, lng: gps?.lng ?? null }
+            : null,
+        );
       } else if (key === "contact") {
+        const email = extract.customer_email?.trim() || match?.email?.trim() || "";
+        setReviewEmail(email);
         if (!match) {
           setNewCustomer((prev) => ({
             ...prev,
             phone: extract.customer_phone ?? "",
-            email: extract.customer_email ?? "",
+            email,
           }));
         }
       } else if (key === "equipment") {
@@ -821,25 +951,18 @@ function NewJob() {
       if (i >= steps.length) {
         setTimeout(() => {
           setFullReveal(null);
-          // Once the AI preview animation finishes, jump straight to the live
-          // record review so the pro can eyeball and send in one tap.
+          setReviewEdit(reviewAddress ? null : "address");
           setStage("review");
         }, 420);
         return;
       }
       setFullReveal((cur) =>
-        cur
-          ? cur.map((s, idx) =>
-              idx === i ? { ...s, status: "active" } : s,
-            )
-          : cur,
+        cur ? cur.map((s, idx) => (idx === i ? { ...s, status: "active" } : s)) : cur,
       );
       setTimeout(() => {
         applyStep(steps[i].key);
         setFullReveal((cur) =>
-          cur
-            ? cur.map((s, idx) => (idx === i ? { ...s, status: "done" } : s))
-            : cur,
+          cur ? cur.map((s, idx) => (idx === i ? { ...s, status: "done" } : s)) : cur,
         );
         runStep(i + 1);
       }, STEP_MS);
@@ -876,24 +999,143 @@ function NewJob() {
     return null;
   }
 
+  async function deliverRecord(customerId: string, recordId: string) {
+    try {
+      const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+        body: {
+          customer_id: customerId,
+          pro_id: proId,
+          origin: window.location.origin,
+          record_id: recordId,
+        },
+      });
+      const ok = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+      if (!ok) {
+        return {
+          ok: false as const,
+          code: (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed",
+        };
+      }
+
+      // Delivery already happened even if the bookkeeping update or QR mint
+      // fails, so neither follow-up is allowed to turn a sent email into a
+      // false failure state.
+      await supabase
+        .from("records")
+        .update({ sent_email_at: new Date().toISOString() })
+        .eq("id", recordId);
+      const { data: qr } = await supabase.functions.invoke("claim-qr", {
+        body: {
+          customer_id: customerId,
+          pro_id: proId,
+          record_id: recordId,
+          origin: window.location.origin,
+        },
+      });
+      const claimUrl =
+        !!qr &&
+        (qr as { ok?: boolean; claim_url?: string }).ok === true &&
+        typeof (qr as { claim_url?: string }).claim_url === "string"
+          ? (qr as { claim_url: string }).claim_url
+          : null;
+      return { ok: true as const, claimUrl };
+    } catch {
+      return { ok: false as const, code: "send_failed" };
+    }
+  }
+
   async function submit() {
     if (!proId) return;
+    const work = whatDone.trim();
+    const selected = existing.find((customer) => customer.id === selectedCustomerId);
+    const finalName = (reviewName ?? selected?.name ?? newCustomer.name).trim() || "Customer";
+    const finalAddress = (selectedCustomerId ? locAddress : newCustomer.address).trim();
+    const finalEmail = reviewEmail.trim().toLowerCase();
+
+    if (!work) {
+      setStage("review");
+      setReviewEdit("work");
+      setToast("Add what was done before saving this job.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    if (selectedCustomerId && !selected) {
+      setStage("customer");
+      setToast("Choose the customer again before saving.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    if (!finalAddress) {
+      setStage("review");
+      setReviewEdit("address");
+      setToast("Add the service address before saving this job.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    if (!finalEmail) {
+      setStage("review");
+      setToast("Add the customer's email before sending.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    if (!isEmail(finalEmail)) {
+      setStage("review");
+      setToast("Check the customer's email address.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+
     setSubmitting(true);
+    setBillingError(null);
+    setSendErrorCode(null);
+    setClaimUrl(null);
 
     let customerId = selectedCustomerId;
     let homeId: string | undefined;
     let toName = "";
-    let toContact = "";
+    let emailAddr = "";
+    let phoneAddr = "";
 
     if (customerId) {
-      const c = existing.find((x) => x.id === customerId)!;
+      const c = selected!;
       homeId = c.home_id;
-      toName = c.name;
-      toContact = c.phone || c.email || "";
+      toName = finalName;
+      emailAddr = finalEmail;
+      phoneAddr = c.phone?.trim() ?? "";
+      const customerUpdates: { name?: string; email?: string } = {};
+      if (finalName !== c.name.trim()) customerUpdates.name = finalName;
+      if (finalEmail !== (c.email?.trim().toLowerCase() ?? "")) {
+        customerUpdates.email = finalEmail;
+      }
+      if (Object.keys(customerUpdates).length) {
+        const { error: customerUpdateErr } = await supabase
+          .from("customers")
+          .update(customerUpdates)
+          .eq("id", customerId);
+        if (customerUpdateErr) {
+          setSubmitting(false);
+          setToast("Could not update the customer details. Your job details are still here.");
+          setTimeout(() => setToast(null), 4500);
+          return;
+        }
+        setExisting((prev) =>
+          prev.map((customer) =>
+            customer.id === customerId ? { ...customer, ...customerUpdates } : customer,
+          ),
+        );
+      }
       // Pro confirmed the address on the location slide; if they changed it
       // (moved, corrected a typo), update the home in place.
       const onFile = c.homes?.address ?? "";
-      const confirmed = locAddress.trim();
+      const confirmed = finalAddress;
+      if (!confirmed) {
+        setSubmitting(false);
+        setStage("review");
+        setReviewEdit("address");
+        setToast("Confirm the service address before saving this job.");
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
       if (confirmed && normalizeAddress(confirmed) !== normalizeAddress(onFile)) {
         const { error: addrErr } = await supabase
           .from("homes")
@@ -916,7 +1158,7 @@ function NewJob() {
       // address does not hit the unique-address 409.
       const { data: upsertedHomeId, error: homeErr } = await supabase.rpc(
         "upsert_home_by_address",
-        { p_address: newCustomer.address },
+        { p_address: finalAddress },
       );
       if (homeErr || !upsertedHomeId) {
         setSubmitting(false);
@@ -927,24 +1169,60 @@ function NewJob() {
       homeId = upsertedHomeId as string;
       // Fire-and-forget geocode; reuse coords from the Places pick / GPS when we
       // have them for this exact address, else forward-geocode the string.
-      void geocodeHome(homeId, newCustomer.address, coordsFor(newCustomer.address));
+      void geocodeHome(homeId, finalAddress, coordsFor(finalAddress));
 
-      const { data: newC } = await supabase
+      const { data: newC, error: customerErr } = await supabase
         .from("customers")
         .insert({
           pro_id: proId,
           home_id: homeId,
-          name: newCustomer.name,
-          phone: newCustomer.phone || null,
-          email: newCustomer.email || null,
+          name: finalName,
+          phone: newCustomer.phone.trim() || null,
+          email: finalEmail,
           consent_at: new Date().toISOString(),
           consent_ref: `web_form_${Date.now()}`,
         })
         .select("id")
         .single();
-      customerId = newC!.id;
-      toName = newCustomer.name;
-      toContact = newCustomer.phone || newCustomer.email || "";
+      if (customerErr || !newC) {
+        setSubmitting(false);
+        setToast("Could not save the customer. Your job details are still here. Try again.");
+        setTimeout(() => setToast(null), 4500);
+        return;
+      }
+      customerId = newC.id;
+      toName = finalName;
+      emailAddr = finalEmail;
+      phoneAddr = newCustomer.phone.trim();
+      const savedCoords = coordsFor(finalAddress);
+      const savedCustomer: CustomerOpt = {
+        id: newC.id,
+        name: finalName,
+        phone: phoneAddr || null,
+        email: finalEmail,
+        home_id: homeId,
+        homes: {
+          address: finalAddress,
+          lat: savedCoords?.lat ?? null,
+          lng: savedCoords?.lng ?? null,
+          geocoded_at: savedCoords ? new Date().toISOString() : null,
+        },
+      };
+      // If a later equipment/job write fails, the retry must reuse the customer
+      // that already saved instead of inserting a duplicate.
+      setExisting((prev) => [
+        savedCustomer,
+        ...prev.filter((item) => item.id !== savedCustomer.id),
+      ]);
+      setSelectedCustomerId(savedCustomer.id);
+      setLocAddress(finalAddress);
+    }
+
+    if (!homeId || !customerId) {
+      setSubmitting(false);
+      setToast("Could not prepare this job. Choose the customer and try again.");
+      setTimeout(() => setToast(null), 4500);
+      return;
     }
 
     // Equipment: reuse an existing appliance on this home when the pro picked
@@ -957,7 +1235,7 @@ function NewJob() {
       if (editDetails) {
         // attributes column shipped in migration 2026-07-09; cast the payload
         // until the Lovable-generated Database types refresh.
-        await supabase
+        const { error: equipmentErr } = await supabase
           .from("equipment")
           .update({
             type: eqType || null,
@@ -969,12 +1247,18 @@ function NewJob() {
             attributes: cleanedAttrs,
           } as never)
           .eq("id", selectedEquipmentId);
+        if (equipmentErr) {
+          setSubmitting(false);
+          setToast("Could not update the unit details. Your job details are still here.");
+          setTimeout(() => setToast(null), 4500);
+          return;
+        }
       }
     } else if (eqType || eqMake || eqModel || hasAttrs) {
-      const { data: eq } = await supabase
+      const { data: eq, error: equipmentErr } = await supabase
         .from("equipment")
         .insert({
-          home_id: homeId!,
+          home_id: homeId,
           type: eqType || null,
           make: eqMake || null,
           model: eqModel || null,
@@ -986,50 +1270,33 @@ function NewJob() {
         } as never)
         .select("id")
         .single();
-      equipmentId = eq?.id;
+      if (equipmentErr || !eq) {
+        setSubmitting(false);
+        setToast("Could not save the unit details. Your job details are still here.");
+        setTimeout(() => setToast(null), 4500);
+        return;
+      }
+      equipmentId = eq.id;
     }
 
     // Job
-    const { data: job } = await supabase
+    const { data: job, error: jobErr } = await supabase
       .from("jobs")
       .insert({
         pro_id: proId,
-        home_id: homeId!,
+        home_id: homeId,
         customer_id: customerId,
         equipment_id: equipmentId,
-        what_done: whatDone,
+        what_done: work,
         next_service_date: nextService || null,
       })
       .select("id")
       .single();
-
-    // First / second job milestones for the funnel dashboard.
-    if (job?.id) {
-      const { count: jobCount } = await supabase
-        .from("jobs")
-        .select("id", { count: "exact", head: true })
-        .eq("pro_id", proId);
-      if (jobCount === 1) {
-        await logEvent(`pro:${proId}`, "pro_first_job", { role: "pro", job_id: job.id });
-      } else if (jobCount === 2) {
-        await logEvent(`pro:${proId}`, "pro_second_job", { role: "pro", job_id: job.id });
-      }
-    }
-
-
-    // Optional invoice: if the pro entered a charge amount, create an open
-    // invoice tied to this job so the homeowner can pay through /home.
-    const chargeNum = parseFloat(chargeAmount);
-    setBilledAmount(null);
-    if (job?.id && customerId && homeId && Number.isFinite(chargeNum) && chargeNum > 0) {
-      const inv = await createInvoice({
-        proId,
-        customerId,
-        homeId,
-        jobId: job.id,
-        items: [{ description: whatDone.trim() || "Service", amount: chargeNum }],
-      });
-      if (inv) setBilledAmount(chargeNum);
+    if (jobErr || !job) {
+      setSubmitting(false);
+      setToast("Could not save the job. Your details are still here. Try again.");
+      setTimeout(() => setToast(null), 4500);
+      return;
     }
 
     // Record. Persist which record rows the pro excluded, scoped to rows that
@@ -1038,77 +1305,80 @@ function NewJob() {
     if (eqType) presentKeys.add(FIELD_EQUIPMENT);
     if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
-    const hidden = Array.from(hiddenFields).filter((k) => presentKeys.has(k));
+    const hidden = Array.from(hiddenFields).filter((key) => presentKeys.has(key));
 
-    // Persist the record without pre-stamping sent_* timestamps. A record is
-    // "sent" only when invite-claim actually delivered the email; SMS is not
-    // live yet, so sent_sms_at stays null.
-    const publicUrl = buildRecordUrl("pending");
     const recordPayload = {
-      job_id: job!.id,
-      public_url: publicUrl,
+      job_id: job.id,
+      public_url: buildRecordUrl("pending"),
       sent_sms_at: null,
       sent_email_at: null,
       ...(hidden.length ? { hidden_fields: hidden } : {}),
     };
-    const { data: rec } = await supabase
+    const { data: rec, error: recordErr } = await supabase
       .from("records")
       // hidden_fields added in migration 20260708120000_record_hidden_fields;
       // cast until Lovable regenerates supabase types.ts from the migration.
       .insert(recordPayload as never)
       .select("id")
       .single();
-    setSentCustomerId(customerId);
-    setSentRecordId(rec!.id);
 
-    const emailAddr =
-      newCustomer.email || existing.find((x) => x.id === customerId)?.email || "";
-    const phoneAddr =
-      newCustomer.phone || existing.find((x) => x.id === customerId)?.phone || "";
+    setSentCustomerId(customerId);
     setSentTo({ name: toName, email: emailAddr || null, phone: phoneAddr || null });
+    if (recordErr || !rec) {
+      const chargeNum = parseFloat(chargeAmount);
+      if (Number.isFinite(chargeNum) && chargeNum > 0) {
+        setBillingError("The invoice was not created.");
+      }
+      setDeliveryState("record_failed");
+      setSubmitting(false);
+      setStage("done");
+      setToast("Job saved");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    setSentRecordId(rec.id);
+
+    // First / second job milestones for the funnel dashboard.
+    const { count: jobCount } = await supabase
+      .from("jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("pro_id", proId);
+    if (jobCount === 1) {
+      await logEvent(`pro:${proId}`, "pro_first_job", { role: "pro", job_id: job.id });
+    } else if (jobCount === 2) {
+      await logEvent(`pro:${proId}`, "pro_second_job", { role: "pro", job_id: job.id });
+    }
+
+    // Optional invoice: if the pro entered a charge amount, create an open
+    // invoice tied to this job so the homeowner can pay through /home.
+    const chargeNum = parseFloat(chargeAmount);
+    setBilledAmount(null);
+    if (Number.isFinite(chargeNum) && chargeNum > 0) {
+      const inv = await createInvoice({
+        proId,
+        customerId,
+        homeId,
+        jobId: job.id,
+        items: [{ description: work, amount: chargeNum }],
+      });
+      if (inv) setBilledAmount(chargeNum);
+      else setBillingError("The job was saved, but the invoice could not be created.");
+    }
 
     let delivered = false;
     if (emailAddr) {
-      const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
-        body: {
-          customer_id: customerId,
-          pro_id: proId,
-          origin: window.location.origin,
-          record_id: rec!.id,
-        },
-      });
-      const respOk =
-        !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
-      if (respOk) {
+      const delivery = await deliverRecord(customerId, rec.id);
+      if (delivery.ok) {
         delivered = true;
-        await supabase
-          .from("records")
-          .update({ sent_email_at: new Date().toISOString() })
-          .eq("id", rec!.id);
-        // Mint a real single-use claim URL for the "Copy link" button. If
-        // this fails we simply hide the button - never fall back to /home.
-        const { data: qr } = await supabase.functions.invoke("claim-qr", {
-          body: {
-            customer_id: customerId,
-            pro_id: proId,
-            record_id: rec!.id,
-            origin: window.location.origin,
-          },
-        });
-        const qrOk =
-          !!qr && (qr as { ok?: boolean; claim_url?: string }).ok === true &&
-          typeof (qr as { claim_url?: string }).claim_url === "string";
-        if (qrOk) setClaimUrl((qr as { claim_url: string }).claim_url);
+        if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
       } else {
-        const code =
-          (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed";
-        setSendErrorCode(code);
+        setSendErrorCode(delivery.code);
       }
     }
 
     if (delivered) {
       setDeliveryState("sent");
-      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec!.id });
+      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec.id });
       // Google review ask: only fires on a real delivery, so the Reviews page
       // count reflects reality. No mock SMS - texting is not live yet.
       if (askReview) {
@@ -1136,56 +1406,34 @@ function NewJob() {
     setTimeout(() => setToast(null), 3500);
   }
 
-  /* When the pro adds an email on the done screen for a phone-only customer,
-     persist it, then run the same real send path. */
-  async function retryWithEmail() {
-    const email = addEmail.trim();
-    if (!email || !sentCustomerId || !sentRecordId || !proId) return;
+  async function retrySavedRecord(email: string, persistEmail: boolean) {
+    if (!sentCustomerId || !sentRecordId || !proId) return;
     setRetrying(true);
-    const { error: updErr } = await supabase
-      .from("customers")
-      .update({ email })
-      .eq("id", sentCustomerId);
-    if (updErr) {
+    if (persistEmail) {
+      const { error: updateError } = await supabase
+        .from("customers")
+        .update({ email })
+        .eq("id", sentCustomerId);
+      if (updateError) {
+        setRetrying(false);
+        setToast("Could not save that email. Try again.");
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
+    }
+
+    const delivery = await deliverRecord(sentCustomerId, sentRecordId);
+    if (!delivery.ok) {
+      setSendErrorCode(delivery.code);
+      setDeliveryState("send_failed");
       setRetrying(false);
-      setToast("Could not save that email");
+      setToast(deliveryErrorMessage(delivery.code));
       setTimeout(() => setToast(null), 3500);
       return;
     }
-    const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
-      body: {
-        customer_id: sentCustomerId,
-        pro_id: proId,
-        origin: window.location.origin,
-        record_id: sentRecordId,
-      },
-    });
-    const respOk = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
-    if (!respOk) {
-      const code =
-        (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed";
-      setSendErrorCode(code);
-      setDeliveryState("send_failed");
-      setRetrying(false);
-      return;
-    }
-    await supabase
-      .from("records")
-      .update({ sent_email_at: new Date().toISOString() })
-      .eq("id", sentRecordId);
-    const { data: qr } = await supabase.functions.invoke("claim-qr", {
-      body: {
-        customer_id: sentCustomerId,
-        pro_id: proId,
-        record_id: sentRecordId,
-        origin: window.location.origin,
-      },
-    });
-    const qrOk =
-      !!qr && (qr as { ok?: boolean; claim_url?: string }).ok === true &&
-      typeof (qr as { claim_url?: string }).claim_url === "string";
-    if (qrOk) setClaimUrl((qr as { claim_url: string }).claim_url);
+    if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
     setSentTo((prev) => ({ ...prev, email }));
+    setSendErrorCode(null);
     setDeliveryState("sent");
     await logEvent(`pro:${proId}`, "record_sent", { record_id: sentRecordId });
     if (askReview) {
@@ -1194,6 +1442,24 @@ function NewJob() {
     setRetrying(false);
     setToast(`Sent to ${email}`);
     setTimeout(() => setToast(null), 3500);
+  }
+
+  /* When the pro adds an email on the done screen for a phone-only customer,
+     persist it, then run the same real send path. */
+  async function retryWithEmail() {
+    const email = addEmail.trim().toLowerCase();
+    if (!email) return;
+    if (!isEmail(email)) {
+      setToast("Check the customer's email address.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    await retrySavedRecord(email, true);
+  }
+
+  async function retryDelivery() {
+    if (!sentTo.email) return;
+    await retrySavedRecord(sentTo.email, false);
   }
 
   async function copyUrl() {
@@ -1242,6 +1508,9 @@ function NewJob() {
     micLevel.stop();
     setVoiceOpen(false);
     setAskReview(true);
+    setReviewEdit(null);
+    setReviewName(null);
+    setReviewEmail("");
     setHiddenFields(new Set());
     setClaimUrl(null);
     setDeliveryState("no_contact");
@@ -1254,10 +1523,14 @@ function NewJob() {
     setCopied(false);
     setChargeAmount("");
     setBilledAmount(null);
+    setBillingError(null);
     setStage("customer");
   }
 
   const canWork = whatDone.length > 0;
+  const canRetryDelivery = !["opted_out", "daily_limit", "not_configured"].includes(
+    sendErrorCode ?? "",
+  );
 
   // While listening, show the in-progress (interim) words live in the notes box
   // so text appears the instant it's spoken. Finalized words are already
@@ -1375,13 +1648,7 @@ function NewJob() {
                 ? ["Customer", "The work", "Send"]
                 : STAGE_LABELS;
               const idx = flowStages.indexOf(stage);
-              return (
-                <StepBar
-                  steps={flowLabels}
-                  current={idx < 0 ? 0 : idx}
-                  accent="indigo"
-                />
-              );
+              return <StepBar steps={flowLabels} current={idx < 0 ? 0 : idx} accent="indigo" />;
             })()}
             <h1 className="mt-6 text-2xl tracking-tight text-center">
               {stage === "customer"
@@ -1616,22 +1883,12 @@ function NewJob() {
                     />
                   </Field>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Phone (optional)">
-                      <PhoneInput
-                        value={newCustomer.phone}
-                        onChange={(v) => setNewCustomer({ ...newCustomer, phone: v })}
-                      />
-                    </Field>
-                    <Field label="Email (optional)">
-                      <Input
-                        value={newCustomer.email}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                        placeholder="jane@email.com"
-                        type="email"
-                      />
-                    </Field>
-                  </div>
+                  <Field label="Phone (optional)">
+                    <PhoneInput
+                      value={newCustomer.phone}
+                      onChange={(v) => setNewCustomer({ ...newCustomer, phone: v })}
+                    />
+                  </Field>
 
                   <div className="flex gap-2">
                     <Btn variant="secondary" onClick={() => setStage("customer")}>
@@ -1957,10 +2214,28 @@ function NewJob() {
 
             {stage === "review" && (
               <div className="space-y-4">
-                <p className="px-2 text-center text-sm text-muted">
-                  This is your customer's live record. Check what to include, uncheck what to leave
-                  off.
-                </p>
+                <p className="px-2 text-center text-sm text-muted">Review and send.</p>
+
+                {!reviewRequiredComplete && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-3 rounded-xl border border-red/20 bg-redbg px-4 py-3 text-red"
+                  >
+                    <AlertTriangle size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
+                    <div>
+                      <div className="text-sm font-bold">Finish these details before sending</div>
+                      <div className="mt-0.5 text-sm">
+                        {missingReviewAddress && missingReviewEmail
+                          ? "Add the service address and customer email."
+                          : missingReviewAddress
+                            ? "Add the service address."
+                            : missingReviewEmail
+                              ? "Add the customer email."
+                              : "Enter a valid customer email."}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* One box: the live record IS the control surface. Every row is a
                     checkmark, and the Google review ask lives inside the same box. */}
@@ -1975,24 +2250,95 @@ function NewJob() {
                     </div>
                   </div>
 
-                  <div className="mt-4">
-                    <h3 className="text-lg font-semibold tracking-tight">Service record</h3>
-                    <div className="text-xs text-muted">{previewAddress || "Service address"}</div>
+                  <div
+                    className={`mt-4 border-y px-1 py-3 ${
+                      missingReviewAddress ? "border-red/30 bg-redbg/50" : "border-line"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-semibold tracking-tight">Service record</h3>
+                        <div
+                          className={`mt-0.5 text-xs ${
+                            missingReviewAddress ? "font-semibold text-red" : "text-muted"
+                          }`}
+                        >
+                          {previewAddress || "Service address required"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setReviewEdit("address")}
+                        aria-label="Edit service address"
+                        title="Edit service address"
+                        className="pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-soft hover:text-ink"
+                      >
+                        <Pencil size={17} aria-hidden="true" />
+                      </button>
+                    </div>
+
+                    {(reviewEdit === "address" || missingReviewAddress) && (
+                      <div className="mt-3">
+                        <ReviewEditor
+                          doneDisabled={missingReviewAddress}
+                          onDone={() => setReviewEdit(null)}
+                        >
+                          <Field label="Service address *">
+                            <AddressField
+                              value={previewAddress}
+                              onChange={(value) => {
+                                addressTouched.current = true;
+                                if (selectedCustomerId) setLocAddress(value);
+                                else setNewCustomer((current) => ({ ...current, address: value }));
+                              }}
+                              onResolve={(address) => {
+                                addressTouched.current = true;
+                                if (selectedCustomerId) setLocAddress(address.address);
+                                else {
+                                  setNewCustomer((current) => ({
+                                    ...current,
+                                    address: address.address,
+                                  }));
+                                }
+                                setResolved(address);
+                              }}
+                              bias={gps}
+                              placeholder="123 Maple St, Austin TX"
+                              ariaLabel="Service address"
+                            />
+                          </Field>
+                        </ReviewEditor>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-2">
                     <RecordRow
                       label="Customer"
-                      value={previewName || "-"}
+                      value={previewName || "Customer"}
                       included={!hiddenFields.has(FIELD_CUSTOMER)}
                       onToggle={() => toggleField(FIELD_CUSTOMER)}
+                      onEdit={() => setReviewEdit("customer")}
                     />
+                    {reviewEdit === "customer" && (
+                      <ReviewEditor onDone={() => setReviewEdit(null)}>
+                        <Field label="Customer name">
+                          <Input
+                            autoFocus
+                            value={reviewName ?? previewName}
+                            onChange={(event) => setReviewName(event.target.value)}
+                            placeholder="Customer name"
+                          />
+                        </Field>
+                      </ReviewEditor>
+                    )}
                     {eqType && (
                       <RecordRow
                         label="Equipment"
                         value={eqType}
                         included={!hiddenFields.has(FIELD_EQUIPMENT)}
                         onToggle={() => toggleField(FIELD_EQUIPMENT)}
+                        onEdit={() => setReviewEdit("equipment")}
                       />
                     )}
                     {(eqMake || eqModel) && (
@@ -2001,22 +2347,82 @@ function NewJob() {
                         value={[eqMake, eqModel].filter(Boolean).join(" · ")}
                         included={!hiddenFields.has(FIELD_MAKE_MODEL)}
                         onToggle={() => toggleField(FIELD_MAKE_MODEL)}
+                        onEdit={() => setReviewEdit("equipment")}
                       />
+                    )}
+                    {reviewEdit === "equipment" && (
+                      <ReviewEditor onDone={() => setReviewEdit(null)}>
+                        {unitFieldsGrid}
+                      </ReviewEditor>
                     )}
                     <RecordRow
                       label="Work done"
                       value={whatDone || "-"}
                       included={!hiddenFields.has(FIELD_WORK_DONE)}
                       onToggle={() => toggleField(FIELD_WORK_DONE)}
+                      onEdit={() => setReviewEdit("work")}
                     />
+                    {reviewEdit === "work" && (
+                      <ReviewEditor
+                        doneDisabled={!whatDone.trim()}
+                        onDone={() => setReviewEdit(null)}
+                      >
+                        <Field label="Work done">
+                          <Textarea
+                            autoFocus
+                            value={whatDone}
+                            onChange={(event) => setWhatDone(event.target.value)}
+                            placeholder="What did you do?"
+                          />
+                        </Field>
+                      </ReviewEditor>
+                    )}
                     {nextService && (
                       <RecordRow
                         label="Next service"
                         value={formatDate(nextService)}
                         included={!hiddenFields.has(FIELD_NEXT_SERVICE)}
                         onToggle={() => toggleField(FIELD_NEXT_SERVICE)}
+                        onEdit={() => setReviewEdit("next_service")}
                       />
                     )}
+                    {reviewEdit === "next_service" && (
+                      <ReviewEditor onDone={() => setReviewEdit(null)}>
+                        <Field label="Next service">
+                          <Input
+                            type="date"
+                            value={nextService}
+                            onChange={(event) => setNextService(event.target.value)}
+                          />
+                        </Field>
+                      </ReviewEditor>
+                    )}
+                  </div>
+
+                  <div className="mt-5 border-t border-line pt-4">
+                    <Field
+                      label="Customer email *"
+                      hint={
+                        reviewEmailInvalid
+                          ? "Enter a valid email address."
+                          : "The service record will be sent here."
+                      }
+                    >
+                      <Input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        value={reviewEmail}
+                        onChange={(event) => setReviewEmail(event.target.value)}
+                        placeholder="customer@email.com"
+                        aria-invalid={missingReviewEmail || reviewEmailInvalid}
+                        className={
+                          missingReviewEmail || reviewEmailInvalid
+                            ? "border-red bg-redbg/30 focus:border-red focus:ring-red/10"
+                            : ""
+                        }
+                      />
+                    </Field>
                   </div>
 
                   {/* Optional "bill this customer" amount. Leave blank to skip;
@@ -2074,6 +2480,7 @@ function NewJob() {
                         size="lg"
                         className="flex-1"
                         loading={submitting}
+                        disabled={!reviewRequiredComplete || submitting}
                         onClick={submit}
                       >
                         Send record
@@ -2094,9 +2501,7 @@ function NewJob() {
                 {deliveryState === "sent" && (
                   <>
                     <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
-                    <p className="mt-2 text-sm text-muted">
-                      Sent to {sentTo.email}.
-                    </p>
+                    <p className="mt-2 text-sm text-muted">Sent to {sentTo.email}.</p>
                   </>
                 )}
                 {deliveryState === "phone_only" && (
@@ -2130,7 +2535,8 @@ function NewJob() {
                   <>
                     <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
                     <p className="mt-2 text-sm text-muted">
-                      No way to reach {sentTo.name || "your customer"} yet. Add an email to send their record.
+                      No way to reach {sentTo.name || "your customer"} yet. Add an email to send
+                      their record.
                     </p>
                     <div className="mx-auto mt-4 flex max-w-sm flex-col gap-2 sm:flex-row">
                       <input
@@ -2156,14 +2562,35 @@ function NewJob() {
                   <>
                     <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
                     <p className="mt-2 text-sm text-muted">
-                      We couldn't deliver the record to {sentTo.email || "the customer"}
-                      {sendErrorCode ? ` (${sendErrorCode})` : ""}. Try again or show the QR.
+                      We couldn't deliver the record to {sentTo.email || "the customer"}.{" "}
+                      {deliveryErrorMessage(sendErrorCode)}
+                    </p>
+                    {canRetryDelivery && sentTo.email && (
+                      <div className="mt-4">
+                        <Btn variant="indigo" size="sm" loading={retrying} onClick={retryDelivery}>
+                          Try email again
+                        </Btn>
+                      </div>
+                    )}
+                  </>
+                )}
+                {deliveryState === "record_failed" && (
+                  <>
+                    <h2 className="mt-4 text-2xl tracking-tight">Job saved.</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      The work is safe, but we couldn't create or send the customer record. Do not
+                      log the job again.
                     </p>
                   </>
                 )}
                 {billedAmount != null && (
                   <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-sm font-semibold text-indigo">
                     Billed {formatMoney(billedAmount)} · they can pay it from their home page
+                  </div>
+                )}
+                {billingError && (
+                  <div className="mx-auto mt-4 max-w-sm rounded-xl bg-redbg px-4 py-3 text-sm font-semibold text-red">
+                    {billingError}
                   </div>
                 )}
                 {claimUrl && (
@@ -2175,7 +2602,7 @@ function NewJob() {
                   </button>
                 )}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
-                  {sentCustomerId && (
+                  {sentCustomerId && sentRecordId && (
                     <Btn variant="secondary" onClick={() => setQrOpen(true)}>
                       <QrCode size={15} /> Show claim QR
                     </Btn>
@@ -2221,7 +2648,7 @@ function NewJob() {
                     key={s.key}
                     className={`flex items-start gap-3 rounded-2xl border px-3.5 py-3 transition-colors ${
                       done
-                        ? "border-teal/30 bg-tealbg"
+                        ? "border-indigo/30 bg-indigobg"
                         : active
                           ? "border-indigo/30 bg-indigobg"
                           : "border-line bg-white"
@@ -2230,7 +2657,7 @@ function NewJob() {
                     <span
                       className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
                         done
-                          ? "bg-teal text-white"
+                          ? "bg-indigo text-white"
                           : active
                             ? "bg-indigo text-white"
                             : "bg-line text-muted"
@@ -2254,7 +2681,7 @@ function NewJob() {
                     <div className="min-w-0 flex-1">
                       <div
                         className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
-                          done ? "text-teal-dark" : active ? "text-indigo" : "text-muted"
+                          done ? "text-indigo-dark" : active ? "text-indigo" : "text-muted"
                         }`}
                       >
                         {s.label}

@@ -27,11 +27,11 @@ const UPDATED_ISO = "2026-07-01";
 const UPDATED_LABEL = "July 2026";
 const AREA_SERVED = "St. Johns County, Florida";
 
-type Section = { id: string; label: string; teal?: boolean };
+type Section = { id: string; label: string; indigo?: boolean };
 
 function buildSections(g: Guide, hasPros: boolean): Section[] {
   const s: Section[] = [];
-  if (hasPros) s.push({ id: "pros", label: "Pros near you", teal: true });
+  if (hasPros) s.push({ id: "pros", label: "Pros near you", indigo: true });
   if (g.overview) s.push({ id: "overview", label: "Overview" });
   if (g.expectedLifeOnly) {
     s.push({ id: "built-to-last", label: "Built to last" });
@@ -309,10 +309,10 @@ function GuidePage() {
           <ul className="flex gap-1 px-4 py-2 whitespace-nowrap">
             {sections.map((s) => {
               const isActive = active === s.id;
-              const cls = s.teal
+              const cls = s.indigo
                 ? isActive
-                  ? "bg-tealbg text-tealdark font-bold"
-                  : "text-teal font-bold hover:text-tealdark"
+                  ? "bg-indigobg text-indigodark font-bold"
+                  : "text-indigo font-bold hover:text-indigodark"
                 : isActive
                   ? "bg-coralbg text-coraldark"
                   : "text-muted hover:text-ink";
@@ -340,10 +340,10 @@ function GuidePage() {
             <ul className="space-y-1 border-l border-line">
               {sections.map((s) => {
                 const isActive = active === s.id;
-                const cls = s.teal
+                const cls = s.indigo
                   ? isActive
-                    ? "border-teal text-tealdark font-bold"
-                    : "border-transparent text-teal font-bold hover:text-tealdark"
+                    ? "border-indigo text-indigodark font-bold"
+                    : "border-transparent text-indigo font-bold hover:text-indigodark"
                   : isActive
                     ? "border-coral text-coraldark font-semibold"
                     : "border-transparent text-muted hover:text-ink";
@@ -541,7 +541,7 @@ function GuidePage() {
                     <Link
                       to="/pros"
                       search={{ trade: primaryTrade }}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-tealdark hover:underline"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigodark hover:underline"
                     >
                       See all {TRADE_LABELS[primaryTrade]} pros in St. Johns County →
                     </Link>

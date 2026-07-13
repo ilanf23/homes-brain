@@ -66,9 +66,9 @@ function ProsDirectory() {
     <MarketingShell>
       {/* Hero */}
       <section className="mx-auto max-w-3xl px-5 pt-10 sm:pt-16 pb-6 text-center">
-        <Eyebrow accent="teal">Find a pro</Eyebrow>
+        <Eyebrow accent="indigo">Find a pro</Eyebrow>
         <h1 className="mt-4 text-[2rem] leading-[1.1] sm:text-5xl sm:leading-[1.06] tracking-tight text-ink font-sans font-extrabold">
-          The top few pros in <span className="text-teal">St. Johns County</span>.
+          The top few pros in <span className="text-indigo">St. Johns County</span>.
         </h1>
         <p className="mt-4 text-base sm:text-lg text-muted">
           Charter Pros, curated by trade and town. Nocatee, Ponte Vedra Beach, Palm Valley, World Golf Village, Fruit Cove, St. Augustine, and St. Augustine Beach.
@@ -153,11 +153,11 @@ function ProsDirectory() {
                 </div>
               </div>
               {open > 0 ? (
-                <Pill accent="teal">
+                <Pill accent="indigo">
                   {open} spot{open === 1 ? "" : "s"} filling
                 </Pill>
               ) : (
-                <Pill accent="teal">
+                <Pill accent="indigo">
                   <ShieldCheck size={11} strokeWidth={2.5} />
                   <span className="ml-0.5">Full</span>
                 </Pill>
@@ -170,8 +170,8 @@ function ProsDirectory() {
       {/* Verified results */}
       <section className="mx-auto max-w-6xl px-5 pb-20">
         {filtered.length === 0 ? (
-          <div className="mx-auto max-w-2xl rounded-3xl border border-dashed border-teal/40 bg-tealbg/40 p-6 sm:p-8 text-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/70 border border-teal/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-tealdark">
+          <div className="mx-auto max-w-2xl rounded-3xl border border-dashed border-indigo/40 bg-indigobg/40 p-6 sm:p-8 text-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/70 border border-indigo/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-indigodark">
               <ShieldCheck size={12} strokeWidth={2.5} />
               Charter Class of 2027
             </div>
@@ -187,7 +187,7 @@ function ProsDirectory() {
             </p>
             <a
               href="/pro/signup"
-              className="mt-5 inline-flex items-center justify-center rounded-full bg-teal text-(--on-accent) font-semibold px-5 py-2.5 text-sm hover:bg-tealdark transition-colors"
+              className="mt-5 inline-flex items-center justify-center rounded-full bg-indigo text-(--on-accent) font-semibold px-5 py-2.5 text-sm hover:bg-indigodark transition-colors"
             >
               Claim your Charter spot
             </a>
@@ -220,7 +220,7 @@ function AreaChip({
       aria-pressed={active}
       className={`pressable rounded-full px-4 py-2 text-sm font-semibold transition-colors min-h-[44px] ${
         active
-          ? "bg-teal text-(--on-accent)"
+          ? "bg-indigo text-(--on-accent)"
           : "bg-soft text-ink hover:bg-line"
       }`}
     >
@@ -267,23 +267,23 @@ function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
         Coming soon
       </text>
 
-      {/* St. Johns County (active, teal) */}
+      {/* St. Johns County (active, indigo) */}
       <path
         d="M74 140 L286 140 C294 198 292 296 280 356 C272 402 258 436 248 452 C196 462 150 458 118 440 C90 420 76 384 70 330 C64 262 64 200 74 140 Z"
-        fill="var(--tealbg, #e9f6f3)"
-        stroke="var(--teal, #0f8a86)"
+        fill="var(--indigobg, #e9f6f3)"
+        stroke="var(--indigo, #0f8a86)"
         strokeWidth="1.6"
       />
       {/* coastline hint */}
       <path
         d="M280 150 C290 210 290 300 278 356 C272 400 260 432 250 448"
         fill="none"
-        stroke="var(--teal, #0f8a86)"
+        stroke="var(--indigo, #0f8a86)"
         strokeWidth="1"
         strokeDasharray="2 5"
         opacity="0.45"
       />
-      <text x="150" y="162" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="var(--tealdark, #0a5f5c)">
+      <text x="150" y="162" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="var(--indigodark, #0a5f5c)">
         St. Johns County
       </text>
 
@@ -294,13 +294,13 @@ function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
         return (
           <g key={key}>
             {isSelected && (
-              <circle cx={p.x} cy={p.y} r={12} fill="var(--teal, #0f8a86)" opacity="0.16" />
+              <circle cx={p.x} cy={p.y} r={12} fill="var(--indigo, #0f8a86)" opacity="0.16" />
             )}
             <circle
               cx={p.x}
               cy={p.y}
               r={isSelected ? 6 : 3.5}
-              fill={isSelected ? "var(--teal, #0f8a86)" : "var(--ink, #16160f)"}
+              fill={isSelected ? "var(--indigo, #0f8a86)" : "var(--ink, #16160f)"}
               stroke="#fff"
               strokeWidth="1.5"
             />
@@ -311,7 +311,7 @@ function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
                 textAnchor="middle"
                 fontSize="12"
                 fontWeight="700"
-                fill="var(--tealdark, #0a5f5c)"
+                fill="var(--indigodark, #0a5f5c)"
               >
                 {key}
               </text>

@@ -57,13 +57,13 @@ There is no test suite. Verify changes by running the dev server and exercising 
 
 ## Brand - use these tokens exactly
 
-**Color carries meaning.** Notion is the canonical source: each color has a fixed role and they are never mixed. A pro CTA is teal; a homeowner CTA is coral; the brand mark, cross-cutting platform UI, and the AI/copilot are indigo; partner surfaces are amber; compliance and destructive states are red. Audiences are distinguished by color, copy, and structure together.
+**Color carries meaning.** Notion is the canonical source: each color has a fixed role and they are never mixed. Indigo (purple) is the main brand color: the brand mark, platform UI, the AI/copilot, and all CTAs by default, including every pro/vendor surface. Coral (orange) is the accent: homeowner surfaces and payoff moments. Partner surfaces are amber; compliance and destructive states are red. Audiences are distinguished by copy and structure, plus the indigo/coral split.
 
-- **Indigo** = HomesBrain itself, the platform, the brand mark, cross-cutting UI, and the AI/copilot.
-- **Teal** = pros / vendor side (buttons, accents, chips on pro surfaces).
-- **Coral** = homeowners (buttons, accents, chips on homeowner surfaces).
+- **Indigo (purple, main)** = HomesBrain itself, the platform, the brand mark, cross-cutting UI, the AI/copilot, and the pro/vendor side.
+- **Coral (orange, accent)** = homeowners (buttons, accents, chips on homeowner surfaces) and payoff highlights.
 - **Amber** = partners.
 - **Red** = compliance, warnings, destructive states.
+- **Teal was retired in July 2026.** Never reintroduce it; pro surfaces use indigo.
 
 ```css
 --ink: #16160f;
@@ -73,10 +73,7 @@ There is no test suite. Verify changes by running the dev server and exercising 
 --soft: #f7f6f1;
 --indigo: #473fb0;
 --indigobg: #eeedfd;
---indigo-dark: #2a2470; /* brand and platform */
---teal: #0f6e56;
---tealbg: #e6f5ee;
---teal-dark: #0d5d49;  /* pros */
+--indigo-dark: #2a2470; /* brand, platform, and pros */
 --coral: #c2461f;
 --coralbg: #fbeae2;
 --coral-dark: #9c3a18; /* homeowners */

@@ -20,8 +20,8 @@ const H_SANS = "font-sans font-extrabold tracking-[-0.02em] text-ink";
 
 function CallbackRow({ initial, name, need, area }: { initial: string; name: string; need: string; area: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-teal/10 border border-teal/20 px-4 py-3">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal text-white font-extrabold">
+    <div className="flex items-center gap-3 rounded-2xl bg-indigo/10 border border-indigo/20 px-4 py-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo text-white font-extrabold">
         {initial}
       </span>
       <div className="min-w-0 flex-1">
@@ -30,7 +30,7 @@ function CallbackRow({ initial, name, need, area }: { initial: string; name: str
         </div>
         <div className="text-[12px] text-muted">{area}</div>
       </div>
-      <span className="rounded-full bg-teal px-3.5 py-1.5 text-[12px] font-bold text-white">
+      <span className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] font-bold text-white">
         Call
       </span>
     </div>
@@ -41,7 +41,7 @@ function Step({ n, title, body }: { n: number; title: string; body: ReactNode })
   return (
     <div className="rounded-[22px] border border-line bg-paper p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-white text-sm font-extrabold">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo text-white text-sm font-extrabold">
           {n}
         </span>
         <h3 className={`${H_SANS} text-lg`}>{title}</h3>
@@ -53,14 +53,14 @@ function Step({ n, title, body }: { n: number; title: string; body: ReactNode })
 
 function ForPros() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "teal" }}>
+    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero */}
       <section className={`${CONTAINER} pt-14 pb-14 text-center`}>
-        <div className="eyebrow text-teal">Charter Pro, Class of 2027</div>
+        <div className="eyebrow text-indigo">Charter Pro, Class of 2027</div>
         <h1 className={`${H_SANS} mt-4 text-4xl sm:text-5xl leading-[1.08]`}>
           You do the best work in St. Johns County.
           <br />
-          <span className="text-teal">Google barely knows it.</span>
+          <span className="text-indigo">Google barely knows it.</span>
         </h1>
         <p className="mt-5 mx-auto max-w-xl text-lg text-muted">
           HomesBrain turns every job into a Google review and a reason for the customer to bring
@@ -68,7 +68,7 @@ function ForPros() {
         </p>
         <div className="mt-8 flex justify-center">
           <Link to="/pro/signup" className="w-full sm:w-auto">
-            <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+            <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
               Claim your profile
             </Btn>
           </Link>
@@ -96,7 +96,7 @@ function ForPros() {
       {/* Your pipeline, shown as the pro app */}
       <section className={`${CONTAINER} border-t border-line py-16`}>
         <div className="text-center">
-          <div className="eyebrow text-teal">Your pipeline</div>
+          <div className="eyebrow text-indigo">Your pipeline</div>
           <h2 className={`${H_SANS} mt-4 text-3xl sm:text-[34px] leading-[1.15]`}>
             Callbacks, with the names attached.
           </h2>
@@ -106,10 +106,10 @@ function ForPros() {
             <Phone>
               <div className="flex items-center justify-between px-1 pb-1">
                 <div className="text-[13px] font-extrabold text-ink">Your pipeline</div>
-                <span className="flex items-center gap-1.5 text-[10px] font-semibold text-teal">
+                <span className="flex items-center gap-1.5 text-[10px] font-semibold text-coral">
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inset-0 rounded-full bg-teal/60 animate-ping" />
-                    <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-teal" />
+                    <span className="absolute inset-0 rounded-full bg-coral/60 animate-ping" />
+                    <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-coral" />
                   </span>
                   3 due
                 </span>
@@ -128,7 +128,7 @@ function ForPros() {
       {/* How it works */}
       <section className={`${CONTAINER} border-t border-line py-16`}>
         <div className="text-center">
-          <div className="eyebrow text-teal">How it works</div>
+          <div className="eyebrow text-indigo">How it works</div>
           <h2 className={`${H_SANS} mt-4 text-3xl sm:text-[34px] leading-[1.15]`}>
             Three taps, near zero typing.
           </h2>
@@ -156,10 +156,10 @@ function ForPros() {
       <section className={`${CONTAINER} border-t border-line py-16`}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Free */}
-          <div className="rounded-[24px] border border-teal/20 bg-soft p-7 sm:p-8 flex flex-col">
+          <div className="rounded-[24px] border border-indigo/20 bg-soft p-7 sm:p-8 flex flex-col">
             <div className="flex items-baseline gap-3">
               <h3 className={`${H_SANS} text-2xl text-ink`}>Free</h3>
-              <div className="font-sans text-3xl font-extrabold tracking-tight text-teal tnum">$0</div>
+              <div className="font-sans text-3xl font-extrabold tracking-tight text-coral tnum">$0</div>
             </div>
             <p className="mt-1 text-sm text-muted">Start here. The wedge never expires.</p>
             <ul className="mt-6 space-y-3 text-[15px] text-ink flex-1">
@@ -171,7 +171,7 @@ function ForPros() {
                 "See who is due, your callback list",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal text-white">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo text-white">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 6l3 3 5-6" />
                     </svg>
@@ -183,8 +183,8 @@ function ForPros() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-[24px] bg-teal p-7 sm:p-8 text-white flex flex-col">
-            <span className="inline-block self-start rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+          <div className="rounded-[24px] bg-indigo p-7 sm:p-8 text-white flex flex-col">
+            <span className="inline-block self-start rounded-full bg-coral px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
               Founding price, first 1,000 pros
             </span>
             <div className="mt-4 font-sans text-5xl font-extrabold tracking-tight tnum">
@@ -218,7 +218,7 @@ function ForPros() {
           </p>
           <div className="mt-5 flex justify-center">
             <Link to="/pro/signup" className="w-full sm:w-auto">
-              <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+              <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
                 Claim your profile
               </Btn>
             </Link>
@@ -229,7 +229,7 @@ function ForPros() {
       {/* Closing CTA */}
       <section className={`${CONTAINER} border-t border-line py-20 text-center`}>
         <Link to="/pro/signup" className="inline-block w-full sm:w-auto">
-          <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+          <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
             Claim your profile
           </Btn>
         </Link>

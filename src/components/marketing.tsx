@@ -52,7 +52,7 @@ const NAV_LINKS = [
 ] as const;
 
 /* Homeowner-oriented routes get the coral homeowner CTA. Everything else
-   (including /, /for-pros, /how-it-works) gets the teal pro CTA. */
+   (including /, /for-pros, /how-it-works) gets the indigo pro CTA. */
 function isHomeownerRoute(pathname: string): boolean {
   if (pathname.startsWith("/home")) return true;
   return (
@@ -68,16 +68,16 @@ function isHomeownerRoute(pathname: string): boolean {
 type FooterLink = {
   to: string;
   label: string;
-  /* Optional per-link accent so Make it last (coral) and Find a pro (teal)
+  /* Optional per-link accent so Make it last (coral) and Find a pro (indigo)
      stand out as the two hero destinations, matching the header subbrands. */
-  accent?: "coral" | "teal";
+  accent?: "coral" | "indigo";
 };
 
 const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
     links: [
-      { to: "/for-pros", label: "For pros", accent: "teal" },
+      { to: "/for-pros", label: "For pros", accent: "indigo" },
       { to: "/make-it-last", label: "Make it last", accent: "coral" },
       { to: "/pros", label: "Find a pro" },
       { to: "/how-it-works", label: "How it works" },
@@ -109,9 +109,9 @@ export function MarketingShell({
   children: ReactNode;
   /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide.
      If omitted, the shell falls back to the persistent primary CTA which
-     is teal (Claim your profile) on pro-oriented routes and coral
+     is indigo (Claim your profile) on pro-oriented routes and coral
      (Get my record) on homeowner-oriented routes. */
-  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" | "teal" } | null;
+  mobileCta?: { label: string; to: string; variant: "indigo" | "coral" | "indigo" } | null;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -120,10 +120,10 @@ export function MarketingShell({
   /* The single persistent primary CTA, shown in the desktop header and the
      mobile overlay pinned bottom. Pro-first by default; homeowner routes
      get the homeowner CTA. */
-  const primaryCta: { label: string; to: string; variant: "coral" | "teal" } =
+  const primaryCta: { label: string; to: string; variant: "coral" | "indigo" } =
     isHomeownerRoute(pathname)
       ? { label: "Get my record", to: "/home/signup", variant: "coral" }
-      : { label: "Claim your profile", to: "/pro/signup", variant: "teal" };
+      : { label: "Claim your profile", to: "/pro/signup", variant: "indigo" };
 
   const resolvedMobileCta =
     mobileCta === undefined ? { ...primaryCta } : mobileCta;
@@ -186,9 +186,9 @@ export function MarketingShell({
             {NAV_LINKS.map((l) => {
               const isForPros = l.to === "/for-pros";
               const emphasis = isForPros
-                ? "text-sm font-bold text-teal hover:text-tealdark transition-colors px-3 py-2 rounded-full"
+                ? "text-sm font-bold text-indigo hover:text-indigodark transition-colors px-3 py-2 rounded-full"
                 : "text-sm font-semibold text-muted hover:text-ink transition-colors px-3 py-2 rounded-full";
-              const activeClass = isForPros ? "text-tealdark" : "text-ink";
+              const activeClass = isForPros ? "text-indigodark" : "text-ink";
               return (
                 <Link
                   key={l.to}
@@ -284,9 +284,9 @@ export function MarketingShell({
               <Link
                 to="/for-pros"
                 onClick={() => setMenuOpen(false)}
-                className="pressable block rounded-3xl bg-tealbg/70 px-5 py-5 hover:bg-tealbg transition-colors"
+                className="pressable block rounded-3xl bg-indigobg/70 px-5 py-5 hover:bg-indigobg transition-colors"
               >
-                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-tealdark">
+                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-indigodark">
                   For pros
                 </div>
                 <div className="mt-1 text-sm text-ink/70">
@@ -413,8 +413,8 @@ export function MarketingShell({
                     const accentClass =
                       l.accent === "coral"
                         ? "text-coraldark font-semibold hover:text-coraldark/80"
-                        : l.accent === "teal"
-                          ? "text-tealdark font-semibold hover:text-tealdark/80"
+                        : l.accent === "indigo"
+                          ? "text-indigodark font-semibold hover:text-indigodark/80"
                           : "text-muted font-medium hover:text-ink";
                     return (
                       <li key={`${g.title}-${l.label}`}>
@@ -597,59 +597,194 @@ export function MsgBubble({
   );
 }
 
-/* Pipeline mockup: shows a pro's inbound callback stream. Used on for-pros and index. */
+/* Pipeline mockup: the hero phone acts out the booking workflow on a slow
+   loop. Customers whose service is coming due wait to hear back from the pro;
+   each cycle a new one drops in as a notification, the one who waited longest
+   gets booked, and the roster rotates. Reduced motion shows the full tableau,
+   frozen. Used on index. */
+
+const PIPELINE_QUEUE = [
+  {
+    name: "Karen M.",
+    first: "Karen",
+    detail: "Water softener",
+    due: "Due this week",
+    slot: "Tue 9am",
+  },
+  { name: "Mike R.", first: "Mike", detail: "AC tune up", due: "Due now", slot: "Wed 2pm" },
+  {
+    name: "Dana P.",
+    first: "Dana",
+    detail: "Water heater flush",
+    due: "Due in 5 days",
+    slot: "Fri 10am",
+  },
+  {
+    name: "Luis G.",
+    first: "Luis",
+    detail: "Filter replacement",
+    due: "Due in 6 days",
+    slot: "Mon 8am",
+  },
+  {
+    name: "Priya S.",
+    first: "Priya",
+    detail: "Furnace check",
+    due: "Due next week",
+    slot: "Thu 4pm",
+  },
+];
+
+/* arrive: roster settles, new notification drops in.
+   book: CTA pulses like a tap on the top customer.
+   booked: their pill stamps to a confirmed slot; next cycle they move
+   down into "Booked this week" and everyone advances a position. */
+type PipelinePhase = "arrive" | "book" | "booked";
+const PIPELINE_PHASE_MS: Record<PipelinePhase, number> = {
+  arrive: 3400,
+  book: 1900,
+  booked: 2900,
+};
+const PIPELINE_NEXT: Record<PipelinePhase, PipelinePhase> = {
+  arrive: "book",
+  book: "booked",
+  booked: "arrive",
+};
+
+function useReducedMotionPref() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const on = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduced;
+}
+
+function PipelineCheck() {
+  return (
+    <svg width="8" height="8" viewBox="0 0 10 10" aria-hidden="true">
+      <path
+        d="M1.5 5.5l2.5 2.5 4.5-5.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
+  const reduced = useReducedMotionPref();
+  const [cycle, setCycle] = useState(0);
+  const [phase, setPhase] = useState<PipelinePhase>("arrive");
+
+  useEffect(() => {
+    if (reduced) return;
+    const t = setTimeout(() => {
+      if (phase === "booked") setCycle((n) => (n + 1) % PIPELINE_QUEUE.length);
+      setPhase(PIPELINE_NEXT[phase]);
+    }, PIPELINE_PHASE_MS[phase]);
+    return () => clearTimeout(t);
+  }, [phase, cycle, reduced]);
+
+  const at = (k: number) => PIPELINE_QUEUE[(cycle + k) % PIPELINE_QUEUE.length];
+  const waiting = [at(0), at(1), at(2)];
+  const arriving = at(3); // dropping in as a notification, joins the list next cycle
+  const booked = at(4); // booked last cycle, now resting in "Booked this week"
+
   return (
     <Phone floatDelay={floatDelay}>
-      {/* push notification */}
-      <div className="rounded-2xl bg-white border border-line px-3 py-2.5 flex items-start gap-2.5 shadow-[0_6px_16px_-10px_rgba(22,22,15,0.25)]">
-        <div className="mt-0.5 h-7 w-7 shrink-0 rounded-lg bg-indigo grid place-items-center text-white text-[11px] font-extrabold">
-          HB
-        </div>
-        <div className="min-w-0">
-          <div className="text-[11.5px] font-extrabold text-ink leading-tight">
-            Mike is due today
-          </div>
-          <div className="mt-0.5 text-[10.5px] text-muted leading-snug">
-            He set a reminder for an AC tune-up. Tap to call and log it.
-          </div>
-        </div>
-      </div>
-
-      <div className="pt-2 px-1">
-        <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-teal">
-          Your pipeline
-        </div>
-        <div className="mt-1 text-[22px] font-extrabold leading-tight text-ink">
-          <span className="text-teal">3</span> callbacks coming
-        </div>
-      </div>
-
-      {[
-        { name: "Karen M.", detail: "Water softener · due Jun", pill: "Reminder set", tone: "teal" as const },
-        { name: "Mike R.", detail: "AC tune up · due now", pill: "Call today", tone: "coral" as const },
-        { name: "Dana P.", detail: "Water heater · due Aug", pill: "Reminder set", tone: "teal" as const },
-      ].map((r) => (
+      <div className="space-y-2">
+        {/* push notification: a new customer entering the queue */}
         <div
-          key={r.name}
-          className="rounded-xl border border-line bg-paper px-3 py-2 flex items-center justify-between gap-2"
+          key={`note-${cycle}`}
+          className={`rounded-2xl bg-white border border-line px-3 py-2.5 flex items-start gap-2.5 shadow-[0_6px_16px_-10px_rgba(22,22,15,0.25)] ${
+            reduced ? "" : "cls-drop"
+          }`}
+          style={reduced ? undefined : { animationDelay: "0.9s" }}
+        >
+          <div className="mt-0.5 h-7 w-7 shrink-0 rounded-lg bg-indigo grid place-items-center text-white text-[11px] font-extrabold">
+            HB
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11.5px] font-extrabold text-ink leading-tight">
+              {arriving.first} is ready to book
+            </div>
+            <div className="mt-0.5 text-[10.5px] text-muted leading-snug">
+              {arriving.detail} coming due. Tap to text and lock it in.
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-1 px-1">
+          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo">
+            Waiting on you
+          </div>
+          <div className="mt-1 text-[22px] font-extrabold leading-tight text-ink">
+            <span className="text-coral">3</span> ready to book
+          </div>
+        </div>
+
+        {waiting.map((r, idx) => (
+          <div
+            key={`${cycle}-${r.name}`}
+            className={`rounded-xl border border-line bg-paper px-3 py-2 flex items-center justify-between gap-2 ${
+              reduced ? "" : "anim-fade-up"
+            }`}
+            style={reduced ? undefined : { animationDelay: `${idx * 90}ms` }}
+          >
+            <div className="min-w-0">
+              <div className="text-[12px] font-bold text-ink truncate">{r.name}</div>
+              <div className="text-[10.5px] text-muted truncate">{r.detail}</div>
+            </div>
+            {idx === 0 && phase === "booked" ? (
+              <span className="cls-stamp shrink-0 rounded-full bg-indigo px-2 py-0.5 text-[9.5px] font-bold text-white inline-flex items-center gap-1">
+                <PipelineCheck /> Booked {r.slot}
+              </span>
+            ) : idx === 0 ? (
+              <span className="shrink-0 rounded-full bg-coralbg px-2 py-0.5 text-[9.5px] font-bold text-coraldark inline-flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full bg-coral ${reduced ? "" : "pip-dot"}`} />
+                Waiting on you
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-full bg-indigobg px-2 py-0.5 text-[9.5px] font-bold text-indigodark">
+                {r.due}
+              </span>
+            )}
+          </div>
+        ))}
+
+        <div className="pt-1 px-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
+          Booked this week
+        </div>
+        <div
+          key={`booked-${cycle}`}
+          className={`rounded-xl border border-line bg-paper px-3 py-2 flex items-center justify-between gap-2 ${
+            reduced ? "" : "anim-fade-up"
+          }`}
+          style={reduced ? undefined : { animationDelay: "260ms" }}
         >
           <div className="min-w-0">
-            <div className="text-[12px] font-bold text-ink truncate">{r.name}</div>
-            <div className="text-[10.5px] text-muted truncate">{r.detail}</div>
+            <div className="text-[12px] font-bold text-ink truncate">{booked.name}</div>
+            <div className="text-[10.5px] text-muted truncate">{booked.detail}</div>
           </div>
-          <span
-            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold ${
-              r.tone === "coral" ? "bg-coralbg text-coraldark" : "bg-tealbg text-tealdark"
-            }`}
-          >
-            {r.pill}
+          <span className="shrink-0 rounded-full bg-indigo px-2 py-0.5 text-[9.5px] font-bold text-white inline-flex items-center gap-1">
+            <PipelineCheck /> {booked.slot}
           </span>
         </div>
-      ))}
 
-      <div className="rounded-xl bg-teal px-3 py-2.5 text-center text-[12.5px] font-bold text-white">
-        Call Mike, log the job →
+        <div
+          className={`rounded-xl bg-indigo px-3 py-2.5 text-center text-[12.5px] font-bold text-white ${
+            phase === "book" && !reduced ? "pip-cta-pulse" : ""
+          }`}
+        >
+          Text {waiting[0].first}, lock it in →
+        </div>
       </div>
     </Phone>
   );

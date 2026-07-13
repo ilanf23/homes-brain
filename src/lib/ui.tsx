@@ -6,15 +6,14 @@ import type {
 } from "react";
 import { initials, formatPhone } from "./hb";
 
-/* indigo = brand (default), coral = homeowner + payoff moments,
-   teal = pro-world subbrand (pros directory, pro profiles, pros-near-you),
+/* indigo (purple) = the brand, main color everywhere including pro surfaces,
+   coral (orange) = the accent: homeowner + payoff moments,
    amber = functional warning/status, red = errors/compliance. */
-type Accent = "indigo" | "coral" | "teal" | "amber" | "red" | "ink";
+type Accent = "indigo" | "coral" | "amber" | "red" | "ink";
 
 const accentText: Record<Accent, string> = {
   indigo: "text-indigo",
   coral: "text-coral",
-  teal: "text-teal",
   amber: "text-amber",
   red: "text-red",
   ink: "text-ink",
@@ -22,7 +21,6 @@ const accentText: Record<Accent, string> = {
 const accentBg: Record<Accent, string> = {
   indigo: "bg-indigobg",
   coral: "bg-coralbg",
-  teal: "bg-tealbg",
   amber: "bg-amberbg",
   red: "bg-redbg",
   ink: "bg-soft",
@@ -30,7 +28,6 @@ const accentBg: Record<Accent, string> = {
 const accentSolid: Record<Accent, string> = {
   indigo: "bg-indigo",
   coral: "bg-coral",
-  teal: "bg-teal",
   amber: "bg-amber",
   red: "bg-red",
   ink: "bg-ink",
@@ -40,7 +37,6 @@ const accentSolid: Record<Accent, string> = {
 const accentTextOnTint: Record<Accent, string> = {
   indigo: "text-indigodark",
   coral: "text-coraldark",
-  teal: "text-tealdark",
   amber: "text-amberdark",
   red: "text-red",
   ink: "text-ink",
@@ -113,9 +109,9 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
   );
 }
 
-/* indigo = default brand CTA; coral = payoff / homeowner CTAs;
-   teal = pro-world CTAs (contact a pro, find a pro). */
-type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "teal" | "amber" | "ghost";
+/* indigo = default brand CTA (including pro-world CTAs);
+   coral = payoff / homeowner CTAs. */
+type BtnVariant = "primary" | "secondary" | "coral" | "indigo" | "amber" | "ghost";
 
 /* Fill text tokens instead of text-white so dark mode stays AA: ink fills
    flip light (text follows --bg), accent fills brighten (text follows
@@ -129,7 +125,6 @@ const btnStyles: Record<BtnVariant, string> = {
     "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)] active:translate-y-px",
   indigo:
     "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)] active:translate-y-px",
-  teal: "bg-teal text-(--on-accent) hover:bg-teal/90 hover:shadow-[0_10px_24px_-12px_rgba(15,110,86,0.55)] active:translate-y-px",
   amber: "bg-amber text-(--on-accent) hover:bg-amber/90 hover:shadow-[0_10px_24px_-12px_rgba(138,82,8,0.55)] active:translate-y-px",
   ghost: "bg-transparent text-ink hover:bg-soft active:translate-y-px",
 };
@@ -437,7 +432,6 @@ export function OtpBoxes({
   const accentBorder: Record<Accent, string> = {
     indigo: "border-indigo",
     coral: "border-coral",
-    teal: "border-teal",
     amber: "border-amber",
     red: "border-red",
     ink: "border-ink",

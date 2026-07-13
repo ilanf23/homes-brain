@@ -71,7 +71,7 @@ export const Route = createFileRoute("/pro/$slug")({
         </p>
         <div className="mt-6">
           <Link to="/pros">
-            <Btn variant="teal">See all pros</Btn>
+            <Btn variant="indigo">See all pros</Btn>
           </Link>
         </div>
       </div>
@@ -100,7 +100,7 @@ function ProProfile() {
         <header className="mt-6 rounded-3xl border border-line bg-paper p-6 sm:p-8">
           <div className="flex flex-wrap items-start gap-3">
             <div className="min-w-0 flex-1">
-              <Eyebrow accent="teal">{pro.city}, St. Johns County</Eyebrow>
+              <Eyebrow accent="indigo">{pro.city}, St. Johns County</Eyebrow>
               <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-ink leading-tight">
                 {pro.name}
               </h1>
@@ -116,7 +116,7 @@ function ProProfile() {
               </div>
             </div>
             {pro.verified ? (
-              <Pill accent="teal">
+              <Pill accent="indigo">
                 <ShieldCheck size={12} strokeWidth={2.5} />
                 <span className="ml-0.5">Verified</span>
               </Pill>
@@ -127,7 +127,7 @@ function ProProfile() {
 
           <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Btn
-              variant="teal"
+              variant="indigo"
               size="lg"
               onClick={() => setContactOpen(true)}
               className="w-full sm:w-auto"
@@ -161,7 +161,7 @@ function ProProfile() {
                 <ContactRow icon={<Phone size={14} strokeWidth={2} />}>
                   <a
                     href={`tel:${pro.phone.replace(/[^\d+]/g, "")}`}
-                    className="text-ink hover:text-tealdark transition-colors tnum"
+                    className="text-ink hover:text-indigodark transition-colors tnum"
                   >
                     {formatPhone(pro.phone)}
                   </a>
@@ -173,7 +173,7 @@ function ProProfile() {
                     href={pro.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-ink hover:text-tealdark transition-colors"
+                    className="text-ink hover:text-indigodark transition-colors"
                   >
                     {pro.website.replace(/^https?:\/\//, "")}
                   </a>
@@ -185,7 +185,7 @@ function ProProfile() {
                     href={pro.socials.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-ink hover:text-tealdark transition-colors"
+                    className="text-ink hover:text-indigodark transition-colors"
                   >
                     Facebook
                   </a>
@@ -197,7 +197,7 @@ function ProProfile() {
                     href={pro.socials.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-ink hover:text-tealdark transition-colors"
+                    className="text-ink hover:text-indigodark transition-colors"
                   >
                     Instagram
                   </a>
@@ -250,8 +250,8 @@ function ProProfile() {
 
         {/* Deals - verified only */}
         {pro.verified && pro.deals && pro.deals.length > 0 && (
-          <Card className="mt-6 !bg-tealbg !border-teal/25">
-            <h2 className="text-lg font-bold text-tealdark flex items-center gap-2">
+          <Card className="mt-6 !bg-indigobg !border-indigo/25">
+            <h2 className="text-lg font-bold text-indigodark flex items-center gap-2">
               <Tag size={16} strokeWidth={2} /> Deals for HomesBrain homeowners
             </h2>
             <ul className="mt-3 space-y-2">
@@ -259,7 +259,7 @@ function ProProfile() {
                 <li key={i} className="flex items-start gap-2 text-sm text-ink">
                   <span
                     aria-hidden
-                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal"
+                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo"
                   />
                   <span>{d}</span>
                 </li>
@@ -277,7 +277,7 @@ function ProProfile() {
             We'll pass your info to {pro.name}. No spam, ever.
           </p>
           <div className="mt-5">
-            <Btn variant="teal" size="lg" onClick={() => setContactOpen(true)}>
+            <Btn variant="indigo" size="lg" onClick={() => setContactOpen(true)}>
               Contact this pro
             </Btn>
           </div>

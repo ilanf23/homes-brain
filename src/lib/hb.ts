@@ -328,7 +328,10 @@ export function initials(name: string) {
 
 export function formatDate(iso?: string | null) {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString(undefined, {
+  // A bare YYYY-MM-DD is a calendar date, not a UTC timestamp. Parsing it as
+  // UTC shifts it to the prior day in US time zones.
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T00:00:00`) : new Date(iso);
+  return date.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",

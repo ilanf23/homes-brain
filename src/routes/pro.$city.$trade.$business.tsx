@@ -118,7 +118,7 @@ function NotAvailable() {
   return (
     <MarketingShell mobileCta={null}>
       <section className="mx-auto max-w-xl px-5 py-24 text-center">
-        <Eyebrow accent="teal">Verified pros</Eyebrow>
+        <Eyebrow accent="indigo">Verified pros</Eyebrow>
         <h1 className="mt-4 text-4xl tracking-tight text-ink">This profile isn't available.</h1>
         <p className="mt-4 text-muted">
           Either the link is wrong, or this pro hasn't logged verified work recently. Verified
@@ -126,7 +126,7 @@ function NotAvailable() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link to="/for-pros">
-            <Btn variant="teal" size="lg">
+            <Btn variant="indigo" size="lg">
               I'm a pro, get verified
             </Btn>
           </Link>
@@ -175,13 +175,13 @@ function ProProfile() {
       {/* Header */}
       <section className="mx-auto max-w-4xl px-5 pt-8 pb-10">
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-tealbg text-teal flex items-center justify-center shrink-0">
+          <div className="w-16 h-16 rounded-2xl bg-indigobg text-indigo flex items-center justify-center shrink-0">
             <TradeIcon trade={profile.trade} size={28} />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{profile.business}</h1>
-              <Pill accent="teal">
+              <Pill accent="indigo">
                 <ShieldCheck size={12} animate={false} /> Verified by HomesBrain
               </Pill>
             </div>
@@ -225,7 +225,7 @@ function ProProfile() {
       <section className="bg-soft border-y border-line py-14">
         <div className="mx-auto max-w-4xl px-5 grid md:grid-cols-[1fr_1.2fr] gap-8">
           <div>
-            <Eyebrow accent="teal">What this means</Eyebrow>
+            <Eyebrow accent="indigo">What this means</Eyebrow>
             <h2 className="mt-3 text-2xl sm:text-3xl tracking-tight">
               Every job here really happened.
             </h2>
@@ -240,7 +240,7 @@ function ProProfile() {
               <KV
                 k="Recall checks"
                 v={
-                  <span className="inline-flex items-center gap-1.5 text-teal font-semibold text-sm">
+                  <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
                     <ShieldCheck size={16} animate={false} /> On every visit
                   </span>
                 }
@@ -252,7 +252,7 @@ function ProProfile() {
               <h3 className="text-lg font-semibold tracking-tight font-display">
                 Recent verified work
               </h3>
-              <Pill accent="teal">Anonymized</Pill>
+              <Pill accent="indigo">Anonymized</Pill>
             </div>
             {profile.activity.length === 0 ? (
               <p className="mt-4 text-sm text-muted">Recent activity will appear here.</p>
@@ -283,7 +283,7 @@ function ProProfile() {
       {/* Homeowner CTA */}
       <section className="py-16">
         <div className="mx-auto max-w-3xl px-5 text-center">
-          <Eyebrow accent="teal">For their customers</Eyebrow>
+          <Eyebrow accent="indigo">For their customers</Eyebrow>
           <h2 className="mt-3 text-2xl sm:text-3xl tracking-tight">
             This pro keeps a verified record of their work. Claim your home record.
           </h2>
@@ -293,7 +293,7 @@ function ProProfile() {
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link to="/for-homeowners">
-              <Btn variant="teal" size="lg">
+              <Btn variant="indigo" size="lg">
                 Claim your home record
               </Btn>
             </Link>

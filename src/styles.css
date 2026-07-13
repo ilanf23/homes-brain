@@ -10,10 +10,12 @@
 
 /* HomesBrain design tokens.
    Color carries meaning. Never mix the roles.
-   indigo = the brand (buttons, links, accents, chips - everywhere, all audiences),
-   coral = homeowner content + payoff highlights (rebooks, revenue, wins),
-   teal = the pro world subbrand (pros directory, pro profiles, pros-near-you),
-   amber = functional warning/status (due soon, pending), red = errors/destructive. */
+   indigo (purple) = the main brand color: buttons, links, accents, chips,
+   everywhere, all audiences, including all pro-world surfaces,
+   coral (orange) = the accent: homeowner content + payoff highlights
+   (rebooks, revenue, wins),
+   amber = functional warning/status (due soon, pending), red = errors/destructive.
+   Teal was retired from the palette in July 2026: pro surfaces use indigo. */
 
 @theme inline {
   --color-background: var(--bg);
@@ -49,9 +51,6 @@
   --color-coral: var(--coral);
   --color-coralbg: var(--coralbg);
   --color-coraldark: var(--coral-dark);
-  --color-teal: var(--teal);
-  --color-tealbg: var(--tealbg);
-  --color-tealdark: var(--teal-dark);
   --color-amber: var(--amber);
   --color-amberbg: var(--amberbg);
   --color-amberdark: var(--amber-dark);
@@ -96,9 +95,6 @@
   --coral: #c2461f;
   --coralbg: #fbeae2;
   --coral-dark: #9c3a18;
-  --teal: #0f6e56;
-  --tealbg: #e6f5ee;
-  --teal-dark: #0a4f3d;
 
   --amber: #8a5208;
   --amberbg: #faf0db;
@@ -135,9 +131,6 @@
   --coral: #e87a4a;
   --coralbg: #3f2118;
   --coral-dark: #f2a184;
-  --teal: #5cc4a3;
-  --tealbg: #16332a;
-  --teal-dark: #86dcc0;
 
   --amber: #d9a04a;
   --amberbg: #3a2f16;
@@ -459,6 +452,17 @@
   animation: none;
   opacity: 1;
   transform: translate(100px, -48px);
+}
+
+/* ---------- PipelinePhone workflow ----------
+   The hero phone acts out the booking workflow. React phases drive which
+   elements exist; these are the one-shot accents. Reduced motion is handled
+   in the component by omitting the classes entirely. */
+.pip-dot {
+  animation: hb-pulse-dot 1.6s ease-in-out infinite;
+}
+.pip-cta-pulse {
+  animation: hb-cls-send 0.6s ease-in-out 0.35s 2;
 }
 
 /* Entry motion stays under the 300ms ceiling: fast enough to never feel

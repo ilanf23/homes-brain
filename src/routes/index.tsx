@@ -16,21 +16,6 @@ export const Route = createFileRoute("/")({
 
 const H_SANS = "font-sans font-extrabold tracking-[-0.02em] text-ink";
 
-function Stars() {
-  return (
-    <div className="flex items-center gap-0.5" aria-label="Five stars">
-      {[0, 1, 2, 3, 4].map((i) => (
-        <svg key={i} width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
-          <path
-            d="M10 1.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9L10 15.3l-5.3 2.7 1-5.9L1.4 7.9l5.9-.9L10 1.7z"
-            fill="#f5b400"
-          />
-        </svg>
-      ))}
-    </div>
-  );
-}
-
 function GoogleGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true" className="shrink-0">
@@ -44,8 +29,8 @@ function GoogleGlyph() {
 
 function StarCircleIcon() {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tealbg">
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" className="text-teal">
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-coralbg">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" className="text-coral">
         <path
           fill="currentColor"
           d="M10 1.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9L10 15.3l-5.3 2.7 1-5.9L1.4 7.9l5.9-.9L10 1.7z"
@@ -57,7 +42,7 @@ function StarCircleIcon() {
 
 function BellCircleIcon() {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tealbg">
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigobg">
       <svg
         width="20"
         height="20"
@@ -68,7 +53,7 @@ function BellCircleIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        className="text-teal"
+        className="text-indigo"
       >
         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
@@ -79,8 +64,8 @@ function BellCircleIcon() {
 
 function MiniGoogleReviewCard() {
   return (
-    <div className="relative rounded-[20px] border border-teal/15 bg-bg p-5 shadow-[0_8px_24px_-12px_rgba(15,110,86,0.18)]">
-      <span className="absolute -top-2.5 -right-2.5 rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-(--on-accent) shadow-sm">
+    <div className="relative rounded-[20px] border border-coral/15 bg-bg p-5 shadow-[0_8px_24px_-12px_rgba(194,70,31,0.18)]">
+      <span className="absolute -top-2.5 -right-2.5 rounded-full bg-coral px-2 py-0.5 text-[11px] font-bold text-(--on-accent) shadow-sm">
         +1
       </span>
       <div className="flex items-center gap-0.5">
@@ -108,52 +93,187 @@ function MiniGoogleReviewCard() {
   );
 }
 
+function PhoneGlyph() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  );
+}
+
 function MiniNudgeCard() {
   return (
     <div className="relative">
-      {/* stacked cards behind */}
-      <div className="absolute inset-x-4 top-4 h-full rounded-[20px] border border-line bg-soft opacity-60" />
-      <div className="absolute inset-x-2 top-2 h-full rounded-[20px] border border-line bg-soft opacity-80" />
       {/* main notification */}
-      <div className="relative rounded-[20px] border border-teal/15 bg-bg p-4 shadow-[0_8px_24px_-12px_rgba(15,110,86,0.18)]">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal font-bold text-(--on-accent)">
+      <div className="rounded-[20px] border border-coral/15 bg-bg p-4 shadow-[0_12px_30px_-14px_rgba(194,70,31,0.22)]">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo text-[13px] font-extrabold text-(--on-accent)">
             HB
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <div className="text-[15px] font-bold text-ink">Karen is due today</div>
-              <span className="pulse-dot h-2 w-2 rounded-full bg-teal" aria-hidden="true" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="truncate text-[15px] font-bold text-ink">Karen Whitfield</div>
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-coralbg px-2.5 py-1 text-[11px] font-bold text-coraldark">
+                <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-coral" aria-hidden="true" />
+                Due today
+              </span>
             </div>
-            <div className="text-[13px] text-muted">Water softener, serviced 6 months ago</div>
+            <div className="mt-0.5 text-[13px] text-muted">
+              Water softener · serviced 6 months ago
+            </div>
           </div>
-          <span className="rounded-full bg-teal px-3 py-1 text-[11px] font-bold text-(--on-accent)">Call</span>
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
+          <span className="text-[12px] font-medium text-muted">Next up on your list</span>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[12px] font-bold text-(--on-accent) shadow-[0_4px_12px_-4px_rgba(194,70,31,0.5)] transition-transform duration-150 active:scale-[0.97]"
+          >
+            <PhoneGlyph /> Call Karen
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+/* Small line icons for the repeat-loop flywheel (Lucide paths). */
+function LoopStroke({ d, size = 22 }: { d: string | string[]; size?: number }) {
+  const paths = Array.isArray(d) ? d : [d];
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {paths.map((p, i) => (
+        <path key={i} d={p} />
+      ))}
+    </svg>
+  );
+}
+
+const LOOP_NODES = [
+  {
+    pos: "left-1/2 top-[9%]",
+    tone: "indigo" as const,
+    label: "You do the job",
+    d: "m14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
+  },
+  {
+    pos: "left-[91%] top-1/2",
+    tone: "indigo" as const,
+    label: "Record, your name on it",
+    d: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z", "M14 2v6h6", "M16 13H8", "M16 17H8", "M10 9H8"],
+  },
+  {
+    pos: "left-1/2 top-[91%]",
+    tone: "indigo" as const,
+    label: "We nudge you when it's due",
+    d: ["M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9", "M10.3 21a1.94 1.94 0 0 0 3.4 0"],
+  },
+  {
+    pos: "left-[9%] top-1/2",
+    tone: "coral" as const,
+    label: "They call you back",
+    d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+  },
+];
+
+function RepeatLoop() {
+  return (
+    <div className="relative mx-auto aspect-square w-full max-w-[340px] sm:max-w-[400px]">
+      {/* orbit + direction arrow */}
+      <svg
+        viewBox="0 0 200 200"
+        className="absolute inset-0 h-full w-full text-indigo/30"
+        fill="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <marker id="loopArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+            <path d="M1 1 6 3.5 1 6" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </marker>
+        </defs>
+        <path
+          d="M141 29 A82 82 0 1 1 59 29"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="3 6"
+          markerEnd="url(#loopArrow)"
+        />
+      </svg>
+
+      {/* center payoff */}
+      <div className="absolute left-1/2 top-1/2 flex h-[132px] w-[132px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-coral text-center text-(--on-accent) shadow-[0_12px_30px_-8px_rgba(194,70,31,0.45)]">
+        <LoopStroke
+          size={28}
+          d={["M3 12a9 9 0 0 1 15-6.7L21 8", "M21 3v5h-5", "M21 12a9 9 0 0 1-15 6.7L3 16", "M3 21v-5h5"]}
+        />
+        <div className="mt-1.5 text-[15px] font-extrabold leading-tight tracking-[-0.01em]">
+          Again
+          <br />& again
+        </div>
+      </div>
+
+      {/* orbiting steps */}
+      {LOOP_NODES.map((n) => (
+        <div
+          key={n.label}
+          className={`absolute ${n.pos} flex w-[88px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2`}
+        >
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-full ring-4 ring-bg ${
+              n.tone === "coral" ? "bg-coralbg text-coral" : "bg-indigobg text-indigo"
+            }`}
+          >
+            <LoopStroke d={n.d} />
+          </div>
+          <span className="rounded-full border border-line bg-bg px-2.5 py-1 text-center text-[11px] font-bold leading-tight text-ink shadow-[0_1px_2px_rgba(22,22,15,0.05)]">
+            {n.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Landing() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "teal" }}>
-      {/* Hero: callback led */}
+    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
+      {/* Hero: customers waiting to book, led by the workflow phone */}
       <section className="mx-auto max-w-6xl px-5 pt-12 sm:pt-16 pb-14">
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
           <div className="text-center lg:text-left">
-            <div className="eyebrow text-teal">For pros in St. Johns County</div>
-            <h1 className={`${H_SANS} mt-4 text-4xl sm:text-6xl leading-[1.05]`}>
+            <div className="eyebrow text-indigo">For pros in St. Johns County</div>
+            <h1 className={`${H_SANS} mt-5 text-4xl sm:text-6xl leading-[1.12] tracking-[-0.02em]`}>
               Never lose a customer
               <br />
-              <span className="text-teal">you already earned.</span>
+              <span className="text-coral">you already earned.</span>
             </h1>
-            <p className="mt-5 max-w-xl mx-auto lg:mx-0 text-lg text-muted">
-              HomesBrain tells you when each past customer is due and hands you the name to call.
-              Your callback list builds itself.
+            <p className="mt-6 max-w-xl mx-auto lg:mx-0 text-lg text-muted">
+              Log a job in 30 seconds. Win more repeat customers, more reviews, and a professional record with your name on it.
             </p>
             <div className="mt-8 flex justify-center lg:justify-start">
               <Link to="/pro/signup" className="w-full sm:w-auto">
-                <Btn variant="teal" size="lg" className="w-full sm:w-auto min-h-12">
+                <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
                   Claim your profile
                 </Btn>
               </Link>
@@ -163,34 +283,47 @@ function Landing() {
             </p>
           </div>
 
-          {/* Callback pipeline phone */}
+          {/* Booking workflow phone */}
           <div className="order-first lg:order-last">
             <PipelinePhone />
           </div>
         </div>
 
-        {/* Day-one proof: reviews */}
-        <div className="mt-14 mx-auto max-w-md text-center">
-          <div className="eyebrow text-teal">And it pays you on day one</div>
-        </div>
-        <div className="mt-4 mx-auto max-w-md rounded-[22px] border border-line bg-paper p-6 shadow-[0_20px_50px_-30px_rgba(22,22,15,0.35)]">
-          <Stars />
-          <p className="mt-3 text-[16px] text-ink leading-snug">
-            "Fast, honest, cleaned up after himself. Best plumber in Ponte Vedra."
-          </p>
-          <div className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-muted">
-            <GoogleGlyph />
-            New Google review, posted for you.
+      </section>
+
+
+      {/* The core promise: turn one job into a customer who keeps coming back */}
+      <section className="border-t border-line py-16 sm:py-24">
+        <div className="mx-auto max-w-5xl px-5">
+          <div className="grid items-center gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+            <div className="text-center lg:text-left">
+              <div className="eyebrow text-indigo">Why HomesBrain exists</div>
+              <h2 className={`${H_SANS} mt-4 text-3xl sm:text-[42px] leading-[1.08]`}>
+                Your best customers forget you.{" "}
+                <span className="text-coral">We make sure they come back.</span>
+              </h2>
+              <p className="mt-5 max-w-md mx-auto lg:mx-0 text-[16px] leading-relaxed text-muted">
+                You did great work once, then they moved on. Six months later, when the softener
+                needs service, they Google a stranger. HomesBrain keeps every customer tied to your
+                name, so the next call comes back to you. Again and again.
+              </p>
+              <div className="mt-7 flex flex-wrap justify-center lg:justify-start gap-2">
+                <span className="rounded-full bg-indigobg px-3 py-1.5 text-[13px] font-bold text-indigo">
+                  More repeat jobs
+                </span>
+                <span className="rounded-full bg-coralbg px-3 py-1.5 text-[13px] font-bold text-coraldark">
+                  No customer forgotten
+                </span>
+              </div>
+            </div>
+            <RepeatLoop />
           </div>
         </div>
-        <p className="mt-4 mx-auto max-w-md text-center text-sm text-muted">
-          Every job asks your customer for the Google review, automatically. Free.
-        </p>
       </section>
 
 
       {/* HomesBrain AI: voice in, record out */}
-      <section className="border-t border-line py-16 sm:py-20">
+      <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-5xl px-5">
           <div className="text-center">
             <div className="eyebrow text-indigo">HomesBrain AI, free for every pro</div>
@@ -211,7 +344,7 @@ function Landing() {
       {/* The whole idea */}
       <section className="border-t border-line bg-soft py-20 sm:py-24">
         <div className="mx-auto max-w-4xl px-5 text-center">
-          <div className="eyebrow text-teal">The whole idea</div>
+          <div className="eyebrow text-indigo">The whole idea</div>
           <h2 className={`${H_SANS} mt-4 text-3xl sm:text-4xl leading-[1.1]`}>
             Never forgotten. Never forget.
           </h2>

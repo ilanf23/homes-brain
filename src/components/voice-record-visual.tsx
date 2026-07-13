@@ -4,7 +4,7 @@ import { Phone } from "@/components/marketing";
 
 const H_SANS = "font-sans font-extrabold tracking-[-0.02em] text-ink";
 
-function Check({ className = "text-teal" }: { className?: string }) {
+function Check({ className = "text-indigo" }: { className?: string }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className={`shrink-0 ${className}`}>
       <path
@@ -41,7 +41,7 @@ export function VoiceOrb({ size = "lg" }: { size?: "lg" | "md" }) {
   const iconSize = size === "lg" ? 26 : 22;
   return (
     <div className={`relative flex ${box} items-center justify-center`}>
-      <span className="absolute inset-0 rounded-full bg-indigo/20 animate-ping" aria-hidden="true" />
+      <span className="absolute inset-0 rounded-full bg-indigo/20 animate-ping [animation-duration:2s]" aria-hidden="true" />
       <span className="absolute inset-2 rounded-full bg-indigo/15" aria-hidden="true" />
       <span className={`relative flex ${core} items-center justify-center rounded-full bg-indigo text-white shadow-lg`}>
         <MicIcon size={iconSize} />
@@ -79,7 +79,7 @@ export function RecordCard() {
     <div className="rounded-2xl border border-line bg-soft p-5">
       <div className="flex items-center justify-between">
         <div className={`${H_SANS} text-base`}>Job record</div>
-        <span className="rounded-full bg-teal/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal">
+        <span className="rounded-full bg-indigo/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo">
           Done in 12 sec
         </span>
       </div>
