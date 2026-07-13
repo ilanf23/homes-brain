@@ -44,7 +44,13 @@ function HomeownerSignup() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user || cancelled) return;
       setFinishing(true);
-      let pending: { name?: string; address?: string; consent?: boolean } = {};
+      let pending: {
+        name?: string;
+        address?: string;
+        consent?: boolean;
+        phone?: string;
+        smsConsent?: boolean;
+      } = {};
       try {
         pending = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "{}");
       } catch {
@@ -63,8 +69,20 @@ function HomeownerSignup() {
       if (pending.name && pending.name.trim()) {
         await supabase.rpc("homeowner_update_profile", { p_name: pending.name.trim() });
       }
+      // Web SMS opt-in: record phone + consent timestamp when the checkbox was
+      // checked AND a number was provided. Never blocks signup.
+      if (pending.smsConsent && pending.phone && pending.phone.trim()) {
+        await supabase
+          .from("homeowners")
+          .update({
+            phone: pending.phone.trim(),
+            sms_consent_at: new Date().toISOString(),
+          })
+          .eq("id", homeownerId);
+      }
       await logEvent(`homeowner:${homeownerId}`, "homeowner_signed_up", {
         has_address: !!pending.address,
+        sms_consent: !!(pending.smsConsent && pending.phone && pending.phone.trim()),
       });
       localStorage.removeItem(PENDING_KEY);
       navigate({ to: "/home" });
