@@ -37,8 +37,6 @@ function HomeownerSignup() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
