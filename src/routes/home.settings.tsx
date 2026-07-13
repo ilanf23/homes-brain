@@ -192,6 +192,40 @@ function HomeownerSettings() {
     }
   }
 
+  async function saveSmsConsent() {
+    if (!homeowner || !homeownerId) return;
+    setSmsErr(null);
+    const trimmed = smsPhone.trim();
+    if (smsConsent && !trimmed) {
+      setSmsErr("Enter a mobile number to opt in.");
+      return;
+    }
+    setSmsSaving(true);
+    const now = new Date().toISOString();
+    const patch: { phone?: string; sms_consent_at: string | null } = smsConsent
+      ? { phone: trimmed, sms_consent_at: now }
+      : { sms_consent_at: null };
+    const { error } = await supabase.from("homeowners").update(patch).eq("id", homeownerId);
+    if (error) {
+      setSmsErr(error.message || "Couldn't save. Try again.");
+      setSmsSaving(false);
+      return;
+    }
+    setSmsSavedAt(smsConsent ? now : null);
+    if (smsConsent) {
+      setHomeowner({ ...homeowner, phone: trimmed });
+      setPhone(trimmed);
+    }
+    await logEvent(
+      `homeowner:${homeownerId}`,
+      smsConsent ? "sms_web_opted_in" : "sms_web_opted_out",
+      {},
+    );
+    setToast(smsConsent ? "You're opted in for texts" : "Text consent removed");
+    setSmsSaving(false);
+  }
+
+
   async function exportData() {
     if (!homeownerId) return;
     setExporting(true);
