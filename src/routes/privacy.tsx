@@ -133,7 +133,7 @@ function Privacy() {
               Text <strong>STOP</strong> to unsubscribe at any time. Text <strong>HELP</strong> for
               help, or email support@homesbrain.com.
             </>,
-            "We do not sell, rent, or share your mobile phone number or SMS opt-in information with third parties or affiliates for their own marketing purposes. Mobile opt-in data is never shared for marketing.",
+            "No mobile information - including your phone number - and no SMS or messaging consent will be shared with, sold to, or disclosed to any third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent are never shared with third parties.",
           ]}
         />
         <p>
