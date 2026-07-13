@@ -376,7 +376,7 @@ function Landing() {
 
       {/* Homeowner nod band */}
       <section className="border-t border-line py-10">
-        <div className="mx-auto max-w-4xl px-5">
+        <div className="mx-auto max-w-4xl px-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl bg-coralbg border border-coral/20 px-5 py-4">
             <div className="eyebrow text-coraldark">Own a home?</div>
             <Link
@@ -386,6 +386,15 @@ function Landing() {
               Your home already has a record. See it. →
             </Link>
           </div>
+          <p className="text-center text-sm text-muted">
+            With your consent, your pro can text you your service records and reminders from
+            HomesBrain. Message frequency varies. Msg &amp; data rates may apply. Reply STOP
+            anytime. See our{" "}
+            <Link to="/messaging-terms" className="font-semibold text-ink hover:underline">
+              Messaging Terms
+            </Link>
+            .
+          </p>
         </div>
       </section>
     </MarketingShell>

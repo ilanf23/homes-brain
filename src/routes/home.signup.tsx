@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
+import { Btn, Card, Field, Input, PhoneInput, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
@@ -30,6 +30,8 @@ function HomeownerSignup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -42,7 +44,13 @@ function HomeownerSignup() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user || cancelled) return;
       setFinishing(true);
-      let pending: { name?: string; address?: string; consent?: boolean } = {};
+      let pending: {
+        name?: string;
+        address?: string;
+        consent?: boolean;
+        phone?: string;
+        smsConsent?: boolean;
+      } = {};
       try {
         pending = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "{}");
       } catch {
@@ -61,8 +69,20 @@ function HomeownerSignup() {
       if (pending.name && pending.name.trim()) {
         await supabase.rpc("homeowner_update_profile", { p_name: pending.name.trim() });
       }
+      // Web SMS opt-in: record phone + consent timestamp when the checkbox was
+      // checked AND a number was provided. Never blocks signup.
+      if (pending.smsConsent && pending.phone && pending.phone.trim()) {
+        await supabase
+          .from("homeowners")
+          .update({
+            phone: pending.phone.trim(),
+            sms_consent_at: new Date().toISOString(),
+          })
+          .eq("id", homeownerId);
+      }
       await logEvent(`homeowner:${homeownerId}`, "homeowner_signed_up", {
         has_address: !!pending.address,
+        sms_consent: !!(pending.smsConsent && pending.phone && pending.phone.trim()),
       });
       localStorage.removeItem(PENDING_KEY);
       navigate({ to: "/home" });
@@ -82,7 +102,13 @@ function HomeownerSignup() {
     setErr(null);
     localStorage.setItem(
       PENDING_KEY,
-      JSON.stringify({ name: name.trim(), address: address.trim(), consent }),
+      JSON.stringify({
+        name: name.trim(),
+        address: address.trim(),
+        consent,
+        phone: phone.trim(),
+        smsConsent,
+      }),
     );
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -143,7 +169,13 @@ function HomeownerSignup() {
                 stashPending={() => {
                   localStorage.setItem(
                     PENDING_KEY,
-                    JSON.stringify({ name: name.trim(), address: address.trim(), consent }),
+                    JSON.stringify({
+                      name: name.trim(),
+                      address: address.trim(),
+                      consent,
+                      phone: phone.trim(),
+                      smsConsent,
+                    }),
                   );
                 }}
               />
@@ -164,6 +196,38 @@ function HomeownerSignup() {
                   autoComplete="email"
                 />
               </Field>
+              <Field label="Mobile number (for text updates)">
+                <PhoneInput value={phone} onChange={setPhone} />
+                <p className="mt-1.5 text-xs text-muted">
+                  Optional. Only used if you opt in below.
+                </p>
+              </Field>
+              <label className="flex items-start gap-2 text-xs text-muted leading-relaxed">
+                <input
+                  type="checkbox"
+                  checked={smsConsent}
+                  onChange={(e) => setSmsConsent(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Text me my service records and reminders. By checking this box, I agree to
+                  receive recurring automated service and reminder text messages from HomesBrain
+                  at the number I provide. Consent is not a condition of any purchase or service.
+                  Msg &amp; data rates may apply. Message frequency varies. Reply STOP to opt out,
+                  HELP for help. See our{" "}
+                  <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                    Privacy Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/messaging-terms"
+                    className="font-semibold text-indigo hover:underline"
+                  >
+                    Messaging Terms
+                  </Link>
+                  .
+                </span>
+              </label>
               <Field label={t("auth.password")}>
                 <Input
                   type="password"

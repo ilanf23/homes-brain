@@ -93,6 +93,11 @@ function HomeownerSettings() {
   const [proCount, setProCount] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [smsPhone, setSmsPhone] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsSavedAt, setSmsSavedAt] = useState<string | null>(null);
+  const [smsSaving, setSmsSaving] = useState(false);
+  const [smsErr, setSmsErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
@@ -104,6 +109,10 @@ function HomeownerSettings() {
     setPhone(homeowner.phone ?? "");
     setEmail(homeowner.email ?? "");
     setLocalPrefs(loadLocalPrefs());
+    const ho = homeowner as unknown as { sms_consent_at?: string | null };
+    setSmsPhone(homeowner.phone ?? "");
+    setSmsConsent(!!ho.sms_consent_at);
+    setSmsSavedAt(ho.sms_consent_at ?? null);
   }, [homeowner]);
 
   useEffect(() => {
@@ -182,6 +191,40 @@ function HomeownerSettings() {
       await logEvent(`homeowner:${homeownerId}`, value ? "sms_opted_out" : "sms_opted_in", {});
     }
   }
+
+  async function saveSmsConsent() {
+    if (!homeowner || !homeownerId) return;
+    setSmsErr(null);
+    const trimmed = smsPhone.trim();
+    if (smsConsent && !trimmed) {
+      setSmsErr("Enter a mobile number to opt in.");
+      return;
+    }
+    setSmsSaving(true);
+    const now = new Date().toISOString();
+    const patch: { phone?: string; sms_consent_at: string | null } = smsConsent
+      ? { phone: trimmed, sms_consent_at: now }
+      : { sms_consent_at: null };
+    const { error } = await supabase.from("homeowners").update(patch).eq("id", homeownerId);
+    if (error) {
+      setSmsErr(error.message || "Couldn't save. Try again.");
+      setSmsSaving(false);
+      return;
+    }
+    setSmsSavedAt(smsConsent ? now : null);
+    if (smsConsent) {
+      setHomeowner({ ...homeowner, phone: trimmed });
+      setPhone(trimmed);
+    }
+    await logEvent(
+      `homeowner:${homeownerId}`,
+      smsConsent ? "sms_web_opted_in" : "sms_web_opted_out",
+      {},
+    );
+    setToast(smsConsent ? "You're opted in for texts" : "Text consent removed");
+    setSmsSaving(false);
+  }
+
 
   async function exportData() {
     if (!homeownerId) return;
@@ -329,6 +372,60 @@ function HomeownerSettings() {
                       onChange={(v) => setPref("respect_quiet_hrs", v)}
                       label="Quiet hours"
                     />
+                  </div>
+                </div>
+
+                {/* Web SMS opt-in: unchecked by default, records timestamp. */}
+                <div className="mt-5 rounded-xl border border-line bg-white p-4">
+                  <div className="text-sm font-semibold text-ink">Text updates from HomesBrain</div>
+                  <div className="mt-3 space-y-3">
+                    <Field label="Mobile number (for text updates)">
+                      <PhoneInput value={smsPhone} onChange={setSmsPhone} />
+                    </Field>
+                    <label className="flex items-start gap-2 text-xs text-muted leading-relaxed">
+                      <input
+                        type="checkbox"
+                        checked={smsConsent}
+                        onChange={(e) => setSmsConsent(e.target.checked)}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        Text me my service records and reminders. By checking this box, I agree
+                        to receive recurring automated service and reminder text messages from
+                        HomesBrain at the number I provide. Consent is not a condition of any
+                        purchase or service. Msg &amp; data rates may apply. Message frequency
+                        varies. Reply STOP to opt out, HELP for help. See our{" "}
+                        <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                          Privacy Policy
+                        </Link>{" "}
+                        and{" "}
+                        <Link
+                          to="/messaging-terms"
+                          className="font-semibold text-indigo hover:underline"
+                        >
+                          Messaging Terms
+                        </Link>
+                        .
+                      </span>
+                    </label>
+                    {smsErr && (
+                      <div
+                        role="alert"
+                        className="text-sm text-red bg-redbg rounded-xl px-3 py-2"
+                      >
+                        {smsErr}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs text-muted">
+                        {smsSavedAt
+                          ? `Opted in ${formatDate(smsSavedAt)}`
+                          : "Unchecked by default. Opt in only if you want texts."}
+                      </div>
+                      <Btn variant="indigo" size="sm" loading={smsSaving} onClick={saveSmsConsent}>
+                        Save
+                      </Btn>
+                    </div>
                   </div>
                 </div>
               </>
