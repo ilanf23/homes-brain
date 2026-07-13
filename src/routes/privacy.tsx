@@ -152,7 +152,7 @@ function Privacy() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Changes to this policy">
+      <LegalSection title="9. Changes to this policy">
         <p>
           We will post any changes here and update the date above. Material changes will be
           communicated through the service or by email.
