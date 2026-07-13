@@ -93,6 +93,11 @@ function HomeownerSettings() {
   const [proCount, setProCount] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [smsPhone, setSmsPhone] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsSavedAt, setSmsSavedAt] = useState<string | null>(null);
+  const [smsSaving, setSmsSaving] = useState(false);
+  const [smsErr, setSmsErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
