@@ -30,9 +30,13 @@ function HomeownerSignup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
 
