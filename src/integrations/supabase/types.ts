@@ -907,6 +907,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_optouts: {
+        Row: {
+          opted_out_at: string
+          phone: string
+          resubscribed_at: string | null
+        }
+        Insert: {
+          opted_out_at?: string
+          phone: string
+          resubscribed_at?: string | null
+        }
+        Update: {
+          opted_out_at?: string
+          phone?: string
+          resubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       trade_fields: {
         Row: {
           active: boolean
@@ -1075,6 +1093,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_email_opted_out: { Args: { p_email: string }; Returns: boolean }
       is_pro: { Args: never; Returns: boolean }
+      is_sms_opted_out: { Args: { p_phone: string }; Returns: boolean }
       lookup_login_method: { Args: { p_email: string }; Returns: string }
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       mock_set_plan: { Args: { p_plan: string }; Returns: string }
