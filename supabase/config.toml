@@ -73,3 +73,10 @@ verify_jwt = false
 # the opaque per-recipient token.
 [functions.email-unsubscribe]
 verify_jwt = false
+
+# sms-inbound receives Twilio's inbound SMS webhook (form-encoded From/Body).
+# Twilio cannot present a Supabase JWT; the endpoint is idempotent and only
+# updates the sms_optouts table based on standard keywords.
+[functions.sms-inbound]
+verify_jwt = false
+
