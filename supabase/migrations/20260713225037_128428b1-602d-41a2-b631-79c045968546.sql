@@ -1,0 +1,1 @@
+ALTER TABLE public.homeowners ADD COLUMN IF NOT EXISTS sms_consent_at timestamptz;

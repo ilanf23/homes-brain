@@ -286,6 +286,7 @@ export type Database = {
           phone: string | null
           respect_quiet_hrs: boolean
           setup_completed_at: string | null
+          sms_consent_at: string | null
           sms_opt_out: boolean
         }
         Insert: {
@@ -301,6 +302,7 @@ export type Database = {
           phone?: string | null
           respect_quiet_hrs?: boolean
           setup_completed_at?: string | null
+          sms_consent_at?: string | null
           sms_opt_out?: boolean
         }
         Update: {
@@ -316,6 +318,7 @@ export type Database = {
           phone?: string | null
           respect_quiet_hrs?: boolean
           setup_completed_at?: string | null
+          sms_consent_at?: string | null
           sms_opt_out?: boolean
         }
         Relationships: []
