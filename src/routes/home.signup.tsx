@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Btn, Card, Field, Input, Pill } from "@/lib/ui";
+import { Btn, Card, Field, Input, PhoneInput, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
