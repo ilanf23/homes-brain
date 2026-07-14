@@ -654,7 +654,7 @@ function CustomerDetail() {
                     </div>
                     <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
                   </div>
-                  {rec && <ChevronRightIcon />}
+                  {rec && <ChevronRight size={18} className="shrink-0 text-muted" />}
                 </div>
               );
               return (
