@@ -2506,7 +2506,7 @@ function NewJob() {
                     disabled={!canWork}
                     onClick={() => setStage("review")}
                   >
-                    {t("pro.review")}
+                    Continue
                   </Btn>
                 </div>
               </Card>
