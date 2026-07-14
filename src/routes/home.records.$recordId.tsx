@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
@@ -19,7 +19,6 @@ export const Route = createFileRoute("/home/records/$recordId")({
 function RecordDetail() {
   const { recordId } = Route.useParams();
 
-  const navigate = useNavigate();
   const { locale } = useI18n();
   const copy = homeRecordCopy(locale);
   const { homeowner, home, records, jobs, equipment, pros, loading } = useHomeownerGuard();
@@ -58,14 +57,12 @@ function RecordDetail() {
     [invoices, record],
   );
 
-  useEffect(() => {
-    if (!loading && !home) navigate({ to: "/home" });
-  }, [loading, home, navigate]);
-
   if (loading) return <PageLoader label={copy.loadingRecord} />;
-  if (!home) return <PageLoader label={copy.settingUp} />;
 
-  if (!record || !job) {
+  // Never auto-redirect away from a record link. If the bundle is missing
+  // the home or the record, say so; a silent bounce to the dashboard reads
+  // as a broken claim.
+  if (!home || !record || !job) {
     return (
       <HomeShell active="overview" homeowner={homeowner} home={home}>
         <Card className="anim-fade-up text-center py-14">

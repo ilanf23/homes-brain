@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Merge, Plus, Search } from "lucide-react";
-import { Avatar, Btn, Card, Input, Pill, Toast } from "@/lib/ui";
+import { ChevronRight, Merge, Search } from "lucide-react";
+import { Btn, Card, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent } from "@/lib/hb";
+import { logEvent } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
 import { isProEntitled } from "@/lib/plan";
@@ -22,27 +22,8 @@ type CustomerRow = {
   created_at: string;
   home_id: string | null;
   homes: { address: string; claimed_at: string | null } | null;
-  jobs:
-    | { id: string; created_at: string; next_service_date: string | null; what_done: string }[]
-    | null;
+  jobs: { id: string }[] | null;
 };
-
-type Derived = {
-  c: CustomerRow;
-  jobCount: number;
-  lastJob: string | null;
-  claimed: boolean;
-};
-
-function derive(c: CustomerRow): Derived {
-  const jobs = c.jobs ?? [];
-  const lastJob =
-    jobs
-      .map((j) => j.created_at)
-      .sort()
-      .at(-1) ?? null;
-  return { c, jobCount: jobs.length, lastJob, claimed: Boolean(c.homes?.claimed_at) };
-}
 
 function CustomersList() {
   const { proId, pro } = useProGuard();
@@ -64,17 +45,13 @@ function CustomersList() {
     (async () => {
       const { data } = await supabase
         .from("customers")
-        .select(
-          "id,name,phone,email,created_at,home_id,homes(address,claimed_at),jobs(id,created_at,next_service_date,what_done)",
-        )
+        .select("id,name,phone,email,created_at,home_id,homes(address,claimed_at),jobs(id)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setCustomers((data ?? []) as unknown as CustomerRow[]);
       setLoading(false);
     })();
   }, [proId]);
-
-  const derived = useMemo(() => customers.map(derive), [customers]);
 
   // Same name, same home: the same person logged twice. Anything less certain
   // is left alone rather than risking a merge of two real people.
@@ -102,13 +79,13 @@ function CustomersList() {
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return derived;
-    return derived.filter((d) =>
-      [d.c.name, d.c.phone, d.c.email, d.c.homes?.address]
+    if (!needle) return customers;
+    return customers.filter((customer) =>
+      [customer.name, customer.phone, customer.email, customer.homes?.address]
         .filter(Boolean)
         .some((v) => v!.toLowerCase().includes(needle)),
     );
-  }, [derived, q]);
+  }, [customers, q]);
 
   if (!pro || loading) {
     return (
@@ -123,7 +100,7 @@ function CustomersList() {
       <ProShell pro={pro} active="customers">
         <PlanLock
           title="Customer CRM"
-          description="Your full customer + property history in one place — visits, equipment, invoices, notes. Included with Pro."
+          description="Your full customer + property history in one place: visits, equipment, invoices, notes. Included with Pro."
         />
       </ProShell>
     );
@@ -133,104 +110,115 @@ function CustomersList() {
     <ProShell pro={pro} active="customers">
       <ProPageHead
         eyebrow="Customers"
-        title="Customers"
-        sub={`${customers.length} customer${customers.length === 1 ? "" : "s"} · every homeowner you've logged a job for.`}
-        action={
-          <Link to="/pro/jobs/new">
-            <Btn variant="indigo">
-              <Plus size={16} /> Log a job
-            </Btn>
-          </Link>
-        }
+        title="Your customers"
+        sub={`${customers.length} customer${customers.length === 1 ? "" : "s"}. Tap a card to open it.`}
       />
 
       {customers.length === 0 ? (
         <Card className="anim-fade-up text-center py-14">
           <h2 className="text-2xl tracking-tight">No customers yet</h2>
           <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-            Customers are added the first time you log a job for them: name, contact, and address,
-            with consent captured.
+            Log your first job and your customer shows up here.
           </p>
+          <div className="mt-6">
+            <Link to="/pro/jobs/new">
+              <Btn variant="indigo" size="lg">
+                Log a job
+              </Btn>
+            </Link>
+          </div>
         </Card>
       ) : (
         <>
-          {duplicateGroups.map((group) => (
-            <Card
-              key={group.survivor.id}
-              className="anim-fade-up mt-4 !bg-amberbg !border-amber/30"
-            >
-              <div className="flex items-center gap-3">
-                <Merge size={18} className="shrink-0 text-amber" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-ink">
-                    {group.duplicates.length + 1} customers named {group.name} at the same address
+          {duplicateGroups.length > 0 && (
+            <div className="anim-fade-up mb-6 space-y-3">
+              {duplicateGroups.map((group) => (
+                <Card key={group.survivor.id} className="!border-amber/30 !bg-amberbg !p-5">
+                  <div className="flex items-center gap-4">
+                    <Merge size={20} className="shrink-0 text-amber" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-ink">Possible duplicate</div>
+                      <div className="mt-0.5 truncate text-sm text-muted">{group.name}</div>
+                    </div>
+                    <Btn variant="amber" size="sm" onClick={() => setConfirming(group)}>
+                      Review
+                    </Btn>
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-muted">
-                    {group.address ?? "No address"} · looks like one person logged more than once
-                  </div>
-                </div>
-                <Btn variant="amber" size="sm" onClick={() => setConfirming(group)}>
-                  Merge
-                </Btn>
-              </div>
-            </Card>
-          ))}
+                </Card>
+              ))}
+            </div>
+          )}
 
-          <div className="anim-fade-up relative mt-4 mb-4">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <div className="anim-fade-up relative mb-6">
+            <label htmlFor="customer-search" className="sr-only">
+              Find a customer
+            </label>
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+              aria-hidden="true"
+            />
             <Input
+              id="customer-search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search customers"
-              className="pl-10 !min-h-11"
-              aria-label="Search customers"
+              placeholder="Find a customer by name or address"
+              className="!pl-11"
             />
           </div>
 
           {filtered.length === 0 ? (
-            <Card className="anim-fade-up d-1">
-              <p className="text-sm text-muted">
-                No customers match.{" "}
-                <button
-                  onClick={() => setQ("")}
-                  className="font-semibold text-indigo hover:underline"
-                >
-                  Clear search
-                </button>
+            <Card className="anim-fade-up d-1 text-center py-14">
+              <h2 className="text-2xl tracking-tight">No customers found</h2>
+              <p className="mt-2 text-sm text-muted max-w-md mx-auto">
+                Nothing matches "{q.trim()}". Try a different name or address.
               </p>
-            </Card>
-          ) : (
-            <Card className="anim-fade-up d-1 !p-2">
-              <div className="divide-y divide-line">
-                {filtered.map((d) => (
-                  <Link
-                    key={d.c.id}
-                    to="/pro/customers/$customerId"
-                    params={{ customerId: d.c.id }}
-                    className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft active:bg-line/50 transition-colors duration-150"
-                  >
-                    <Avatar name={d.c.name} accent="indigo" size={40} />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-ink truncate">{d.c.name}</div>
-                      <div className="text-xs text-muted truncate">
-                        {d.c.homes?.address ?? "No address"}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-xs text-muted tnum">
-                        {d.jobCount} job{d.jobCount === 1 ? "" : "s"}
-                        {d.lastJob ? ` · last ${formatDate(d.lastJob)}` : ""}
-                      </div>
-                      {d.claimed && (
-                        <div className="mt-1">
-                          <Pill accent="coral">Claimed</Pill>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+              <div className="mt-6">
+                <Btn variant="ghost" onClick={() => setQ("")}>
+                  Clear search
+                </Btn>
               </div>
             </Card>
+          ) : (
+            <div className="anim-fade-up d-1 space-y-3">
+              {filtered.map((customer) => {
+                const claimed = Boolean(customer.homes?.claimed_at);
+                return (
+                  <Link
+                    key={customer.id}
+                    to="/pro/customers/$customerId"
+                    params={{ customerId: customer.id }}
+                    className="block"
+                  >
+                    <Card
+                      lift
+                      className="!p-5 hover:bg-soft active:bg-line/50 transition-colors duration-150"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[17px] font-bold text-ink truncate">
+                            {customer.name}
+                          </div>
+                          <div className="mt-1 text-sm text-muted truncate">
+                            {customer.homes?.address ?? "No address added"}
+                          </div>
+                        </div>
+                        {claimed && (
+                          <div className="shrink-0">
+                            <Pill accent="coral">Claimed</Pill>
+                          </div>
+                        )}
+                        <ChevronRight
+                          size={18}
+                          className="shrink-0 text-muted"
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
           )}
         </>
       )}

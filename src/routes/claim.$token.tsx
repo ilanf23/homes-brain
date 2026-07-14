@@ -128,11 +128,25 @@ function ClaimByToken() {
         const { data, error } = await supabase.functions.invoke("claim-exchange", {
           body: email ? { token, email } : { token },
         });
-        if (error && !data) {
+        // claim-exchange returns its {code} JSON on non-2xx too (invalid is
+        // a 404), but supabase-js discards that body into error.context.
+        // Recover it so a bad token shows its real error instead of hanging.
+        let resp = data as ExchangeResp | null;
+        if (error && !resp) {
+          const ctx = (error as { context?: Response } | null)?.context;
+          if (ctx && typeof ctx.clone === "function") {
+            try {
+              resp = (await ctx.clone().json()) as ExchangeResp;
+            } catch {
+              /* body wasn't JSON - treat as a network failure */
+            }
+          }
+        }
+        if (!resp) {
           setErrorCode("network");
           return null;
         }
-        return data as ExchangeResp;
+        return resp;
       },
     [token],
   );
@@ -218,7 +232,12 @@ function ClaimByToken() {
     let cancelled = false;
     (async () => {
       const resp = await invokeExchange();
-      if (cancelled || !resp) return;
+      if (cancelled) return;
+      if (!resp) {
+        // Network failure: show the error card instead of loading forever.
+        setPhase("error");
+        return;
+      }
       applyResponseLocale(resp);
       if (resp.preview) setPreview(resp.preview);
       if (resp.ok) {
@@ -236,6 +255,17 @@ function ClaimByToken() {
       if (resp.code === "used" && resp.record_id) {
         const { data: userData } = await supabase.auth.getUser();
         if (!cancelled && userData?.user) {
+          // The token can burn without the claim happening (link scanners,
+          // an interrupted first tap). claim_home is a no-op for the owner,
+          // so claim again before opening the record.
+          const { error: claimErr } = await supabase.rpc("claim_home", {
+            p_record_id: resp.record_id,
+          });
+          if (claimErr && /already_claimed/i.test(claimErr.message ?? "")) {
+            setPhase("error");
+            setErrorCode("already_claimed");
+            return;
+          }
           navigate({ to: "/home/records/$recordId", params: { recordId: resp.record_id } });
           return;
         }

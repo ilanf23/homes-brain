@@ -174,7 +174,9 @@ function Login() {
     setBusy(true);
     setErr(null);
     const { data, error } = await supabase.functions.invoke("homeowner-login", {
-      body: { email: email.trim(), origin: window.location.origin },
+      // claim: keep the record from an expired link on the fresh one, so
+      // the resent email still opens (and claims) the same record.
+      body: { email: email.trim(), origin: window.location.origin, claim: claimRecordId },
     });
     if (error) {
       setErr(error.message);

@@ -17,7 +17,7 @@ import { useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { Celebration } from "@/components/celebration";
 import { AlertTriangle, Check, ChevronRight, Pencil, QrCode } from "lucide-react";
-import { matchVoiceCustomer } from "@/lib/customer-match";
+import { matchVoiceCustomer, normalizedName, suggestCloseCustomers } from "@/lib/customer-match";
 import {
   buildRecordUrl,
   checkRecall,
@@ -423,6 +423,9 @@ function NewJob() {
   const [askReview, setAskReview] = useState(true);
   const [reviewEdit, setReviewEdit] = useState<ReviewEdit>(null);
   const [reviewName, setReviewName] = useState<string | null>(null);
+  /* Normalized name the pro said "no, new customer" to on the Review slide, so
+     the "did you mean...?" card does not nag unless the name changes. */
+  const [dismissedSuggestionName, setDismissedSuggestionName] = useState("");
   const [reviewEmail, setReviewEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   // Real single-use claim URL minted via claim-qr on a successful email send.
@@ -921,6 +924,63 @@ function NewJob() {
         ...baseFiltered.filter((c) => c.id !== locationMatch.id),
       ]
     : baseFiltered;
+
+  /* "Did you mean...?" on Review: the record is about to create a NEW customer,
+     but someone on file has a close name. The voice transcription mishears
+     names ("Kristen" arrives as "Christian"), and silently saving would file
+     this home under a duplicate person. Never auto-link; the pro confirms. */
+  const closeMatch = (() => {
+    if (selectedCustomerId) return undefined;
+    const name = previewName.trim();
+    if (!name || normalizedName(name) === dismissedSuggestionName) return undefined;
+    return suggestCloseCustomers(existing, name)[0]?.customer;
+  })();
+
+  /* Inside the Review name editor: existing customers the pro can link to
+     instead of renaming, substring matches first, then sounds-alike. Until the
+     pro actually types (the input opens prefilled with the record's current
+     name), show the list as-is: "press edit, see your customers". */
+  const reviewCustomerOptions = (() => {
+    if (reviewEdit !== "customer") return [];
+    const pool = existing.filter((c) => c.id !== selectedCustomerId);
+    const typed = (reviewName ?? previewName).trim();
+    const untouched =
+      !typed || (!!selectedCustomer && normalizedName(typed) === normalizedName(selectedCustomer.name));
+    if (untouched) return pool.slice(0, 5);
+    const needle = typed.toLowerCase();
+    const substring = pool.filter(
+      (c) =>
+        c.name?.toLowerCase().includes(needle) || c.homes?.address?.toLowerCase().includes(needle),
+    );
+    const close = suggestCloseCustomers(pool, typed, 5)
+      .map((s) => s.customer)
+      .filter((c) => !substring.some((s) => s.id === c.id));
+    return [...substring, ...close].slice(0, 5);
+  })();
+
+  /* Link the Review record to a customer already on file (the "did you
+     mean...?" card or a pick inside the name editor). The name on file beats
+     the transcription; the address the pro captured for THIS job beats the one
+     on file, except when it is just the previously linked customer's saved
+     address; anything the pro actually spoke (email) still wins. */
+  function linkExistingCustomer(c: CustomerOpt) {
+    const prev = existing.find((x) => x.id === selectedCustomerId);
+    const current = (selectedCustomerId ? locAddress : newCustomer.address).trim();
+    const cameFromFile =
+      !!prev?.homes?.address &&
+      !!current &&
+      normalizeAddress(prev.homes.address) === normalizeAddress(current);
+    setSelectedCustomerId(c.id);
+    setReviewName(c.name);
+    setQuery(c.name);
+    if (!reviewEmail.trim() && c.email) setReviewEmail(c.email);
+    setCustomerLocale(isLocale(c.preferred_locale) ? c.preferred_locale : "en");
+    setLocAddress(!current || cameFromFile ? (c.homes?.address ?? "") : current);
+    addressTouched.current = true;
+    setNewCustomer({ name: "", address: "", phone: "", email: "" });
+    setDismissedSuggestionName("");
+    setReviewEdit(null);
+  }
 
   function pickExisting(c: CustomerOpt) {
     setSelectedCustomerId(c.id);
@@ -2680,7 +2740,69 @@ function NewJob() {
                             placeholder="Customer name"
                           />
                         </Field>
+                        {reviewCustomerOptions.length > 0 && (
+                          <div className="mt-2">
+                            <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted">
+                              Your customers
+                            </div>
+                            <div className="max-h-56 space-y-1.5 overflow-auto">
+                              {reviewCustomerOptions.map((c) => (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  onClick={() => linkExistingCustomer(c)}
+                                  className="pressable flex w-full items-center gap-2.5 rounded-xl border border-line bg-white px-3 py-2.5 text-left transition-colors hover:border-indigo/30 hover:bg-indigobg/40"
+                                >
+                                  <Avatar name={c.name || "?"} accent="indigo" size={32} />
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-sm font-semibold text-ink">
+                                      {c.name}
+                                    </span>
+                                    <span className="block truncate text-xs text-muted">
+                                      {c.homes?.address ||
+                                        c.phone ||
+                                        c.email ||
+                                        "No address on file"}
+                                    </span>
+                                  </span>
+                                  <ChevronRight
+                                    size={16}
+                                    className="shrink-0 text-muted"
+                                    aria-hidden="true"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </ReviewEditor>
+                    )}
+                    {closeMatch && reviewEdit !== "customer" && (
+                      <div className="my-2 rounded-2xl border border-indigo/30 bg-indigobg/50 p-3 anim-fade-up">
+                        <div className="text-sm text-ink">
+                          This sounded like <span className="font-semibold">{closeMatch.name}</span>
+                          {closeMatch.homes?.address ? (
+                            <span className="text-muted"> · {closeMatch.homes.address}</span>
+                          ) : null}
+                          . Did you mean them?
+                        </div>
+                        <div className="mt-2.5 flex gap-2">
+                          <Btn
+                            variant="indigo"
+                            size="sm"
+                            onClick={() => linkExistingCustomer(closeMatch)}
+                          >
+                            Yes, it's them
+                          </Btn>
+                          <Btn
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDismissedSuggestionName(normalizedName(previewName))}
+                          >
+                            No, new customer
+                          </Btn>
+                        </div>
+                      </div>
                     )}
                     {eqType && (
                       <RecordRow

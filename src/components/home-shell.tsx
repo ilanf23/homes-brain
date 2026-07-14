@@ -115,8 +115,19 @@ export function useHomeownerGuard() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase.rpc("get_home_view");
-    const view = (data as HomeViewBundle | null) ?? null;
+    // get_home_view is the only data source for every /home page. A
+    // transient failure here must not read as "this account has no home":
+    // pages route on that, so retry before giving up.
+    let view: HomeViewBundle | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data, error } = await supabase.rpc("get_home_view");
+      if (!error) {
+        view = (data as HomeViewBundle | null) ?? null;
+        break;
+      }
+      console.error("get_home_view failed", error);
+      await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+    }
     if (view) {
       setBundle({
         homeowner: view.homeowner,

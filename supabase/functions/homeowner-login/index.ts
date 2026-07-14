@@ -111,6 +111,55 @@ Deno.serve(async (req) => {
     // Kept for logging/telemetry only.
     void ho;
 
+    // Optional record to reopen/claim after login (an expired claim link
+    // routed the homeowner here with the record preserved). Bind it to the
+    // fresh token only when this email is already tied to that home, as
+    // the customer the pro added or as the homeowner who claimed it.
+    // Otherwise a login link would let any email claim any record id.
+    const claimRaw = typeof body?.claim === "string" ? body.claim : "";
+    let recordId: string | null = null;
+    let homeId: string | null = null;
+    let proId: string | null = null;
+    if (claimRaw) {
+      const { data: rec } = await admin
+        .from("records")
+        .select("id,jobs(home_id,pro_id)")
+        .eq("id", claimRaw)
+        .maybeSingle();
+      const job = Array.isArray(rec?.jobs) ? rec?.jobs[0] : rec?.jobs;
+      if (job?.home_id) {
+        const { data: cust } = await admin
+          .from("customers")
+          .select("id")
+          .eq("home_id", job.home_id)
+          .ilike("email", email)
+          .limit(1)
+          .maybeSingle();
+        let allowed = !!cust;
+        if (!allowed) {
+          const { data: homeRow } = await admin
+            .from("homes")
+            .select("claimed_by_homeowner")
+            .eq("id", job.home_id)
+            .maybeSingle();
+          if (homeRow?.claimed_by_homeowner) {
+            const { data: owner } = await admin
+              .from("homeowners")
+              .select("id")
+              .eq("id", homeRow.claimed_by_homeowner)
+              .ilike("email", email)
+              .maybeSingle();
+            allowed = !!owner;
+          }
+        }
+        if (allowed) {
+          recordId = claimRaw;
+          homeId = job.home_id;
+          proId = job.pro_id ?? null;
+        }
+      }
+    }
+
     // Per-address daily cap protects the sending domain reputation.
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const { count: sentToday } = await admin
@@ -130,9 +179,9 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + LOGIN_TOKEN_TTL_MS).toISOString();
     const { error: tokErr } = await admin.from("claim_tokens").insert({
       token_hash: tokenHash,
-      record_id: null,
-      home_id: null,
-      pro_id: null,
+      record_id: recordId,
+      home_id: homeId,
+      pro_id: proId,
       email,
       expires_at: expiresAt,
       intent: "homeowner",
