@@ -945,7 +945,8 @@ function NewJob() {
     const pool = existing.filter((c) => c.id !== selectedCustomerId);
     const typed = (reviewName ?? previewName).trim();
     const untouched =
-      !typed || (!!selectedCustomer && normalizedName(typed) === normalizedName(selectedCustomer.name));
+      !typed ||
+      (!!selectedCustomer && normalizedName(typed) === normalizedName(selectedCustomer.name));
     if (untouched) return pool.slice(0, 5);
     const needle = typed.toLowerCase();
     const substring = pool.filter(
