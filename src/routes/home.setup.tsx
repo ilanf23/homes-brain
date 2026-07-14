@@ -47,7 +47,7 @@ function HomeSetupWizard() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [notifySms, setNotifySms] = useState(true);
+  const [notifySms, setNotifySms] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [quietHrs, setQuietHrs] = useState(true);
   const [marketing, setMarketing] = useState(false);
@@ -76,7 +76,7 @@ function HomeSetupWizard() {
     setName((homeowner.name ?? "").trim());
     setPhone((homeowner.phone ?? "").trim());
     setEmail((homeowner.email ?? "").trim());
-    setNotifySms(homeowner.notify_sms ?? true);
+    setNotifySms(homeowner.notify_sms ?? false);
     setNotifyEmail(homeowner.notify_email ?? true);
     setQuietHrs(homeowner.respect_quiet_hrs ?? true);
     setMarketing(homeowner.marketing_consent ?? false);
@@ -159,6 +159,13 @@ function HomeSetupWizard() {
           if (error) throw error;
           const { error: stampErr } = await supabase.rpc("homeowner_confirm_contact");
           if (stampErr) throw stampErr;
+          const smsConsentAt = notifySms && validPhone ? new Date().toISOString() : null;
+          if (homeowner) {
+            await supabase
+              .from("homeowners")
+              .update({ sms_consent_at: smsConsentAt })
+              .eq("id", homeowner.id);
+          }
           break;
         }
         case "home":
@@ -298,11 +305,32 @@ function HomeSetupWizard() {
               </Field>
               <div className="rounded-2xl border border-line bg-white px-4 py-1">
                 <SettingRow
-                  label="Text me reminders"
+                  label="Text me my service records & reminders"
                   sub="Service due dates and new records by SMS."
                 >
-                  <Toggle checked={notifySms} onChange={setNotifySms} label="Text me reminders" />
+                  <Toggle
+                    checked={notifySms}
+                    onChange={setNotifySms}
+                    label="Text me my service records & reminders"
+                  />
                 </SettingRow>
+                <p className="px-1 pb-3 -mt-1 text-xs text-muted leading-relaxed">
+                  By turning this on, I agree to receive recurring automated service and reminder
+                  text messages from HomesBrain at the mobile number above. Consent is not a
+                  condition of any purchase or service. Msg &amp; data rates may apply. Message
+                  frequency varies. Reply STOP to opt out, HELP for help. See our{" "}
+                  <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                    Privacy Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/messaging-terms"
+                    className="font-semibold text-indigo hover:underline"
+                  >
+                    Messaging Terms
+                  </Link>
+                  .
+                </p>
                 <SettingRow label="Email me reminders" sub="The same updates in your inbox.">
                   <Toggle
                     checked={notifyEmail}
