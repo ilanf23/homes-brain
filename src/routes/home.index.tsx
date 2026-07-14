@@ -88,7 +88,7 @@ function HomeOverview() {
   const addedAppliance = equipment.some((e) => e.source === "homeowner");
   const invitedPro = invites.length > 0;
 
-  if (guardLoading) return <PageLoader label="Loading your home" />;
+  if (guardLoading) return <PageLoader label={t("hi.loadingHome")} />;
   if (!home)
     return (
       <HomeShell active="overview" homeowner={homeowner} home={null}>
@@ -104,9 +104,9 @@ function HomeOverview() {
     <HomeShell active="overview" homeowner={homeowner} home={home}>
       {celebrate && <Celebration variant="grand" />}
       <HomePageHead
-        eyebrow="My home"
+        eyebrow={t("hi.myHome")}
         title={home.address}
-        sub="Your pros write the record. You own it."
+        sub={t("hi.myHomeSub")}
       />
 
       <HomeSetupChecklist homeowner={homeowner} />
@@ -117,7 +117,7 @@ function HomeOverview() {
 
       {openInvoices.length > 0 && (
         <Card className="anim-fade-up mb-6 border-indigo/30">
-          <Eyebrow accent="indigo">Amount due</Eyebrow>
+          <Eyebrow accent="indigo">{t("hi.amountDue")}</Eyebrow>
           <div className="mt-3 space-y-3">
             {openInvoices.map((inv) => (
               <AmountDueRow
@@ -125,7 +125,7 @@ function HomeOverview() {
                 inv={inv}
                 onPaid={async () => {
                   if (home) setInvoices(await listInvoicesForHome(home.id));
-                  setToast("Payment complete");
+                  setToast(t("hi.paymentComplete"));
                 }}
                 onError={(msg) => setToast(msg)}
               />
@@ -135,13 +135,14 @@ function HomeOverview() {
       )}
 
       <div className="anim-fade-up mb-6 text-sm text-muted">
-        {equipment.length} item{equipment.length === 1 ? "" : "s"} · {pros.length} pro
-        {pros.length === 1 ? "" : "s"} · {jobs.length} visit{jobs.length === 1 ? "" : "s"}
+        {equipment.length} {equipment.length === 1 ? t("hi.item.one") : t("hi.item.other")} ·{" "}
+        {pros.length} {pros.length === 1 ? t("hi.pro.one") : t("hi.pro.other")} ·{" "}
+        {jobs.length} {jobs.length === 1 ? t("hi.visit.one") : t("hi.visit.other")}
         {verifiedCount > 0 && (
           <>
             {" · "}
             <span className="inline-flex items-center gap-1 text-indigo font-semibold">
-              <ShieldCheck size={13} animate={false} /> all verified
+              <ShieldCheck size={13} animate={false} /> {t("hi.allVerified")}
             </span>
           </>
         )}
