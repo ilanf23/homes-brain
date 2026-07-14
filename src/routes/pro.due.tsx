@@ -89,9 +89,6 @@ function DueForService() {
     );
   }
 
-  const isPro = pro.plan === "pro";
-
-
   const byBucket = {
     overdue: jobs.filter((j) => bucketOf(j.next_service_date) === "overdue"),
     soon: jobs.filter((j) => bucketOf(j.next_service_date) === "soon"),
@@ -106,32 +103,7 @@ function DueForService() {
         sub="Jobs with a next-service date. Nudge the homeowner before someone else gets the call."
       />
 
-      {!isPro && (
-        <Card className="anim-fade-up mb-4 border-indigo/30 bg-indigobg/40">
-          <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
-              <Sparkles size={16} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Eyebrow accent="indigo">Free vs Pro</Eyebrow>
-                <Pill accent="indigo">{DEMO_SHORT}</Pill>
-              </div>
-              <div className="mt-1 font-semibold text-ink">
-                Free: nudge them one by one. Pro: we work your whole book.
-              </div>
-              <p className="text-sm text-muted mt-0.5">
-                Upgrade for automated seasonal, overdue, and win-back outreach — hands-off.
-              </p>
-            </div>
-            <Link to="/pro/plan" className="shrink-0">
-              <Btn variant="primary" size="sm">
-                Automate rebooking
-              </Btn>
-            </Link>
-          </div>
-        </Card>
-      )}
+
 
 
       {jobs.length === 0 ? (
