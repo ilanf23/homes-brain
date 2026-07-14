@@ -378,7 +378,7 @@ function ActivityCard({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <div className="font-semibold text-ink truncate">{row.proName}</div>
-                    {row.isNew && <Pill accent="coral">New</Pill>}
+                    {row.isNew && <Pill accent="coral">{t("hi.new")}</Pill>}
                   </div>
                   <div className="text-xs text-muted truncate">
                     {row.what} · {row.when}
