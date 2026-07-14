@@ -1063,6 +1063,7 @@ function NewJob() {
         extract.make && "make",
         extract.model && "model",
         extract.next_service_date && "next_service",
+        typeof extract.charge_amount === "number" && extract.charge_amount > 0 && "charge",
       ].filter(Boolean),
       matched_existing: !!match,
     });
