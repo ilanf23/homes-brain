@@ -16,6 +16,7 @@ import {
 } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 import { HomeSetupChecklist } from "@/components/home-setup-checklist";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/home/")({
   head: () => ({ meta: [{ title: "My home - HomesBrain" }] }),
