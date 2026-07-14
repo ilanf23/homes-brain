@@ -162,18 +162,16 @@ function HomeOverview() {
 
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">On file</Eyebrow>
+            <Eyebrow accent="indigo">{t("hi.onFile")}</Eyebrow>
             <Link
               to="/home/add"
               className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
             >
-              + Add something
+              {t("hi.addSomething")}
             </Link>
           </div>
           {equipment.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">
-              Nothing yet. Records from your pros will show up here.
-            </p>
+            <p className="mt-3 text-sm text-muted">{t("hi.onFileEmpty")}</p>
           ) : (
             <div className="mt-3 space-y-2">
               {equipment.map((e) => (
@@ -184,18 +182,18 @@ function HomeOverview() {
                   className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
                 >
                   <div className="min-w-0">
-                    <div className="font-semibold text-ink truncate">{e.type ?? "Equipment"}</div>
+                    <div className="font-semibold text-ink truncate">{e.type ?? t("hi.equipment")}</div>
                     <div className="text-xs text-muted truncate">
-                      {[e.make, e.model].filter(Boolean).join(" · ") || "No details yet"}
+                      {[e.make, e.model].filter(Boolean).join(" · ") || t("hi.noDetails")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {e.source === "pro" ? (
                       <span className="inline-flex items-center gap-1 text-indigo font-semibold text-xs">
-                        <ShieldCheck size={13} animate={false} /> Verified
+                        <ShieldCheck size={13} animate={false} /> {t("hi.verified")}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted">Self-added</span>
+                      <span className="text-xs text-muted">{t("hi.selfAdded")}</span>
                     )}
                     <ChevronRight size={16} className="text-muted" />
                   </div>
@@ -209,24 +207,24 @@ function HomeOverview() {
           <Card className="anim-fade-up d-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="min-w-0">
-                <Eyebrow accent="indigo">Coming up</Eyebrow>
+                <Eyebrow accent="indigo">{t("hi.comingUp")}</Eyebrow>
                 <div className="mt-2 font-semibold text-ink truncate">{nextDue.what_done}</div>
                 <div className="text-xs text-muted mt-0.5 truncate">
-                  {proById.get(nextDue.pro_id)?.business ?? ""} · due{" "}
+                  {proById.get(nextDue.pro_id)?.business ?? ""} · {t("hi.due")}{" "}
                   {formatDate(nextDue.next_service_date)}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/home/reminders">
                   <Btn variant="secondary" size="sm">
-                    Remind me
+                    {t("hi.remindMe")}
                   </Btn>
                 </Link>
                 <Link
                   to="/home/reminders"
                   className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
                 >
-                  All reminders
+                  {t("hi.allReminders")}
                 </Link>
               </div>
             </div>
@@ -235,16 +233,16 @@ function HomeOverview() {
 
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">My pros</Eyebrow>
+            <Eyebrow accent="indigo">{t("hi.myPros")}</Eyebrow>
             <Link
               to="/home/pros"
               className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
             >
-              See all
+              {t("hi.seeAll")}
             </Link>
           </div>
           {pros.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">No pros yet.</p>
+            <p className="mt-3 text-sm text-muted">{t("hi.noProsYet")}</p>
           ) : (
             <div className="mt-3 space-y-3">
               {pros.slice(0, 3).map((p) => {
@@ -257,13 +255,14 @@ function HomeOverview() {
                         <div className="font-semibold text-ink truncate">{p.business}</div>
                         <div className="text-xs text-muted flex items-center gap-1.5">
                           <TradeIcon trade={p.trade} size={13} className="text-indigo" />
-                          {tradeLabel(p.trade)} · {visits} visit{visits === 1 ? "" : "s"}
+                          {tradeLabel(p.trade)} · {visits}{" "}
+                          {visits === 1 ? t("hi.visit.one") : t("hi.visit.other")}
                         </div>
                       </div>
                     </div>
                     <Link to="/home/pros">
                       <Btn variant="secondary" size="sm">
-                        Rebook
+                        {t("hi.rebook")}
                       </Btn>
                     </Link>
                   </div>
