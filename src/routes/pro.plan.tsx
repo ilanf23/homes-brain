@@ -201,7 +201,7 @@ function PlanCard({
         {showAnchor && (
           <span className="text-sm text-muted line-through tnum">${anchorPrice}</span>
         )}
-        {plan.price_monthly > 0 && (
+        {plan.price_monthly > 0 && !ALL_FEATURES_FREE && (
           <Pill accent="indigo">{DEMO_SHORT}</Pill>
         )}
       </div>
