@@ -725,6 +725,10 @@ function NewJob() {
         setNextService(r.next_service_date);
         filled.push("next service");
       }
+      if (typeof r.charge_amount === "number" && r.charge_amount > 0 && !chargeAmount.trim()) {
+        setChargeAmount(String(r.charge_amount));
+        filled.push("charge");
+      }
       setExtractFilled(filled);
       setExtractState(filled.length ? "done" : "idle");
       if (filled.length) {
