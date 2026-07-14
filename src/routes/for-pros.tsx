@@ -226,14 +226,6 @@ function ForPros() {
         </div>
       </section>
 
-      {/* Closing CTA */}
-      <section className={`${CONTAINER} border-t border-line py-20 text-center`}>
-        <Link to="/pro/signup" className="inline-block w-full sm:w-auto">
-          <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-            Claim your profile
-          </Btn>
-        </Link>
-      </section>
     </MarketingShell>
   );
 }

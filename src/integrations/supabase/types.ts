@@ -38,6 +38,7 @@ export type Database = {
           home_id: string | null
           id: string
           intent: string | null
+          locale: string
           pro_id: string | null
           record_id: string | null
           token_hash: string
@@ -51,6 +52,7 @@ export type Database = {
           home_id?: string | null
           id?: string
           intent?: string | null
+          locale?: string
           pro_id?: string | null
           record_id?: string | null
           token_hash: string
@@ -64,6 +66,7 @@ export type Database = {
           home_id?: string | null
           id?: string
           intent?: string | null
+          locale?: string
           pro_id?: string | null
           record_id?: string | null
           token_hash?: string
@@ -104,6 +107,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          preferred_locale: string
           pro_id: string
         }
         Insert: {
@@ -116,6 +120,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          preferred_locale?: string
           pro_id: string
         }
         Update: {
@@ -128,6 +133,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          preferred_locale?: string
           pro_id?: string
         }
         Relationships: [
@@ -506,6 +512,7 @@ export type Database = {
           equipment_id: string | null
           home_id: string
           id: string
+          localized_content: Json
           next_service_date: string | null
           photo_url: string | null
           pro_id: string
@@ -517,6 +524,7 @@ export type Database = {
           equipment_id?: string | null
           home_id: string
           id?: string
+          localized_content?: Json
           next_service_date?: string | null
           photo_url?: string | null
           pro_id: string
@@ -528,6 +536,7 @@ export type Database = {
           equipment_id?: string | null
           home_id?: string
           id?: string
+          localized_content?: Json
           next_service_date?: string | null
           photo_url?: string | null
           pro_id?: string
@@ -571,6 +580,7 @@ export type Database = {
           created_at: string
           id: string
           kind: string
+          locale: string
           to_contact: string
         }
         Insert: {
@@ -579,6 +589,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind: string
+          locale?: string
           to_contact: string
         }
         Update: {
@@ -587,6 +598,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
+          locale?: string
           to_contact?: string
         }
         Relationships: []
