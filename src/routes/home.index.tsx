@@ -61,7 +61,7 @@ function HomeOverview() {
     const q = new URLSearchParams(window.location.search).get("paid");
     if (!q) return;
     (async () => setInvoices(await listInvoicesForHome(home.id)))();
-    setToast("Paid ✓");
+    setToast(t("hi.paid"));
     const url = new URL(window.location.href);
     url.searchParams.delete("paid");
     window.history.replaceState({}, "", url.toString());
