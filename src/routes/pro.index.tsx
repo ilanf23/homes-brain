@@ -217,12 +217,12 @@ function ProHome() {
 
       {/* What's Next */}
       <section className="anim-fade-up d-2 mt-8">
-        <h2 className="text-lg font-semibold text-ink mb-3">What's Next</h2>
+        <h2 className="text-lg font-semibold text-ink mb-3">{t("pi.whatsNext")}</h2>
 
         {customerBuckets.total === 0 ? (
           <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
             <Check size={16} strokeWidth={2.5} />
-            <span>You're all caught up</span>
+            <span>{t("pi.allCaughtUp")}</span>
           </div>
         ) : (
           <>
@@ -236,13 +236,13 @@ function ProHome() {
                 {customerBuckets.toSet.length > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
                     <span className="w-2 h-2 rounded-full bg-amber" />
-                    {customerBuckets.toSet.length} to set
+                    {customerBuckets.toSet.length} {t("pi.toSet")}
                   </span>
                 )}
                 {customerBuckets.upcoming.length > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
                     <span className="w-2 h-2 rounded-full bg-muted" />
-                    {customerBuckets.upcoming.length} upcoming
+                    {customerBuckets.upcoming.length} {t("pi.upcoming")}
                   </span>
                 )}
               </div>
