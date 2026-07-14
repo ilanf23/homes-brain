@@ -121,7 +121,7 @@ function HomeownerSettings() {
     const ho = homeowner as unknown as DbPrefs & { notify_email: boolean };
     setPrefs({
       notify_email: ho.notify_email ?? true,
-      notify_sms: ho.notify_sms ?? false,
+      notify_sms: !!ho.sms_consent_at,
       sms_opt_out: ho.sms_opt_out ?? false,
       respect_quiet_hrs: ho.respect_quiet_hrs ?? true,
       marketing_consent: ho.marketing_consent ?? false,

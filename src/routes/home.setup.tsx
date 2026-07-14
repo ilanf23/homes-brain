@@ -76,7 +76,7 @@ function HomeSetupWizard() {
     setName((homeowner.name ?? "").trim());
     setPhone((homeowner.phone ?? "").trim());
     setEmail((homeowner.email ?? "").trim());
-    setNotifySms(homeowner.notify_sms ?? false);
+    setNotifySms(!!homeowner.sms_consent_at);
     setNotifyEmail(homeowner.notify_email ?? true);
     setQuietHrs(homeowner.respect_quiet_hrs ?? true);
     setMarketing(homeowner.marketing_consent ?? false);
