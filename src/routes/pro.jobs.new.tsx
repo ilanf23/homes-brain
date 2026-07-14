@@ -134,7 +134,8 @@ function deliveryErrorMessage(code: string | null) {
   if (code === "daily_limit") return "Your daily email limit has been reached.";
   if (code === "not_configured") return "Email delivery is temporarily unavailable.";
   if (code === "no_email") return "Add the customer's email before sending.";
-  if (code === "bad_request") return "The email couldn't be sent — the record is missing details. Try again.";
+  if (code === "bad_request")
+    return "The email couldn't be sent — the record is missing details. Try again.";
   if (code === "forbidden") return "You don't have access to send for this customer.";
   if (code === "unauthorized") return "Your session expired. Sign in again and retry.";
   if (code === "send_failed") return "The email service rejected the send. Try again in a moment.";
@@ -1766,6 +1767,77 @@ function NewJob() {
     </Field>
   );
 
+  /* Optional unit photo + nameplate scan. Shared by the work step and Review:
+     the "speak the whole job" AI flow jumps from the customer step straight to
+     Review, so without this the voice path would never get a photo prompt.
+     Only one stage renders at a time, so the hidden input mounts once. */
+  const photoCapture = (
+    <div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onNameplate(f);
+          e.target.value = "";
+        }}
+      />
+      {scanState === "idle" ? (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
+        >
+          <div className="flex items-center justify-center gap-2 text-indigo">
+            <CameraIcon size={22} />
+            <span className="text-sm font-semibold">Take a photo of the unit (optional)</span>
+          </div>
+          <div className="mt-1 text-xs text-muted">
+            HomesBrain AI reads the make, model, and warranty for you.
+          </div>
+        </button>
+      ) : (
+        <div className="rounded-xl border border-line bg-paper p-3">
+          <div className="flex items-center gap-3">
+            {scanPreview && (
+              <img
+                src={scanPreview}
+                alt="Unit photo"
+                className="h-14 w-14 rounded-lg object-cover"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              {scanState === "scanning" && (
+                <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
+                  <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                  HomesBrain AI reading the photo…
+                </div>
+              )}
+              {scanState === "done" && (
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
+                  <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the unit details
+                </div>
+              )}
+              {scanState === "error" && <div className="text-sm text-red">{scanError}</div>}
+            </div>
+            {scanState !== "scanning" && (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
+              >
+                Retake
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   if (!proId) {
     return (
       <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
@@ -2126,75 +2198,7 @@ function NewJob() {
                 </Field>
 
                 {/* Photo (optional) */}
-                <div>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) onNameplate(f);
-                      e.target.value = "";
-                    }}
-                  />
-                  {scanState === "idle" ? (
-                    <button
-                      type="button"
-                      onClick={() => fileRef.current?.click()}
-                      className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
-                    >
-                      <div className="flex items-center justify-center gap-2 text-indigo">
-                        <CameraIcon size={22} />
-                        <span className="text-sm font-semibold">
-                          Take a photo of the unit (optional)
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs text-muted">
-                        HomesBrain AI reads the make, model, and warranty for you.
-                      </div>
-                    </button>
-                  ) : (
-                    <div className="rounded-xl border border-line bg-paper p-3">
-                      <div className="flex items-center gap-3">
-                        {scanPreview && (
-                          <img
-                            src={scanPreview}
-                            alt="Unit photo"
-                            className="h-14 w-14 rounded-lg object-cover"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          {scanState === "scanning" && (
-                            <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
-                              <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                              HomesBrain AI reading the photo…
-                            </div>
-                          )}
-                          {scanState === "done" && (
-                            <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                              <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the
-                              unit details
-                            </div>
-                          )}
-                          {scanState === "error" && (
-                            <div className="text-sm text-red">{scanError}</div>
-                          )}
-                        </div>
-                        {scanState !== "scanning" && (
-                          <button
-                            type="button"
-                            onClick={() => fileRef.current?.click()}
-                            className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
-                          >
-                            Retake
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {photoCapture}
 
                 {/* Recall alert - only when there's an actual recall. No recall
                     is the norm, so we don't surface it as noise. */}
@@ -2610,6 +2614,10 @@ function NewJob() {
                       </ReviewEditor>
                     )}
                   </div>
+
+                  {/* Photo also offered here: the AI voice flow skips the work
+                      step, so Review is that path's only chance to add one. */}
+                  <div className="mt-5 border-t border-line pt-4">{photoCapture}</div>
 
                   <div className="mt-5 border-t border-line pt-4">
                     <Field
