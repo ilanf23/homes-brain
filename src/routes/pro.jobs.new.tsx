@@ -1089,11 +1089,26 @@ function NewJob() {
               : null,
         },
       });
-      const ok = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+      // On non-2xx, supabase-js sets `sendErr` and leaves `sendResp` null,
+      // discarding the JSON `{code}` in the error body. Read it off
+      // `sendErr.context` (a Response) so the pro sees the real reason
+      // instead of a generic "check your connection" fallback.
+      let parsedResp = sendResp as { ok?: boolean; code?: string } | null;
+      if (sendErr && !parsedResp) {
+        const ctx = (sendErr as { context?: Response } | null)?.context;
+        if (ctx && typeof ctx.clone === "function") {
+          try {
+            parsedResp = (await ctx.clone().json()) as { ok?: boolean; code?: string };
+          } catch {
+            /* body wasn't JSON — fall through to generic code */
+          }
+        }
+      }
+      const ok = !sendErr && !!parsedResp && parsedResp.ok !== false;
       if (!ok) {
         return {
           ok: false as const,
-          code: (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed",
+          code: parsedResp?.code || sendErr?.message || "send_failed",
         };
       }
 
