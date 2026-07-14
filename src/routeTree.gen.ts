@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StartRouteImport } from './routes/start'
+import { Route as SmsOptInRouteImport } from './routes/sms-opt-in'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -73,6 +74,11 @@ const TermsRoute = TermsRouteImport.update({
 const StartRoute = StartRouteImport.update({
   id: '/start',
   path: '/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SmsOptInRoute = SmsOptInRouteImport.update({
+  id: '/sms-opt-in',
+  path: '/sms-opt-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecurityRoute = SecurityRouteImport.update({
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/sms-opt-in': typeof SmsOptInRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/sms-opt-in': typeof SmsOptInRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/sms-opt-in': typeof SmsOptInRoute
   '/start': typeof StartRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/sms-opt-in'
     | '/start'
     | '/terms'
     | '/unsubscribe'
@@ -535,6 +545,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/sms-opt-in'
     | '/start'
     | '/terms'
     | '/unsubscribe'
@@ -587,6 +598,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/sms-opt-in'
     | '/start'
     | '/terms'
     | '/unsubscribe'
@@ -640,6 +652,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
+  SmsOptInRoute: typeof SmsOptInRoute
   StartRoute: typeof StartRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -701,6 +714,13 @@ declare module '@tanstack/react-router' {
       path: '/start'
       fullPath: '/start'
       preLoaderRoute: typeof StartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sms-opt-in': {
+      id: '/sms-opt-in'
+      path: '/sms-opt-in'
+      fullPath: '/sms-opt-in'
+      preLoaderRoute: typeof SmsOptInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/security': {
@@ -1048,6 +1068,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
+  SmsOptInRoute: SmsOptInRoute,
   StartRoute: StartRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
@@ -1090,13 +1111,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
