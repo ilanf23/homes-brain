@@ -293,13 +293,128 @@ function ProHome() {
       <ProSetupChecklist proId={proId} />
 
       {/* What's Next */}
-      <WhatsNext
-        needsDecision={needsDecision}
-        dated={dated}
-        expanded={expanded}
-        onToggle={() => setExpanded((v) => !v)}
-        onOpenSheet={(id) => setSheetFor(id)}
-      />
+      {(() => {
+        const overdueCount = dated.filter(
+          (r) => new Date(`${r.next_service_date}T00:00:00`).getTime() < new Date().setHours(0, 0, 0, 0),
+        ).length;
+        const upcomingCount = dated.length - overdueCount;
+        const totalOpen = needsDecision.length + dated.length;
+        const activeRow = sheetFor
+          ? [...needsDecision, ...dated].find((r) => r.id === sheetFor) ?? null
+          : null;
+
+        return (
+          <section className="anim-fade-up d-2 mt-8">
+            <h2 className="text-lg font-semibold text-ink mb-3">What's Next</h2>
+
+            {totalOpen === 0 ? (
+              <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
+                <Check size={16} strokeWidth={2.5} />
+                <span>You're all caught up</span>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
+                  aria-expanded={expanded}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {needsDecision.length > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-amber" />
+                        {needsDecision.length} to set
+                      </span>
+                    )}
+                    {overdueCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-redbg text-red px-3 py-1 text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-red" />
+                        {overdueCount} overdue
+                      </span>
+                    )}
+                    {upcomingCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-muted" />
+                        {upcomingCount} upcoming
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    size={20}
+                    className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {expanded && (
+                  <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+                    {needsDecision.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSheetFor(row.id)}
+                          className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-base font-semibold text-ink truncate">
+                              {row.customer?.name ?? "Customer"}
+                            </span>
+                            <span className="block text-sm text-muted truncate">
+                              {recordTitle(row.what_done, row.equipment_type)}
+                            </span>
+                          </span>
+                          <ChevronRight size={18} className="shrink-0 text-muted" />
+                        </button>
+                      </li>
+                    ))}
+                    {dated.map((row) => {
+                      const overdue =
+                        new Date(`${row.next_service_date}T00:00:00`).getTime() <
+                        new Date().setHours(0, 0, 0, 0);
+                      return (
+                        <li key={row.id}>
+                          <button
+                            type="button"
+                            onClick={() => setSheetFor(row.id)}
+                            className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                          >
+                            <span
+                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${overdue ? "bg-red" : "bg-muted"}`}
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-base font-semibold text-ink truncate">
+                                {row.customer?.name ?? "Customer"}
+                              </span>
+                              <span className="block text-sm text-muted truncate">
+                                {recordTitle(row.what_done, row.equipment_type)}
+                              </span>
+                            </span>
+                            <ChevronRight size={18} className="shrink-0 text-muted" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </>
+            )}
+
+            {activeRow && (
+              <FollowUpSheet
+                row={activeRow}
+                busy={busy === activeRow.id}
+                onClose={() => setSheetFor(null)}
+                onSchedule={(months) => saveFollowUpDate(activeRow, addMonthsIso(months))}
+                onNoFollowUp={() => markNoFollowUp(activeRow)}
+                onRemind={() => sendReminder(activeRow)}
+                onMarkDone={() => markDone(activeRow)}
+              />
+            )}
+          </section>
+        );
+      })()}
+
 
 
       {googleConnected && (
