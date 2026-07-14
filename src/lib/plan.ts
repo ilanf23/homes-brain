@@ -158,5 +158,5 @@ export function useCurrentPlan(): {
     void reload();
   }, [reload]);
 
-  return { plan, isPro: plan === "pro", reload };
+  return { plan, isPro: ALL_FEATURES_FREE ? true : plan === "pro", reload };
 }
