@@ -160,10 +160,12 @@ function HomeSetupWizard() {
           const { error: stampErr } = await supabase.rpc("homeowner_confirm_contact");
           if (stampErr) throw stampErr;
           const smsConsentAt = notifySms && validPhone ? new Date().toISOString() : null;
-          await supabase
-            .from("homeowners")
-            .update({ sms_consent_at: smsConsentAt })
-            .eq("id", homeowner.id);
+          if (homeowner) {
+            await supabase
+              .from("homeowners")
+              .update({ sms_consent_at: smsConsentAt })
+              .eq("id", homeowner.id);
+          }
           break;
         }
         case "home":
