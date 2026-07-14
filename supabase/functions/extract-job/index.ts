@@ -47,6 +47,7 @@ Respond with strict JSON, no markdown, using exactly these keys:
   "make": brand name if mentioned or null,
   "model": model number/name if mentioned or null,
   "next_service_date": "YYYY-MM-DD" if the note says when to come back (e.g. "next service in 6 months", "check back in a year"), computed from today = {TODAY}. Only set if a duration or explicit date is present. Otherwise null,
+  "charge_amount": a positive number in US dollars if the note clearly states what the pro charged/billed/quoted for THIS job (e.g. "charged 145", "it was $220", "total 89.50", "cost was two hundred bucks"). Numbers only, no currency symbol, no thousands separators. Otherwise null,
   "what_done_clean": a tidy one-to-two sentence version of the work performed, in past tense, professional tone, no fluff. Preserve the pro's meaning. Do not add facts.
 }`;
 
