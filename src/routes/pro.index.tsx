@@ -7,6 +7,7 @@ import { formatDate, isGoogleUrl } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/pro/")({
   head: () => ({ meta: [{ title: "HomesBrain" }] }),
