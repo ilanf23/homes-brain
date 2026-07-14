@@ -174,9 +174,8 @@ function ProHome() {
 
   const firstName =
     (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
-  const greeting = firstName
-    ? `${timeOfDayGreeting()}, ${firstName}.`
-    : `${timeOfDayGreeting()}.`;
+  const greetingWord = t(timeOfDayGreetingKey());
+  const greeting = firstName ? `${greetingWord}, ${firstName}.` : `${greetingWord}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
 
@@ -189,7 +188,7 @@ function ProHome() {
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-paper border border-line px-3 py-1.5 text-xs text-muted">
             <MapPin size={13} className="text-indigo" />
             <span>
-              You're at <span className="text-ink font-semibold">{locationText}</span>
+              {t("pi.youreAt")} <span className="text-ink font-semibold">{locationText}</span>
             </span>
           </div>
         )}
