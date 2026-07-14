@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
-import { Avatar, Btn, Card, Input, Pill } from "@/lib/ui";
+import { Merge, Plus, Search } from "lucide-react";
+import { Avatar, Btn, Card, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/lib/hb";
+import { formatDate, logEvent } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
 import { isProEntitled } from "@/lib/plan";
+import { findDuplicateGroups, mergeCustomers, type DuplicateGroup } from "@/lib/customer-merge";
 
 export const Route = createFileRoute("/pro/customers/")({
   head: () => ({ meta: [{ title: "Customers - HomesBrain" }] }),
@@ -19,6 +20,7 @@ type CustomerRow = {
   phone: string | null;
   email: string | null;
   created_at: string;
+  home_id: string | null;
   homes: { address: string; claimed_at: string | null } | null;
   jobs:
     | { id: string; created_at: string; next_service_date: string | null; what_done: string }[]
@@ -34,7 +36,11 @@ type Derived = {
 
 function derive(c: CustomerRow): Derived {
   const jobs = c.jobs ?? [];
-  const lastJob = jobs.map((j) => j.created_at).sort().at(-1) ?? null;
+  const lastJob =
+    jobs
+      .map((j) => j.created_at)
+      .sort()
+      .at(-1) ?? null;
   return { c, jobCount: jobs.length, lastJob, claimed: Boolean(c.homes?.claimed_at) };
 }
 
@@ -43,6 +49,15 @@ function CustomersList() {
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [confirming, setConfirming] = useState<DuplicateGroup<CustomerRow> | null>(null);
+  const [merging, setMerging] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3200);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     if (!proId) return;
@@ -50,7 +65,7 @@ function CustomersList() {
       const { data } = await supabase
         .from("customers")
         .select(
-          "id,name,phone,email,created_at,homes(address,claimed_at),jobs(id,created_at,next_service_date,what_done)",
+          "id,name,phone,email,created_at,home_id,homes(address,claimed_at),jobs(id,created_at,next_service_date,what_done)",
         )
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
@@ -60,6 +75,30 @@ function CustomersList() {
   }, [proId]);
 
   const derived = useMemo(() => customers.map(derive), [customers]);
+
+  // Same name, same home: the same person logged twice. Anything less certain
+  // is left alone rather than risking a merge of two real people.
+  const duplicateGroups = useMemo(() => findDuplicateGroups(customers), [customers]);
+
+  async function runMerge(group: DuplicateGroup<CustomerRow>) {
+    if (!proId) return;
+    setMerging(true);
+    const result = await mergeCustomers(proId, group);
+    setMerging(false);
+    if (!result.ok) {
+      setToast("Couldn't merge. Nothing was changed.");
+      return;
+    }
+    const removed = new Set(group.duplicates.map((c) => c.id));
+    setCustomers((prev) => prev.filter((c) => !removed.has(c.id)));
+    setConfirming(null);
+    await logEvent(`pro:${proId}`, "customers_merged", {
+      survivor_id: group.survivor.id,
+      merged_ids: [...removed],
+      moved_jobs: result.movedJobs,
+    });
+    setToast(`Merged into one ${group.name}.`);
+  }
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -115,6 +154,28 @@ function CustomersList() {
         </Card>
       ) : (
         <>
+          {duplicateGroups.map((group) => (
+            <Card
+              key={group.survivor.id}
+              className="anim-fade-up mt-4 !bg-amberbg !border-amber/30"
+            >
+              <div className="flex items-center gap-3">
+                <Merge size={18} className="shrink-0 text-amber" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-ink">
+                    {group.duplicates.length + 1} customers named {group.name} at the same address
+                  </div>
+                  <div className="mt-0.5 truncate text-xs text-muted">
+                    {group.address ?? "No address"} · looks like one person logged more than once
+                  </div>
+                </div>
+                <Btn variant="amber" size="sm" onClick={() => setConfirming(group)}>
+                  Merge
+                </Btn>
+              </div>
+            </Card>
+          ))}
+
           <div className="anim-fade-up relative mt-4 mb-4">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <Input
@@ -173,6 +234,66 @@ function CustomersList() {
           )}
         </>
       )}
+
+      {confirming && (
+        <MergeConfirm
+          group={confirming}
+          busy={merging}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => runMerge(confirming)}
+        />
+      )}
+
+      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
+  );
+}
+
+/* Merging deletes customer records, so say plainly what survives and what goes
+   before the pro commits to it. */
+function MergeConfirm({
+  group,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  group: DuplicateGroup<CustomerRow>;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const copies = group.duplicates.length;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm anim-fade-up sm:items-center">
+      <div className="w-full rounded-t-3xl border border-line bg-paper p-5 shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6">
+        <div className="text-lg font-semibold text-ink">
+          Merge {copies + 1} into one {group.name}?
+        </div>
+        <div className="mt-1 text-sm text-muted">{group.address ?? "No address"}</div>
+
+        <ul className="mt-4 space-y-2 text-sm text-ink">
+          <li>
+            All {group.jobCount} job{group.jobCount === 1 ? "" : "s"} and any invoices move to the
+            original {group.name}.
+          </li>
+          <li>
+            The {copies} duplicate record{copies === 1 ? "" : "s"} {copies === 1 ? "is" : "are"}{" "}
+            deleted. This can't be undone.
+          </li>
+        </ul>
+
+        <Btn variant="amber" size="lg" className="mt-5 w-full" loading={busy} onClick={onConfirm}>
+          Merge into one
+        </Btn>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={busy}
+          className="mt-3 w-full py-2 text-sm text-muted hover:text-ink"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
