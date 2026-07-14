@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Btn, Card, Toast } from "@/lib/ui";
+import { Btn, Card, Eyebrow, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent, mockSend } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
