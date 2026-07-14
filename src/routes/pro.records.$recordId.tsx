@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPhone, recordTitle } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
+import { isProEntitled } from "@/lib/plan";
 
 
 export const Route = createFileRoute("/pro/records/$recordId")({
