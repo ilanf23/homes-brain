@@ -22,6 +22,7 @@ export type HomeownerRow = {
   consent_at?: string | null;
   setup_completed_at?: string | null;
   contact_confirmed_at?: string | null;
+  sms_consent_at?: string | null;
 };
 
 export type HomeRow = {
