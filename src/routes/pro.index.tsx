@@ -30,11 +30,11 @@ type FollowUpRow = {
   address: string | null;
 };
 
-function timeOfDayGreeting() {
+function timeOfDayGreetingKey(): "pi.greeting.morning" | "pi.greeting.afternoon" | "pi.greeting.evening" {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return "pi.greeting.morning";
+  if (h < 18) return "pi.greeting.afternoon";
+  return "pi.greeting.evening";
 }
 
 
