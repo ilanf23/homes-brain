@@ -159,8 +159,15 @@ function ClaimByToken() {
       const { error: claimErr } = await supabase.rpc("claim_home", {
         p_record_id: resp.record_id,
       });
-      if (claimErr && !/already_claimed/i.test(claimErr.message ?? "")) {
+      // claim_home raises already_claimed only when the home belongs to a
+      // DIFFERENT account (re-claiming your own home is a no-op success).
+      // Navigating on into /home/records would bounce through an empty
+      // dashboard, so surface the truth here instead.
+      if (claimErr) {
         console.error("claim_home failed", claimErr);
+        setPhase("error");
+        setErrorCode(/already_claimed/i.test(claimErr.message ?? "") ? "already_claimed" : "error");
+        return;
       }
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
@@ -222,6 +229,18 @@ function ClaimByToken() {
         setPhase("need_email");
         return;
       }
+      // A used link usually means the claim already went through (second tap
+      // on the email link, rescanned QR). If a session is live, skip the
+      // dead-end error and open the record; the record page's own guard
+      // handles the case where this account doesn't actually own it.
+      if (resp.code === "used" && resp.record_id) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!cancelled && userData?.user) {
+          navigate({ to: "/home/records/$recordId", params: { recordId: resp.record_id } });
+          return;
+        }
+      }
+      if (cancelled) return;
       setPhase("error");
       setErrorCode(resp.code ?? "error");
     })();
@@ -317,19 +336,31 @@ function ClaimByToken() {
                 ? copy.expiredTitle
                 : errorCode === "used"
                   ? copy.usedTitle
-                  : copy.cannotOpenTitle}
+                  : errorCode === "already_claimed"
+                    ? copy.alreadyClaimedTitle
+                    : copy.cannotOpenTitle}
             </h2>
             <p className="mt-1 text-sm text-muted">
               {errorCode === "used"
                 ? copy.usedBody
                 : errorCode === "expired"
                   ? copy.expiredBody
-                  : copy.cannotOpenBody}
+                  : errorCode === "already_claimed"
+                    ? copy.alreadyClaimedBody
+                    : copy.cannotOpenBody}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Btn variant="indigo" onClick={requestFreshLink}>
-                {copy.freshLink}
-              </Btn>
+              {errorCode === "already_claimed" ? (
+                // The magic link already signed this visitor in; a fresh claim
+                // link cannot help because the home belongs to another account.
+                <Btn variant="indigo" onClick={() => navigate({ to: "/home" })}>
+                  {copy.goDashboard}
+                </Btn>
+              ) : (
+                <Btn variant="indigo" onClick={requestFreshLink}>
+                  {copy.freshLink}
+                </Btn>
+              )}
             </div>
           </Card>
         )}

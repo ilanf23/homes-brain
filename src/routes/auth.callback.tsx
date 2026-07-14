@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
+import { queueCelebration } from "@/components/celebration";
 import { phIdentify } from "@/lib/posthog";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -140,8 +141,17 @@ function AuthCallback() {
         const { error: claimErr } = await supabase.rpc("claim_home", {
           p_record_id: claimRecordId,
         });
-        if (claimErr) console.error("claim_home failed", claimErr);
-        else await logEvent(`user:${user.id}`, "home_claimed", { record_id: claimRecordId });
+        if (claimErr) {
+          // already_claimed = the home belongs to another account; fall
+          // through to the dashboard rather than a record they don't own.
+          console.error("claim_home failed", claimErr);
+        } else {
+          await logEvent(`user:${user.id}`, "home_claimed", { record_id: claimRecordId });
+          await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
+          queueCelebration("home_claimed");
+          navigate({ to: "/home/records/$recordId", params: { recordId: claimRecordId } });
+          return;
+        }
       }
       await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
       navigate({ to: "/home" });

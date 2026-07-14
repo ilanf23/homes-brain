@@ -127,6 +127,9 @@ export type ClaimCopy = {
   expiredBody: string;
   cannotOpenBody: string;
   freshLink: string;
+  alreadyClaimedTitle: string;
+  alreadyClaimedBody: string;
+  goDashboard: string;
 };
 
 const CLAIM_COPY: Record<Locale, ClaimCopy> = {
@@ -158,6 +161,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "Links expire after 7 days for security. Get a fresh one and we'll still take you straight to your record.",
     cannotOpenBody: "Try a fresh link and we'll take you straight to your record.",
     freshLink: "Send a fresh link",
+    alreadyClaimedTitle: "This home is already claimed",
+    alreadyClaimedBody:
+      "Another account already owns this home's record book. If this is your home, ask your service pro to help sort it out.",
+    goDashboard: "Go to my dashboard",
   },
   es: {
     yourServicePro: "Tu profesional de servicio",
@@ -187,6 +194,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "Por seguridad, los enlaces expiran después de 7 días. Solicita uno nuevo para ir directamente a tu registro.",
     cannotOpenBody: "Solicita un enlace nuevo para ir directamente a tu registro.",
     freshLink: "Enviar un enlace nuevo",
+    alreadyClaimedTitle: "Este hogar ya fue reclamado",
+    alreadyClaimedBody:
+      "Otra cuenta ya es dueña del registro de este hogar. Si es tu hogar, pide ayuda a tu profesional de servicio.",
+    goDashboard: "Ir a mi panel",
   },
   ru: {
     yourServicePro: "Ваш специалист",
@@ -216,6 +227,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "В целях безопасности ссылки действуют 7 дней. Запросите новую, и мы откроем нужную запись.",
     cannotOpenBody: "Запросите новую ссылку, и мы откроем нужную запись.",
     freshLink: "Отправить новую ссылку",
+    alreadyClaimedTitle: "Этот дом уже привязан к другому аккаунту",
+    alreadyClaimedBody:
+      "Записи этого дома уже принадлежат другому аккаунту. Если это ваш дом, обратитесь к вашему специалисту.",
+    goDashboard: "Перейти в мой кабинет",
   },
   uk: {
     yourServicePro: "Ваш фахівець",
@@ -245,6 +260,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "З міркувань безпеки посилання діють 7 днів. Запросіть нове, і ми відкриємо потрібний запис.",
     cannotOpenBody: "Запросіть нове посилання, і ми відкриємо потрібний запис.",
     freshLink: "Надіслати нове посилання",
+    alreadyClaimedTitle: "Цей дім уже привʼязано до іншого акаунта",
+    alreadyClaimedBody:
+      "Записи цього дому вже належать іншому акаунту. Якщо це ваш дім, зверніться до вашого фахівця.",
+    goDashboard: "Перейти до мого кабінету",
   },
 };
 

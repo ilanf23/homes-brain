@@ -5,6 +5,7 @@ import { Btn, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/hb";
+import { queueCelebration } from "@/components/celebration";
 import { useT, type TKey } from "@/lib/i18n";
 
 type LoginSearch = { email?: string; claim?: string; note?: string };
@@ -217,7 +218,15 @@ function Login() {
       const { error: claimErr } = await supabase.rpc("claim_home", {
         p_record_id: claimRecordId,
       });
-      if (claimErr) console.error("claim_home failed", claimErr);
+      if (claimErr) {
+        // already_claimed = the home belongs to another account; anything else
+        // is unexpected. Either way the dashboard is the honest landing spot.
+        console.error("claim_home failed", claimErr);
+      } else {
+        queueCelebration("home_claimed");
+        navigate({ to: "/home/records/$recordId", params: { recordId: claimRecordId } });
+        return;
+      }
     }
     navigate({ to: "/home" });
   }
