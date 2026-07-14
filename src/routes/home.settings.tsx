@@ -118,7 +118,7 @@ function HomeownerSettings() {
   useEffect(() => {
     if (!homeowner) return;
     // Prefs live on the homeowner row; get_home_view returns the full row.
-    const ho = homeowner as unknown as DbPrefs & { notify_email: boolean };
+    const ho = homeowner as unknown as DbPrefs & { notify_email: boolean; sms_consent_at?: string | null };
     setPrefs({
       notify_email: ho.notify_email ?? true,
       notify_sms: !!ho.sms_consent_at,
