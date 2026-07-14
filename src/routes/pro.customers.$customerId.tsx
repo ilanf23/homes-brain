@@ -1038,6 +1038,8 @@ function CustomerDetail() {
           </div>
         </div>
       </div>
+      )}
+
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
 
