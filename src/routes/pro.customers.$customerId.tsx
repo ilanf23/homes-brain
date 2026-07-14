@@ -533,7 +533,152 @@ function CustomerDetail() {
         <ArrowLeft size={15} /> Customers
       </Link>
 
-      <div className="grid gap-5 items-start lg:grid-cols-[300px_minmax(0,1fr)_320px]">
+      {/* Simple v0 surface: identity, follow-up hero, contact, past jobs. */}
+      <div className="anim-fade-up mb-2">
+        <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{customer.name}</h1>
+        {customer.homes?.address && (
+          <div className="mt-1 text-sm text-muted">{customer.homes.address}</div>
+        )}
+      </div>
+
+      <section className="anim-fade-up d-1 mt-6">
+        {!latestJob ? (
+          <Card className="text-center py-8">
+            <p className="text-sm text-muted">
+              No jobs yet. Log a job to set a follow-up.
+            </p>
+            <div className="mt-4">
+              <Link to="/pro/jobs/new">
+                <Btn variant="indigo" size="sm">Log a job</Btn>
+              </Link>
+            </div>
+          </Card>
+        ) : upcomingJob && !changingFollowUp ? (
+          <Card>
+            <div className="text-sm text-muted">Coming back</div>
+            <div className="mt-1 text-2xl font-bold text-ink tnum">
+              {formatDate(upcomingJob.next_service_date!)}
+            </div>
+            <button
+              type="button"
+              onClick={() => setChangingFollowUp(true)}
+              className="mt-3 text-sm font-semibold text-indigo hover:underline"
+            >
+              Change
+            </button>
+          </Card>
+        ) : (
+          <div>
+            <h2 className="text-xl font-semibold text-ink mb-3">
+              When are you coming back?
+            </h2>
+            <div className="space-y-2">
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={() => setFollowUpMonths(3)}
+              >
+                In 3 months
+              </Btn>
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={() => setFollowUpMonths(6)}
+              >
+                In 6 months
+              </Btn>
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={() => setFollowUpMonths(12)}
+              >
+                In 1 year
+              </Btn>
+              <Btn
+                variant="ghost"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={markNoFollowUp}
+              >
+                No follow-up
+              </Btn>
+              {changingFollowUp && (
+                <button
+                  type="button"
+                  onClick={() => setChangingFollowUp(false)}
+                  className="w-full text-sm text-muted hover:text-ink py-2"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="anim-fade-up d-2 mt-8">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Contact</h2>
+        <Card>
+          <KV k="Name" v={customer.name} />
+          <KV k="Phone" v={customer.phone ? formatPhone(customer.phone) : "-"} />
+          <KV k="Email" v={customer.email ?? "-"} />
+          {customer.homes?.address && <KV k="Address" v={customer.homes.address} />}
+        </Card>
+      </section>
+
+      <section className="anim-fade-up d-3 mt-8">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
+          Previous jobs
+        </h2>
+        {jobs.length === 0 ? (
+          <Card className="text-center py-6">
+            <p className="text-sm text-muted">No jobs yet.</p>
+          </Card>
+        ) : (
+          <ul className="divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+            {jobs.map((j) => {
+              const rec = j.records?.[0];
+              const content = (
+                <div className="flex items-center gap-3 px-4 py-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold text-ink truncate">
+                      {j.what_done}
+                    </div>
+                    <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
+                  </div>
+                  {rec && <ChevronRightIcon />}
+                </div>
+              );
+              return (
+                <li key={j.id}>
+                  {rec ? (
+                    <Link
+                      to="/pro/records/$recordId"
+                      params={{ recordId: rec.id }}
+                      className="pressable block hover:bg-soft transition-colors"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    content
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {SHOW_ADVANCED && (
+      <div className="mt-8 grid gap-5 items-start lg:grid-cols-[300px_minmax(0,1fr)_320px]">
+
         {/* Left: identity, actions, properties */}
         <div className="space-y-5">
           <Card className="anim-fade-up text-center">
