@@ -47,7 +47,7 @@ function HomeSetupWizard() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [notifySms, setNotifySms] = useState(true);
+  const [notifySms, setNotifySms] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [quietHrs, setQuietHrs] = useState(true);
   const [marketing, setMarketing] = useState(false);
