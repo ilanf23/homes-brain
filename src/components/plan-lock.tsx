@@ -26,6 +26,7 @@ export function PlanLock({
   description: string;
   children?: React.ReactNode;
 }) {
+  if (ALL_FEATURES_FREE) return null;
   return (
     <Card className="max-w-lg mx-auto text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigobg text-indigo mb-4">
