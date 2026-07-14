@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
+import { isProEntitled } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/customers/")({
   head: () => ({ meta: [{ title: "Customers - HomesBrain" }] }),
