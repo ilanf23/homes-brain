@@ -34,6 +34,7 @@ import {
 } from "@/components/crm";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
+import { isProEntitled } from "@/lib/plan";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 
 // Flip to true to restore the full CRM (notes, invoices, timeline, nudge/invite,
@@ -488,7 +489,7 @@ function CustomerDetail() {
     );
   }
 
-  if (SHOW_ADVANCED && pro.plan !== "pro") {
+  if (SHOW_ADVANCED && !isProEntitled(pro)) {
     return (
       <ProShell pro={pro} active="customers">
         <PlanLock

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPhone, recordTitle } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
+import { isProEntitled } from "@/lib/plan";
 
 
 export const Route = createFileRoute("/pro/records/$recordId")({
@@ -117,7 +118,7 @@ function RecordDetail() {
               <QrCode size={15} /> Show claim QR
             </Btn>
           )}
-          {job?.customers && pro.plan === "pro" && (
+          {job?.customers && isProEntitled(pro) && (
             <Link to="/pro/invoices/new" search={{ customer: job.customers.id, job: job.id }}>
               <Btn variant="secondary">Create invoice</Btn>
             </Link>
