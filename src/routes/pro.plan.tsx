@@ -11,6 +11,7 @@ import {
   fetchMyPlanInfo,
   mockSetPlan,
   useCurrentPlan,
+  ALL_FEATURES_FREE,
   DEMO_NOTICE,
   DEMO_SHORT,
   type Plan,
