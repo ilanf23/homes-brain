@@ -8,6 +8,7 @@ import { track } from "@/lib/events";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
+import { pluralForm, useI18n, useT, type TKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/pro/")({
   head: () => ({ meta: [{ title: "HomesBrain" }] }),
@@ -30,11 +31,11 @@ type FollowUpRow = {
   address: string | null;
 };
 
-function timeOfDayGreeting() {
+function greetingKey(): TKey {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return "dash.greet.morning";
+  if (h < 18) return "dash.greet.afternoon";
+  return "dash.greet.evening";
 }
 
 function dueLabel(iso: string): { text: string; tone: "red" | "amber" | "indigo" } {
@@ -68,6 +69,7 @@ function addMonthsIso(months: number): string {
 
 function ProHome() {
   const { proId, pro } = useProGuard();
+  const { locale, t } = useI18n();
   const [rows, setRows] = useState<FollowUpRow[]>([]);
   const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -172,14 +174,14 @@ function ProHome() {
       .eq("id", row.id);
     setBusy(null);
     if (error) {
-      setToast("Couldn't save that date. Try again.");
+      setToast(t("dash.toast.dateFailed"));
       return;
     }
     setRows((prev) =>
       prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
     );
     setSheetFor(null);
-    setToast("Follow-up scheduled");
+    setToast(t("dash.toast.scheduled"));
   }
 
   async function markNoFollowUp(row: FollowUpRow) {
@@ -190,11 +192,11 @@ function ProHome() {
       .eq("id", row.id);
     setBusy(null);
     if (error) {
-      setToast("Couldn't update. Try again.");
+      setToast(t("dash.toast.updateFailed"));
       return;
     }
     removeRow(row.id);
-    setToast("Marked as no follow-up needed");
+    setToast(t("dash.toast.noFollowUp"));
   }
 
   async function markDone(row: FollowUpRow) {
@@ -206,11 +208,11 @@ function ProHome() {
       .eq("id", row.id);
     setBusy(null);
     if (error) {
-      setToast("Couldn't update. Try again.");
+      setToast(t("dash.toast.updateFailed"));
       return;
     }
     removeRow(row.id);
-    setToast("Marked done");
+    setToast(t("dash.toast.markedDone"));
   }
 
   async function sendReminder(row: FollowUpRow) {
@@ -224,7 +226,7 @@ function ProHome() {
         },
       });
       if (error || !(data as { ok?: boolean } | null)?.ok) {
-        setToast("Couldn't send email. Try again.");
+        setToast(t("dash.toast.emailFailed"));
         return;
       }
       await track("pro", proId, "follow_up_reminder_sent", {
@@ -232,7 +234,7 @@ function ProHome() {
         customer_id: row.customer.id,
       });
       removeRow(row.id);
-      setToast(`Reminder sent to ${row.customer.name.split(" ")[0]}`);
+      setToast(`${t("dash.reminderSent")}${row.customer.name.split(" ")[0]}`);
     } finally {
       setBusy(null);
     }
@@ -248,9 +250,7 @@ function ProHome() {
 
   const firstName =
     (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
-  const greeting = firstName
-    ? `${timeOfDayGreeting()}, ${firstName}.`
-    : `${timeOfDayGreeting()}.`;
+  const greeting = firstName ? `${t(greetingKey())}, ${firstName}.` : `${t(greetingKey())}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
   const totalOpen = needsDecision.length + dated.length;
@@ -263,7 +263,7 @@ function ProHome() {
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-paper border border-line px-3 py-1.5 text-xs text-muted">
             <MapPin size={13} className="text-indigo" />
             <span>
-              You're at <span className="text-ink font-semibold">{locationText}</span>
+              {t("dash.youreAt")} <span className="text-ink font-semibold">{locationText}</span>
             </span>
           </div>
         )}
@@ -279,11 +279,9 @@ function ProHome() {
               <Plus size={32} strokeWidth={2.5} />
             </div>
             <div className="min-w-0">
-              <div className="text-2xl sm:text-3xl font-bold leading-tight">Log a job</div>
+              <div className="text-2xl sm:text-3xl font-bold leading-tight">{t("pro.logJob")}</div>
               <div className="mt-1 text-sm sm:text-base text-white/85">
-                {jobCount === 0
-                  ? "Start with one you already did — 30 seconds."
-                  : "30 seconds. Just talk and tap."}
+                {jobCount === 0 ? t("dash.logJob.first") : t("dash.logJob.hint")}
               </div>
             </div>
           </div>
@@ -305,12 +303,12 @@ function ProHome() {
 
         return (
           <section className="anim-fade-up d-2 mt-8">
-            <h2 className="text-lg font-semibold text-ink mb-3">What's Next</h2>
+            <h2 className="text-lg font-semibold text-ink mb-3">{t("dash.whatsNext")}</h2>
 
             {totalOpen === 0 ? (
               <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
                 <Check size={16} strokeWidth={2.5} />
-                <span>You're all caught up</span>
+                <span>{t("dash.allCaughtUp")}</span>
               </div>
             ) : (
               <>
@@ -324,19 +322,19 @@ function ProHome() {
                     {needsDecision.length > 0 && (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
                         <span className="w-2 h-2 rounded-full bg-amber" />
-                        {needsDecision.length} to set
+                        {needsDecision.length} {t("dash.toSet")}
                       </span>
                     )}
                     {overdueCount > 0 && (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-redbg text-red px-3 py-1 text-sm font-semibold">
                         <span className="w-2 h-2 rounded-full bg-red" />
-                        {overdueCount} overdue
+                        {overdueCount} {t("dash.overdue")}
                       </span>
                     )}
                     {upcomingCount > 0 && (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
                         <span className="w-2 h-2 rounded-full bg-muted" />
-                        {upcomingCount} upcoming
+                        {upcomingCount} {t("dash.upcoming")}
                       </span>
                     )}
                   </div>
@@ -358,7 +356,7 @@ function ProHome() {
                           <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block text-base font-semibold text-ink truncate">
-                              {row.customer?.name ?? "Customer"}
+                              {row.customer?.name ?? t("dash.customer")}
                             </span>
                             <span className="block text-sm text-muted truncate">
                               {recordTitle(row.what_done, row.equipment_type)}
@@ -384,7 +382,7 @@ function ProHome() {
                             />
                             <span className="min-w-0 flex-1">
                               <span className="block text-base font-semibold text-ink truncate">
-                                {row.customer?.name ?? "Customer"}
+                                {row.customer?.name ?? t("dash.customer")}
                               </span>
                               <span className="block text-sm text-muted truncate">
                                 {recordTitle(row.what_done, row.equipment_type)}
@@ -422,20 +420,20 @@ function ProHome() {
           <Card className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-sm text-muted">
-                {reviewAsks7d > 0 ? "Nice week" : "This week"}
+                {reviewAsks7d > 0 ? t("dash.niceWeek") : t("dash.thisWeek")}
               </div>
               <div className="mt-0.5 text-xl font-semibold text-ink">
-                {pro.google_rating} ★ on Google
+                {pro.google_rating} {t("dash.onGoogle")}
               </div>
               {reviewAsks7d > 0 && (
                 <div className="mt-0.5 text-sm text-muted">
-                  {reviewAsks7d} review {reviewAsks7d === 1 ? "ask" : "asks"} sent in the last 7 days
+                  {reviewAsks7d} {t(`dash.asks.${pluralForm(locale, reviewAsks7d)}` as TKey)}
                 </div>
               )}
             </div>
             <Link to="/pro/reviews" className="shrink-0">
               <Btn variant="ghost" size="sm">
-                Reviews
+                {t("pro.nav.reviews")}
               </Btn>
             </Link>
           </Card>
@@ -447,7 +445,7 @@ function ProHome() {
           to="/pro/office"
           className="pressable flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper/60 px-4 py-3 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
         >
-          <span>My numbers, map and customers</span>
+          <span>{t("dash.office")}</span>
           <ChevronRight size={16} />
         </Link>
       </div>
@@ -474,9 +472,10 @@ function FollowUpSheet({
   onRemind: () => void;
   onMarkDone: () => void;
 }) {
+  const t = useT();
   const needsDate = !row.next_service_date;
   const canEmail = !!row.customer?.email;
-  const name = row.customer?.name ?? "Customer";
+  const name = row.customer?.name ?? t("dash.customer");
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm anim-fade-up"
@@ -495,21 +494,19 @@ function FollowUpSheet({
 
         {needsDate ? (
           <>
-            <div className="text-base font-semibold text-ink mb-3">
-              When should you check back?
-            </div>
+            <div className="text-base font-semibold text-ink mb-3">{t("sheet.whenCheckBack")}</div>
             <div className="space-y-2">
               <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(3)}>
-                In 3 months
+                {t("sheet.in3")}
               </Btn>
               <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(6)}>
-                In 6 months
+                {t("sheet.in6")}
               </Btn>
               <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(12)}>
-                In 1 year
+                {t("sheet.in12")}
               </Btn>
               <Btn variant="ghost" size="lg" className="w-full" loading={busy} onClick={onNoFollowUp}>
-                No follow-up
+                {t("sheet.noFollowUp")}
               </Btn>
             </div>
           </>
@@ -523,10 +520,10 @@ function FollowUpSheet({
               disabled={!canEmail}
               onClick={onRemind}
             >
-              Remind them
+              {t("sheet.remindThem")}
             </Btn>
             {!canEmail && (
-              <div className="mt-2 text-xs text-muted text-center">No email on file</div>
+              <div className="mt-2 text-xs text-muted text-center">{t("sheet.noEmail")}</div>
             )}
             <button
               type="button"
@@ -534,7 +531,7 @@ function FollowUpSheet({
               disabled={busy}
               className="mt-3 w-full text-sm text-muted hover:text-ink py-2"
             >
-              Mark done
+              {t("sheet.markDone")}
             </button>
           </>
         )}
@@ -544,7 +541,7 @@ function FollowUpSheet({
           onClick={onClose}
           className="mt-4 w-full text-sm text-muted hover:text-ink py-2"
         >
-          Cancel
+          {t("sheet.cancel")}
         </button>
       </div>
     </div>

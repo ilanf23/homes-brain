@@ -3,12 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, ChevronDown, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { proTrades } from "@/lib/hb";
+import { useT, type TKey } from "@/lib/i18n";
 
 type StepKey = "business" | "trade" | "service_area" | "phone";
 
 type ChecklistItem = {
   key: StepKey;
-  label: string;
+  labelKey: TKey;
   done: boolean;
 };
 
@@ -57,10 +58,10 @@ export function useProSetup(proId: string | null): ProSetupState {
   }, [proId]);
 
   const items: ChecklistItem[] = [
-    { key: "business", label: "Business name", done: !!row?.business?.trim() },
-    { key: "trade", label: "Choose your trades", done: proTrades(row ?? {}).length > 0 },
-    { key: "service_area", label: "Service area", done: !!row?.service_area?.trim() },
-    { key: "phone", label: "Contact phone", done: !!row?.phone?.trim() },
+    { key: "business", labelKey: "setup.item.business", done: !!row?.business?.trim() },
+    { key: "trade", labelKey: "setup.item.trade", done: proTrades(row ?? {}).length > 0 },
+    { key: "service_area", labelKey: "setup.item.service_area", done: !!row?.service_area?.trim() },
+    { key: "phone", labelKey: "setup.item.phone", done: !!row?.phone?.trim() },
   ];
 
 
@@ -96,6 +97,7 @@ function writeFlag(key: string, on: boolean) {
 
 export function ProSetupChecklist({ proId }: { proId: string | null }) {
   const { loading, items, completed, total, allDone } = useProSetup(proId);
+  const t = useT();
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -119,10 +121,10 @@ export function ProSetupChecklist({ proId }: { proId: string | null }) {
           setCollapsed(false);
         }}
         className="anim-fade-up mt-4 w-full pressable flex items-center gap-3 rounded-xl border border-line bg-white px-3 py-2.5 hover:bg-soft transition-colors"
-        aria-label="Expand setup checklist"
+        aria-label={t("setup.expand")}
       >
         <div className="flex-1 min-w-0 text-left">
-          <div className="text-xs font-semibold text-ink">Finish setting up</div>
+          <div className="text-xs font-semibold text-ink">{t("setup.finish")}</div>
           <div className="mt-1 h-1 rounded-full bg-line overflow-hidden">
             <div className="h-full bg-indigo" style={{ width: `${pct}%` }} />
           </div>
@@ -140,9 +142,9 @@ export function ProSetupChecklist({ proId }: { proId: string | null }) {
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold text-ink">Finish setting up</div>
+            <div className="text-xs font-semibold text-ink">{t("setup.finish")}</div>
             <span className="text-xs font-semibold text-muted tnum">
-              {completed} of {total}
+              {completed} {t("setup.of")} {total}
             </span>
           </div>
           <div className="mt-1.5 h-1 rounded-full bg-line overflow-hidden">
@@ -156,7 +158,7 @@ export function ProSetupChecklist({ proId }: { proId: string | null }) {
             setCollapsed(true);
           }}
           className="pressable shrink-0 p-1 text-muted hover:text-ink"
-          aria-label="Minimize setup checklist"
+          aria-label={t("setup.minimize")}
         >
           <Minus size={14} />
         </button>
@@ -171,7 +173,7 @@ export function ProSetupChecklist({ proId }: { proId: string | null }) {
               className="flex items-center gap-2 py-2 -mx-1 px-1 rounded-lg hover:bg-soft active:bg-line/50 transition-colors"
             >
               <span className="flex-1 min-w-0 text-sm font-medium text-ink truncate">
-                {item.label}
+                {t(item.labelKey)}
               </span>
               <ChevronRight size={16} className="text-muted shrink-0" aria-hidden="true" />
             </Link>

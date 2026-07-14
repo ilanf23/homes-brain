@@ -16,7 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { Celebration } from "@/components/celebration";
-import { AlertTriangle, Check, Pencil, QrCode } from "lucide-react";
+import { AlertTriangle, Check, ChevronRight, Pencil, QrCode } from "lucide-react";
+import { matchVoiceCustomer } from "@/lib/customer-match";
 import {
   buildRecordUrl,
   checkRecall,
@@ -87,43 +88,7 @@ type ApplianceOpt = {
 };
 type JobHistoryRow = { id: string; what_done: string; created_at: string };
 
-type VoiceCustomerExtract = {
-  customer_name: string | null;
-  customer_phone: string | null;
-  customer_email: string | null;
-  address: string | null;
-};
-
 type ReviewEdit = "customer" | "address" | "equipment" | "work" | "next_service" | null;
-
-function normalizedPhone(value?: string | null) {
-  const digits = value?.replace(/\D/g, "") ?? "";
-  return digits.length >= 7 ? digits.slice(-10) : "";
-}
-
-function findVoiceCustomer(existing: CustomerOpt[], extract: VoiceCustomerExtract) {
-  const email = extract.customer_email?.trim().toLowerCase() ?? "";
-  const phone = normalizedPhone(extract.customer_phone);
-  const name = extract.customer_name?.trim().toLowerCase() ?? "";
-  const address = extract.address ? normalizeAddress(extract.address) : "";
-
-  const contactMatches = existing.filter((customer) => {
-    const emailMatches = email && customer.email?.trim().toLowerCase() === email;
-    const phoneMatches = phone && normalizedPhone(customer.phone) === phone;
-    return emailMatches || phoneMatches;
-  });
-  if (contactMatches.length === 1) return contactMatches[0];
-
-  const nameAndAddressMatches = existing.filter(
-    (customer) =>
-      name &&
-      address &&
-      customer.name.trim().toLowerCase() === name &&
-      !!customer.homes?.address &&
-      normalizeAddress(customer.homes.address) === address,
-  );
-  return nameAndAddressMatches.length === 1 ? nameAndAddressMatches[0] : undefined;
-}
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -263,6 +228,50 @@ function ReviewEditor({
   );
 }
 
+/* Two or more customers answer to the spoken name. The pro is standing in the
+   home, so they know which one: show the address that tells them apart, and let
+   them start a fresh customer when this really is a different person. */
+function SameNameChooser({
+  candidates,
+  onPick,
+}: {
+  candidates: CustomerOpt[];
+  onPick: (picked: CustomerOpt | undefined) => void;
+}) {
+  const spokenName = candidates[0]?.name ?? "";
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm anim-fade-up sm:items-center">
+      <div className="w-full rounded-t-3xl border border-line bg-paper p-5 shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6">
+        <div className="mb-1 text-lg font-semibold text-ink">Which {spokenName}?</div>
+        <div className="mb-4 text-sm text-muted">You have more than one customer by that name.</div>
+
+        <div className="space-y-2">
+          {candidates.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onPick(c)}
+              className="pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 text-left transition-colors hover:bg-soft"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-base font-semibold text-ink">{c.name}</span>
+                <span className="block truncate text-sm text-muted">
+                  {c.homes?.address || c.phone || c.email || "No address on file"}
+                </span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+
+        <Btn variant="ghost" size="lg" className="mt-3 w-full" onClick={() => onPick(undefined)}>
+          None of these, add a new customer
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
 function NewJob() {
   const navigate = useNavigate();
   const t = useT();
@@ -277,6 +286,12 @@ function NewJob() {
 
   // Customer
   const [existing, setExisting] = useState<CustomerOpt[]>([]);
+  // Open "which one did you mean?" prompt. Held as a promise resolver so the
+  // voice flow can await the pro's pick and then carry on building the record.
+  const [nameChoice, setNameChoice] = useState<{
+    candidates: CustomerOpt[];
+    resolve: (picked: CustomerOpt | undefined) => void;
+  } | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [newCustomer, setNewCustomer] = useState({ name: "", address: "", phone: "", email: "" });
   const [customerLocale, setCustomerLocale] = useState<Locale>("en");
@@ -895,6 +910,12 @@ function NewJob() {
     setStage("location");
   }
 
+  /* Ask the pro which same-name customer they meant. Resolves to the pick, or
+     to undefined when they choose to start a new customer with that name. */
+  function askWhichCustomer(candidates: CustomerOpt[]): Promise<CustomerOpt | undefined> {
+    return new Promise((resolve) => setNameChoice({ candidates, resolve }));
+  }
+
   /* "Speak the whole job" done handler: one AI extract fills the customer,
      address, and work fields, then jumps straight to Review so the pro only
      has to eyeball it and send. */
@@ -930,10 +951,16 @@ function NewJob() {
     }
     setFullBusy(false);
 
-    // Reuse a customer only on a strong contact match or an exact name+address
-    // match. Review is always the next screen; uncertain or missing details are
-    // corrected there instead of sending the pro backward through the funnel.
-    const match = findVoiceCustomer(existing, extract);
+    // Reuse the customer on file when the voice note points at exactly one.
+    // When several share the name, ask rather than guess: picking wrong would
+    // file a job under the wrong person's home.
+    const decision = matchVoiceCustomer(existing, extract);
+    let match: CustomerOpt | undefined;
+    if (decision.kind === "linked") {
+      match = decision.customer;
+    } else if (decision.kind === "ambiguous") {
+      match = await askWhichCustomer(decision.candidates);
+    }
     const extractedName = extract.customer_name?.trim() ?? "";
     const extractedAddress = extract.address?.trim() ?? "";
     const savedAddress = match?.homes?.address?.trim() ?? "";
@@ -2957,6 +2984,16 @@ function NewJob() {
             </ul>
           </div>
         </div>
+      )}
+
+      {nameChoice && (
+        <SameNameChooser
+          candidates={nameChoice.candidates}
+          onPick={(picked) => {
+            nameChoice.resolve(picked);
+            setNameChoice(null);
+          }}
+        />
       )}
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}

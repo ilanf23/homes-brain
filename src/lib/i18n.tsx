@@ -166,6 +166,66 @@ const en = {
   "pro.accountMenu": "Account menu",
   "pro.account": "Account",
   "pro.loading": "Loading",
+
+  // Pro dashboard
+  "dash.greet.morning": "Good morning",
+  "dash.greet.afternoon": "Good afternoon",
+  "dash.greet.evening": "Good evening",
+  "dash.youreAt": "You're at",
+  "dash.logJob.first": "Start with one you already did: 30 seconds.",
+  "dash.logJob.hint": "30 seconds. Just talk and tap.",
+  "dash.whoNeedsYou": "Who needs you",
+  "dash.noneDue":
+    "No one's due right now. When a job's next service date comes up, it'll show here.",
+  "dash.customer": "Customer",
+  "dash.overdueSince": "Overdue since ",
+  "dash.due": "Due ",
+  "dash.remind": "Remind",
+  "dash.reminded": "Reminded",
+  "dash.remindAria": "Send reminder to ",
+  "dash.reminderSent": "Reminder sent to ",
+  "dash.niceWeek": "Nice week",
+  "dash.thisWeek": "This week",
+  "dash.onGoogle": "★ on Google",
+  "dash.asks.one": "review ask sent in the last 7 days",
+  "dash.asks.few": "review asks sent in the last 7 days",
+  "dash.asks.many": "review asks sent in the last 7 days",
+  "dash.asks.other": "review asks sent in the last 7 days",
+  "dash.office": "My numbers, map and customers",
+
+  // Dashboard: What's Next
+  "dash.whatsNext": "What's Next",
+  "dash.allCaughtUp": "You're all caught up",
+  "dash.toSet": "to set",
+  "dash.overdue": "overdue",
+  "dash.upcoming": "upcoming",
+  "dash.toast.dateFailed": "Couldn't save that date. Try again.",
+  "dash.toast.scheduled": "Follow-up scheduled",
+  "dash.toast.updateFailed": "Couldn't update. Try again.",
+  "dash.toast.noFollowUp": "Marked as no follow-up needed",
+  "dash.toast.markedDone": "Marked done",
+  "dash.toast.emailFailed": "Couldn't send email. Try again.",
+
+  // Dashboard: follow-up sheet
+  "sheet.whenCheckBack": "When should you check back?",
+  "sheet.in3": "In 3 months",
+  "sheet.in6": "In 6 months",
+  "sheet.in12": "In 1 year",
+  "sheet.noFollowUp": "No follow-up",
+  "sheet.remindThem": "Remind them",
+  "sheet.noEmail": "No email on file",
+  "sheet.markDone": "Mark done",
+  "sheet.cancel": "Cancel",
+
+  // Pro setup checklist (dashboard card)
+  "setup.finish": "Finish setting up",
+  "setup.of": "of",
+  "setup.expand": "Expand setup checklist",
+  "setup.minimize": "Minimize setup checklist",
+  "setup.item.business": "Business name",
+  "setup.item.trade": "Choose your trades",
+  "setup.item.service_area": "Service area",
+  "setup.item.phone": "Contact phone",
 } as const;
 
 export type TKey = keyof typeof en;
@@ -292,6 +352,62 @@ const es: Partial<Record<TKey, string>> = {
   "pro.accountMenu": "Menú de cuenta",
   "pro.account": "Cuenta",
   "pro.loading": "Cargando",
+
+  "dash.greet.morning": "Buenos días",
+  "dash.greet.afternoon": "Buenas tardes",
+  "dash.greet.evening": "Buenas noches",
+  "dash.youreAt": "Estás en",
+  "dash.logJob.first": "Empieza con uno que ya hiciste: 30 segundos.",
+  "dash.logJob.hint": "30 segundos. Solo habla y toca.",
+  "dash.whoNeedsYou": "Quién te necesita",
+  "dash.noneDue":
+    "Nadie tiene servicio pendiente ahora. Cuando llegue la próxima fecha de servicio de un trabajo, aparecerá aquí.",
+  "dash.customer": "Cliente",
+  "dash.overdueSince": "Vencido desde el ",
+  "dash.due": "Para el ",
+  "dash.remind": "Recordar",
+  "dash.reminded": "Recordatorio enviado",
+  "dash.remindAria": "Enviar recordatorio a ",
+  "dash.reminderSent": "Recordatorio enviado a ",
+  "dash.niceWeek": "Buena semana",
+  "dash.thisWeek": "Esta semana",
+  "dash.onGoogle": "★ en Google",
+  "dash.asks.one": "solicitud de reseña enviada en los últimos 7 días",
+  "dash.asks.few": "solicitudes de reseña enviadas en los últimos 7 días",
+  "dash.asks.many": "solicitudes de reseña enviadas en los últimos 7 días",
+  "dash.asks.other": "solicitudes de reseña enviadas en los últimos 7 días",
+  "dash.office": "Mis números, mapa y clientes",
+
+  "dash.whatsNext": "Qué sigue",
+  "dash.allCaughtUp": "Estás al día",
+  "dash.toSet": "por programar",
+  "dash.overdue": "vencidos",
+  "dash.upcoming": "próximos",
+  "dash.toast.dateFailed": "No se pudo guardar esa fecha. Inténtalo de nuevo.",
+  "dash.toast.scheduled": "Seguimiento programado",
+  "dash.toast.updateFailed": "No se pudo actualizar. Inténtalo de nuevo.",
+  "dash.toast.noFollowUp": "Marcado como sin seguimiento",
+  "dash.toast.markedDone": "Marcado como hecho",
+  "dash.toast.emailFailed": "No se pudo enviar el correo. Inténtalo de nuevo.",
+
+  "sheet.whenCheckBack": "¿Cuándo deberías volver a revisar?",
+  "sheet.in3": "En 3 meses",
+  "sheet.in6": "En 6 meses",
+  "sheet.in12": "En 1 año",
+  "sheet.noFollowUp": "Sin seguimiento",
+  "sheet.remindThem": "Enviar recordatorio",
+  "sheet.noEmail": "No hay correo registrado",
+  "sheet.markDone": "Marcar como hecho",
+  "sheet.cancel": "Cancelar",
+
+  "setup.finish": "Termina la configuración",
+  "setup.of": "de",
+  "setup.expand": "Mostrar la lista de configuración",
+  "setup.minimize": "Minimizar la lista de configuración",
+  "setup.item.business": "Nombre del negocio",
+  "setup.item.trade": "Elige tus oficios",
+  "setup.item.service_area": "Área de servicio",
+  "setup.item.phone": "Teléfono de contacto",
 };
 
 const ru: Record<TKey, string> = {
@@ -416,6 +532,62 @@ const ru: Record<TKey, string> = {
   "pro.accountMenu": "Меню аккаунта",
   "pro.account": "Аккаунт",
   "pro.loading": "Загрузка",
+
+  "dash.greet.morning": "Доброе утро",
+  "dash.greet.afternoon": "Добрый день",
+  "dash.greet.evening": "Добрый вечер",
+  "dash.youreAt": "Вы находитесь по адресу",
+  "dash.logJob.first": "Начните с того, что уже сделали: 30 секунд.",
+  "dash.logJob.hint": "30 секунд. Просто говорите и нажимайте.",
+  "dash.whoNeedsYou": "Кому вы нужны",
+  "dash.noneDue":
+    "Сейчас никого нет в очереди. Когда подойдёт дата следующего обслуживания, работа появится здесь.",
+  "dash.customer": "Клиент",
+  "dash.overdueSince": "Просрочено с ",
+  "dash.due": "Срок: ",
+  "dash.remind": "Напомнить",
+  "dash.reminded": "Напоминание отправлено",
+  "dash.remindAria": "Отправить напоминание: ",
+  "dash.reminderSent": "Напоминание отправлено: ",
+  "dash.niceWeek": "Хорошая неделя",
+  "dash.thisWeek": "На этой неделе",
+  "dash.onGoogle": "★ на Google",
+  "dash.asks.one": "запрос отзыва отправлен за последние 7 дней",
+  "dash.asks.few": "запроса отзыва отправлено за последние 7 дней",
+  "dash.asks.many": "запросов отзыва отправлено за последние 7 дней",
+  "dash.asks.other": "запросов отзыва отправлено за последние 7 дней",
+  "dash.office": "Мои цифры, карта и клиенты",
+
+  "dash.whatsNext": "Что дальше",
+  "dash.allCaughtUp": "Все дела закрыты",
+  "dash.toSet": "без даты",
+  "dash.overdue": "просрочено",
+  "dash.upcoming": "предстоящих",
+  "dash.toast.dateFailed": "Не удалось сохранить дату. Попробуйте ещё раз.",
+  "dash.toast.scheduled": "Повторный визит запланирован",
+  "dash.toast.updateFailed": "Не удалось обновить. Попробуйте ещё раз.",
+  "dash.toast.noFollowUp": "Отмечено: повторный визит не нужен",
+  "dash.toast.markedDone": "Отмечено как выполнено",
+  "dash.toast.emailFailed": "Не удалось отправить письмо. Попробуйте ещё раз.",
+
+  "sheet.whenCheckBack": "Когда стоит проверить снова?",
+  "sheet.in3": "Через 3 месяца",
+  "sheet.in6": "Через 6 месяцев",
+  "sheet.in12": "Через 1 год",
+  "sheet.noFollowUp": "Без повторного визита",
+  "sheet.remindThem": "Отправить напоминание",
+  "sheet.noEmail": "Нет электронной почты",
+  "sheet.markDone": "Отметить как выполнено",
+  "sheet.cancel": "Отмена",
+
+  "setup.finish": "Завершите настройку",
+  "setup.of": "из",
+  "setup.expand": "Развернуть список настройки",
+  "setup.minimize": "Свернуть список настройки",
+  "setup.item.business": "Название компании",
+  "setup.item.trade": "Выберите свои специальности",
+  "setup.item.service_area": "Зона обслуживания",
+  "setup.item.phone": "Контактный телефон",
 };
 
 const uk: Record<TKey, string> = {
@@ -539,6 +711,62 @@ const uk: Record<TKey, string> = {
   "pro.accountMenu": "Меню облікового запису",
   "pro.account": "Обліковий запис",
   "pro.loading": "Завантаження",
+
+  "dash.greet.morning": "Доброго ранку",
+  "dash.greet.afternoon": "Доброго дня",
+  "dash.greet.evening": "Доброго вечора",
+  "dash.youreAt": "Ви за адресою",
+  "dash.logJob.first": "Почніть з того, що вже зробили: 30 секунд.",
+  "dash.logJob.hint": "30 секунд. Просто говоріть і торкайтеся.",
+  "dash.whoNeedsYou": "Кому ви потрібні",
+  "dash.noneDue":
+    "Зараз ніхто не очікує. Коли настане дата наступного обслуговування, робота з’явиться тут.",
+  "dash.customer": "Клієнт",
+  "dash.overdueSince": "Прострочено з ",
+  "dash.due": "Термін: ",
+  "dash.remind": "Нагадати",
+  "dash.reminded": "Нагадування надіслано",
+  "dash.remindAria": "Надіслати нагадування: ",
+  "dash.reminderSent": "Нагадування надіслано: ",
+  "dash.niceWeek": "Гарний тиждень",
+  "dash.thisWeek": "Цього тижня",
+  "dash.onGoogle": "★ на Google",
+  "dash.asks.one": "запит відгуку надіслано за останні 7 днів",
+  "dash.asks.few": "запити відгуку надіслано за останні 7 днів",
+  "dash.asks.many": "запитів відгуку надіслано за останні 7 днів",
+  "dash.asks.other": "запитів відгуку надіслано за останні 7 днів",
+  "dash.office": "Мої цифри, карта та клієнти",
+
+  "dash.whatsNext": "Що далі",
+  "dash.allCaughtUp": "Усі справи закриті",
+  "dash.toSet": "без дати",
+  "dash.overdue": "прострочено",
+  "dash.upcoming": "майбутніх",
+  "dash.toast.dateFailed": "Не вдалося зберегти дату. Спробуйте ще раз.",
+  "dash.toast.scheduled": "Повторний візит заплановано",
+  "dash.toast.updateFailed": "Не вдалося оновити. Спробуйте ще раз.",
+  "dash.toast.noFollowUp": "Позначено: повторний візит не потрібен",
+  "dash.toast.markedDone": "Позначено як виконано",
+  "dash.toast.emailFailed": "Не вдалося надіслати лист. Спробуйте ще раз.",
+
+  "sheet.whenCheckBack": "Коли варто перевірити знову?",
+  "sheet.in3": "Через 3 місяці",
+  "sheet.in6": "Через 6 місяців",
+  "sheet.in12": "Через 1 рік",
+  "sheet.noFollowUp": "Без повторного візиту",
+  "sheet.remindThem": "Надіслати нагадування",
+  "sheet.noEmail": "Немає електронної пошти",
+  "sheet.markDone": "Позначити як виконано",
+  "sheet.cancel": "Скасувати",
+
+  "setup.finish": "Завершіть налаштування",
+  "setup.of": "з",
+  "setup.expand": "Розгорнути список налаштування",
+  "setup.minimize": "Згорнути список налаштування",
+  "setup.item.business": "Назва компанії",
+  "setup.item.trade": "Оберіть свої спеціальності",
+  "setup.item.service_area": "Зона обслуговування",
+  "setup.item.phone": "Контактний телефон",
 };
 
 const DICTS: Record<Locale, Partial<Record<TKey, string>>> = { en, es, ru, uk };
@@ -615,6 +843,16 @@ export function useI18n(): I18nValue {
 /* Convenience hook for the common case of only needing t(). */
 export function useT(): (key: TKey) => string {
   return useI18n().t;
+}
+
+/* Plural category for count-driven copy. Russian and Ukrainian need distinct
+   few/many forms, so the caller keys off this instead of a bare n === 1 test.
+   Categories we do not author (zero, two) collapse to "other". */
+export type PluralForm = "one" | "few" | "many" | "other";
+
+export function pluralForm(locale: Locale, n: number): PluralForm {
+  const c = new Intl.PluralRules(locale).select(n);
+  return c === "one" || c === "few" || c === "many" ? c : "other";
 }
 
 /* ---- Language switcher ------------------------------------------------- */
