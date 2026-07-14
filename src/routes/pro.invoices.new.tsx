@@ -135,7 +135,7 @@ function NewInvoice() {
     );
   }
 
-  if (pro.plan !== "pro") {
+  if (!isProEntitled(pro)) {
     return (
       <ProShell pro={pro} active="invoices">
         <PlanLock
