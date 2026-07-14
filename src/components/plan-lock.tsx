@@ -5,6 +5,7 @@ import { ALL_FEATURES_FREE, DEMO_SHORT } from "@/lib/plan";
 
 /** Small inline demo notice — repeat wherever price/upgrade appears. */
 export function DemoNotice({ className = "" }: { className?: string }) {
+  if (ALL_FEATURES_FREE) return null;
   return (
     <div
       className={`rounded-xl border border-indigo/20 bg-indigobg text-indigo px-3 py-2 text-xs font-semibold flex items-center gap-2 ${className}`}
