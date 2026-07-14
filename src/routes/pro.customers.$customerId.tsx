@@ -35,11 +35,16 @@ import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 
+// Flip to true to restore the full CRM (notes, invoices, timeline, nudge/invite,
+// equipment, activity tabs). Kept behind a flag so the page stays radically
+// simple for v0 while preserving every advanced surface for a future Premium tier.
+const SHOW_ADVANCED = false;
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer - HomesBrain" }] }),
   component: CustomerDetail,
 });
+
 
 type Customer = {
   id: string;
