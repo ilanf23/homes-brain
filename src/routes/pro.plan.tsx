@@ -95,20 +95,22 @@ function PlanPage() {
 
       <ProPageHead
         eyebrow="Plan"
-        title="Choose your plan"
-        sub="Free forever, or unlock the money features with Pro."
+        title="Everything's included"
+        sub="Every HomesBrain feature is free for all pros right now. No card, no billing."
       />
 
-      {/* Big demo banner */}
       <div className="mt-2 mb-6 rounded-2xl border border-indigo/25 bg-indigobg p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <Pill accent="indigo">Demo mode</Pill>
+          <Pill accent="indigo">All included</Pill>
           <div className="text-sm text-ink">
-            <div className="font-semibold">This is a demo — no payment is collected.</div>
-            <div className="text-muted mt-0.5">{DEMO_NOTICE}</div>
+            <div className="font-semibold">Free for all pros — no upgrade needed.</div>
+            <div className="text-muted mt-0.5">
+              We're keeping HomesBrain free while we grow. Paid tiers will return later; when they do, founding pros keep their price locked for life.
+            </div>
           </div>
         </div>
       </div>
+
 
       {!plans || !features ? (
         <div className="grid gap-4 sm:grid-cols-2">
