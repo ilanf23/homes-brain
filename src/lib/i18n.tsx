@@ -376,7 +376,7 @@ const es: Partial<Record<TKey, string>> = {
   "pro.loading": "Cargando",
 };
 
-const ru: Record<TKey, string> = {
+const ru: Partial<Record<TKey, string>> = {
   "chrome.forHomeowners": "Для домовладельцев",
   "chrome.homeowner": "Домовладелец",
   "chrome.signOut": "Выйти",
