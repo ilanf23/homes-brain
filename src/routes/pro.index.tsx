@@ -178,7 +178,7 @@ function ProHome() {
     setRows((prev) =>
       prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
     );
-    setDatePickerFor(null);
+    setSheetFor(null);
     setToast("Follow-up scheduled");
   }
 
