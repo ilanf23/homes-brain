@@ -133,6 +133,11 @@ function deliveryErrorMessage(code: string | null) {
   if (code === "opted_out") return "This customer has opted out of email.";
   if (code === "daily_limit") return "Your daily email limit has been reached.";
   if (code === "not_configured") return "Email delivery is temporarily unavailable.";
+  if (code === "no_email") return "Add the customer's email before sending.";
+  if (code === "bad_request") return "The email couldn't be sent — the record is missing details. Try again.";
+  if (code === "forbidden") return "You don't have access to send for this customer.";
+  if (code === "unauthorized") return "Your session expired. Sign in again and retry.";
+  if (code === "send_failed") return "The email service rejected the send. Try again in a moment.";
   return "Check your connection and try the email again.";
 }
 
