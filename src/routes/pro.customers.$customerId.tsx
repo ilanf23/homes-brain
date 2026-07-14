@@ -489,7 +489,7 @@ function CustomerDetail() {
     );
   }
 
-  if (SHOW_ADVANCED && pro.plan !== "pro") {
+  if (SHOW_ADVANCED && !isProEntitled(pro)) {
     return (
       <ProShell pro={pro} active="customers">
         <PlanLock
