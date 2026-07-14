@@ -338,7 +338,7 @@ function ProDashboard() {
         onToast={setToast}
       />
 
-      {pro.plan === "pro" ? (
+      {isProEntitled(pro) ? (
         <>
           <MoneyRow
             invoices={invoices}
