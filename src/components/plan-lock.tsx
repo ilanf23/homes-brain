@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
-import { DEMO_SHORT } from "@/lib/plan";
+import { ALL_FEATURES_FREE, DEMO_SHORT } from "@/lib/plan";
 
 /** Small inline demo notice — repeat wherever price/upgrade appears. */
 export function DemoNotice({ className = "" }: { className?: string }) {
