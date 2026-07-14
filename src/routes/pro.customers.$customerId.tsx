@@ -222,6 +222,58 @@ function CustomerDetail() {
     else setToast("Could not delete the note.");
   }
 
+  const latestJob = jobs[0] ?? null;
+  const upcomingJob = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return (
+      jobs
+        .filter((j) => j.next_service_date && j.next_service_date >= today)
+        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))[0] ?? null
+    );
+  }, [jobs]);
+  const [savingFollowUp, setSavingFollowUp] = useState(false);
+  const [changingFollowUp, setChangingFollowUp] = useState(false);
+
+  async function setFollowUpMonths(months: number) {
+    if (!latestJob || savingFollowUp) return;
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    const iso = d.toISOString().slice(0, 10);
+    setSavingFollowUp(true);
+    const { error } = await supabase
+      .from("jobs")
+      .update({ next_service_date: iso, no_follow_up: false, follow_up_handled_at: null })
+      .eq("id", latestJob.id);
+    setSavingFollowUp(false);
+    if (error) {
+      setToast("Could not save. Try again.");
+      return;
+    }
+    setJobs((prev) =>
+      prev.map((j) => (j.id === latestJob.id ? { ...j, next_service_date: iso } : j)),
+    );
+    setChangingFollowUp(false);
+    setToast("Follow-up scheduled");
+  }
+
+  async function markNoFollowUp() {
+    if (!latestJob || savingFollowUp) return;
+    setSavingFollowUp(true);
+    const { error } = await supabase
+      .from("jobs")
+      .update({ no_follow_up: true })
+      .eq("id", latestJob.id);
+    setSavingFollowUp(false);
+    if (error) {
+      setToast("Could not save. Try again.");
+      return;
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== latestJob.id).concat({ ...latestJob }));
+    setChangingFollowUp(false);
+    setToast("No follow-up needed");
+  }
+
+
   async function sendNudge() {
     if (!proId || !customer || nudging) return;
     const to = customer.phone ?? customer.email;
