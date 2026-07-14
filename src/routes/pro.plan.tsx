@@ -247,7 +247,7 @@ function PlanCard({
         ))}
       </ul>
       <div className="mt-6">{action}</div>
-      {plan.price_monthly > 0 && (
+      {plan.price_monthly > 0 && !ALL_FEATURES_FREE && (
         <div className="mt-3 text-center text-xs text-muted">
           {DEMO_NOTICE}
         </div>
