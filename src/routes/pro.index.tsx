@@ -197,7 +197,7 @@ function ProHome() {
     : `${timeOfDayGreeting()}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
-  const totalOpen = needsDecision.length + dated.length;
+
 
   return (
     <ProShell pro={pro} active="home" hideMobileCta>
