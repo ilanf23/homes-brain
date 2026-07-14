@@ -9,47 +9,50 @@ export function LegalPage({
   updated,
   intro,
   children,
+  draft = true,
 }: {
   title: string;
   updated: string;
   intro: string;
   children: ReactNode;
+  draft?: boolean;
 }) {
   return (
     <MarketingShell mobileCta={null}>
       <div className="mx-auto max-w-3xl px-5 py-14">
-        {/* Draft banner - compliance red role. Remove only after attorney sign-off. */}
-        <div
-          role="note"
-          className="rounded-2xl border border-red/25 bg-redbg px-5 py-4 flex items-start gap-3"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            aria-hidden="true"
-            className="mt-0.5 shrink-0 text-red"
+        {draft && (
+          <div
+            role="note"
+            className="rounded-2xl border border-red/25 bg-redbg px-5 py-4 flex items-start gap-3"
           >
-            <path
-              d="M9 2 16.5 15.5H1.5L9 2Z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinejoin="round"
-            />
-            <path d="M9 7v3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            <circle cx="9" cy="13" r="0.9" fill="currentColor" />
-          </svg>
-          <div>
-            <div className="text-sm font-bold text-red uppercase tracking-[0.08em]">
-              Draft: pending attorney review
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              aria-hidden="true"
+              className="mt-0.5 shrink-0 text-red"
+            >
+              <path
+                d="M9 2 16.5 15.5H1.5L9 2Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <path d="M9 7v3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="9" cy="13" r="0.9" fill="currentColor" />
+            </svg>
+            <div>
+              <div className="text-sm font-bold text-red uppercase tracking-[0.08em]">
+                Draft: pending attorney review
+              </div>
+              <p className="mt-1 text-sm text-red/90">
+                This document is a structured draft and is not final legal advice. It will be reviewed
+                by counsel before launch.
+              </p>
             </div>
-            <p className="mt-1 text-sm text-red/90">
-              This document is a structured draft and is not final legal advice. It will be reviewed
-              by counsel before launch.
-            </p>
           </div>
-        </div>
+        )}
 
         <h1 className="mt-10 text-4xl sm:text-5xl tracking-tight text-ink">{title}</h1>
         <p className="mt-3 text-sm text-muted">Last updated: {updated}</p>
