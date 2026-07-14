@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { FileText, Search, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
+import { useT } from "@/lib/i18n";
 
 type Hit = {
   kind: "customer" | "record";
@@ -24,6 +25,7 @@ type JobHit = {
    Failures resolve to empty groups; search must never break the shell. */
 export function GlobalSearch({ proId }: { proId: string | null }) {
   const navigate = useNavigate();
+  const t = useT();
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const [open, setOpen] = useState(false);
@@ -39,7 +41,7 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
       setSearched(false);
       return;
     }
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       /* Commas and parens would break PostgREST or() syntax. */
       const safe = term.replace(/[,()]/g, " ").trim();
       const like = `%${safe}%`;
@@ -68,7 +70,7 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
         next.push({
           kind: "record",
           id: recordId,
-          primary: j.homes?.address ?? "Record",
+          primary: j.homes?.address ?? t("pro.nav.records"),
           secondary: j.what_done,
         });
       }
@@ -77,8 +79,8 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
       setOpen(true);
       setActive(-1);
     }, 250);
-    return () => clearTimeout(t);
-  }, [q, proId]);
+    return () => clearTimeout(timer);
+  }, [q, proId, t]);
 
   function go(hit: Hit) {
     setOpen(false);
@@ -111,8 +113,8 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
   }
 
   const groups: { label: string; kind: Hit["kind"]; icon: typeof User }[] = [
-    { label: "Customers", kind: "customer", icon: User },
-    { label: "Records", kind: "record", icon: FileText },
+    { label: t("pro.nav.customers"), kind: "customer", icon: User },
+    { label: t("pro.nav.records"), kind: "record", icon: FileText },
   ];
 
   return (
@@ -131,8 +133,8 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
         role="combobox"
         aria-expanded={open}
         aria-controls="pro-search-listbox"
-        aria-label="Search customers and records"
-        placeholder="Search customers, records..."
+        aria-label={t("pro.search.label")}
+        placeholder={t("pro.search.placeholder")}
         className="w-full h-10 rounded-full border border-line bg-soft pl-9 pr-4 text-sm text-ink placeholder:text-muted outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:ring-2 focus:ring-ink/10 hover:border-ink/30"
       />
       {open && (
@@ -141,11 +143,11 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
           <div
             id="pro-search-listbox"
             role="listbox"
-            aria-label="Search results"
+            aria-label={t("pro.search.results")}
             className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border border-line bg-paper shadow-[0_24px_60px_-24px_rgba(22,22,15,0.3)] overflow-hidden"
           >
             {hits.length === 0 ? (
-              <p className="px-4 py-4 text-sm text-muted">No matches</p>
+              <p className="px-4 py-4 text-sm text-muted">{t("pro.search.noMatches")}</p>
             ) : (
               groups.map(({ label, kind, icon: Icon }) => {
                 const rows = hits.filter((h) => h.kind === kind);

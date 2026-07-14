@@ -51,6 +51,10 @@ export type HomeJob = {
   customer_id: string | null;
   equipment_id: string | null;
   what_done: string;
+  localized_content?: Record<
+    string,
+    { what_done?: string | null; equipment_type?: string | null }
+  > | null;
   next_service_date: string | null;
   created_at: string;
 };
@@ -227,7 +231,10 @@ export function HomeShell({
             </Btn>
           </Link>
         </div>
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto" aria-label="Homeowner navigation">
+        <nav
+          className="flex-1 px-3 space-y-0.5 overflow-y-auto"
+          aria-label={t("nav.homeownerNavigation")}
+        >
           {NAV.map(({ key, labelKey, to, icon: Icon }) => (
             <Link
               key={key}
@@ -302,7 +309,7 @@ export function HomeShell({
           </div>
           <nav
             className="flex gap-1 px-3 pb-2 overflow-x-auto no-scrollbar"
-            aria-label="Homeowner navigation"
+            aria-label={t("nav.homeownerNavigation")}
           >
             {NAV.map(({ key, labelKey, to }) => (
               <Link

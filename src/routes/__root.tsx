@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { I18nProvider } from "../lib/i18n";
+import { I18nProvider, isLocale } from "../lib/i18n";
 import { getLocaleServerFn } from "../lib/i18n-server";
 import { initPosthog } from "../lib/posthog";
 
@@ -123,8 +124,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const locale = useRouterState({
+    select: (state) => {
+      const data = state.matches.find((match) => match.routeId === "__root__")?.loaderData as
+        | { locale?: unknown }
+        | undefined;
+      return isLocale(data?.locale) ? data.locale : "en";
+    },
+  });
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <HeadContent />
       </head>

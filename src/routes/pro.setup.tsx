@@ -8,6 +8,7 @@ import { Logo, TradeIcon } from "@/components/svg";
 import { GoogleConnect } from "@/components/google-connect";
 import { startStripeOnboarding } from "@/lib/stripe-connect";
 import type { ProRow } from "@/components/pro-shell";
+import { LanguageToggle } from "@/lib/i18n";
 
 const STEP_KEYS = ["business", "trade", "service_area", "phone", "payments", "google"] as const;
 type StepKey = (typeof STEP_KEYS)[number];
@@ -39,7 +40,6 @@ function ProSetupWizard() {
   const [stripeConnecting, setStripeConnecting] = useState(false);
 
   const [stepIdx, setStepIdx] = useState(0);
-
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +115,6 @@ function ProSetupWizard() {
     }
   }, [step, business, trades, area, phone]);
 
-
   async function persistCurrent(): Promise<boolean> {
     if (!proId) return false;
     setSaving(true);
@@ -146,10 +145,7 @@ function ProSetupWizard() {
         break;
       }
       case "phone": {
-        ({ error } = await supabase
-          .from("pros")
-          .update({ phone: phone.trim() })
-          .eq("id", proId));
+        ({ error } = await supabase.from("pros").update({ phone: phone.trim() }).eq("id", proId));
         break;
       }
       default:
@@ -223,6 +219,7 @@ function ProSetupWizard() {
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
+            <LanguageToggle />
             <Pill accent="indigo">
               Step {stepIdx + 1} of {STEP_KEYS.length}
             </Pill>
@@ -241,9 +238,7 @@ function ProSetupWizard() {
           {STEP_KEYS.map((k, i) => (
             <div
               key={k}
-              className={`h-1.5 flex-1 rounded-full ${
-                i <= stepIdx ? "bg-indigo" : "bg-line"
-              }`}
+              className={`h-1.5 flex-1 rounded-full ${i <= stepIdx ? "bg-indigo" : "bg-line"}`}
             />
           ))}
         </div>
@@ -256,7 +251,6 @@ function ProSetupWizard() {
           setBusiness={setBusiness}
           trades={trades}
           setTrades={setTrades}
-
           area={area}
           setArea={setArea}
           phone={phone}
@@ -429,7 +423,6 @@ function StepView(props: {
     );
   }
 
-
   if (step === "service_area") {
     return (
       <StepFrame title="Where do you work?" sub="City or ZIP is fine.">
@@ -489,10 +482,7 @@ function StepView(props: {
 
   if (step === "google") {
     return (
-      <StepFrame
-        title="Connect Google Business"
-        sub="Route review asks to your Google page."
-      >
+      <StepFrame title="Connect Google Business" sub="Route review asks to your Google page.">
         <div className="rounded-2xl border border-line bg-white p-4">
           <GoogleConnect proId={proId} pro={pro} onUpdated={onProUpdated} />
         </div>

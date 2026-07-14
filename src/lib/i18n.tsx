@@ -7,29 +7,33 @@
    __root.tsx), so the first client render matches the server and there is
    no hydration flash on translated copy.
 
-   English is the source language; Spanish is the first translation. Add a
+   English is the source language. Add a
    locale by extending Locale, LOCALES, and the DICTS map. Keys missing from
    a non-English dictionary fall back to English, then to the key itself. */
+import { ChevronDown } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-export type Locale = "en" | "es";
+export type Locale = "en" | "es" | "ru" | "uk";
 
 export const LOCALES: { code: Locale; label: string; short: string }[] = [
   { code: "en", label: "English", short: "EN" },
   { code: "es", label: "Español", short: "ES" },
+  { code: "ru", label: "Русский", short: "RU" },
+  { code: "uk", label: "Українська", short: "UK" },
 ];
 
 export const LOCALE_COOKIE = "hb_lang";
 
 export function isLocale(v: unknown): v is Locale {
-  return v === "en" || v === "es";
+  return v === "en" || v === "es" || v === "ru" || v === "uk";
 }
 
 /* ---- Dictionaries ------------------------------------------------------ */
@@ -44,6 +48,7 @@ const en = {
   "nav.myPros": "My pros",
   "nav.reminders": "Reminders",
   "nav.settings": "Settings",
+  "nav.homeownerNavigation": "Homeowner navigation",
   "nav.addToHome": "Add to your home",
   "nav.add": "Add",
 
@@ -90,6 +95,7 @@ const en = {
   "login.forgotSent.sub": "Your reset link is on the way.",
   "login.role.homeowner": "Homeowner",
   "login.role.pro": "Pro",
+  "login.signInAs": "Sign in as",
   "login.continuePro": "Continue as pro",
   "login.continueHomeowner": "Continue as homeowner",
   "login.newHere": "New here?",
@@ -124,6 +130,42 @@ const en = {
 
   // Language switcher
   "lang.label": "Language",
+
+  // Pro workspace chrome
+  "pro.navigation": "Pro navigation",
+  "pro.nav.home": "Home",
+  "pro.nav.customers": "Customers",
+  "pro.nav.records": "Records",
+  "pro.nav.invoices": "Invoices",
+  "pro.nav.due": "Due for service",
+  "pro.nav.reviews": "Reviews",
+  "pro.nav.referral": "Referral",
+  "pro.nav.office": "Office",
+  "pro.nav.settings": "Settings",
+  "pro.logJob": "Log a job",
+  "pro.back": "Back",
+  "pro.review": "Review",
+  "pro.reviewAndSend": "Review and send",
+  "pro.backDashboard": "Back to dashboard",
+  "pro.yourBusiness": "Your business",
+  "pro.chargeJob": "Charge for this job (optional)",
+  "pro.chargeHelp": "Leave blank if you're not billing through the app.",
+  "pro.askGoogleReview": "Ask customer for a Google review after sending",
+  "pro.recordSent": "Record sent.",
+  "pro.saved": "Saved.",
+  "pro.showClaimQr": "Show claim QR",
+  "pro.logAnother": "Log another",
+  "pro.search.label": "Search customers and records",
+  "pro.search.placeholder": "Search customers, records…",
+  "pro.search.results": "Search results",
+  "pro.search.noMatches": "No matches",
+  "pro.notifications": "Notifications",
+  "pro.notificationsUnread": "unread",
+  "pro.notificationsEmpty":
+    "Nothing yet. When homeowners view records, claim homes, or ask to connect, it lands here.",
+  "pro.accountMenu": "Account menu",
+  "pro.account": "Account",
+  "pro.loading": "Loading",
 } as const;
 
 export type TKey = keyof typeof en;
@@ -137,6 +179,7 @@ const es: Partial<Record<TKey, string>> = {
   "nav.myPros": "Mis profesionales",
   "nav.reminders": "Recordatorios",
   "nav.settings": "Configuración",
+  "nav.homeownerNavigation": "Navegación del propietario",
   "nav.addToHome": "Agregar a tu hogar",
   "nav.add": "Agregar",
 
@@ -180,6 +223,7 @@ const es: Partial<Record<TKey, string>> = {
   "login.forgotSent.sub": "Tu enlace de restablecimiento está en camino.",
   "login.role.homeowner": "Propietario",
   "login.role.pro": "Profesional",
+  "login.signInAs": "Iniciar sesión como",
   "login.continuePro": "Continuar como profesional",
   "login.continueHomeowner": "Continuar como propietario",
   "login.newHere": "¿Nuevo por aquí?",
@@ -213,9 +257,291 @@ const es: Partial<Record<TKey, string>> = {
     "Cada visita de tus profesionales se convierte en un registro verificado que tu hogar conserva para siempre.",
 
   "lang.label": "Idioma",
+
+  "pro.navigation": "Navegación profesional",
+  "pro.nav.home": "Inicio",
+  "pro.nav.customers": "Clientes",
+  "pro.nav.records": "Registros",
+  "pro.nav.invoices": "Facturas",
+  "pro.nav.due": "Servicio pendiente",
+  "pro.nav.reviews": "Reseñas",
+  "pro.nav.referral": "Referidos",
+  "pro.nav.office": "Oficina",
+  "pro.nav.settings": "Configuración",
+  "pro.logJob": "Registrar un trabajo",
+  "pro.back": "Volver",
+  "pro.review": "Revisar",
+  "pro.reviewAndSend": "Revisar y enviar",
+  "pro.backDashboard": "Volver al panel",
+  "pro.yourBusiness": "Tu negocio",
+  "pro.chargeJob": "Cobrar por este trabajo (opcional)",
+  "pro.chargeHelp": "Déjalo en blanco si no vas a facturar desde la aplicación.",
+  "pro.askGoogleReview": "Pedir al cliente una reseña en Google después del envío",
+  "pro.recordSent": "Registro enviado.",
+  "pro.saved": "Guardado.",
+  "pro.showClaimQr": "Mostrar QR de reclamación",
+  "pro.logAnother": "Registrar otro",
+  "pro.search.label": "Buscar clientes y registros",
+  "pro.search.placeholder": "Buscar clientes, registros…",
+  "pro.search.results": "Resultados de búsqueda",
+  "pro.search.noMatches": "Sin resultados",
+  "pro.notifications": "Notificaciones",
+  "pro.notificationsUnread": "sin leer",
+  "pro.notificationsEmpty":
+    "Aún no hay nada. Aquí aparecerá cuando los propietarios vean registros, reclamen hogares o pidan conectarse.",
+  "pro.accountMenu": "Menú de cuenta",
+  "pro.account": "Cuenta",
+  "pro.loading": "Cargando",
 };
 
-const DICTS: Record<Locale, Partial<Record<TKey, string>>> = { en, es };
+const ru: Record<TKey, string> = {
+  "chrome.forHomeowners": "Для домовладельцев",
+  "chrome.homeowner": "Домовладелец",
+  "chrome.signOut": "Выйти",
+  "nav.myHome": "Мой дом",
+  "nav.appliances": "Техника",
+  "nav.myPros": "Мои специалисты",
+  "nav.reminders": "Напоминания",
+  "nav.settings": "Настройки",
+  "nav.homeownerNavigation": "Навигация домовладельца",
+  "nav.addToHome": "Добавить в дом",
+  "nav.add": "Добавить",
+
+  "auth.continueGoogle": "Продолжить с Google",
+  "auth.openingGoogle": "Открываем Google…",
+  "auth.or": "или",
+  "auth.email": "Электронная почта",
+  "auth.emailPlaceholder": "you@email.com",
+  "auth.password": "Пароль",
+  "auth.passwordPlaceholder": "Ваш пароль",
+  "auth.logIn": "Войти",
+  "auth.signIn": "Войти",
+
+  "signup.title": "Начните вести историю своего дома",
+  "signup.subtitle": "Бесплатно. Навсегда ваша. Без карты.",
+  "signup.finishing": "Завершаем создание аккаунта…",
+  "signup.nameLabel": "Ваше имя (необязательно)",
+  "signup.namePlaceholder": "Алекс",
+  "signup.passwordPlaceholder": "Не менее 8 символов",
+  "signup.addressLabel": "Адрес дома (необязательно)",
+  "signup.addressPlaceholder": "Начните вводить адрес…",
+  "signup.addressHelp":
+    "Выберите адрес из списка, чтобы подтвердить его. Можно пропустить этот шаг и добавить адрес позже или подтвердить его автоматически, когда специалист отправит вам запись об обслуживании.",
+  "signup.consent": "Я согласен(-на) получать записи об обслуживании и новости о моем доме.",
+  "signup.create": "Создать аккаунт",
+  "signup.creating": "Создаем аккаунт…",
+  "signup.haveAccount": "Уже есть аккаунт?",
+
+  "login.email.title": "С возвращением",
+  "login.email.sub": "Введите электронную почту, а мы позаботимся об остальном.",
+  "login.sent.title": "Проверьте почту",
+  "login.sent.sub": "Мы отправили вам ссылку для входа одним нажатием.",
+  "login.password.sub": "Введите пароль, чтобы войти.",
+  "login.noAccount.title": "Аккаунта пока нет",
+  "login.noAccount.sub": "Мы не нашли аккаунт с такой электронной почтой.",
+  "login.chooseRole.title": "Два аккаунта, одна электронная почта",
+  "login.chooseRole.sub": "Как вы хотите войти?",
+  "login.forgot.title": "Сброс пароля",
+  "login.forgot.sub": "Мы отправим вам ссылку для сброса пароля.",
+  "login.forgotSent.title": "Проверьте почту",
+  "login.forgotSent.sub": "Ссылка для сброса пароля уже в пути.",
+  "login.role.homeowner": "Домовладелец",
+  "login.role.pro": "Специалист",
+  "login.signInAs": "Войти как",
+  "login.continuePro": "Продолжить как специалист",
+  "login.continueHomeowner": "Продолжить как домовладелец",
+  "login.newHere": "Впервые здесь?",
+  "login.startFreePro": "Создать профиль",
+  "login.createHomeAccountLink": "создайте аккаунт своего дома",
+  "login.createHomeAccountBtn": "Создать аккаунт дома",
+  "login.forgotPassword": "Забыли пароль?",
+  "login.usePasswordInstead": "Войти с паролем",
+  "login.emailLinkInstead": "Отправить ссылку для входа по электронной почте",
+  "login.emailLink": "Отправить ссылку для входа",
+  "login.signInWithPassword": "Войти с паролем",
+  "login.sendReset": "Отправить ссылку для сброса",
+  "login.backToSignIn": "Вернуться ко входу",
+  "login.useDifferentEmail": "Использовать другую электронную почту",
+  "login.notYou": "Это не вы?",
+  "login.proSent.pre": "Мы отправили ссылку для входа одним нажатием на адрес ",
+  "login.proSent.post": ". Откройте ее — и вы войдете.",
+  "login.hoSent.pre": "Мы отправили ссылку для входа на адрес ",
+  "login.hoSent.post": ". Откройте ее — и вы войдете.",
+  "login.expiredLink": "Срок действия ссылки истек. Мы только что отправили новую.",
+  "login.noAccount.pre": "Для адреса ",
+  "login.noAccount.post": " пока ничего нет. Выберите, с чего начать:",
+  "login.forgotSent.pre": "Ссылка для сброса пароля отправлена на адрес ",
+  "login.forgotSent.post": ". Откройте ее, чтобы создать новый пароль.",
+  "login.footer": "Бесплатно для домовладельцев. Записи навсегда остаются вашими.",
+
+  "aside.eyebrow": "История дома",
+  "aside.headline1": "Дом, который",
+  "aside.headline2": "помнит всё о себе.",
+  "aside.sub":
+    "Каждый визит специалиста становится подтвержденной записью, которую ваш дом хранит навсегда.",
+
+  "lang.label": "Язык",
+
+  "pro.navigation": "Навигация специалиста",
+  "pro.nav.home": "Главная",
+  "pro.nav.customers": "Клиенты",
+  "pro.nav.records": "Записи",
+  "pro.nav.invoices": "Счета",
+  "pro.nav.due": "Пора обслужить",
+  "pro.nav.reviews": "Отзывы",
+  "pro.nav.referral": "Рекомендации",
+  "pro.nav.office": "Офис",
+  "pro.nav.settings": "Настройки",
+  "pro.logJob": "Записать работу",
+  "pro.back": "Назад",
+  "pro.review": "Проверить",
+  "pro.reviewAndSend": "Проверить и отправить",
+  "pro.backDashboard": "Вернуться на главную",
+  "pro.yourBusiness": "Ваша компания",
+  "pro.chargeJob": "Сумма за эту работу (необязательно)",
+  "pro.chargeHelp": "Оставьте поле пустым, если не выставляете счёт через приложение.",
+  "pro.askGoogleReview": "Попросить клиента оставить отзыв в Google после отправки",
+  "pro.recordSent": "Запись отправлена.",
+  "pro.saved": "Сохранено.",
+  "pro.showClaimQr": "Показать QR для подтверждения",
+  "pro.logAnother": "Записать ещё одну работу",
+  "pro.search.label": "Поиск клиентов и записей",
+  "pro.search.placeholder": "Найти клиента или запись…",
+  "pro.search.results": "Результаты поиска",
+  "pro.search.noMatches": "Ничего не найдено",
+  "pro.notifications": "Уведомления",
+  "pro.notificationsUnread": "непрочитанных",
+  "pro.notificationsEmpty":
+    "Пока ничего нет. Здесь появятся просмотры записей, подтверждения домов и запросы на связь.",
+  "pro.accountMenu": "Меню аккаунта",
+  "pro.account": "Аккаунт",
+  "pro.loading": "Загрузка",
+};
+
+const uk: Record<TKey, string> = {
+  "chrome.forHomeowners": "Для домовласників",
+  "chrome.homeowner": "Домовласник",
+  "chrome.signOut": "Вийти",
+  "nav.myHome": "Мій дім",
+  "nav.appliances": "Техніка",
+  "nav.myPros": "Мої фахівці",
+  "nav.reminders": "Нагадування",
+  "nav.settings": "Налаштування",
+  "nav.homeownerNavigation": "Навігація домовласника",
+  "nav.addToHome": "Додати до дому",
+  "nav.add": "Додати",
+
+  "auth.continueGoogle": "Продовжити з Google",
+  "auth.openingGoogle": "Відкриваємо Google…",
+  "auth.or": "або",
+  "auth.email": "Електронна пошта",
+  "auth.emailPlaceholder": "you@email.com",
+  "auth.password": "Пароль",
+  "auth.passwordPlaceholder": "Ваш пароль",
+  "auth.logIn": "Увійти",
+  "auth.signIn": "Увійти",
+
+  "signup.title": "Почніть вести історію свого дому",
+  "signup.subtitle": "Безкоштовно. Назавжди ваша. Без картки.",
+  "signup.finishing": "Завершуємо створення облікового запису…",
+  "signup.nameLabel": "Ваше ім’я (необов’язково)",
+  "signup.namePlaceholder": "Олексій",
+  "signup.passwordPlaceholder": "Щонайменше 8 символів",
+  "signup.addressLabel": "Адреса дому (необов’язково)",
+  "signup.addressPlaceholder": "Почніть вводити адресу…",
+  "signup.addressHelp":
+    "Виберіть адресу зі списку, щоб підтвердити її. Можна пропустити цей крок і додати адресу пізніше або підтвердити її автоматично, коли фахівець надішле вам запис про обслуговування.",
+  "signup.consent": "Я погоджуюся отримувати записи про обслуговування та новини про мій дім.",
+  "signup.create": "Створити обліковий запис",
+  "signup.creating": "Створюємо обліковий запис…",
+  "signup.haveAccount": "Уже маєте обліковий запис?",
+
+  "login.email.title": "З поверненням",
+  "login.email.sub": "Введіть електронну пошту, а ми подбаємо про решту.",
+  "login.sent.title": "Перевірте пошту",
+  "login.sent.sub": "Ми надіслали вам посилання для входу одним натисканням.",
+  "login.password.sub": "Введіть пароль, щоб увійти.",
+  "login.noAccount.title": "Облікового запису ще немає",
+  "login.noAccount.sub": "Ми не знайшли обліковий запис із такою електронною поштою.",
+  "login.chooseRole.title": "Два облікові записи, одна електронна пошта",
+  "login.chooseRole.sub": "Як ви хочете увійти?",
+  "login.forgot.title": "Скидання пароля",
+  "login.forgot.sub": "Ми надішлемо вам посилання для скидання пароля.",
+  "login.forgotSent.title": "Перевірте пошту",
+  "login.forgotSent.sub": "Посилання для скидання пароля вже в дорозі.",
+  "login.role.homeowner": "Домовласник",
+  "login.role.pro": "Фахівець",
+  "login.signInAs": "Увійти як",
+  "login.continuePro": "Продовжити як фахівець",
+  "login.continueHomeowner": "Продовжити як домовласник",
+  "login.newHere": "Ви тут уперше?",
+  "login.startFreePro": "Створити профіль",
+  "login.createHomeAccountLink": "створіть обліковий запис свого дому",
+  "login.createHomeAccountBtn": "Створити обліковий запис дому",
+  "login.forgotPassword": "Забули пароль?",
+  "login.usePasswordInstead": "Увійти з паролем",
+  "login.emailLinkInstead": "Надіслати посилання для входу електронною поштою",
+  "login.emailLink": "Надіслати посилання для входу",
+  "login.signInWithPassword": "Увійти з паролем",
+  "login.sendReset": "Надіслати посилання для скидання",
+  "login.backToSignIn": "Повернутися до входу",
+  "login.useDifferentEmail": "Використати іншу електронну пошту",
+  "login.notYou": "Це не ви?",
+  "login.proSent.pre": "Ми надіслали посилання для входу одним натисканням на адресу ",
+  "login.proSent.post": ". Відкрийте його — і ви ввійдете.",
+  "login.hoSent.pre": "Ми надіслали посилання для входу на адресу ",
+  "login.hoSent.post": ". Відкрийте його — і ви ввійдете.",
+  "login.expiredLink": "Термін дії посилання минув. Ми щойно надіслали нове.",
+  "login.noAccount.pre": "Для адреси ",
+  "login.noAccount.post": " ще нічого немає. Виберіть, з чого почати:",
+  "login.forgotSent.pre": "Посилання для скидання пароля надіслано на адресу ",
+  "login.forgotSent.post": ". Відкрийте його, щоб створити новий пароль.",
+  "login.footer": "Безкоштовно для домовласників. Записи назавжди залишаються вашими.",
+
+  "aside.eyebrow": "Історія дому",
+  "aside.headline1": "Дім, який",
+  "aside.headline2": "пам’ятає все про себе.",
+  "aside.sub": "Кожен візит фахівця стає підтвердженим записом, який ваш дім зберігає назавжди.",
+
+  "lang.label": "Мова",
+
+  "pro.navigation": "Навігація фахівця",
+  "pro.nav.home": "Головна",
+  "pro.nav.customers": "Клієнти",
+  "pro.nav.records": "Записи",
+  "pro.nav.invoices": "Рахунки",
+  "pro.nav.due": "Час обслуговування",
+  "pro.nav.reviews": "Відгуки",
+  "pro.nav.referral": "Рекомендації",
+  "pro.nav.office": "Офіс",
+  "pro.nav.settings": "Налаштування",
+  "pro.logJob": "Записати роботу",
+  "pro.back": "Назад",
+  "pro.review": "Перевірити",
+  "pro.reviewAndSend": "Перевірити й надіслати",
+  "pro.backDashboard": "Повернутися на головну",
+  "pro.yourBusiness": "Ваша компанія",
+  "pro.chargeJob": "Сума за цю роботу (необов’язково)",
+  "pro.chargeHelp": "Залиште поле порожнім, якщо не виставляєте рахунок через застосунок.",
+  "pro.askGoogleReview": "Попросити клієнта залишити відгук у Google після надсилання",
+  "pro.recordSent": "Запис надіслано.",
+  "pro.saved": "Збережено.",
+  "pro.showClaimQr": "Показати QR для підтвердження",
+  "pro.logAnother": "Записати ще одну роботу",
+  "pro.search.label": "Пошук клієнтів і записів",
+  "pro.search.placeholder": "Знайти клієнта або запис…",
+  "pro.search.results": "Результати пошуку",
+  "pro.search.noMatches": "Нічого не знайдено",
+  "pro.notifications": "Сповіщення",
+  "pro.notificationsUnread": "непрочитаних",
+  "pro.notificationsEmpty":
+    "Поки що нічого немає. Тут з’являться перегляди записів, підтвердження будинків і запити на зв’язок.",
+  "pro.accountMenu": "Меню облікового запису",
+  "pro.account": "Обліковий запис",
+  "pro.loading": "Завантаження",
+};
+
+const DICTS: Record<Locale, Partial<Record<TKey, string>>> = { en, es, ru, uk };
 
 /* ---- Context ----------------------------------------------------------- */
 
@@ -258,8 +584,15 @@ export function I18nProvider({
   );
 
   // Keep the document language attribute in sync for a11y and browser tools.
+  // Writing here also persists a locale supplied by an emailed `?lang=` URL
+  // after the first hydration, even when it already matched the SSR locale.
   useEffect(() => {
     document.documentElement.lang = locale;
+    try {
+      writeLocaleCookie(locale);
+    } catch {
+      /* cookies blocked: choice still applies for this page life */
+    }
   }, [locale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
@@ -286,33 +619,47 @@ export function useT(): (key: TKey) => string {
 
 /* ---- Language switcher ------------------------------------------------- */
 
-/* Compact segmented EN | ES control. Matches the pill chrome used across
-   the shells. Sits next to the theme/bell icon buttons. */
+/* Compact language menu. The trigger stays narrow enough for mobile headers,
+   while the menu exposes each language's full native name. */
 export function LanguageToggle({ className = "" }: { className?: string }) {
   const { locale, setLocale, t } = useI18n();
+  const current = LOCALES.find(({ code }) => code === locale) ?? LOCALES[0];
+
   return (
-    <div
-      role="group"
-      aria-label={t("lang.label")}
-      className={`flex items-center gap-0.5 rounded-full border border-line bg-soft p-0.5 ${className}`}
-    >
-      {LOCALES.map(({ code, short, label }) => {
-        const active = code === locale;
-        return (
-          <button
-            key={code}
-            type="button"
-            aria-pressed={active}
-            title={label}
-            onClick={() => setLocale(code)}
-            className={`pressable rounded-full px-2.5 py-1 text-xs font-bold tracking-wide transition-colors ${
-              active ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink"
-            }`}
-          >
-            {short}
-          </button>
-        );
-      })}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${t("lang.label")}: ${current.label}`}
+          title={current.label}
+          className={`pressable inline-flex h-8 items-center gap-1 rounded-full border border-line bg-soft px-2.5 text-xs font-bold tracking-wide text-ink transition-colors hover:bg-paper ${className}`}
+        >
+          {current.short}
+          <ChevronDown size={13} aria-hidden="true" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-40 rounded-xl border-line bg-paper p-1.5">
+        <DropdownMenuLabel className="px-2 py-1 text-xs text-muted">
+          {t("lang.label")}
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={locale}
+          onValueChange={(value) => {
+            if (isLocale(value)) setLocale(value);
+          }}
+        >
+          {LOCALES.map(({ code, short, label }) => (
+            <DropdownMenuRadioItem
+              key={code}
+              value={code}
+              className="cursor-pointer rounded-lg py-2 pl-8 pr-2 font-semibold focus:bg-soft focus:text-ink"
+            >
+              <span className="w-6 text-xs font-bold tracking-wide text-muted">{short}</span>
+              <span>{label}</span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

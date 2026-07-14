@@ -148,7 +148,7 @@ function ProHome() {
 
   if (loading || !pro) {
     return (
-      <ProShell pro={pro} active="home">
+      <ProShell pro={pro} active="home" hideMobileCta>
         <ProPageSkeleton variant="list" />
       </ProShell>
     );
@@ -163,7 +163,7 @@ function ProHome() {
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
 
   return (
-    <ProShell pro={pro} active="home">
+    <ProShell pro={pro} active="home" hideMobileCta>
       {/* Greeting */}
       <div className="anim-fade-up mb-2">
         <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{greeting}</h1>

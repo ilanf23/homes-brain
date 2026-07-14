@@ -2,10 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Field, Input, KV, PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent } from "@/lib/hb";
+import { formatDate, logEvent } from "@/lib/hb";
 import { queueCelebration } from "@/components/celebration";
+import { claimCopy } from "@/lib/customer-locales";
+import { isLocale, LanguageToggle, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/claim/$token")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    lang: isLocale(search.lang) ? search.lang : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Claim your home record - HomesBrain" },
@@ -40,9 +45,12 @@ type ExchangeResp = {
   intent?: string | null;
   first_name?: string | null;
   preview?: Preview;
+  locale?: unknown;
 };
 
 function ProHeader({ pro }: { pro: Preview["pro"] }) {
+  const { locale } = useI18n();
+  const copy = claimCopy(locale);
   const logoOk = pro?.logo && /^https:\/\//i.test(pro.logo);
   return (
     <div className="mb-6 flex items-center gap-3">
@@ -50,34 +58,43 @@ function ProHeader({ pro }: { pro: Preview["pro"] }) {
         <img src={pro!.logo!} alt={pro!.business} className="h-10 max-w-[220px] object-contain" />
       ) : (
         <div className="text-xl font-extrabold tracking-tight text-ink">
-          {pro?.business ?? "Your service pro"}
+          {pro?.business ?? copy.yourServicePro}
         </div>
       )}
-      <div className="ml-auto text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-        via HomesBrain
+      <div className="ml-auto flex items-center gap-2">
+        <div className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          {copy.via}
+        </div>
+        <LanguageToggle />
       </div>
     </div>
   );
 }
 
 function RecordPreview({ preview }: { preview: Preview }) {
+  const { locale } = useI18n();
+  const copy = claimCopy(locale);
   const eq = preview.equipment;
   const eqLine = [eq?.type, eq?.make, eq?.model].filter(Boolean).join(" ");
   return (
     <Card>
       <div className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo">
-        New service record
+        {copy.newServiceRecord}
       </div>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-ink">
-        {preview.pro?.business
-          ? `${preview.pro.business} added a record to your home`
-          : "A record was added to your home"}
+        {preview.pro?.business ? copy.recordAddedBy(preview.pro.business) : copy.recordAddedGeneric}
       </h1>
       <div className="mt-4 space-y-2">
-        {preview.address && <KV k="Address" v={preview.address} mono={false} />}
-        {preview.what_done && <KV k="Work done" v={preview.what_done} mono={false} />}
-        {eqLine && <KV k="Equipment" v={eqLine} mono={false} />}
-        {eq?.warranty_until && <KV k="Warranty" v={`Through ${eq.warranty_until}`} mono={false} />}
+        {preview.address && <KV k={copy.address} v={preview.address} mono={false} />}
+        {preview.what_done && <KV k={copy.workDone} v={preview.what_done} mono={false} />}
+        {eqLine && <KV k={copy.equipment} v={eqLine} mono={false} />}
+        {eq?.warranty_until && (
+          <KV
+            k={copy.warranty}
+            v={copy.through(formatDate(eq.warranty_until, locale))}
+            mono={false}
+          />
+        )}
       </div>
     </Card>
   );
@@ -85,7 +102,10 @@ function RecordPreview({ preview }: { preview: Preview }) {
 
 function ClaimByToken() {
   const { token } = Route.useParams();
+  const { lang } = Route.useSearch();
   const navigate = useNavigate();
+  const { locale, setLocale } = useI18n();
+  const copy = claimCopy(locale);
   const [phase, setPhase] = useState<"loading" | "need_email" | "claiming" | "error" | "done">(
     "loading",
   );
@@ -93,6 +113,14 @@ function ClaimByToken() {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (lang && lang !== locale) setLocale(lang);
+  }, [lang, locale, setLocale]);
+
+  function applyResponseLocale(resp: ExchangeResp) {
+    if (isLocale(resp.locale) && resp.locale !== locale) setLocale(resp.locale);
+  }
 
   const invokeExchange = useMemo(
     () =>
@@ -110,6 +138,7 @@ function ClaimByToken() {
   );
 
   async function finalize(resp: ExchangeResp) {
+    applyResponseLocale(resp);
     if (!resp.hashed_token) {
       setPhase("error");
       setErrorCode(resp.code ?? "error");
@@ -183,6 +212,7 @@ function ClaimByToken() {
     (async () => {
       const resp = await invokeExchange();
       if (cancelled || !resp) return;
+      applyResponseLocale(resp);
       if (resp.preview) setPreview(resp.preview);
       if (resp.ok) {
         await finalize(resp);
@@ -211,6 +241,7 @@ function ClaimByToken() {
       setPhase("error");
       return;
     }
+    applyResponseLocale(resp);
     if (resp.preview) setPreview(resp.preview);
     if (resp.ok) {
       await finalize(resp);
@@ -244,9 +275,7 @@ function ClaimByToken() {
             </>
           )}
           <div className="mt-6">
-            <PageLoader
-              label={phase === "claiming" ? "Setting up your home" : "Opening your record"}
-            />
+            <PageLoader label={phase === "claiming" ? copy.settingUp : copy.openingRecord} />
           </div>
         </div>
       </div>
@@ -261,15 +290,10 @@ function ClaimByToken() {
 
         {phase === "need_email" && (
           <Card className="mt-6">
-            <h2 className="text-lg font-extrabold tracking-tight text-ink">
-              Confirm your email to claim
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Enter the email your service pro has for you. We'll open your record and save this
-              home to your account.
-            </p>
+            <h2 className="text-lg font-extrabold tracking-tight text-ink">{copy.confirmTitle}</h2>
+            <p className="mt-1 text-sm text-muted">{copy.confirmBody}</p>
             <form onSubmit={submitEmail} className="mt-4 space-y-3">
-              <Field label="Email">
+              <Field label={copy.email}>
                 <Input
                   type="email"
                   autoFocus
@@ -280,7 +304,7 @@ function ClaimByToken() {
                 />
               </Field>
               <Btn type="submit" variant="indigo" disabled={submitting}>
-                {submitting ? "Opening…" : "Claim my home record"}
+                {submitting ? copy.opening : copy.claimRecord}
               </Btn>
             </form>
           </Card>
@@ -290,19 +314,21 @@ function ClaimByToken() {
           <Card className="mt-6">
             <h2 className="text-lg font-extrabold tracking-tight text-ink">
               {errorCode === "expired"
-                ? "This link has expired"
+                ? copy.expiredTitle
                 : errorCode === "used"
-                  ? "This link was already used"
-                  : "We couldn't open this link"}
+                  ? copy.usedTitle
+                  : copy.cannotOpenTitle}
             </h2>
             <p className="mt-1 text-sm text-muted">
               {errorCode === "used"
-                ? "For security, each claim link only works once. We can send a fresh one to your inbox."
-                : "Links expire after 7 days for security. Get a fresh one and we'll still take you straight to your record."}
+                ? copy.usedBody
+                : errorCode === "expired"
+                  ? copy.expiredBody
+                  : copy.cannotOpenBody}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Btn variant="indigo" onClick={requestFreshLink}>
-                Send a fresh link
+                {copy.freshLink}
               </Btn>
             </div>
           </Card>

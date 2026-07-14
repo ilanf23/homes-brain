@@ -18,7 +18,8 @@ declare const Deno: {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -30,21 +31,29 @@ function json(body: unknown, status = 200) {
 }
 
 async function sha256Hex(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(input),
+  );
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
     const body = await req.json().catch(() => ({}));
     const token = typeof body?.token === "string" ? body.token : "";
-    const providedEmail =
-      typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-    if (!token || token.length < 20) return json({ ok: false, code: "invalid" }, 400);
+    const providedEmail = typeof body?.email === "string"
+      ? body.email.trim().toLowerCase()
+      : "";
+    if (!token || token.length < 20) {
+      return json({ ok: false, code: "invalid" }, 400);
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -54,14 +63,28 @@ Deno.serve(async (req) => {
     const tokenHash = await sha256Hex(token);
     const { data: row } = await admin
       .from("claim_tokens")
-      .select("id,record_id,home_id,pro_id,email,expires_at,used_at,intent,first_name")
+      .select(
+        "id,record_id,home_id,pro_id,email,expires_at,used_at,intent,first_name,locale",
+      )
       .eq("token_hash", tokenHash)
       .maybeSingle();
 
     if (!row) return json({ ok: false, code: "invalid" }, 404);
-    if (row.used_at) return json({ ok: false, code: "used", record_id: row.record_id });
+    if (row.used_at) {
+      return json({
+        ok: false,
+        code: "used",
+        record_id: row.record_id,
+        locale: row.locale,
+      });
+    }
     if (new Date(row.expires_at).getTime() < Date.now()) {
-      return json({ ok: false, code: "expired", record_id: row.record_id });
+      return json({
+        ok: false,
+        code: "expired",
+        record_id: row.record_id,
+        locale: row.locale,
+      });
     }
 
     // Login-only token: no record to claim, just establish a session.
@@ -70,14 +93,27 @@ Deno.serve(async (req) => {
       // Load preview data even before finalizing, so the client can render.
       const { data: recordRow } = await admin
         .from("records")
-        .select("id,created_at,jobs(what_done,equipment_id,homes(address))")
+        .select(
+          "id,created_at,jobs(what_done,equipment_id,localized_content,homes(address))",
+        )
         .eq("id", row.record_id)
         .maybeSingle();
-      const job = (recordRow as unknown as {
-        jobs?: { what_done?: string; equipment_id?: string | null; homes?: { address?: string } };
-      } | null)?.jobs;
+      const job = (
+        recordRow as unknown as {
+          jobs?: {
+            what_done?: string;
+            equipment_id?: string | null;
+            localized_content?: Record<
+              string,
+              { what_done?: string; equipment_type?: string }
+            >;
+            homes?: { address?: string };
+          };
+        } | null
+      )?.jobs;
       const address = job?.homes?.address ?? null;
-      const whatDone = job?.what_done ?? null;
+      const localized = job?.localized_content?.[row.locale ?? "en"];
+      const whatDone = localized?.what_done ?? job?.what_done ?? null;
       const equipmentId = job?.equipment_id ?? null;
       let equipment: {
         type: string | null;
@@ -91,10 +127,18 @@ Deno.serve(async (req) => {
           .select("type,make,model,warranty_until")
           .eq("id", equipmentId)
           .maybeSingle();
-        if (eq) equipment = eq;
+        if (eq) {
+          equipment = {
+            ...eq,
+            type: localized?.equipment_type ?? eq.type,
+          };
+        }
       }
       const { data: pro } = row.pro_id
-        ? await admin.from("pros").select("id,business,logo").eq("id", row.pro_id).maybeSingle()
+        ? await admin.from("pros").select("id,business,logo").eq(
+          "id",
+          row.pro_id,
+        ).maybeSingle()
         : { data: null };
 
       preview = {
@@ -109,21 +153,30 @@ Deno.serve(async (req) => {
 
     // If the token has no email, ask for it (one-time capture path).
     const email = row.email ?? providedEmail;
-    if (!email) return json({ ok: false, code: "need_email", preview });
-
+    if (!email) {
+      return json({
+        ok: false,
+        code: "need_email",
+        preview,
+        locale: row.locale,
+      });
+    }
 
     // Mint a magic credential without a visible supabase.co redirect.
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
+    const { data: linkData, error: linkErr } = await admin.auth.admin
+      .generateLink({
+        type: "magiclink",
+        email,
+      });
     if (linkErr || !linkData?.properties?.hashed_token) {
       console.error("claim-exchange generateLink failed", linkErr);
       return json({ ok: false, code: "send_failed" }, 502);
     }
 
     // Single-use: mark consumed before returning the credential.
-    await admin.from("claim_tokens").update({ used_at: new Date().toISOString() }).eq("id", row.id);
+    await admin.from("claim_tokens").update({
+      used_at: new Date().toISOString(),
+    }).eq("id", row.id);
 
     return json({
       ok: true,
@@ -132,6 +185,7 @@ Deno.serve(async (req) => {
       record_id: row.record_id,
       intent: row.intent ?? null,
       first_name: row.first_name ?? null,
+      locale: row.locale ?? "en",
       preview,
     });
   } catch (e) {

@@ -45,8 +45,8 @@ export function isOverdue(inv: Pick<Invoice, "status" | "due_date">) {
   return new Date(inv.due_date + "T23:59:59") < new Date();
 }
 
-export function formatMoney(n: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+export function formatMoney(n: number, locale = "en-US") {
+  return new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(n);
 }
 
 export async function listInvoicesForPro(proId: string): Promise<ProInvoice[]> {

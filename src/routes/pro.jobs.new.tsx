@@ -52,6 +52,8 @@ import {
   TradeFieldInputs,
   type AttributeValues,
 } from "@/components/trade-field-inputs";
+import { LanguageToggle, LOCALES, isLocale, useI18n, useT, type Locale } from "@/lib/i18n";
+import { customerPreviewCopy } from "@/lib/customer-locales";
 
 export const Route = createFileRoute("/pro/jobs/new")({
   head: () => ({ meta: [{ title: "Log a job - HomesBrain" }] }),
@@ -64,6 +66,7 @@ type CustomerOpt = {
   name: string;
   phone: string | null;
   email: string | null;
+  preferred_locale: Locale;
   home_id: string;
   homes: {
     address: string;
@@ -256,6 +259,9 @@ function ReviewEditor({
 
 function NewJob() {
   const navigate = useNavigate();
+  const t = useT();
+  const { locale: uiLocale } = useI18n();
+  const uiCopy = customerPreviewCopy(uiLocale);
   const { proId, pro } = useProGuard();
   const proName = pro?.business ?? "";
   const proTrade = pro?.trade ?? "";
@@ -267,6 +273,16 @@ function NewJob() {
   const [existing, setExisting] = useState<CustomerOpt[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [newCustomer, setNewCustomer] = useState({ name: "", address: "", phone: "", email: "" });
+  const [customerLocale, setCustomerLocale] = useState<Locale>("en");
+  const [translatedRecord, setTranslatedRecord] = useState<{
+    whatDone: string | null;
+    equipmentType: string | null;
+  } | null>(null);
+  const [translationState, setTranslationState] = useState<"idle" | "loading" | "ready" | "failed">(
+    "idle",
+  );
+  const [deliveryLocale, setDeliveryLocale] = useState<Locale>("en");
+  const [translationFallback, setTranslationFallback] = useState(false);
 
   const [query, setQuery] = useState("");
 
@@ -434,7 +450,7 @@ function NewJob() {
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address,lat,lng,geocoded_at)")
+        .select("id,name,phone,email,preferred_locale,home_id,homes(address,lat,lng,geocoded_at)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       const rows = (c ?? []) as unknown as CustomerOpt[];
@@ -728,6 +744,52 @@ function NewJob() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [whatDone, dictation.listening, stage]);
 
+  /* The Review card is also the customer-message preview. Fixed labels switch
+     immediately; dynamic record fields are translated once and reused by the
+     send function so the delivered email matches what the pro reviewed. */
+  useEffect(() => {
+    if (stage !== "review") return;
+    if (customerLocale === "en") {
+      setTranslatedRecord(null);
+      setTranslationState("ready");
+      return;
+    }
+
+    let cancelled = false;
+    setTranslatedRecord(null);
+    setTranslationState("loading");
+    const timer = window.setTimeout(async () => {
+      const { data, error } = await supabase.functions.invoke("translate-record", {
+        body: {
+          target_locale: customerLocale,
+          what_done: whatDone,
+          equipment_type: eqType || null,
+        },
+      });
+      if (cancelled) return;
+      const response = data as {
+        ok?: boolean;
+        locale?: string;
+        what_done?: string | null;
+        equipment_type?: string | null;
+      } | null;
+      if (error || response?.ok !== true || response.locale !== customerLocale) {
+        setTranslationState("failed");
+        return;
+      }
+      setTranslatedRecord({
+        whatDone: response.what_done ?? null,
+        equipmentType: response.equipment_type ?? null,
+      });
+      setTranslationState("ready");
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [customerLocale, eqType, stage, whatDone]);
+
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
   const previewName = reviewName ?? selectedCustomer?.name ?? newCustomer.name;
@@ -738,6 +800,10 @@ function NewJob() {
   const missingReviewEmail = !trimmedReviewEmail;
   const reviewRequiredComplete =
     !missingReviewAddress && !missingReviewEmail && !reviewEmailInvalid;
+  const effectiveCustomerLocale: Locale = translationState === "failed" ? "en" : customerLocale;
+  const customerCopy = customerPreviewCopy(effectiveCustomerLocale);
+  const previewWork = translatedRecord?.whatDone ?? whatDone;
+  const previewEquipmentType = translatedRecord?.equipmentType ?? eqType;
 
   // Slide-1 combobox: filter existing by name/address, offer create-new inline.
   const q = query.trim().toLowerCase();
@@ -783,6 +849,7 @@ function NewJob() {
     setSelectedCustomerId(c.id);
     setReviewName(c.name);
     setReviewEmail(c.email ?? "");
+    setCustomerLocale(isLocale(c.preferred_locale) ? c.preferred_locale : "en");
     const onFile = c.homes?.address ?? "";
     addressTouched.current = false;
     // An existing customer's saved home is the source of truth. GPS is only a
@@ -808,6 +875,7 @@ function NewJob() {
     setSelectedCustomerId("");
     setReviewName(name);
     setReviewEmail("");
+    setCustomerLocale("en");
     addressTouched.current = false;
     setNewCustomer((n) => ({
       ...n,
@@ -1004,9 +1072,16 @@ function NewJob() {
       const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
         body: {
           customer_id: customerId,
-          pro_id: proId,
           origin: window.location.origin,
           record_id: recordId,
+          locale: customerLocale,
+          translations:
+            translationState === "ready" && customerLocale !== "en"
+              ? {
+                  what_done: translatedRecord?.whatDone ?? null,
+                  equipment_type: translatedRecord?.equipmentType ?? null,
+                }
+              : null,
         },
       });
       const ok = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
@@ -1024,12 +1099,16 @@ function NewJob() {
         .from("records")
         .update({ sent_email_at: new Date().toISOString() })
         .eq("id", recordId);
+      const localeUsed = isLocale((sendResp as { locale_used?: unknown }).locale_used)
+        ? (sendResp as { locale_used: Locale }).locale_used
+        : "en";
       const { data: qr } = await supabase.functions.invoke("claim-qr", {
         body: {
           customer_id: customerId,
           pro_id: proId,
           record_id: recordId,
           origin: window.location.origin,
+          locale: localeUsed,
         },
       });
       const claimUrl =
@@ -1038,7 +1117,13 @@ function NewJob() {
         typeof (qr as { claim_url?: string }).claim_url === "string"
           ? (qr as { claim_url: string }).claim_url
           : null;
-      return { ok: true as const, claimUrl };
+      return {
+        ok: true as const,
+        claimUrl,
+        localeUsed,
+        translationFallback:
+          (sendResp as { translation_fallback?: unknown }).translation_fallback === true,
+      };
     } catch {
       return { ok: false as const, code: "send_failed" };
     }
@@ -1102,10 +1187,13 @@ function NewJob() {
       toName = finalName;
       emailAddr = finalEmail;
       phoneAddr = c.phone?.trim() ?? "";
-      const customerUpdates: { name?: string; email?: string } = {};
+      const customerUpdates: { name?: string; email?: string; preferred_locale?: Locale } = {};
       if (finalName !== c.name.trim()) customerUpdates.name = finalName;
       if (finalEmail !== (c.email?.trim().toLowerCase() ?? "")) {
         customerUpdates.email = finalEmail;
+      }
+      if (customerLocale !== (isLocale(c.preferred_locale) ? c.preferred_locale : "en")) {
+        customerUpdates.preferred_locale = customerLocale;
       }
       if (Object.keys(customerUpdates).length) {
         const { error: customerUpdateErr } = await supabase
@@ -1181,6 +1269,7 @@ function NewJob() {
           email: finalEmail,
           consent_at: new Date().toISOString(),
           consent_ref: `web_form_${Date.now()}`,
+          preferred_locale: customerLocale,
         })
         .select("id")
         .single();
@@ -1200,6 +1289,7 @@ function NewJob() {
         name: finalName,
         phone: phoneAddr || null,
         email: finalEmail,
+        preferred_locale: customerLocale,
         home_id: homeId,
         homes: {
           address: finalAddress,
@@ -1366,10 +1456,16 @@ function NewJob() {
     }
 
     let delivered = false;
+    let localeUsed: Locale = "en";
+    let fellBack = false;
     if (emailAddr) {
       const delivery = await deliverRecord(customerId, rec.id);
       if (delivery.ok) {
         delivered = true;
+        localeUsed = delivery.localeUsed;
+        fellBack = delivery.translationFallback;
+        setDeliveryLocale(localeUsed);
+        setTranslationFallback(fellBack);
         if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
       } else {
         setSendErrorCode(delivery.code);
@@ -1378,11 +1474,19 @@ function NewJob() {
 
     if (delivered) {
       setDeliveryState("sent");
-      await logEvent(`pro:${proId}`, "record_sent", { record_id: rec.id });
+      await logEvent(`pro:${proId}`, "record_sent", {
+        record_id: rec.id,
+        requested_locale: customerLocale,
+        locale_used: localeUsed,
+        translation_fallback: fellBack,
+      });
       // Google review ask: only fires on a real delivery, so the Reviews page
       // count reflects reality. No mock SMS - texting is not live yet.
       if (askReview) {
-        await logEvent(`pro:${proId}`, "review_requested", { customer_id: customerId });
+        await logEvent(`pro:${proId}`, "review_requested", {
+          customer_id: customerId,
+          locale: localeUsed,
+        });
       }
     } else if (emailAddr) {
       setDeliveryState("send_failed");
@@ -1399,7 +1503,11 @@ function NewJob() {
     setSubmitting(false);
     setStage("done");
     if (delivered) {
-      setToast(`Sent to ${emailAddr}`);
+      setToast(
+        fellBack
+          ? `Sent to ${emailAddr} in English because translation was unavailable.`
+          : `Sent to ${emailAddr}`,
+      );
     } else {
       setToast("Job saved");
     }
@@ -1432,15 +1540,29 @@ function NewJob() {
       return;
     }
     if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
+    setDeliveryLocale(delivery.localeUsed);
+    setTranslationFallback(delivery.translationFallback);
     setSentTo((prev) => ({ ...prev, email }));
     setSendErrorCode(null);
     setDeliveryState("sent");
-    await logEvent(`pro:${proId}`, "record_sent", { record_id: sentRecordId });
+    await logEvent(`pro:${proId}`, "record_sent", {
+      record_id: sentRecordId,
+      requested_locale: customerLocale,
+      locale_used: delivery.localeUsed,
+      translation_fallback: delivery.translationFallback,
+    });
     if (askReview) {
-      await logEvent(`pro:${proId}`, "review_requested", { customer_id: sentCustomerId });
+      await logEvent(`pro:${proId}`, "review_requested", {
+        customer_id: sentCustomerId,
+        locale: delivery.localeUsed,
+      });
     }
     setRetrying(false);
-    setToast(`Sent to ${email}`);
+    setToast(
+      delivery.translationFallback
+        ? `Sent to ${email} in English because translation was unavailable.`
+        : `Sent to ${email}`,
+    );
     setTimeout(() => setToast(null), 3500);
   }
 
@@ -1475,7 +1597,7 @@ function NewJob() {
     if (proId) {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,home_id,homes(address,lat,lng)")
+        .select("id,name,phone,email,preferred_locale,home_id,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
@@ -1511,6 +1633,11 @@ function NewJob() {
     setReviewEdit(null);
     setReviewName(null);
     setReviewEmail("");
+    setCustomerLocale("en");
+    setTranslatedRecord(null);
+    setTranslationState("idle");
+    setDeliveryLocale("en");
+    setTranslationFallback(false);
     setHiddenFields(new Set());
     setClaimUrl(null);
     setDeliveryState("no_contact");
@@ -1610,7 +1737,7 @@ function NewJob() {
   if (!proId) {
     return (
       <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
-        Loading…
+        {t("pro.loading")}…
       </div>
     );
   }
@@ -1622,7 +1749,10 @@ function NewJob() {
           <Link to="/pro" className="flex items-center gap-2.5 group">
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
-          <Pill accent="indigo">Log a job</Pill>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <Pill accent="indigo">{t("pro.logJob")}</Pill>
+          </div>
         </div>
       </header>
 
@@ -1634,7 +1764,7 @@ function NewJob() {
               className="mb-6 inline-flex items-center gap-2 text-xl font-extrabold tracking-tight text-indigo transition-colors hover:text-indigodark"
             >
               <span aria-hidden>&larr;</span>
-              Back to dashboard
+              {t("pro.backDashboard")}
             </Link>
             {(() => {
               // Existing-customer flow skips the standalone location step, so
@@ -1657,7 +1787,7 @@ function NewJob() {
                   ? "Where's the job?"
                   : stage === "work"
                     ? "What did you do?"
-                    : "Review and send"}
+                    : t("pro.reviewAndSend")}
             </h1>
           </div>
         )}
@@ -2197,7 +2327,7 @@ function NewJob() {
                     variant="secondary"
                     onClick={() => setStage(selectedCustomerId ? "customer" : "location")}
                   >
-                    Back
+                    {t("pro.back")}
                   </Btn>
                   <Btn
                     variant="indigo"
@@ -2206,7 +2336,7 @@ function NewJob() {
                     disabled={!canWork}
                     onClick={() => setStage("review")}
                   >
-                    Review
+                    {t("pro.review")}
                   </Btn>
                 </div>
               </Card>
@@ -2214,7 +2344,7 @@ function NewJob() {
 
             {stage === "review" && (
               <div className="space-y-4">
-                <p className="px-2 text-center text-sm text-muted">Review and send.</p>
+                <p className="px-2 text-center text-sm text-muted">{t("pro.reviewAndSend")}.</p>
 
                 {!reviewRequiredComplete && (
                   <div
@@ -2244,10 +2374,58 @@ function NewJob() {
                     <Avatar name={proName || "?"} accent="indigo" size={44} />
                     <div className="min-w-0">
                       <div className="truncate font-extrabold text-ink">
-                        {proName || "Your business"}
+                        {proName || t("pro.yourBusiness")}
                       </div>
                       <div className="text-xs text-muted">{tradeLabel(proTrade)}</div>
                     </div>
+                  </div>
+
+                  <div className="mt-5 border-t border-line pt-4">
+                    <label
+                      htmlFor="customer-language"
+                      className="block text-sm font-semibold text-ink"
+                    >
+                      {uiCopy.language}
+                    </label>
+                    <Select
+                      id="customer-language"
+                      value={customerLocale}
+                      onChange={(event) => {
+                        if (isLocale(event.target.value)) setCustomerLocale(event.target.value);
+                      }}
+                      className="mt-2"
+                    >
+                      {LOCALES.map(({ code, label }) => (
+                        <option key={code} value={code}>
+                          {label}
+                        </option>
+                      ))}
+                    </Select>
+                    <p className="mt-1.5 text-xs text-muted">{uiCopy.languageHelp}</p>
+                    {translationState === "loading" && (
+                      <div
+                        className="mt-3 flex items-center gap-2 text-sm text-muted"
+                        role="status"
+                      >
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-indigo" />
+                        {uiCopy.translating}
+                      </div>
+                    )}
+                    {translationState === "failed" && (
+                      <div
+                        className="mt-3 flex items-start gap-2 rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-sm text-ink"
+                        role="status"
+                      >
+                        <AlertTriangle
+                          size={17}
+                          className="mt-0.5 shrink-0 text-amber"
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <strong>{uiCopy.fallbackTitle}.</strong> {uiCopy.fallbackBody}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div
@@ -2257,7 +2435,9 @@ function NewJob() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold tracking-tight">Service record</h3>
+                        <h3 className="text-lg font-semibold tracking-tight">
+                          {customerCopy.serviceRecord}
+                        </h3>
                         <div
                           className={`mt-0.5 text-xs ${
                             missingReviewAddress ? "font-semibold text-red" : "text-muted"
@@ -2314,7 +2494,7 @@ function NewJob() {
 
                   <div className="mt-2">
                     <RecordRow
-                      label="Customer"
+                      label={customerCopy.customer}
                       value={previewName || "Customer"}
                       included={!hiddenFields.has(FIELD_CUSTOMER)}
                       onToggle={() => toggleField(FIELD_CUSTOMER)}
@@ -2334,8 +2514,8 @@ function NewJob() {
                     )}
                     {eqType && (
                       <RecordRow
-                        label="Equipment"
-                        value={eqType}
+                        label={customerCopy.equipment}
+                        value={previewEquipmentType}
                         included={!hiddenFields.has(FIELD_EQUIPMENT)}
                         onToggle={() => toggleField(FIELD_EQUIPMENT)}
                         onEdit={() => setReviewEdit("equipment")}
@@ -2343,7 +2523,7 @@ function NewJob() {
                     )}
                     {(eqMake || eqModel) && (
                       <RecordRow
-                        label="Make / Model"
+                        label={customerCopy.makeModel}
                         value={[eqMake, eqModel].filter(Boolean).join(" · ")}
                         included={!hiddenFields.has(FIELD_MAKE_MODEL)}
                         onToggle={() => toggleField(FIELD_MAKE_MODEL)}
@@ -2356,8 +2536,8 @@ function NewJob() {
                       </ReviewEditor>
                     )}
                     <RecordRow
-                      label="Work done"
-                      value={whatDone || "-"}
+                      label={customerCopy.workDone}
+                      value={previewWork || "-"}
                       included={!hiddenFields.has(FIELD_WORK_DONE)}
                       onToggle={() => toggleField(FIELD_WORK_DONE)}
                       onEdit={() => setReviewEdit("work")}
@@ -2379,7 +2559,7 @@ function NewJob() {
                     )}
                     {nextService && (
                       <RecordRow
-                        label="Next service"
+                        label={customerCopy.nextService}
                         value={formatDate(nextService)}
                         included={!hiddenFields.has(FIELD_NEXT_SERVICE)}
                         onToggle={() => toggleField(FIELD_NEXT_SERVICE)}
@@ -2401,12 +2581,8 @@ function NewJob() {
 
                   <div className="mt-5 border-t border-line pt-4">
                     <Field
-                      label="Customer email *"
-                      hint={
-                        reviewEmailInvalid
-                          ? "Enter a valid email address."
-                          : "The service record will be sent here."
-                      }
+                      label={uiCopy.email}
+                      hint={reviewEmailInvalid ? uiCopy.emailInvalid : uiCopy.emailHelp}
                     >
                       <Input
                         type="email"
@@ -2430,7 +2606,7 @@ function NewJob() {
                       so the homeowner can pay it from /home. */}
                   <div className="mt-5 border-t border-line pt-4">
                     <label htmlFor="charge-amount" className="block text-sm font-semibold text-ink">
-                      Charge for this job (optional)
+                      {t("pro.chargeJob")}
                     </label>
                     <div className="mt-2 relative">
                       <span
@@ -2451,9 +2627,7 @@ function NewJob() {
                         className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-2xl font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
                       />
                     </div>
-                    <p className="mt-1.5 text-xs text-muted">
-                      Leave blank if you're not billing through the app.
-                    </p>
+                    <p className="mt-1.5 text-xs text-muted">{t("pro.chargeHelp")}</p>
                   </div>
 
                   {/* Google review ask: a checkmark in the same box, styled as an
@@ -2467,23 +2641,25 @@ function NewJob() {
                     >
                       <CheckSquare on={askReview} />
                       <span className={askReview ? "text-ink" : "text-muted"}>
-                        Ask customer for a Google review after sending
+                        {t("pro.askGoogleReview")}
                       </span>
                     </button>
 
                     <div className="mt-3 flex gap-2">
                       <Btn variant="secondary" onClick={() => setStage("work")}>
-                        Back
+                        {t("pro.back")}
                       </Btn>
                       <Btn
                         variant="indigo"
                         size="lg"
                         className="flex-1"
                         loading={submitting}
-                        disabled={!reviewRequiredComplete || submitting}
+                        disabled={
+                          !reviewRequiredComplete || submitting || translationState === "loading"
+                        }
                         onClick={submit}
                       >
-                        Send record
+                        {uiCopy.sendRecord}
                       </Btn>
                     </div>
                     <div className="mt-3 text-xs text-muted">
@@ -2500,13 +2676,24 @@ function NewJob() {
                 {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
                 {deliveryState === "sent" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">Record sent.</h2>
+                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.recordSent")}</h2>
                     <p className="mt-2 text-sm text-muted">Sent to {sentTo.email}.</p>
+                    {translationFallback && (
+                      <div className="mx-auto mt-4 max-w-md rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-sm text-ink">
+                        Translation was unavailable, so this message and its linked pages were sent
+                        in English.
+                      </div>
+                    )}
+                    {!translationFallback && deliveryLocale !== "en" && (
+                      <p className="mt-2 text-xs font-semibold text-indigo">
+                        Sent in {LOCALES.find(({ code }) => code === deliveryLocale)?.label}.
+                      </p>
+                    )}
                   </>
                 )}
                 {deliveryState === "phone_only" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.saved")}</h2>
                     <p className="mt-2 text-sm text-muted">
                       We can't reach {sentTo.name || "your customer"} yet. SMS delivery is coming.
                       Add an email to send the record now, or show the QR.
@@ -2533,7 +2720,7 @@ function NewJob() {
                 )}
                 {deliveryState === "no_contact" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.saved")}</h2>
                     <p className="mt-2 text-sm text-muted">
                       No way to reach {sentTo.name || "your customer"} yet. Add an email to send
                       their record.
@@ -2560,7 +2747,7 @@ function NewJob() {
                 )}
                 {deliveryState === "send_failed" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">Saved.</h2>
+                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.saved")}</h2>
                     <p className="mt-2 text-sm text-muted">
                       We couldn't deliver the record to {sentTo.email || "the customer"}.{" "}
                       {deliveryErrorMessage(sendErrorCode)}
@@ -2604,14 +2791,14 @@ function NewJob() {
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
                   {sentCustomerId && sentRecordId && (
                     <Btn variant="secondary" onClick={() => setQrOpen(true)}>
-                      <QrCode size={15} /> Show claim QR
+                      <QrCode size={15} /> {t("pro.showClaimQr")}
                     </Btn>
                   )}
                   <Btn variant="indigo" onClick={logAnother}>
-                    Log another
+                    {t("pro.logAnother")}
                   </Btn>
                   <Link to="/pro">
-                    <Btn variant="secondary">Back to dashboard</Btn>
+                    <Btn variant="secondary">{t("pro.backDashboard")}</Btn>
                   </Link>
                 </div>
               </Card>

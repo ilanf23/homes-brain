@@ -9,9 +9,12 @@ verify_jwt = false
 [functions.extract-job]
 verify_jwt = false
 
-# invite-claim runs unauthenticated because v0 uses mocked sessions (no real
-# Supabase JWT). It validates the caller by requiring pro_id and confirming
-# the customer belongs to that pro before sending.
+# Authenticated in-function so current publishable/asymmetric key formats work.
+[functions.translate-record]
+verify_jwt = false
+
+# Gateway verification stays off for current key compatibility; the function
+# validates the session JWT in-handler and derives the caller's pro row.
 [functions.invite-claim]
 verify_jwt = false
 
@@ -44,8 +47,7 @@ verify_jwt = false
 
 # claim-qr mints a short-lived (20-min) single-use claim token and returns
 # the branded /claim/:token URL so the pro can render it as a QR on-screen.
-# Same rationale as invite-claim: mocked sessions in v0, so we validate the
-# caller by pro_id + customer ownership server-side.
+# Same in-handler authenticated-pro pattern as invite-claim.
 [functions.claim-qr]
 verify_jwt = false
 

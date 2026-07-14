@@ -761,7 +761,7 @@ function RoleToggle({
   return (
     <div
       role="tablist"
-      aria-label="Sign in as"
+      aria-label={t("login.signInAs")}
       className="flex items-center gap-1 rounded-full border border-line bg-soft p-1"
     >
       <button

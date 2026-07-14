@@ -7,7 +7,12 @@ import { getRequest } from "@tanstack/react-start/server";
 import { LOCALE_COOKIE, isLocale, type Locale } from "./i18n";
 
 export const getLocaleServerFn = createServerFn({ method: "GET" }).handler((): Locale => {
-  const cookie = getRequest()?.headers.get("cookie") ?? "";
+  const request = getRequest();
+  if (request) {
+    const queryLocale = new URL(request.url).searchParams.get("lang");
+    if (isLocale(queryLocale)) return queryLocale;
+  }
+  const cookie = request?.headers.get("cookie") ?? "";
   const match = cookie.match(new RegExp(`(?:^|;\\s*)${LOCALE_COOKIE}=([^;]+)`));
   const value = match?.[1];
   return isLocale(value) ? value : "en";
