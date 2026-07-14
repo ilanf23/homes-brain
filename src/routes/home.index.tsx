@@ -313,6 +313,7 @@ function ActivityCard({
   pros: ReturnType<typeof useHomeownerGuard>["pros"];
   onView: (recordId: string) => void | Promise<void>;
 }) {
+  const t = useT();
   const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const rows: FeedRow[] = useMemo(() => {
@@ -329,8 +330,8 @@ function ActivityCard({
           key: `r-${r.id}`,
           href: { to: "/home/records/$recordId" as const, params: { recordId: r.id } },
           onTap: !r.viewed_at ? () => onView(r.id) : undefined,
-          proName: pro?.business ?? "Your pro",
-          what: j?.what_done ?? "New service record",
+          proName: pro?.business ?? t("hi.yourPro"),
+          what: j?.what_done ?? t("hi.serviceRecord"),
           when: formatDate(r.created_at),
           isNew: !r.viewed_at,
         };
@@ -347,30 +348,28 @@ function ActivityCard({
           href: j.equipment_id
             ? { to: "/home/items/$itemId" as const, params: { itemId: j.equipment_id } }
             : null,
-          proName: pro?.business ?? "Your pro",
-          what: j.what_done ?? "Service visit",
+          proName: pro?.business ?? t("hi.yourPro"),
+          what: j.what_done ?? t("hi.serviceVisit"),
           when: formatDate(j.created_at),
           isNew: false,
         };
       });
     return [...fromRecords, ...fromJobs].slice(0, 8);
-  }, [records, jobs, jobById, proById, onView]);
+  }, [records, jobs, jobById, proById, onView, t]);
 
   return (
     <Card className="anim-fade-up d-1">
       <div className="flex items-center justify-between">
-        <Eyebrow accent="indigo">Recent activity</Eyebrow>
+        <Eyebrow accent="indigo">{t("hi.recentActivity")}</Eyebrow>
         <Link
           to="/home/pros"
           className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
         >
-          See all
+          {t("hi.seeAll")}
         </Link>
       </div>
       {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">
-          Nothing yet. When your pros log a job, it'll show up here.
-        </p>
+        <p className="mt-3 text-sm text-muted">{t("hi.recentEmpty")}</p>
       ) : (
         <div className="mt-3 space-y-2">
           {rows.map((row) => {
