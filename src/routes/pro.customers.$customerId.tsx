@@ -435,7 +435,7 @@ function CustomerDetail() {
     );
   }
 
-  if (pro.plan !== "pro") {
+  if (SHOW_ADVANCED && pro.plan !== "pro") {
     return (
       <ProShell pro={pro} active="customers">
         <PlanLock
@@ -445,6 +445,7 @@ function CustomerDetail() {
       </ProShell>
     );
   }
+
 
 
   if (!customer) {
