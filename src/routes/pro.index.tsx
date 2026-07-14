@@ -1,14 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MapPin, ChevronRight, Plus, ChevronDown, Check } from "lucide-react";
 import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, isGoogleUrl, recordTitle } from "@/lib/hb";
-import { track } from "@/lib/events";
+import { formatDate, isGoogleUrl } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
-import { pluralForm, useI18n, useT, type TKey } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/pro/")({
   head: () => ({ meta: [{ title: "HomesBrain" }] }),
@@ -31,54 +30,33 @@ type FollowUpRow = {
   address: string | null;
 };
 
-function greetingKey(): TKey {
+function timeOfDayGreetingKey(): "pi.greeting.morning" | "pi.greeting.afternoon" | "pi.greeting.evening" {
   const h = new Date().getHours();
-  if (h < 12) return "dash.greet.morning";
-  if (h < 18) return "dash.greet.afternoon";
-  return "dash.greet.evening";
+  if (h < 12) return "pi.greeting.morning";
+  if (h < 18) return "pi.greeting.afternoon";
+  return "pi.greeting.evening";
 }
 
-function dueLabel(iso: string): { text: string; tone: "red" | "amber" | "indigo" } {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(`${iso}T00:00:00`);
-  const diffDays = Math.round((target.getTime() - now.getTime()) / DAY);
-  if (diffDays < 0) {
-    const n = -diffDays;
-    return {
-      text: `Overdue by ${n} day${n === 1 ? "" : "s"}`,
-      tone: "red",
-    };
-  }
-  if (diffDays === 0) return { text: "Due today", tone: "amber" };
-  if (diffDays === 1) return { text: "Due tomorrow", tone: "amber" };
-  if (diffDays <= 14) return { text: `Due in ${diffDays} days`, tone: "amber" };
-  if (diffDays <= 60) {
-    const weeks = Math.round(diffDays / 7);
-    return { text: `Due in ${weeks} week${weeks === 1 ? "" : "s"}`, tone: "indigo" };
-  }
-  const months = Math.round(diffDays / 30);
-  return { text: `Due in ${months} month${months === 1 ? "" : "s"}`, tone: "indigo" };
-}
 
-function addMonthsIso(months: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().slice(0, 10);
-}
+
+
+type CustomerBucketRow = {
+  customerId: string;
+  name: string;
+  date: string | null;
+};
 
 function ProHome() {
+  const t = useT();
   const { proId, pro } = useProGuard();
-  const { locale, t } = useI18n();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<FollowUpRow[]>([]);
   const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
   const [locationText, setLocationText] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [sheetFor, setSheetFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!proId) return;
@@ -149,96 +127,42 @@ function ProHome() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const needsDecision = useMemo(
-    () => rows.filter((r) => !r.next_service_date),
-    [rows],
-  );
-  const dated = useMemo(
-    () =>
-      rows
-        .filter((r) => !!r.next_service_date)
-        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1)),
-    [rows],
-  );
-
-  function removeRow(id: string) {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-  }
-
-  async function saveFollowUpDate(row: FollowUpRow, iso: string) {
-    if (!iso) return;
-    setBusy(row.id);
-    const { error } = await supabase
-      .from("jobs")
-      .update({ next_service_date: iso })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast(t("dash.toast.dateFailed"));
-      return;
-    }
-    setRows((prev) =>
-      prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
-    );
-    setSheetFor(null);
-    setToast(t("dash.toast.scheduled"));
-  }
-
-  async function markNoFollowUp(row: FollowUpRow) {
-    setBusy(row.id);
-    const { error } = await supabase
-      .from("jobs")
-      .update({ no_follow_up: true })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast(t("dash.toast.updateFailed"));
-      return;
-    }
-    removeRow(row.id);
-    setToast(t("dash.toast.noFollowUp"));
-  }
-
-  async function markDone(row: FollowUpRow) {
-    setBusy(row.id);
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from("jobs")
-      .update({ follow_up_handled_at: now })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast(t("dash.toast.updateFailed"));
-      return;
-    }
-    removeRow(row.id);
-    setToast(t("dash.toast.markedDone"));
-  }
-
-  async function sendReminder(row: FollowUpRow) {
-    if (!row.customer?.email) return;
-    setBusy(row.id);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-follow-up", {
-        body: {
-          job_id: row.id,
-          origin: typeof window !== "undefined" ? window.location.origin : undefined,
-        },
-      });
-      if (error || !(data as { ok?: boolean } | null)?.ok) {
-        setToast(t("dash.toast.emailFailed"));
-        return;
+  // Group open follow-up jobs by customer. A customer with any undated job goes
+  // in "to set"; otherwise, take their soonest upcoming date for "upcoming".
+  const customerBuckets = useMemo(() => {
+    const byCustomer = new Map<
+      string,
+      { name: string; needsDate: boolean; soonest: string | null }
+    >();
+    for (const r of rows) {
+      if (!r.customer) continue;
+      const key = r.customer.id;
+      const prev = byCustomer.get(key) ?? {
+        name: r.customer.name,
+        needsDate: false,
+        soonest: null,
+      };
+      if (!r.next_service_date) {
+        prev.needsDate = true;
+      } else if (!prev.soonest || r.next_service_date < prev.soonest) {
+        prev.soonest = r.next_service_date;
       }
-      await track("pro", proId, "follow_up_reminder_sent", {
-        job_id: row.id,
-        customer_id: row.customer.id,
-      });
-      removeRow(row.id);
-      setToast(`${t("dash.reminderSent")}${row.customer.name.split(" ")[0]}`);
-    } finally {
-      setBusy(null);
+      byCustomer.set(key, prev);
     }
-  }
+    const toSet: CustomerBucketRow[] = [];
+    const upcoming: CustomerBucketRow[] = [];
+    for (const [customerId, v] of byCustomer) {
+      if (v.needsDate) {
+        toSet.push({ customerId, name: v.name, date: null });
+      } else if (v.soonest) {
+        upcoming.push({ customerId, name: v.name, date: v.soonest });
+      }
+    }
+    toSet.sort((a, b) => a.name.localeCompare(b.name));
+    upcoming.sort((a, b) => (a.date! < b.date! ? -1 : 1));
+    return { toSet, upcoming, total: toSet.length + upcoming.length };
+  }, [rows]);
+
 
   if (loading || !pro) {
     return (
@@ -250,10 +174,11 @@ function ProHome() {
 
   const firstName =
     (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
-  const greeting = firstName ? `${t(greetingKey())}, ${firstName}.` : `${t(greetingKey())}.`;
+  const greetingWord = t(timeOfDayGreetingKey());
+  const greeting = firstName ? `${greetingWord}, ${firstName}.` : `${greetingWord}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
-  const totalOpen = needsDecision.length + dated.length;
+
 
   return (
     <ProShell pro={pro} active="home" hideMobileCta>
@@ -263,7 +188,7 @@ function ProHome() {
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-paper border border-line px-3 py-1.5 text-xs text-muted">
             <MapPin size={13} className="text-indigo" />
             <span>
-              {t("dash.youreAt")} <span className="text-ink font-semibold">{locationText}</span>
+              {t("pi.youreAt")} <span className="text-ink font-semibold">{locationText}</span>
             </span>
           </div>
         )}
@@ -279,9 +204,9 @@ function ProHome() {
               <Plus size={32} strokeWidth={2.5} />
             </div>
             <div className="min-w-0">
-              <div className="text-2xl sm:text-3xl font-bold leading-tight">{t("pro.logJob")}</div>
+              <div className="text-2xl sm:text-3xl font-bold leading-tight">{t("pi.logJob")}</div>
               <div className="mt-1 text-sm sm:text-base text-white/85">
-                {jobCount === 0 ? t("dash.logJob.first") : t("dash.logJob.hint")}
+                {jobCount === 0 ? t("pi.logJob.subFirst") : t("pi.logJob.sub")}
               </div>
             </div>
           </div>
@@ -291,127 +216,97 @@ function ProHome() {
       <ProSetupChecklist proId={proId} />
 
       {/* What's Next */}
-      {(() => {
-        const overdueCount = dated.filter(
-          (r) => new Date(`${r.next_service_date}T00:00:00`).getTime() < new Date().setHours(0, 0, 0, 0),
-        ).length;
-        const upcomingCount = dated.length - overdueCount;
-        const totalOpen = needsDecision.length + dated.length;
-        const activeRow = sheetFor
-          ? [...needsDecision, ...dated].find((r) => r.id === sheetFor) ?? null
-          : null;
+      <section className="anim-fade-up d-2 mt-8">
+        <h2 className="text-lg font-semibold text-ink mb-3">{t("pi.whatsNext")}</h2>
 
-        return (
-          <section className="anim-fade-up d-2 mt-8">
-            <h2 className="text-lg font-semibold text-ink mb-3">{t("dash.whatsNext")}</h2>
-
-            {totalOpen === 0 ? (
-              <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
-                <Check size={16} strokeWidth={2.5} />
-                <span>{t("dash.allCaughtUp")}</span>
-              </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setExpanded((v) => !v)}
-                  className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
-                  aria-expanded={expanded}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    {needsDecision.length > 0 && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-amber" />
-                        {needsDecision.length} {t("dash.toSet")}
-                      </span>
-                    )}
-                    {overdueCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-redbg text-red px-3 py-1 text-sm font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-red" />
-                        {overdueCount} {t("dash.overdue")}
-                      </span>
-                    )}
-                    {upcomingCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-muted" />
-                        {upcomingCount} {t("dash.upcoming")}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown
-                    size={20}
-                    className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {expanded && (
-                  <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
-                    {needsDecision.map((row) => (
-                      <li key={row.id}>
-                        <button
-                          type="button"
-                          onClick={() => setSheetFor(row.id)}
-                          className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
-                        >
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-base font-semibold text-ink truncate">
-                              {row.customer?.name ?? t("dash.customer")}
-                            </span>
-                            <span className="block text-sm text-muted truncate">
-                              {recordTitle(row.what_done, row.equipment_type)}
-                            </span>
-                          </span>
-                          <ChevronRight size={18} className="shrink-0 text-muted" />
-                        </button>
-                      </li>
-                    ))}
-                    {dated.map((row) => {
-                      const overdue =
-                        new Date(`${row.next_service_date}T00:00:00`).getTime() <
-                        new Date().setHours(0, 0, 0, 0);
-                      return (
-                        <li key={row.id}>
-                          <button
-                            type="button"
-                            onClick={() => setSheetFor(row.id)}
-                            className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
-                          >
-                            <span
-                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${overdue ? "bg-red" : "bg-muted"}`}
-                            />
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-base font-semibold text-ink truncate">
-                                {row.customer?.name ?? t("dash.customer")}
-                              </span>
-                              <span className="block text-sm text-muted truncate">
-                                {recordTitle(row.what_done, row.equipment_type)}
-                              </span>
-                            </span>
-                            <ChevronRight size={18} className="shrink-0 text-muted" />
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+        {customerBuckets.total === 0 ? (
+          <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
+            <Check size={16} strokeWidth={2.5} />
+            <span>{t("pi.allCaughtUp")}</span>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
+              aria-expanded={expanded}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                {customerBuckets.toSet.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-amber" />
+                    {customerBuckets.toSet.length} {t("pi.toSet")}
+                  </span>
                 )}
-              </>
-            )}
-
-            {activeRow && (
-              <FollowUpSheet
-                row={activeRow}
-                busy={busy === activeRow.id}
-                onClose={() => setSheetFor(null)}
-                onSchedule={(months) => saveFollowUpDate(activeRow, addMonthsIso(months))}
-                onNoFollowUp={() => markNoFollowUp(activeRow)}
-                onRemind={() => sendReminder(activeRow)}
-                onMarkDone={() => markDone(activeRow)}
+                {customerBuckets.upcoming.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-muted" />
+                    {customerBuckets.upcoming.length} {t("pi.upcoming")}
+                  </span>
+                )}
+              </div>
+              <ChevronDown
+                size={20}
+                className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
               />
+            </button>
+
+            {expanded && (
+              <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+                {customerBuckets.toSet.map((c) => (
+                  <li key={c.customerId}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate({
+                          to: "/pro/customers/$customerId",
+                          params: { customerId: c.customerId },
+                        })
+                      }
+                      className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
+                      <span className="min-w-0 flex-1 block text-base font-semibold text-ink truncate">
+                        {c.name}
+                      </span>
+                      <ChevronRight size={18} className="shrink-0 text-muted" />
+                    </button>
+                  </li>
+                ))}
+                {customerBuckets.upcoming.map((c) => (
+                  <li key={c.customerId}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate({
+                          to: "/pro/customers/$customerId",
+                          params: { customerId: c.customerId },
+                        })
+                      }
+                      className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-muted shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-base font-semibold text-ink truncate">
+                          {c.name}
+                        </span>
+                        {c.date && (
+                          <span className="block text-xs text-muted tnum">
+                            {formatDate(c.date)}
+                          </span>
+                        )}
+                      </span>
+                      <ChevronRight size={18} className="shrink-0 text-muted" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-          </section>
-        );
-      })()}
+          </>
+        )}
+      </section>
+
 
 
 
@@ -420,20 +315,20 @@ function ProHome() {
           <Card className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-sm text-muted">
-                {reviewAsks7d > 0 ? t("dash.niceWeek") : t("dash.thisWeek")}
+                {reviewAsks7d > 0 ? t("pi.niceWeek") : t("pi.thisWeek")}
               </div>
               <div className="mt-0.5 text-xl font-semibold text-ink">
-                {pro.google_rating} {t("dash.onGoogle")}
+                {pro.google_rating} ★ {t("pi.onGoogle")}
               </div>
               {reviewAsks7d > 0 && (
                 <div className="mt-0.5 text-sm text-muted">
-                  {reviewAsks7d} {t(`dash.asks.${pluralForm(locale, reviewAsks7d)}` as TKey)}
+                  {reviewAsks7d} {reviewAsks7d === 1 ? t("pi.reviewAsk.one") : t("pi.reviewAsk.other")}
                 </div>
               )}
             </div>
             <Link to="/pro/reviews" className="shrink-0">
               <Btn variant="ghost" size="sm">
-                {t("pro.nav.reviews")}
+                {t("pi.reviewsCta")}
               </Btn>
             </Link>
           </Card>
@@ -445,7 +340,7 @@ function ProHome() {
           to="/pro/office"
           className="pressable flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper/60 px-4 py-3 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
         >
-          <span>{t("dash.office")}</span>
+          <span>{t("pi.officeLink")}</span>
           <ChevronRight size={16} />
         </Link>
       </div>
@@ -455,95 +350,3 @@ function ProHome() {
   );
 }
 
-function FollowUpSheet({
-  row,
-  busy,
-  onClose,
-  onSchedule,
-  onNoFollowUp,
-  onRemind,
-  onMarkDone,
-}: {
-  row: FollowUpRow;
-  busy: boolean;
-  onClose: () => void;
-  onSchedule: (months: number) => void;
-  onNoFollowUp: () => void;
-  onRemind: () => void;
-  onMarkDone: () => void;
-}) {
-  const t = useT();
-  const needsDate = !row.next_service_date;
-  const canEmail = !!row.customer?.email;
-  const name = row.customer?.name ?? t("dash.customer");
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm anim-fade-up"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-md bg-paper rounded-t-3xl sm:rounded-3xl border border-line shadow-xl p-5 sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4">
-          <div className="text-lg font-semibold text-ink truncate">{name}</div>
-          <div className="text-sm text-muted truncate">
-            {recordTitle(row.what_done, row.equipment_type)}
-          </div>
-        </div>
-
-        {needsDate ? (
-          <>
-            <div className="text-base font-semibold text-ink mb-3">{t("sheet.whenCheckBack")}</div>
-            <div className="space-y-2">
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(3)}>
-                {t("sheet.in3")}
-              </Btn>
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(6)}>
-                {t("sheet.in6")}
-              </Btn>
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(12)}>
-                {t("sheet.in12")}
-              </Btn>
-              <Btn variant="ghost" size="lg" className="w-full" loading={busy} onClick={onNoFollowUp}>
-                {t("sheet.noFollowUp")}
-              </Btn>
-            </div>
-          </>
-        ) : (
-          <>
-            <Btn
-              variant="indigo"
-              size="lg"
-              className="w-full"
-              loading={busy}
-              disabled={!canEmail}
-              onClick={onRemind}
-            >
-              {t("sheet.remindThem")}
-            </Btn>
-            {!canEmail && (
-              <div className="mt-2 text-xs text-muted text-center">{t("sheet.noEmail")}</div>
-            )}
-            <button
-              type="button"
-              onClick={onMarkDone}
-              disabled={busy}
-              className="mt-3 w-full text-sm text-muted hover:text-ink py-2"
-            >
-              {t("sheet.markDone")}
-            </button>
-          </>
-        )}
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-4 w-full text-sm text-muted hover:text-ink py-2"
-        >
-          {t("sheet.cancel")}
-        </button>
-      </div>
-    </div>
-  );
-}

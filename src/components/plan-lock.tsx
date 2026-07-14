@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
-import { DEMO_SHORT } from "@/lib/plan";
+import { ALL_FEATURES_FREE, DEMO_SHORT } from "@/lib/plan";
 
 /** Small inline demo notice — repeat wherever price/upgrade appears. */
 export function DemoNotice({ className = "" }: { className?: string }) {
+  if (ALL_FEATURES_FREE) return null;
   return (
     <div
       className={`rounded-xl border border-indigo/20 bg-indigobg text-indigo px-3 py-2 text-xs font-semibold flex items-center gap-2 ${className}`}
@@ -25,6 +26,7 @@ export function PlanLock({
   description: string;
   children?: React.ReactNode;
 }) {
+  if (ALL_FEATURES_FREE) return null;
   return (
     <Card className="max-w-lg mx-auto text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigobg text-indigo mb-4">
@@ -58,6 +60,7 @@ export function PlanLockCompact({
   description: string;
   className?: string;
 }) {
+  if (ALL_FEATURES_FREE) return null;
   return (
     <Card className={`anim-fade-up ${className}`}>
       <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">

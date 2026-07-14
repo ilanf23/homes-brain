@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/hb";
 import { createInvoice, formatMoney, type InvoiceItem } from "@/lib/invoices";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
+import { isProEntitled } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/invoices/new")({
   head: () => ({ meta: [{ title: "New invoice - HomesBrain" }] }),
@@ -134,7 +135,7 @@ function NewInvoice() {
     );
   }
 
-  if (pro.plan !== "pro") {
+  if (!isProEntitled(pro)) {
     return (
       <ProShell pro={pro} active="invoices">
         <PlanLock

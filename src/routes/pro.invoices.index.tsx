@@ -13,6 +13,7 @@ import {
 } from "@/lib/invoices";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
+import { isProEntitled } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/invoices/")({
   head: () => ({ meta: [{ title: "Invoices - HomesBrain" }] }),
@@ -97,7 +98,7 @@ function InvoicesList() {
     );
   }
 
-  if (pro.plan !== "pro") {
+  if (!isProEntitled(pro)) {
     return (
       <ProShell pro={pro} active="invoices">
         <PlanLock

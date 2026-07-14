@@ -11,6 +11,7 @@ import {
   fetchMyPlanInfo,
   mockSetPlan,
   useCurrentPlan,
+  ALL_FEATURES_FREE,
   DEMO_NOTICE,
   DEMO_SHORT,
   type Plan,
@@ -95,20 +96,22 @@ function PlanPage() {
 
       <ProPageHead
         eyebrow="Plan"
-        title="Choose your plan"
-        sub="Free forever, or unlock the money features with Pro."
+        title="Everything's included"
+        sub="Every HomesBrain feature is free for all pros right now. No card, no billing."
       />
 
-      {/* Big demo banner */}
       <div className="mt-2 mb-6 rounded-2xl border border-indigo/25 bg-indigobg p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <Pill accent="indigo">Demo mode</Pill>
+          <Pill accent="indigo">All included</Pill>
           <div className="text-sm text-ink">
-            <div className="font-semibold">This is a demo — no payment is collected.</div>
-            <div className="text-muted mt-0.5">{DEMO_NOTICE}</div>
+            <div className="font-semibold">Free for all pros — no upgrade needed.</div>
+            <div className="text-muted mt-0.5">
+              We're keeping HomesBrain free while we grow. Paid tiers will return later; when they do, founding pros keep their price locked for life.
+            </div>
           </div>
         </div>
       </div>
+
 
       {!plans || !features ? (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -122,21 +125,7 @@ function PlanPage() {
             features={freeFeatures}
             currentPlan={plan}
             highlight={false}
-            action={
-              plan === "free" ? (
-                <Pill accent="indigo">Your plan</Pill>
-              ) : (
-                <Btn
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  loading={busy === "free"}
-                  onClick={() => switchTo("free")}
-                >
-                  Switch back to Free
-                </Btn>
-              )
-            }
+            action={<Pill accent="indigo">Included</Pill>}
           />
 
           <PlanCard
@@ -147,35 +136,19 @@ function PlanPage() {
             slots={slots}
             myInfo={myInfo}
             action={
-              isPro ? (
-                <div className="space-y-2">
-                  {myInfo?.founding_member ? (
-                    <Pill accent="coral">
-                      Founding · ${myInfo.locked_price ?? 19}/mo locked for life
-                    </Pill>
-                  ) : (
-                    <Pill accent="indigo">Your plan — demo (not billed)</Pill>
-                  )}
-                </div>
-              ) : (
-                <Btn
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  loading={busy === "pro"}
-                  onClick={() => switchTo("pro")}
-                >
-                  Upgrade to Pro — ${proPlan?.founding_price ?? proPlan?.price_monthly}/mo ({DEMO_SHORT})
-                </Btn>
-              )
+              <div className="space-y-2">
+                <Pill accent="indigo">Included — free right now</Pill>
+              </div>
             }
+
           />
         </div>
       )}
 
       <p className="mt-6 text-center text-xs text-muted">
-        {DEMO_NOTICE} No Stripe subscription is created; this is a UI switch only.
+        Paid tiers are paused. When they return, founding pros keep their locked price.
       </p>
+
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
@@ -229,7 +202,7 @@ function PlanCard({
         {showAnchor && (
           <span className="text-sm text-muted line-through tnum">${anchorPrice}</span>
         )}
-        {plan.price_monthly > 0 && (
+        {plan.price_monthly > 0 && !ALL_FEATURES_FREE && (
           <Pill accent="indigo">{DEMO_SHORT}</Pill>
         )}
       </div>
@@ -274,7 +247,7 @@ function PlanCard({
         ))}
       </ul>
       <div className="mt-6">{action}</div>
-      {plan.price_monthly > 0 && (
+      {plan.price_monthly > 0 && !ALL_FEATURES_FREE && (
         <div className="mt-3 text-center text-xs text-muted">
           {DEMO_NOTICE}
         </div>
