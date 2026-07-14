@@ -1,10 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MapPin, ChevronRight, Plus, ChevronDown, Check } from "lucide-react";
 import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, isGoogleUrl, recordTitle } from "@/lib/hb";
-import { track } from "@/lib/events";
+import { formatDate, isGoogleUrl } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
