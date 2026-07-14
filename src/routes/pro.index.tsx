@@ -204,11 +204,9 @@ function ProHome() {
               <Plus size={32} strokeWidth={2.5} />
             </div>
             <div className="min-w-0">
-              <div className="text-2xl sm:text-3xl font-bold leading-tight">Log a job</div>
+              <div className="text-2xl sm:text-3xl font-bold leading-tight">{t("pi.logJob")}</div>
               <div className="mt-1 text-sm sm:text-base text-white/85">
-                {jobCount === 0
-                  ? "Start with one you already did — 30 seconds."
-                  : "30 seconds. Just talk and tap."}
+                {jobCount === 0 ? t("pi.logJob.subFirst") : t("pi.logJob.sub")}
               </div>
             </div>
           </div>
