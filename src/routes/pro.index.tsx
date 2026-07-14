@@ -1,10 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MapPin, ChevronRight, Plus, ChevronDown, Check } from "lucide-react";
 import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, isGoogleUrl, recordTitle } from "@/lib/hb";
-import { track } from "@/lib/events";
+import { formatDate, isGoogleUrl } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
@@ -37,46 +36,25 @@ function timeOfDayGreeting() {
   return "Good evening";
 }
 
-function dueLabel(iso: string): { text: string; tone: "red" | "amber" | "indigo" } {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(`${iso}T00:00:00`);
-  const diffDays = Math.round((target.getTime() - now.getTime()) / DAY);
-  if (diffDays < 0) {
-    const n = -diffDays;
-    return {
-      text: `Overdue by ${n} day${n === 1 ? "" : "s"}`,
-      tone: "red",
-    };
-  }
-  if (diffDays === 0) return { text: "Due today", tone: "amber" };
-  if (diffDays === 1) return { text: "Due tomorrow", tone: "amber" };
-  if (diffDays <= 14) return { text: `Due in ${diffDays} days`, tone: "amber" };
-  if (diffDays <= 60) {
-    const weeks = Math.round(diffDays / 7);
-    return { text: `Due in ${weeks} week${weeks === 1 ? "" : "s"}`, tone: "indigo" };
-  }
-  const months = Math.round(diffDays / 30);
-  return { text: `Due in ${months} month${months === 1 ? "" : "s"}`, tone: "indigo" };
-}
 
-function addMonthsIso(months: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().slice(0, 10);
-}
+
+
+type CustomerBucketRow = {
+  customerId: string;
+  name: string;
+  date: string | null;
+};
 
 function ProHome() {
   const { proId, pro } = useProGuard();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<FollowUpRow[]>([]);
   const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
   const [locationText, setLocationText] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [sheetFor, setSheetFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!proId) return;
@@ -147,96 +125,42 @@ function ProHome() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const needsDecision = useMemo(
-    () => rows.filter((r) => !r.next_service_date),
-    [rows],
-  );
-  const dated = useMemo(
-    () =>
-      rows
-        .filter((r) => !!r.next_service_date)
-        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1)),
-    [rows],
-  );
-
-  function removeRow(id: string) {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-  }
-
-  async function saveFollowUpDate(row: FollowUpRow, iso: string) {
-    if (!iso) return;
-    setBusy(row.id);
-    const { error } = await supabase
-      .from("jobs")
-      .update({ next_service_date: iso })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast("Couldn't save that date. Try again.");
-      return;
-    }
-    setRows((prev) =>
-      prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
-    );
-    setSheetFor(null);
-    setToast("Follow-up scheduled");
-  }
-
-  async function markNoFollowUp(row: FollowUpRow) {
-    setBusy(row.id);
-    const { error } = await supabase
-      .from("jobs")
-      .update({ no_follow_up: true })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast("Couldn't update. Try again.");
-      return;
-    }
-    removeRow(row.id);
-    setToast("Marked as no follow-up needed");
-  }
-
-  async function markDone(row: FollowUpRow) {
-    setBusy(row.id);
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from("jobs")
-      .update({ follow_up_handled_at: now })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast("Couldn't update. Try again.");
-      return;
-    }
-    removeRow(row.id);
-    setToast("Marked done");
-  }
-
-  async function sendReminder(row: FollowUpRow) {
-    if (!row.customer?.email) return;
-    setBusy(row.id);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-follow-up", {
-        body: {
-          job_id: row.id,
-          origin: typeof window !== "undefined" ? window.location.origin : undefined,
-        },
-      });
-      if (error || !(data as { ok?: boolean } | null)?.ok) {
-        setToast("Couldn't send email. Try again.");
-        return;
+  // Group open follow-up jobs by customer. A customer with any undated job goes
+  // in "to set"; otherwise, take their soonest upcoming date for "upcoming".
+  const customerBuckets = useMemo(() => {
+    const byCustomer = new Map<
+      string,
+      { name: string; needsDate: boolean; soonest: string | null }
+    >();
+    for (const r of rows) {
+      if (!r.customer) continue;
+      const key = r.customer.id;
+      const prev = byCustomer.get(key) ?? {
+        name: r.customer.name,
+        needsDate: false,
+        soonest: null,
+      };
+      if (!r.next_service_date) {
+        prev.needsDate = true;
+      } else if (!prev.soonest || r.next_service_date < prev.soonest) {
+        prev.soonest = r.next_service_date;
       }
-      await track("pro", proId, "follow_up_reminder_sent", {
-        job_id: row.id,
-        customer_id: row.customer.id,
-      });
-      removeRow(row.id);
-      setToast(`Reminder sent to ${row.customer.name.split(" ")[0]}`);
-    } finally {
-      setBusy(null);
+      byCustomer.set(key, prev);
     }
-  }
+    const toSet: CustomerBucketRow[] = [];
+    const upcoming: CustomerBucketRow[] = [];
+    for (const [customerId, v] of byCustomer) {
+      if (v.needsDate) {
+        toSet.push({ customerId, name: v.name, date: null });
+      } else if (v.soonest) {
+        upcoming.push({ customerId, name: v.name, date: v.soonest });
+      }
+    }
+    toSet.sort((a, b) => a.name.localeCompare(b.name));
+    upcoming.sort((a, b) => (a.date! < b.date! ? -1 : 1));
+    return { toSet, upcoming, total: toSet.length + upcoming.length };
+  }, [rows]);
+
 
   if (loading || !pro) {
     return (
@@ -253,7 +177,7 @@ function ProHome() {
     : `${timeOfDayGreeting()}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
-  const totalOpen = needsDecision.length + dated.length;
+
 
   return (
     <ProShell pro={pro} active="home" hideMobileCta>
@@ -293,127 +217,97 @@ function ProHome() {
       <ProSetupChecklist proId={proId} />
 
       {/* What's Next */}
-      {(() => {
-        const overdueCount = dated.filter(
-          (r) => new Date(`${r.next_service_date}T00:00:00`).getTime() < new Date().setHours(0, 0, 0, 0),
-        ).length;
-        const upcomingCount = dated.length - overdueCount;
-        const totalOpen = needsDecision.length + dated.length;
-        const activeRow = sheetFor
-          ? [...needsDecision, ...dated].find((r) => r.id === sheetFor) ?? null
-          : null;
+      <section className="anim-fade-up d-2 mt-8">
+        <h2 className="text-lg font-semibold text-ink mb-3">What's Next</h2>
 
-        return (
-          <section className="anim-fade-up d-2 mt-8">
-            <h2 className="text-lg font-semibold text-ink mb-3">What's Next</h2>
-
-            {totalOpen === 0 ? (
-              <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
-                <Check size={16} strokeWidth={2.5} />
-                <span>You're all caught up</span>
-              </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setExpanded((v) => !v)}
-                  className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
-                  aria-expanded={expanded}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    {needsDecision.length > 0 && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-amber" />
-                        {needsDecision.length} to set
-                      </span>
-                    )}
-                    {overdueCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-redbg text-red px-3 py-1 text-sm font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-red" />
-                        {overdueCount} overdue
-                      </span>
-                    )}
-                    {upcomingCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-muted" />
-                        {upcomingCount} upcoming
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown
-                    size={20}
-                    className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {expanded && (
-                  <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
-                    {needsDecision.map((row) => (
-                      <li key={row.id}>
-                        <button
-                          type="button"
-                          onClick={() => setSheetFor(row.id)}
-                          className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
-                        >
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-base font-semibold text-ink truncate">
-                              {row.customer?.name ?? "Customer"}
-                            </span>
-                            <span className="block text-sm text-muted truncate">
-                              {recordTitle(row.what_done, row.equipment_type)}
-                            </span>
-                          </span>
-                          <ChevronRight size={18} className="shrink-0 text-muted" />
-                        </button>
-                      </li>
-                    ))}
-                    {dated.map((row) => {
-                      const overdue =
-                        new Date(`${row.next_service_date}T00:00:00`).getTime() <
-                        new Date().setHours(0, 0, 0, 0);
-                      return (
-                        <li key={row.id}>
-                          <button
-                            type="button"
-                            onClick={() => setSheetFor(row.id)}
-                            className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
-                          >
-                            <span
-                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${overdue ? "bg-red" : "bg-muted"}`}
-                            />
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-base font-semibold text-ink truncate">
-                                {row.customer?.name ?? "Customer"}
-                              </span>
-                              <span className="block text-sm text-muted truncate">
-                                {recordTitle(row.what_done, row.equipment_type)}
-                              </span>
-                            </span>
-                            <ChevronRight size={18} className="shrink-0 text-muted" />
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+        {customerBuckets.total === 0 ? (
+          <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
+            <Check size={16} strokeWidth={2.5} />
+            <span>You're all caught up</span>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
+              aria-expanded={expanded}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                {customerBuckets.toSet.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-amber" />
+                    {customerBuckets.toSet.length} to set
+                  </span>
                 )}
-              </>
-            )}
-
-            {activeRow && (
-              <FollowUpSheet
-                row={activeRow}
-                busy={busy === activeRow.id}
-                onClose={() => setSheetFor(null)}
-                onSchedule={(months) => saveFollowUpDate(activeRow, addMonthsIso(months))}
-                onNoFollowUp={() => markNoFollowUp(activeRow)}
-                onRemind={() => sendReminder(activeRow)}
-                onMarkDone={() => markDone(activeRow)}
+                {customerBuckets.upcoming.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-muted" />
+                    {customerBuckets.upcoming.length} upcoming
+                  </span>
+                )}
+              </div>
+              <ChevronDown
+                size={20}
+                className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
               />
+            </button>
+
+            {expanded && (
+              <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+                {customerBuckets.toSet.map((c) => (
+                  <li key={c.customerId}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate({
+                          to: "/pro/customers/$customerId",
+                          params: { customerId: c.customerId },
+                        })
+                      }
+                      className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
+                      <span className="min-w-0 flex-1 block text-base font-semibold text-ink truncate">
+                        {c.name}
+                      </span>
+                      <ChevronRight size={18} className="shrink-0 text-muted" />
+                    </button>
+                  </li>
+                ))}
+                {customerBuckets.upcoming.map((c) => (
+                  <li key={c.customerId}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate({
+                          to: "/pro/customers/$customerId",
+                          params: { customerId: c.customerId },
+                        })
+                      }
+                      className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-muted shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-base font-semibold text-ink truncate">
+                          {c.name}
+                        </span>
+                        {c.date && (
+                          <span className="block text-xs text-muted tnum">
+                            {formatDate(c.date)}
+                          </span>
+                        )}
+                      </span>
+                      <ChevronRight size={18} className="shrink-0 text-muted" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-          </section>
-        );
-      })()}
+          </>
+        )}
+      </section>
+
 
 
 
@@ -457,96 +351,3 @@ function ProHome() {
   );
 }
 
-function FollowUpSheet({
-  row,
-  busy,
-  onClose,
-  onSchedule,
-  onNoFollowUp,
-  onRemind,
-  onMarkDone,
-}: {
-  row: FollowUpRow;
-  busy: boolean;
-  onClose: () => void;
-  onSchedule: (months: number) => void;
-  onNoFollowUp: () => void;
-  onRemind: () => void;
-  onMarkDone: () => void;
-}) {
-  const needsDate = !row.next_service_date;
-  const canEmail = !!row.customer?.email;
-  const name = row.customer?.name ?? "Customer";
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm anim-fade-up"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-md bg-paper rounded-t-3xl sm:rounded-3xl border border-line shadow-xl p-5 sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4">
-          <div className="text-lg font-semibold text-ink truncate">{name}</div>
-          <div className="text-sm text-muted truncate">
-            {recordTitle(row.what_done, row.equipment_type)}
-          </div>
-        </div>
-
-        {needsDate ? (
-          <>
-            <div className="text-base font-semibold text-ink mb-3">
-              When should you check back?
-            </div>
-            <div className="space-y-2">
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(3)}>
-                In 3 months
-              </Btn>
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(6)}>
-                In 6 months
-              </Btn>
-              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(12)}>
-                In 1 year
-              </Btn>
-              <Btn variant="ghost" size="lg" className="w-full" loading={busy} onClick={onNoFollowUp}>
-                No follow-up
-              </Btn>
-            </div>
-          </>
-        ) : (
-          <>
-            <Btn
-              variant="indigo"
-              size="lg"
-              className="w-full"
-              loading={busy}
-              disabled={!canEmail}
-              onClick={onRemind}
-            >
-              Remind them
-            </Btn>
-            {!canEmail && (
-              <div className="mt-2 text-xs text-muted text-center">No email on file</div>
-            )}
-            <button
-              type="button"
-              onClick={onMarkDone}
-              disabled={busy}
-              className="mt-3 w-full text-sm text-muted hover:text-ink py-2"
-            >
-              Mark done
-            </button>
-          </>
-        )}
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-4 w-full text-sm text-muted hover:text-ink py-2"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-}

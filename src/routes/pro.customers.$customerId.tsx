@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ChevronRight,
   BellRing,
   Eye,
   Mail,
@@ -35,11 +36,16 @@ import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { PlanLock } from "@/components/plan-lock";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 
+// Flip to true to restore the full CRM (notes, invoices, timeline, nudge/invite,
+// equipment, activity tabs). Kept behind a flag so the page stays radically
+// simple for v0 while preserving every advanced surface for a future Premium tier.
+const SHOW_ADVANCED = false;
 
 export const Route = createFileRoute("/pro/customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer - HomesBrain" }] }),
   component: CustomerDetail,
 });
+
 
 type Customer = {
   id: string;
@@ -216,6 +222,58 @@ function CustomerDetail() {
     if (await deleteNote(n)) setNotes((ns) => ns.filter((x) => x.id !== n.id));
     else setToast("Could not delete the note.");
   }
+
+  const latestJob = jobs[0] ?? null;
+  const upcomingJob = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return (
+      jobs
+        .filter((j) => j.next_service_date && j.next_service_date >= today)
+        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1))[0] ?? null
+    );
+  }, [jobs]);
+  const [savingFollowUp, setSavingFollowUp] = useState(false);
+  const [changingFollowUp, setChangingFollowUp] = useState(false);
+
+  async function setFollowUpMonths(months: number) {
+    if (!latestJob || savingFollowUp) return;
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    const iso = d.toISOString().slice(0, 10);
+    setSavingFollowUp(true);
+    const { error } = await supabase
+      .from("jobs")
+      .update({ next_service_date: iso, no_follow_up: false, follow_up_handled_at: null })
+      .eq("id", latestJob.id);
+    setSavingFollowUp(false);
+    if (error) {
+      setToast("Could not save. Try again.");
+      return;
+    }
+    setJobs((prev) =>
+      prev.map((j) => (j.id === latestJob.id ? { ...j, next_service_date: iso } : j)),
+    );
+    setChangingFollowUp(false);
+    setToast("Follow-up scheduled");
+  }
+
+  async function markNoFollowUp() {
+    if (!latestJob || savingFollowUp) return;
+    setSavingFollowUp(true);
+    const { error } = await supabase
+      .from("jobs")
+      .update({ no_follow_up: true })
+      .eq("id", latestJob.id);
+    setSavingFollowUp(false);
+    if (error) {
+      setToast("Could not save. Try again.");
+      return;
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== latestJob.id).concat({ ...latestJob }));
+    setChangingFollowUp(false);
+    setToast("No follow-up needed");
+  }
+
 
   async function sendNudge() {
     if (!proId || !customer || nudging) return;
@@ -430,7 +488,7 @@ function CustomerDetail() {
     );
   }
 
-  if (pro.plan !== "pro") {
+  if (SHOW_ADVANCED && pro.plan !== "pro") {
     return (
       <ProShell pro={pro} active="customers">
         <PlanLock
@@ -440,6 +498,7 @@ function CustomerDetail() {
       </ProShell>
     );
   }
+
 
 
   if (!customer) {
@@ -475,7 +534,152 @@ function CustomerDetail() {
         <ArrowLeft size={15} /> Customers
       </Link>
 
-      <div className="grid gap-5 items-start lg:grid-cols-[300px_minmax(0,1fr)_320px]">
+      {/* Simple v0 surface: identity, follow-up hero, contact, past jobs. */}
+      <div className="anim-fade-up mb-2">
+        <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{customer.name}</h1>
+        {customer.homes?.address && (
+          <div className="mt-1 text-sm text-muted">{customer.homes.address}</div>
+        )}
+      </div>
+
+      <section className="anim-fade-up d-1 mt-6">
+        {!latestJob ? (
+          <Card className="text-center py-8">
+            <p className="text-sm text-muted">
+              No jobs yet. Log a job to set a follow-up.
+            </p>
+            <div className="mt-4">
+              <Link to="/pro/jobs/new">
+                <Btn variant="indigo" size="sm">Log a job</Btn>
+              </Link>
+            </div>
+          </Card>
+        ) : upcomingJob && !changingFollowUp ? (
+          <Card>
+            <div className="text-sm text-muted">Coming back</div>
+            <div className="mt-1 text-2xl font-bold text-ink tnum">
+              {formatDate(upcomingJob.next_service_date!)}
+            </div>
+            <button
+              type="button"
+              onClick={() => setChangingFollowUp(true)}
+              className="mt-3 text-sm font-semibold text-indigo hover:underline"
+            >
+              Change
+            </button>
+          </Card>
+        ) : (
+          <div>
+            <h2 className="text-xl font-semibold text-ink mb-3">
+              When are you coming back?
+            </h2>
+            <div className="space-y-2">
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={() => setFollowUpMonths(3)}
+              >
+                In 3 months
+              </Btn>
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={() => setFollowUpMonths(6)}
+              >
+                In 6 months
+              </Btn>
+              <Btn
+                variant="indigo"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={() => setFollowUpMonths(12)}
+              >
+                In 1 year
+              </Btn>
+              <Btn
+                variant="ghost"
+                size="lg"
+                className="w-full"
+                loading={savingFollowUp}
+                onClick={markNoFollowUp}
+              >
+                No follow-up
+              </Btn>
+              {changingFollowUp && (
+                <button
+                  type="button"
+                  onClick={() => setChangingFollowUp(false)}
+                  className="w-full text-sm text-muted hover:text-ink py-2"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="anim-fade-up d-2 mt-8">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Contact</h2>
+        <Card>
+          <KV k="Name" v={customer.name} />
+          <KV k="Phone" v={customer.phone ? formatPhone(customer.phone) : "-"} />
+          <KV k="Email" v={customer.email ?? "-"} />
+          {customer.homes?.address && <KV k="Address" v={customer.homes.address} />}
+        </Card>
+      </section>
+
+      <section className="anim-fade-up d-3 mt-8">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
+          Previous jobs
+        </h2>
+        {jobs.length === 0 ? (
+          <Card className="text-center py-6">
+            <p className="text-sm text-muted">No jobs yet.</p>
+          </Card>
+        ) : (
+          <ul className="divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+            {jobs.map((j) => {
+              const rec = j.records?.[0];
+              const content = (
+                <div className="flex items-center gap-3 px-4 py-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold text-ink truncate">
+                      {j.what_done}
+                    </div>
+                    <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
+                  </div>
+                  {rec && <ChevronRight size={18} className="shrink-0 text-muted" />}
+                </div>
+              );
+              return (
+                <li key={j.id}>
+                  {rec ? (
+                    <Link
+                      to="/pro/records/$recordId"
+                      params={{ recordId: rec.id }}
+                      className="pressable block hover:bg-soft transition-colors"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    content
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {SHOW_ADVANCED && (
+      <div className="mt-8 grid gap-5 items-start lg:grid-cols-[300px_minmax(0,1fr)_320px]">
+
         {/* Left: identity, actions, properties */}
         <div className="space-y-5">
           <Card className="anim-fade-up text-center">
@@ -835,6 +1039,8 @@ function CustomerDetail() {
           </div>
         </div>
       </div>
+      )}
+
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
 
