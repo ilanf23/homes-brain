@@ -315,20 +315,20 @@ function ProHome() {
           <Card className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-sm text-muted">
-                {reviewAsks7d > 0 ? "Nice week" : "This week"}
+                {reviewAsks7d > 0 ? t("pi.niceWeek") : t("pi.thisWeek")}
               </div>
               <div className="mt-0.5 text-xl font-semibold text-ink">
-                {pro.google_rating} ★ on Google
+                {pro.google_rating} ★ {t("pi.onGoogle")}
               </div>
               {reviewAsks7d > 0 && (
                 <div className="mt-0.5 text-sm text-muted">
-                  {reviewAsks7d} review {reviewAsks7d === 1 ? "ask" : "asks"} sent in the last 7 days
+                  {reviewAsks7d} {reviewAsks7d === 1 ? t("pi.reviewAsk.one") : t("pi.reviewAsk.other")}
                 </div>
               )}
             </div>
             <Link to="/pro/reviews" className="shrink-0">
               <Btn variant="ghost" size="sm">
-                Reviews
+                {t("pi.reviewsCta")}
               </Btn>
             </Link>
           </Card>
@@ -340,7 +340,7 @@ function ProHome() {
           to="/pro/office"
           className="pressable flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper/60 px-4 py-3 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
         >
-          <span>My numbers, map and customers</span>
+          <span>{t("pi.officeLink")}</span>
           <ChevronRight size={16} />
         </Link>
       </div>
