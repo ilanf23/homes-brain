@@ -78,7 +78,7 @@ function CustomersList() {
     );
   }
 
-  if (pro.plan !== "pro") {
+  if (!isProEntitled(pro)) {
     return (
       <ProShell pro={pro} active="customers">
         <PlanLock
