@@ -1020,6 +1020,13 @@ function NewJob() {
         setWhatDone(extract.what_done_clean ?? note);
       } else if (key === "next") {
         if (extract.next_service_date) setNextService(extract.next_service_date);
+        if (
+          typeof extract.charge_amount === "number" &&
+          extract.charge_amount > 0 &&
+          !chargeAmount.trim()
+        ) {
+          setChargeAmount(String(extract.charge_amount));
+        }
       }
     };
 
