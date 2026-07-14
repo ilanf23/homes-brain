@@ -2,6 +2,23 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * REVERSIBLE FEATURE GATING KILL-SWITCH.
+ *
+ * While `ALL_FEATURES_FREE` is true, every pro is treated as fully entitled:
+ * `isProEntitled()` returns true, `useCurrentPlan()` reports `isPro: true`,
+ * and the <PlanLock*> components render nothing. The `plans` / `plan_features`
+ * tables and the `pro.plan` column are untouched, so flipping this flag back
+ * to `false` restores the original gating behaviour.
+ */
+export const ALL_FEATURES_FREE = true;
+
+/** Single source of truth for "does this pro have paid-tier access?" */
+export function isProEntitled(pro?: { plan?: string | null } | null): boolean {
+  if (ALL_FEATURES_FREE) return true;
+  return pro?.plan === "pro";
+}
+
 export type Plan = {
   id: string;
   name: string;
