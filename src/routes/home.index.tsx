@@ -559,6 +559,7 @@ function OnboardingNoHome({
   homeowner: HomeownerRow | null;
   onCreated: () => void;
 }) {
+  const t = useT();
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState(homeowner?.phone ?? "");
   const [busy, setBusy] = useState(false);
@@ -594,18 +595,18 @@ function OnboardingNoHome({
   return (
     <>
       <HomePageHead
-        eyebrow="Welcome"
-        title="Let's set up your home"
-        sub="Add your address to start your home's living record. You can invite your pros anytime."
+        eyebrow={t("hi.welcome")}
+        title={t("hi.setUp")}
+        sub={t("hi.setUpSub")}
       />
       <Card className="anim-fade-up">
-        <Eyebrow accent="indigo">Add your home</Eyebrow>
+        <Eyebrow accent="indigo">{t("hi.addYourHome")}</Eyebrow>
         <div className="mt-3 space-y-3">
-          <Field label="Home address">
+          <Field label={t("hi.homeAddress")}>
             <Input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="123 Main St, Austin, TX"
+              placeholder={t("hi.homeAddressPh")}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter" && address.trim() && !busy) addHome();
@@ -613,17 +614,13 @@ function OnboardingNoHome({
             />
           </Field>
           <Field
-            label="Your phone"
-            hint={
-              homeowner?.phone
-                ? "From the number you signed in with. Change it here if it's wrong."
-                : "So your pros can reach you. Optional."
-            }
+            label={t("hi.yourPhone")}
+            hint={homeowner?.phone ? t("hi.phoneHintExisting") : t("hi.phoneHintNew")}
           >
             <Input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="555-555-1234"
+              placeholder={t("hi.phonePh")}
               type="tel"
             />
           </Field>
@@ -639,17 +636,14 @@ function OnboardingNoHome({
             disabled={!address.trim() || busy}
             onClick={addHome}
           >
-            {busy ? "Saving…" : "Add my home"}
+            {busy ? t("hi.saving") : t("hi.addMyHome")}
           </Btn>
         </div>
       </Card>
 
       <Card className="anim-fade-up d-1 mt-4">
-        <Eyebrow accent="indigo">Or claim from a pro</Eyebrow>
-        <p className="mt-2 text-sm text-muted">
-          If your pro sent you a service record link, open it to claim your home in one tap. The
-          record and any equipment they logged come with it.
-        </p>
+        <Eyebrow accent="indigo">{t("hi.orClaim")}</Eyebrow>
+        <p className="mt-2 text-sm text-muted">{t("hi.orClaimSub")}</p>
       </Card>
     </>
   );
