@@ -580,14 +580,16 @@ function NewJob() {
      second_pro_added moment. */
   useEffect(() => {
     const address = (selectedCustomerId ? locAddress : newCustomer.address).trim();
-    if (!address) {
+    // A picked customer's home is known outright, so it can answer even when the
+    // address string is not usable yet.
+    const homeId = existing.find((x) => x.id === selectedCustomerId)?.home_id;
+    if (!address && !homeId) {
       setHomeAppliances([]);
       setSelectedEquipmentId("");
       setAiMatch(null);
       setEditDetails(false);
       return;
     }
-    const homeId = existing.find((x) => x.id === selectedCustomerId)?.home_id;
     let cancelled = false;
     // Debounced: the address is typed, so this fires on every keystroke.
     const t = setTimeout(() => {
@@ -596,7 +598,7 @@ function NewJob() {
         // and may not be deployed yet). Fall back to the RLS table read for
         // homes this pro already serves, so a repeat customer never loses the
         // picker they have today.
-        let rows = await fetchHomeUnits(address);
+        let rows = address ? await fetchHomeUnits(address) : null;
         if (!rows && homeId) rows = await fetchHomeUnitsByHomeId(homeId);
         if (cancelled) return;
         setHomeAppliances(rows ?? []);

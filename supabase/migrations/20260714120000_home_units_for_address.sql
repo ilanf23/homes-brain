@@ -40,7 +40,15 @@ AS $$
   -- Signed-in pros only. Never anon: this answers "what is installed at this
   -- address", which is not something the open web should be able to ask.
   WHERE public.my_pro_id() IS NOT NULL
-    AND lower(btrim(h.address)) = lower(btrim(p_address))
+    -- Exact match, deliberately. This MUST agree with upsert_home_by_address(),
+    -- which the save path uses to resolve the home and which compares
+    -- `address = p_address` with no normalization. A looser predicate here would
+    -- be actively dangerous: we would show the pro units from the home stored as
+    -- "123 main st.", they would tap one, and then the save path would fail to
+    -- match, create a SEPARATE home for "123 Main St.", and attach that unit's
+    -- equipment_id to a job on the wrong home. Any address normalization has to
+    -- change both functions (and backfill homes.address) together.
+    AND h.address = p_address
   GROUP BY e.id, e.type, e.make, e.model, e.warranty_until, e.attributes, e.created_at
   ORDER BY e.created_at DESC;
 $$;
