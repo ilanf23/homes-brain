@@ -60,6 +60,7 @@ export function PlanLockCompact({
   description: string;
   className?: string;
 }) {
+  if (ALL_FEATURES_FREE) return null;
   return (
     <Card className={`anim-fade-up ${className}`}>
       <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
