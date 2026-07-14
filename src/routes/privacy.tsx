@@ -22,6 +22,7 @@ function Privacy() {
       title="Privacy Policy"
       updated="July 4, 2026"
       intro="HomesBrain, Inc. (“HomesBrain,” “we,” “us”) provides a home service-record platform used by home-service professionals (“Pros”) and homeowners. This policy explains what we collect, how we use it, who we share it with, and the choices you have."
+      draft={false}
     >
       <LegalSection title="1. Information we collect">
         <LegalList
