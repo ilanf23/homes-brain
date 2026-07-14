@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { Btn, Card, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
@@ -23,27 +24,10 @@ type RecordRow = {
   } | null;
 };
 
-type Status = "claimed" | "viewed" | "sent" | "created";
-
-function statusOf(r: RecordRow): Status {
-  if (r.jobs?.homes?.claimed_at) return "claimed";
-  if (r.viewed_at) return "viewed";
-  if (r.sent_sms_at || r.sent_email_at) return "sent";
-  return "created";
-}
-
-const STATUS_PILL: Record<Status, { accent: "coral" | "indigo" | "ink"; label: string }> = {
-  claimed: { accent: "coral", label: "Claimed" },
-  viewed: { accent: "indigo", label: "Viewed" },
-  sent: { accent: "indigo", label: "Sent" },
-  created: { accent: "ink", label: "Created" },
-};
-
 function RecordsList() {
   const { proId, pro } = useProGuard();
   const [records, setRecords] = useState<RecordRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | Status>("all");
 
   useEffect(() => {
     if (!proId) return;
@@ -60,14 +44,6 @@ function RecordsList() {
     })();
   }, [proId]);
 
-  const counts = useMemo(() => {
-    const c: Record<Status, number> = { claimed: 0, viewed: 0, sent: 0, created: 0 };
-    for (const r of records) c[statusOf(r)] += 1;
-    return c;
-  }, [records]);
-
-  const filtered = filter === "all" ? records : records.filter((r) => statusOf(r) === filter);
-
   if (!pro || loading) {
     return (
       <ProShell pro={pro} active="records">
@@ -80,15 +56,15 @@ function RecordsList() {
     <ProShell pro={pro} active="records">
       <ProPageHead
         eyebrow="Records"
-        title="Sent records"
-        sub="Every branded record you've sent, and how far it traveled: sent → viewed → claimed."
+        title="Your records"
+        sub="One card for every job you've sent. Tap a card to open it."
       />
 
       {records.length === 0 ? (
         <Card className="anim-fade-up text-center py-14">
           <h2 className="text-2xl tracking-tight">No records yet</h2>
           <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-            Log a job and we'll send a branded service record to your customer. It shows up here.
+            Log a job and we'll send your customer a record of the work. It shows up here.
           </p>
           <div className="mt-6">
             <Link to="/pro/jobs/new">
@@ -99,66 +75,46 @@ function RecordsList() {
           </div>
         </Card>
       ) : (
-        <>
-          <div
-            className="anim-fade-up flex items-center gap-1 rounded-full bg-paper border border-line p-1 w-fit mb-4 overflow-x-auto no-scrollbar max-w-full"
-            role="tablist"
-            aria-label="Filter records"
-          >
-            {(
-              [
-                ["all", `All · ${records.length}`],
-                ["sent", `Sent · ${counts.sent}`],
-                ["viewed", `Viewed · ${counts.viewed}`],
-                ["claimed", `Claimed · ${counts.claimed}`],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={filter === key}
-                onClick={() => setFilter(key)}
-                className={`pressable shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200 tnum ${
-                  filter === key ? "bg-indigobg text-indigo" : "text-muted hover:text-ink"
-                }`}
+        <div className="anim-fade-up d-1 space-y-3">
+          {records.map((r) => {
+            const claimed = Boolean(r.jobs?.homes?.claimed_at);
+            const seen = Boolean(r.viewed_at);
+            return (
+              <Link
+                key={r.id}
+                to="/pro/records/$recordId"
+                params={{ recordId: r.id }}
+                className="block"
               >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <Card className="anim-fade-up d-1 !p-2">
-            {filtered.length === 0 ? (
-              <p className="text-sm text-muted p-4">No records in this state yet.</p>
-            ) : (
-              <div className="divide-y divide-line">
-                {filtered.map((r) => {
-                  const s = STATUS_PILL[statusOf(r)];
-                  return (
-                    <Link
-                      key={r.id}
-                      to="/pro/records/$recordId"
-                      params={{ recordId: r.id }}
-                      className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-soft active:bg-line/50 transition-colors duration-150"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-ink truncate">
-                          {r.jobs?.customers?.name ?? "-"}
-                          <span className="text-muted font-normal"> · {r.jobs?.what_done}</span>
-                        </div>
-                        <div className="text-xs text-muted truncate">{r.jobs?.homes?.address}</div>
+                <Card
+                  lift
+                  className="!p-5 hover:bg-soft active:bg-line/50 transition-colors duration-150"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[17px] font-bold text-ink truncate">
+                        {r.jobs?.customers?.name ?? "Customer"}
                       </div>
-                      <div className="text-xs text-muted font-mono tnum hidden sm:block">
-                        {formatDate(r.created_at)}
+                      <div className="mt-1 text-sm text-muted truncate">
+                        {r.jobs?.what_done} · {formatDate(r.created_at)}
                       </div>
-                      <Pill accent={s.accent}>{s.label}</Pill>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
-        </>
+                    </div>
+                    <div className="shrink-0">
+                      {claimed ? (
+                        <Pill accent="coral">Claimed</Pill>
+                      ) : seen ? (
+                        <Pill accent="indigo">Seen</Pill>
+                      ) : (
+                        <span className="text-xs font-semibold text-muted">Sent</span>
+                      )}
+                    </div>
+                    <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden="true" />
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
       )}
     </ProShell>
   );

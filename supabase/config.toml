@@ -9,6 +9,11 @@ verify_jwt = false
 [functions.extract-job]
 verify_jwt = false
 
+# Same rationale as extract-job: gated by the pro record page, stores nothing;
+# it only rewrites the fields the caller sends and the client confirms + saves.
+[functions.edit-record]
+verify_jwt = false
+
 # Authenticated in-function so current publishable/asymmetric key formats work.
 [functions.translate-record]
 verify_jwt = false
