@@ -187,6 +187,13 @@ function HomeownerSettings() {
       setPrefErr("Couldn't save that change. Try again.");
       return;
     }
+    if (key === "notify_sms") {
+      const validPhone = (homeowner?.phone ?? "").replace(/\D/g, "").length === 10;
+      const now = value && validPhone ? new Date().toISOString() : null;
+      await supabase.from("homeowners").update({ sms_consent_at: now }).eq("id", homeownerId);
+      setSmsSavedAt(now);
+      setSmsConsent(!!now);
+    }
     if (key === "sms_opt_out") {
       await logEvent(`homeowner:${homeownerId}`, value ? "sms_opted_out" : "sms_opted_in", {});
     }
