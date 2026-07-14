@@ -80,6 +80,7 @@ export type JobExtract = {
   make: string | null;
   model: string | null;
   next_service_date: string | null;
+  charge_amount: number | null;
   what_done_clean: string | null;
 };
 
