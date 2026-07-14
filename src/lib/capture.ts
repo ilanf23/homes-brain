@@ -75,6 +75,24 @@ export async function scanNameplate(file: File): Promise<NameplateScan> {
 
 /* ---------- Extract equipment fields from a free-text note ---------- */
 
+/* Which unit on the home the note is about. Only ever returned when the caller
+   supplied a roster, and matched_id is always one of the ids it supplied.
+   "low" means the model could not narrow it down: do not auto-attach, ask. */
+export type EquipmentRef = {
+  matched_id: string | null;
+  confidence: "high" | "low";
+  reason: string | null;
+};
+
+/* The shape the AI needs to recognise a unit. Deliberately thin: identity only,
+   never another pro's notes. */
+export type UnitHint = {
+  id: string;
+  type: string | null;
+  make: string | null;
+  model: string | null;
+};
+
 export type JobExtract = {
   type: string | null;
   make: string | null;
@@ -82,11 +100,16 @@ export type JobExtract = {
   next_service_date: string | null;
   charge_amount: number | null;
   what_done_clean: string | null;
+  equipment_ref: EquipmentRef | null;
 };
 
-export async function extractFromNotes(note: string, trade?: string): Promise<JobExtract> {
+export async function extractFromNotes(
+  note: string,
+  trade?: string,
+  units?: UnitHint[],
+): Promise<JobExtract> {
   const { data, error } = await supabase.functions.invoke("extract-job", {
-    body: { note, trade },
+    body: { note, trade, units },
   });
   if (error) {
     const ctx = (error as { context?: Response }).context;

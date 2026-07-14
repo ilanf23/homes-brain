@@ -183,6 +183,91 @@ export type ProHome = {
   geocoded_at: string | null;
 };
 
+/* A unit already installed at a home, as offered to a pro who is about to log a
+   job there. Identity and service cadence only: never the other pro's notes,
+   never who they are. */
+export type HomeUnit = {
+  id: string;
+  type: string | null;
+  make: string | null;
+  model: string | null;
+  warranty_until: string | null;
+  attributes: Record<string, string | boolean> | null;
+  last_job_at: string | null;
+  job_count: number;
+};
+
+/* Units on file at an address, for any signed-in pro.
+
+   Keyed on the ADDRESS, not on the pro's own customer list: a home is shared
+   across pros, so the plumber a homeowner just invited must see the softener
+   the water-treatment pro logged, even though they have never worked here. RLS
+   cannot answer that (pro_serves_home is false until they have a row on the
+   home), hence the security-definer RPC.
+
+   Returns null (not []) when the RPC is unavailable, so the caller can tell
+   "this home has no units" from "we could not ask" and fall back. Migrations
+   ship through Lovable, so the client can run against a database that does not
+   have the function yet. */
+export async function fetchHomeUnits(address: string): Promise<HomeUnit[] | null> {
+  const trimmed = address.trim();
+  if (!trimmed) return [];
+  // RPC added in migration 2026-07-14; cast until the Lovable-generated
+  // Database types refresh.
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: unknown }>
+  )("home_units_for_address", { p_address: trimmed });
+  if (error || !Array.isArray(data)) return null;
+  return (data as Record<string, unknown>[]).map((r) => ({
+    id: String(r.id),
+    type: (r.type as string | null) ?? null,
+    make: (r.make as string | null) ?? null,
+    model: (r.model as string | null) ?? null,
+    warranty_until: (r.warranty_until as string | null) ?? null,
+    attributes:
+      r.attributes && typeof r.attributes === "object"
+        ? (r.attributes as Record<string, string | boolean>)
+        : null,
+    last_job_at: (r.last_job_at as string | null) ?? null,
+    job_count: Number(r.job_count ?? 0),
+  }));
+}
+
+/* Units on a home the pro already serves, read straight from the table under
+   RLS. This is the pre-RPC path: it only works once the pro has a customer, job,
+   or created-home row on the home, so it cannot see a home they are new to. Kept
+   as the fallback for when home_units_for_address is not deployed yet. */
+export async function fetchHomeUnitsByHomeId(homeId: string): Promise<HomeUnit[]> {
+  const { data } = await supabase
+    .from("equipment")
+    .select("id,type,make,model,warranty_until,attributes,jobs(created_at)")
+    .eq("home_id", homeId)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((r) => {
+    const jobs = (r as { jobs?: { created_at: string }[] }).jobs ?? [];
+    const last =
+      jobs
+        .map((j) => j.created_at)
+        .sort()
+        .at(-1) ?? null;
+    const attrs = (r as { attributes?: unknown }).attributes;
+    return {
+      id: r.id as string,
+      type: (r.type as string | null) ?? null,
+      make: (r.make as string | null) ?? null,
+      model: (r.model as string | null) ?? null,
+      warranty_until: (r.warranty_until as string | null) ?? null,
+      attributes:
+        attrs && typeof attrs === "object" ? (attrs as Record<string, string | boolean>) : null,
+      last_job_at: last,
+      job_count: jobs.length,
+    } satisfies HomeUnit;
+  });
+}
+
 /* Normalize an address for loose comparison (lowercase, collapse whitespace,
    strip punctuation). Two addresses that normalize equally are considered the
    same home for the geolocation match. */

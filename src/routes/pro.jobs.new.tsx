@@ -21,6 +21,8 @@ import { matchVoiceCustomer } from "@/lib/customer-match";
 import {
   buildRecordUrl,
   checkRecall,
+  fetchHomeUnits,
+  fetchHomeUnitsByHomeId,
   formatDate,
   geocodeHome,
   haversineMeters,
@@ -339,6 +341,9 @@ function NewJob() {
   // Appliance picker (for repeat visits to same home)
   const [homeAppliances, setHomeAppliances] = useState<ApplianceOpt[]>([]);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>(""); // "" = add new
+  /* Set when the AI bound the note to a unit on file. Drives the "Matched to
+     your Kinetico K5" banner, which must always be undoable in one tap. */
+  const [aiMatch, setAiMatch] = useState<{ id: string; label: string } | null>(null);
   const [editDetails, setEditDetails] = useState(false);
   const [applianceHistory, setApplianceHistory] = useState<JobHistoryRow[]>([]);
 
@@ -565,50 +570,46 @@ function NewJob() {
     }
   }, [stage, selectedCustomerId, loc, newCustomer.address, locAddress, gps]);
 
-  /* When an existing customer is picked, load that home's appliances (with
-     last-job info) so the pro can attach this new visit to the same physical
-     unit instead of creating a duplicate equipment row. */
+  /* Load the units already on file at this ADDRESS, so the pro can attach this
+     visit to the same physical unit instead of creating a duplicate.
+
+     Keyed on the address, not on the picked customer: a home is shared across
+     pros. The plumber a homeowner just invited types the address as a brand-new
+     customer, and must still see the softener the water-treatment pro logged.
+     Keying this off selectedCustomerId hid exactly that case, which is the
+     second_pro_added moment. */
   useEffect(() => {
-    const homeId = existing.find((x) => x.id === selectedCustomerId)?.home_id;
-    if (!homeId) {
+    const address = (selectedCustomerId ? locAddress : newCustomer.address).trim();
+    if (!address) {
       setHomeAppliances([]);
       setSelectedEquipmentId("");
+      setAiMatch(null);
       setEditDetails(false);
       return;
     }
-    (async () => {
-      const { data: eq } = await supabase
-        .from("equipment")
-        // attributes column added by migration 2026-07-09; cast in the map
-        // below until the Lovable-generated Database types refresh.
-        .select("id,type,make,model,warranty_until,attributes,jobs(created_at)")
-        .eq("home_id", homeId)
-        .order("created_at", { ascending: false });
-      const rows = (eq ?? []).map((r) => {
-        const jobs = (r as { jobs?: { created_at: string }[] }).jobs ?? [];
-        const last =
-          jobs
-            .map((j) => j.created_at)
-            .sort()
-            .at(-1) ?? null;
-        const attrs = (r as { attributes?: unknown }).attributes;
-        return {
-          id: r.id as string,
-          type: (r.type as string | null) ?? null,
-          make: (r.make as string | null) ?? null,
-          model: (r.model as string | null) ?? null,
-          warranty_until: (r.warranty_until as string | null) ?? null,
-          attributes:
-            attrs && typeof attrs === "object" ? (attrs as Record<string, string | boolean>) : null,
-          last_job_at: last,
-          job_count: jobs.length,
-        } satisfies ApplianceOpt;
-      });
-      setHomeAppliances(rows);
-      setSelectedEquipmentId("");
-      setEditDetails(false);
-    })();
-  }, [selectedCustomerId, existing]);
+    const homeId = existing.find((x) => x.id === selectedCustomerId)?.home_id;
+    let cancelled = false;
+    // Debounced: the address is typed, so this fires on every keystroke.
+    const t = setTimeout(() => {
+      void (async () => {
+        // null means the address RPC could not answer (it ships through Lovable
+        // and may not be deployed yet). Fall back to the RLS table read for
+        // homes this pro already serves, so a repeat customer never loses the
+        // picker they have today.
+        let rows = await fetchHomeUnits(address);
+        if (!rows && homeId) rows = await fetchHomeUnitsByHomeId(homeId);
+        if (cancelled) return;
+        setHomeAppliances(rows ?? []);
+        setSelectedEquipmentId("");
+        setAiMatch(null);
+        setEditDetails(false);
+      })();
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [selectedCustomerId, locAddress, newCustomer.address, existing]);
 
   /* When an existing appliance is picked, prefill the equipment fields (so the
      "correct details" toggle has real values to edit) and load its short
@@ -715,7 +716,13 @@ function NewJob() {
   }
 
   /* Ask the AI to pull equipment + next-service out of the note. Fills blanks
-     only, never clobbers what the pro already typed or picked from history. */
+     only, never clobbers what the pro already typed or picked from history.
+
+     When the home has units on file we hand the AI that roster, so "serviced the
+     softener" can bind to the softener already on the record instead of minting
+     a second one. It only ever proposes: a wrong silent bind corrupts the home's
+     service history, which is the whole asset, so anything short of an
+     unambiguous match leaves the choice to the pro. */
   async function runExtract(note: string) {
     const trimmed = note.trim();
     if (trimmed.length < 6) return;
@@ -723,19 +730,57 @@ function NewJob() {
     lastExtractedNote.current = trimmed;
     setExtractState("working");
     try {
-      const r = await extractFromNotes(trimmed, proTrade);
+      const hints = homeAppliances.map((a) => ({
+        id: a.id,
+        type: a.type,
+        make: a.make,
+        model: a.model,
+      }));
+      const r = await extractFromNotes(trimmed, proTrade, hints.length ? hints : undefined);
+
+      /* The pro's tap is ground truth. If they already picked a unit, the AI
+         does not get to second-guess it, so resolution is skipped entirely. */
+      const ref = selectedEquipmentId ? null : r.equipment_ref;
+      const matched =
+        ref?.matched_id && ref.confidence === "high"
+          ? homeAppliances.find((a) => a.id === ref.matched_id)
+          : undefined;
+
+      if (matched) {
+        // Attach to the unit on file and tell the pro, reversibly. The unit's
+        // own details are truth, so we do NOT let the note's type/make/model
+        // overwrite them here: a genuine correction goes through "Correct unit
+        // details", where the pro confirms it.
+        setSelectedEquipmentId(matched.id);
+        setEditDetails(false);
+        setAiMatch({
+          id: matched.id,
+          label:
+            [matched.type, matched.make, matched.model].filter(Boolean).join(" ") || "the unit",
+        });
+        await logEvent(proId ? `pro:${proId}` : null, "equipment_matched", {
+          confidence: ref?.confidence,
+          source: "ai",
+          reason: ref?.reason,
+        });
+      }
+
       const filled: string[] = [];
-      if (r.type && !eqType) {
-        setEqType(r.type);
-        filled.push("type");
-      }
-      if (r.make && !eqMake) {
-        setEqMake(r.make);
-        filled.push("make");
-      }
-      if (r.model && !eqModel) {
-        setEqModel(r.model);
-        filled.push("model");
+      if (!matched) {
+        // No confident match: this is a new unit (or the pro will pick one), so
+        // fill the blanks from the note exactly as before.
+        if (r.type && !eqType) {
+          setEqType(r.type);
+          filled.push("type");
+        }
+        if (r.make && !eqMake) {
+          setEqMake(r.make);
+          filled.push("make");
+        }
+        if (r.model && !eqModel) {
+          setEqModel(r.model);
+          filled.push("model");
+        }
       }
       if (r.next_service_date && /^\d{4}-\d{2}-\d{2}$/.test(r.next_service_date) && !nextService) {
         setNextService(r.next_service_date);
@@ -746,12 +791,17 @@ function NewJob() {
         filled.push("charge");
       }
       setExtractFilled(filled);
-      setExtractState(filled.length ? "done" : "idle");
+      setExtractState(filled.length || matched ? "done" : "idle");
       if (filled.length) {
         // Reveal the equipment drawer on first-visit homes so the pro can see
         // what got filled in without having to expand it.
         setDetailsOpen(true);
-        await logEvent(proId ? `pro:${proId}` : null, "notes_extracted", { filled });
+      }
+      if (filled.length || matched) {
+        await logEvent(proId ? `pro:${proId}` : null, "notes_extracted", {
+          filled,
+          matched: Boolean(matched),
+        });
       }
     } catch {
       setExtractState("error");
@@ -1677,6 +1727,7 @@ function NewJob() {
     setWhatDone("");
     setNextService("");
     setSelectedEquipmentId("");
+    setAiMatch(null);
     setEditDetails(false);
     setHomeAppliances([]);
     setApplianceHistory([]);
@@ -2296,7 +2347,9 @@ function NewJob() {
                             key={a.id}
                             type="button"
                             onClick={() => {
+                              // A tap overrides whatever the AI proposed.
                               setSelectedEquipmentId(picked ? "" : a.id);
+                              setAiMatch(null);
                               setEditDetails(false);
                             }}
                             aria-pressed={picked}
@@ -2333,6 +2386,28 @@ function NewJob() {
                         );
                       })}
                     </div>
+
+                    {/* The AI bound the note to a unit on file. Say so plainly and
+                        make it one tap to undo: the pro is standing at the unit
+                        and is always the tiebreaker. */}
+                    {aiMatch && selectedEquipmentId === aiMatch.id && (
+                      <div className="flex items-center justify-between gap-3 rounded-xl bg-indigobg px-3 py-2">
+                        <span className="text-sm text-indigo-dark">
+                          Matched to <span className="font-semibold">{aiMatch.label}</span> from
+                          your note.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedEquipmentId("");
+                            setAiMatch(null);
+                          }}
+                          className="shrink-0 text-xs font-semibold text-indigo hover:underline"
+                        >
+                          Not this one
+                        </button>
+                      </div>
+                    )}
 
                     {!selectedEquipmentId && (
                       <div className="flex items-center gap-3 pt-1">

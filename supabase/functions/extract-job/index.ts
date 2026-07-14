@@ -23,8 +23,39 @@ function json(body: unknown, status = 200) {
   });
 }
 
+/* The unit roster for the home, when the caller knows it. Lets the model bind
+   "the softener" to the unit already on file instead of minting a duplicate. */
+type Unit = { id: string; type?: string | null; make?: string | null; model?: string | null };
+
+function unitsBlock(units: Unit[]): string {
+  const lines = units
+    .map((u) => {
+      const label = [u.type, u.make, u.model].filter(Boolean).join(" ") || "unnamed unit";
+      return `- id: ${u.id} | ${label}`;
+    })
+    .join("\n");
+  return `
+
+UNITS ALREADY ON FILE AT THIS HOME:
+${lines}
+
+Decide which of these units the note is about, and add an "equipment_ref" key:
+{
+  "matched_id": the id from the list above that the note is about, or null,
+  "confidence": "high" or "low",
+  "reason": a short phrase explaining the choice (e.g. "only softener on file")
+}
+Rules for equipment_ref, follow them exactly:
+- matched_id MUST be one of the ids listed above, copied exactly. NEVER invent an id.
+- "high" only when the note can refer to exactly one unit above: it is the sole unit of that kind, or the note names a make, model, or serial that pins a single unit.
+- If two or more units could fit (e.g. two water heaters and the note just says "the water heater"), or the note is vague, set matched_id to null and confidence to "low". Guessing wrong corrupts the home's service history, so when in doubt, do not match.
+- If the note describes a unit that is clearly NOT in the list (a different kind of equipment, or a new install), set matched_id to null.
+- Identify the DURABLE INSTALLED UNIT, never the part or consumable that was worked on. In "replaced the sediment filter on the softener", the unit is the SOFTENER; the sediment filter is the work performed, not a unit.`;
+}
+
 const SYSTEM_WORK = `You are helping a home-services pro fill out a service record from a short free-text note about the work they just did.
 Extract ONLY what the note clearly says or strongly implies. Never invent brands, models, or dates.
+The "type"/"make"/"model" keys describe the durable installed unit that was serviced, never the part or consumable replaced on it.
 Respond with strict JSON, no markdown, using exactly these keys:
 {
   "type": short equipment type (e.g. "Water softener", "Water heater", "Furnace", "AC condenser", "Dishwasher") or null,
@@ -37,6 +68,7 @@ Respond with strict JSON, no markdown, using exactly these keys:
 
 const SYSTEM_FULL = `You are helping a home-services pro fill out a whole service record from ONE spoken note that describes who the customer is, where the job was, and what was done.
 Extract ONLY what the note clearly says or strongly implies. Never invent names, addresses, brands, models, phone numbers, or dates.
+The "type"/"make"/"model" keys describe the durable installed unit that was serviced, never the part or consumable replaced on it.
 Respond with strict JSON, no markdown, using exactly these keys:
 {
   "customer_name": the homeowner's name if mentioned (e.g. "Jane Smith", "the Millers"), else null,
@@ -54,16 +86,25 @@ Respond with strict JSON, no markdown, using exactly these keys:
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { note, trade, mode } = await req.json();
+    const { note, trade, mode, units } = await req.json();
     if (typeof note !== "string" || note.trim().length < 3) {
       return json({ error: "Note too short" }, 400);
     }
     const key = Deno.env.get("LOVABLE_API_KEY");
     if (!key) return json({ error: "AI gateway key not configured" }, 500);
 
+    const roster: Unit[] = Array.isArray(units)
+      ? units.filter((u: unknown): u is Unit => {
+          const id = (u as Unit)?.id;
+          return typeof id === "string" && id.length > 0;
+        })
+      : [];
+
     const today = new Date().toISOString().slice(0, 10);
     const full = mode === "full";
-    const prompt = (full ? SYSTEM_FULL : SYSTEM_WORK).replace("{TODAY}", today);
+    const prompt =
+      (full ? SYSTEM_FULL : SYSTEM_WORK).replace("{TODAY}", today) +
+      (roster.length ? unitsBlock(roster) : "");
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -111,6 +152,24 @@ Deno.serve(async (req) => {
       return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
     };
 
+    /* Resolution is only ever as trustworthy as the roster we handed over: a
+       hallucinated id, or an id for some other home, must never reach the
+       client. Anything that is not an exact member of the supplied roster is
+       downgraded to "no match", which the caller treats as a new unit. */
+    const cleanRef = (v: unknown) => {
+      if (!roster.length || !v || typeof v !== "object") return null;
+      const ref = v as Record<string, unknown>;
+      const matched = clean(ref.matched_id);
+      const known = matched && roster.some((u) => u.id === matched) ? matched : null;
+      const confidence = clean(ref.confidence)?.toLowerCase() === "high" ? "high" : "low";
+      return {
+        matched_id: known,
+        // A match we could not verify is not a confident match.
+        confidence: known ? confidence : ("low" as const),
+        reason: clean(ref.reason),
+      };
+    };
+
     const base = {
       type: clean(fields.type),
       make: clean(fields.make),
@@ -118,6 +177,7 @@ Deno.serve(async (req) => {
       next_service_date: clean(fields.next_service_date),
       charge_amount: cleanAmount(fields.charge_amount),
       what_done_clean: clean(fields.what_done_clean),
+      equipment_ref: cleanRef(fields.equipment_ref),
     };
     if (!full) return json(base);
 
