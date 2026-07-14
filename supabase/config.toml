@@ -76,6 +76,11 @@ verify_jwt = false
 [functions.email-unsubscribe]
 verify_jwt = false
 
+# Pro-triggered follow-up reminder email. Same authenticated-pro pattern as
+# invite-claim: validates the session JWT in-handler.
+[functions.send-follow-up]
+verify_jwt = false
+
 # sms-inbound receives Twilio's inbound SMS webhook (form-encoded From/Body).
 # Twilio cannot present a Supabase JWT; the endpoint is idempotent and only
 # updates the sms_optouts table based on standard keywords.

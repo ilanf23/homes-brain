@@ -510,10 +510,12 @@ export type Database = {
           created_at: string
           customer_id: string | null
           equipment_id: string | null
+          follow_up_handled_at: string | null
           home_id: string
           id: string
           localized_content: Json
           next_service_date: string | null
+          no_follow_up: boolean
           photo_url: string | null
           pro_id: string
           what_done: string
@@ -522,10 +524,12 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           equipment_id?: string | null
+          follow_up_handled_at?: string | null
           home_id: string
           id?: string
           localized_content?: Json
           next_service_date?: string | null
+          no_follow_up?: boolean
           photo_url?: string | null
           pro_id: string
           what_done: string
@@ -534,10 +538,12 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           equipment_id?: string | null
+          follow_up_handled_at?: string | null
           home_id?: string
           id?: string
           localized_content?: Json
           next_service_date?: string | null
+          no_follow_up?: boolean
           photo_url?: string | null
           pro_id?: string
           what_done?: string

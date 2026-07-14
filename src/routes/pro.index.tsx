@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, ChevronRight, Plus } from "lucide-react";
-import { Btn, Card, Pill, Toast } from "@/lib/ui";
+import { MapPin, ChevronRight, Plus, AlertCircle, X } from "lucide-react";
+import { Btn, Card, Pill, Toast, Field, Input } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, isGoogleUrl, logEvent, mockSend } from "@/lib/hb";
+import { formatDate, isGoogleUrl, recordTitle } from "@/lib/hb";
+import { track } from "@/lib/events";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
@@ -14,13 +15,12 @@ export const Route = createFileRoute("/pro/")({
 });
 
 const DAY = 24 * 3600 * 1000;
-const DUE_WINDOW = 14 * DAY;
-const MAX_NEEDS = 4;
 
-type DueRow = {
+type FollowUpRow = {
   id: string;
   what_done: string;
-  next_service_date: string;
+  next_service_date: string | null;
+  equipment_type: string | null;
   customer: {
     id: string;
     name: string;
@@ -37,18 +37,47 @@ function timeOfDayGreeting() {
   return "Good evening";
 }
 
+function dueLabel(iso: string): { text: string; tone: "red" | "amber" | "indigo" } {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(`${iso}T00:00:00`);
+  const diffDays = Math.round((target.getTime() - now.getTime()) / DAY);
+  if (diffDays < 0) {
+    const n = -diffDays;
+    return {
+      text: `Overdue by ${n} day${n === 1 ? "" : "s"}`,
+      tone: "red",
+    };
+  }
+  if (diffDays === 0) return { text: "Due today", tone: "amber" };
+  if (diffDays === 1) return { text: "Due tomorrow", tone: "amber" };
+  if (diffDays <= 14) return { text: `Due in ${diffDays} days`, tone: "amber" };
+  if (diffDays <= 60) {
+    const weeks = Math.round(diffDays / 7);
+    return { text: `Due in ${weeks} week${weeks === 1 ? "" : "s"}`, tone: "indigo" };
+  }
+  const months = Math.round(diffDays / 30);
+  return { text: `Due in ${months} month${months === 1 ? "" : "s"}`, tone: "indigo" };
+}
+
+function addMonthsIso(months: number): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().slice(0, 10);
+}
+
 function ProHome() {
   const { proId, pro } = useProGuard();
-  const [due, setDue] = useState<DueRow[]>([]);
+  const [rows, setRows] = useState<FollowUpRow[]>([]);
   const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
   const [locationText, setLocationText] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [reminded, setReminded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
+  const [datePickerFor, setDatePickerFor] = useState<string | null>(null);
+  const [pickerValue, setPickerValue] = useState<string>("");
 
-  // Load only what this screen needs: upcoming/overdue jobs and a review count.
   useEffect(() => {
     if (!proId) return;
     let cancelled = false;
@@ -57,11 +86,12 @@ function ProHome() {
         supabase
           .from("jobs")
           .select(
-            "id,what_done,next_service_date,customers(id,name,phone,email),homes(address)",
+            "id,what_done,next_service_date,no_follow_up,follow_up_handled_at,customers(id,name,phone,email),homes(address),equipment(type)",
           )
           .eq("pro_id", proId)
-          .not("next_service_date", "is", null)
-          .order("next_service_date", { ascending: true }),
+          .eq("no_follow_up", false)
+          .is("follow_up_handled_at", null)
+          .order("next_service_date", { ascending: true, nullsFirst: true }),
         supabase
           .from("events")
           .select("id", { count: "exact", head: false })
@@ -74,26 +104,22 @@ function ProHome() {
           .eq("pro_id", proId),
       ]);
       if (cancelled) return;
-      const rows: DueRow[] = ((j ?? []) as unknown as Array<{
+      const mapped: FollowUpRow[] = ((j ?? []) as unknown as Array<{
         id: string;
         what_done: string;
         next_service_date: string | null;
-        customers: DueRow["customer"];
+        customers: FollowUpRow["customer"];
         homes: { address: string } | null;
-      }>)
-        .filter(
-          (row) =>
-            row.next_service_date &&
-            new Date(row.next_service_date).getTime() - Date.now() <= DUE_WINDOW,
-        )
-        .map((row) => ({
-          id: row.id,
-          what_done: row.what_done,
-          next_service_date: row.next_service_date!,
-          customer: row.customers,
-          address: row.homes?.address ?? null,
-        }));
-      setDue(rows);
+        equipment: { type: string | null } | null;
+      }>).map((row) => ({
+        id: row.id,
+        what_done: row.what_done,
+        next_service_date: row.next_service_date,
+        equipment_type: row.equipment?.type ?? null,
+        customer: row.customers,
+        address: row.homes?.address ?? null,
+      }));
+      setRows(mapped);
       setReviewAsks7d(rv?.length ?? 0);
       setJobCount(totalJobCount ?? 0);
       setLoading(false);
@@ -103,7 +129,6 @@ function ProHome() {
     };
   }, [proId]);
 
-  // Location chip: silent if permission denied or geocode fails.
   useEffect(() => {
     if (typeof window === "undefined" || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -111,9 +136,7 @@ function ProHome() {
         const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         if (r?.address) setLocationText(r.address);
       },
-      () => {
-        /* denied or unavailable — omit chip */
-      },
+      () => {},
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 },
     );
   }, []);
@@ -124,26 +147,95 @@ function ProHome() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const needs = useMemo(() => due.slice(0, MAX_NEEDS), [due]);
+  const needsDecision = useMemo(
+    () => rows.filter((r) => !r.next_service_date),
+    [rows],
+  );
+  const dated = useMemo(
+    () =>
+      rows
+        .filter((r) => !!r.next_service_date)
+        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1)),
+    [rows],
+  );
 
-  async function remind(row: DueRow) {
-    const c = row.customer;
-    if (!c || (!c.phone && !c.email) || !pro) return;
+  function removeRow(id: string) {
+    setRows((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  async function saveFollowUpDate(row: FollowUpRow, iso: string) {
+    if (!iso) return;
     setBusy(row.id);
-    const body = `Hi ${c.name.split(" ")[0]}, it's ${pro.business}. Your ${row.what_done.toLowerCase()} is due for service around ${formatDate(row.next_service_date)}. Reply here and we'll get you on the schedule.`;
-    await mockSend({
-      channel: c.phone ? "sms" : "email",
-      to: c.phone ?? c.email ?? "",
-      body,
-      kind: "other",
-    });
-    await logEvent(`pro:${proId}`, "rebook_nudge_sent", {
-      job_id: row.id,
-      customer_id: c.id,
-    });
-    setReminded((prev) => new Set(prev).add(row.id));
+    const { error } = await supabase
+      .from("jobs")
+      .update({ next_service_date: iso })
+      .eq("id", row.id);
     setBusy(null);
-    setToast(`Reminder sent to ${c.name.split(" ")[0]}`);
+    if (error) {
+      setToast("Couldn't save that date. Try again.");
+      return;
+    }
+    setRows((prev) =>
+      prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
+    );
+    setDatePickerFor(null);
+    setToast("Follow-up scheduled");
+  }
+
+  async function markNoFollowUp(row: FollowUpRow) {
+    setBusy(row.id);
+    const { error } = await supabase
+      .from("jobs")
+      .update({ no_follow_up: true })
+      .eq("id", row.id);
+    setBusy(null);
+    if (error) {
+      setToast("Couldn't update. Try again.");
+      return;
+    }
+    removeRow(row.id);
+    setToast("Marked as no follow-up needed");
+  }
+
+  async function markDone(row: FollowUpRow) {
+    setBusy(row.id);
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("jobs")
+      .update({ follow_up_handled_at: now })
+      .eq("id", row.id);
+    setBusy(null);
+    if (error) {
+      setToast("Couldn't update. Try again.");
+      return;
+    }
+    removeRow(row.id);
+    setToast("Marked done");
+  }
+
+  async function sendReminder(row: FollowUpRow) {
+    if (!row.customer?.email) return;
+    setBusy(row.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-follow-up", {
+        body: {
+          job_id: row.id,
+          origin: typeof window !== "undefined" ? window.location.origin : undefined,
+        },
+      });
+      if (error || !(data as { ok?: boolean } | null)?.ok) {
+        setToast("Couldn't send email. Try again.");
+        return;
+      }
+      await track("pro", proId, "follow_up_reminder_sent", {
+        job_id: row.id,
+        customer_id: row.customer.id,
+      });
+      removeRow(row.id);
+      setToast(`Reminder sent to ${row.customer.name.split(" ")[0]}`);
+    } finally {
+      setBusy(null);
+    }
   }
 
   if (loading || !pro) {
@@ -161,10 +253,10 @@ function ProHome() {
     : `${timeOfDayGreeting()}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
+  const totalOpen = needsDecision.length + dated.length;
 
   return (
     <ProShell pro={pro} active="home" hideMobileCta>
-      {/* Greeting */}
       <div className="anim-fade-up mb-2">
         <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{greeting}</h1>
         {locationText && (
@@ -177,7 +269,6 @@ function ProHome() {
         )}
       </div>
 
-      {/* Hero action: the one thing this screen exists to make easy. */}
       <Link to="/pro/jobs/new" className="anim-fade-up d-1 block mt-6">
         <button
           type="button"
@@ -201,55 +292,175 @@ function ProHome() {
 
       <ProSetupChecklist proId={proId} />
 
-      {/* Who needs you */}
+      {/* What's Next */}
       <section className="anim-fade-up d-2 mt-8">
-        <h2 className="text-lg font-semibold text-ink mb-3">Who needs you</h2>
-        {needs.length === 0 ? (
-          <Card className="text-sm text-muted">
-            No one's due right now. When a job's next service date comes up, it'll show here.
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="text-lg font-semibold text-ink">What's Next</h2>
+          {needsDecision.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-2.5 py-1 text-xs font-semibold">
+              <AlertCircle size={12} />
+              {needsDecision.length} need{needsDecision.length === 1 ? "s" : ""} a decision
+            </span>
+          )}
+        </div>
+
+        {totalOpen === 0 ? (
+          <Card className="text-center py-8">
+            <div className="text-base font-semibold text-ink">
+              You're all caught up
+            </div>
+            <div className="mt-1 text-sm text-muted">
+              No follow-ups due. Log another job and it'll show up here.
+            </div>
           </Card>
         ) : (
           <div className="space-y-3">
-            {needs.map((row) => {
-              const overdue = new Date(row.next_service_date).getTime() < Date.now();
-              const c = row.customer;
-              const canRemind = !!(c && (c.phone || c.email));
-              const isReminded = reminded.has(row.id);
+            {/* Tier A: needs a decision */}
+            {needsDecision.map((row) => {
+              const title = recordTitle(row.what_done, row.equipment_type);
+              const isPicking = datePickerFor === row.id;
               return (
-                <Card key={row.id} className="!p-4 sm:!p-5">
-                  <div className="flex items-start gap-3 sm:gap-4">
+                <Card
+                  key={row.id}
+                  className="!p-4 sm:!p-5 border-amber/40 bg-amberbg/40"
+                >
+                  <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="text-base sm:text-lg font-semibold text-ink truncate">
-                        {c?.name ?? "Customer"}
+                        {row.customer?.name ?? "Customer"}
                       </div>
-                      <div className="mt-0.5 text-sm text-ink/80">{row.what_done}</div>
+                      <div className="mt-0.5 text-sm text-ink/80">{title}</div>
+                      {row.address && (
+                        <div className="mt-0.5 text-xs text-muted truncate">
+                          {row.address}
+                        </div>
+                      )}
+                      <div className="mt-2 text-sm text-amberdark">
+                        Set when you'll check back in — or mark this one as no follow-up needed.
+                      </div>
+                    </div>
+                  </div>
+                  {isPicking ? (
+                    <div className="mt-3 border-t border-amber/30 pt-3">
+                      <Field label="Follow-up date">
+                        <Input
+                          type="date"
+                          value={pickerValue}
+                          onChange={(e) => setPickerValue(e.target.value)}
+                        />
+                      </Field>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {[3, 6, 12].map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setPickerValue(addMonthsIso(m))}
+                            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink hover:border-indigo hover:text-indigo transition-colors"
+                          >
+                            {m} months
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <Btn
+                          variant="indigo"
+                          size="sm"
+                          loading={busy === row.id}
+                          disabled={!pickerValue}
+                          onClick={() => saveFollowUpDate(row, pickerValue)}
+                        >
+                          Save
+                        </Btn>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDatePickerFor(null);
+                            setPickerValue("");
+                          }}
+                          className="text-sm text-muted hover:text-ink"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Btn
+                        variant="indigo"
+                        size="sm"
+                        onClick={() => {
+                          setPickerValue(addMonthsIso(6));
+                          setDatePickerFor(row.id);
+                        }}
+                      >
+                        Set follow-up date
+                      </Btn>
+                      <Btn
+                        variant="ghost"
+                        size="sm"
+                        loading={busy === row.id}
+                        onClick={() => markNoFollowUp(row)}
+                      >
+                        No follow-up needed
+                      </Btn>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+
+            {/* Tier B: dated */}
+            {dated.map((row) => {
+              const label = dueLabel(row.next_service_date!);
+              const title = recordTitle(row.what_done, row.equipment_type);
+              const canEmail = !!row.customer?.email;
+              return (
+                <Card key={row.id} className="!p-4 sm:!p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-base sm:text-lg font-semibold text-ink truncate">
+                        {row.customer?.name ?? "Customer"}
+                      </div>
+                      <div className="mt-0.5 text-sm text-ink/80">{title}</div>
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        <Pill accent={overdue ? "coral" : "indigo"}>
-                          {overdue
-                            ? `Overdue since ${formatDate(row.next_service_date)}`
-                            : `Due ${formatDate(row.next_service_date)}`}
+                        <Pill accent={label.tone === "red" ? "coral" : label.tone === "amber" ? "amber" : "indigo"}>
+                          {label.text}
                         </Pill>
+                        <span className="text-xs text-muted">
+                          {formatDate(row.next_service_date)}
+                        </span>
                         {row.address && (
-                          <span className="text-xs text-muted truncate">{row.address}</span>
+                          <span className="text-xs text-muted truncate">
+                            · {row.address}
+                          </span>
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0">
-                      {isReminded ? (
-                        <Pill accent="indigo">Reminded</Pill>
-                      ) : (
-                        <Btn
-                          variant="indigo"
-                          size="md"
-                          loading={busy === row.id}
-                          disabled={!canRemind}
-                          onClick={() => remind(row)}
-                          aria-label={`Send reminder to ${c?.name ?? "customer"}`}
-                        >
-                          Remind
-                        </Btn>
-                      )}
-                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Btn
+                      variant="indigo"
+                      size="sm"
+                      loading={busy === row.id}
+                      disabled={!canEmail}
+                      title={canEmail ? undefined : "No email on file."}
+                      onClick={() => sendReminder(row)}
+                    >
+                      Send reminder
+                    </Btn>
+                    <Btn
+                      variant="ghost"
+                      size="sm"
+                      loading={busy === row.id}
+                      onClick={() => markDone(row)}
+                    >
+                      Mark done
+                    </Btn>
+                    {!canEmail && (
+                      <span className="text-xs text-muted inline-flex items-center gap-1">
+                        <X size={12} /> No email on file
+                      </span>
+                    )}
                   </div>
                 </Card>
               );
@@ -258,7 +469,6 @@ function ProHome() {
         )}
       </section>
 
-      {/* One small win: rating on Google (only if connected) */}
       {googleConnected && (
         <section className="anim-fade-up d-3 mt-8">
           <Card className="flex items-center justify-between gap-3">
@@ -284,7 +494,6 @@ function ProHome() {
         </section>
       )}
 
-      {/* Quiet office link */}
       <div className="anim-fade-up d-4 mt-10 mb-4">
         <Link
           to="/pro/office"

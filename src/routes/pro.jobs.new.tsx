@@ -1761,8 +1761,38 @@ function NewJob() {
       <TradeFieldInputs fields={tradeFields} values={attrValues} onChange={setAttr} />
     </div>
   );
+  const setNextServiceInMonths = (months: number) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    const iso = d.toISOString().slice(0, 10);
+    setNextService(iso);
+  };
   const nextServiceField = (
-    <Field label="Next service">
+    <Field
+      label="Schedule a follow-up (optional)"
+      hint="When should you check back in on this customer? Leave blank to decide later."
+    >
+      <div className="flex flex-wrap gap-2 mb-2">
+        {[3, 6, 12].map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setNextServiceInMonths(m)}
+            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink hover:border-indigo hover:text-indigo transition-colors"
+          >
+            {m} months
+          </button>
+        ))}
+        {nextService && (
+          <button
+            type="button"
+            onClick={() => setNextService("")}
+            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-xs text-muted hover:text-ink transition-colors"
+          >
+            Clear
+          </button>
+        )}
+      </div>
       <Input type="date" value={nextService} onChange={(e) => setNextService(e.target.value)} />
     </Field>
   );
