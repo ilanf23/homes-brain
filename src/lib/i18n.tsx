@@ -500,7 +500,7 @@ const ru: Partial<Record<TKey, string>> = {
   "pro.loading": "Загрузка",
 };
 
-const uk: Record<TKey, string> = {
+const uk: Partial<Record<TKey, string>> = {
   "chrome.forHomeowners": "Для домовласників",
   "chrome.homeowner": "Домовласник",
   "chrome.signOut": "Вийти",
