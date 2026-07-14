@@ -395,6 +395,13 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { customer_id, pro_id, origin, record_id, translations } = body;
     if (typeof customer_id !== "string" || !customer_id) {
+      console.error("invite-claim bad_request", {
+        hasBody: !!body,
+        keys: body && typeof body === "object" ? Object.keys(body) : [],
+        customerIdType: typeof customer_id,
+        customerIdEmpty: customer_id === "",
+        recordIdType: typeof record_id,
+      });
       return json({ ok: false, code: "bad_request" }, 400);
     }
     // Older clients still send pro_id. Accept it only when it matches the
