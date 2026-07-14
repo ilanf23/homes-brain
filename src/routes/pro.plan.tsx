@@ -145,8 +145,9 @@ function PlanPage() {
       )}
 
       <p className="mt-6 text-center text-xs text-muted">
-        {DEMO_NOTICE} No Stripe subscription is created; this is a UI switch only.
+        Paid tiers are paused. When they return, founding pros keep their locked price.
       </p>
+
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
