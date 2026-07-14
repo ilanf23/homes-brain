@@ -16,6 +16,7 @@ import {
 } from "@/components/home-shell";
 import { InviteProsCard } from "@/components/invite-pros";
 import { HomeSetupChecklist } from "@/components/home-setup-checklist";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/home/")({
   head: () => ({ meta: [{ title: "My home - HomesBrain" }] }),
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/home/")({
 });
 
 function HomeOverview() {
+  const t = useT();
   const {
     homeownerId,
     homeowner,
@@ -59,7 +61,7 @@ function HomeOverview() {
     const q = new URLSearchParams(window.location.search).get("paid");
     if (!q) return;
     (async () => setInvoices(await listInvoicesForHome(home.id)))();
-    setToast("Paid ✓");
+    setToast(t("hi.paid"));
     const url = new URL(window.location.href);
     url.searchParams.delete("paid");
     window.history.replaceState({}, "", url.toString());
@@ -86,7 +88,7 @@ function HomeOverview() {
   const addedAppliance = equipment.some((e) => e.source === "homeowner");
   const invitedPro = invites.length > 0;
 
-  if (guardLoading) return <PageLoader label="Loading your home" />;
+  if (guardLoading) return <PageLoader label={t("hi.loadingHome")} />;
   if (!home)
     return (
       <HomeShell active="overview" homeowner={homeowner} home={null}>
@@ -102,9 +104,9 @@ function HomeOverview() {
     <HomeShell active="overview" homeowner={homeowner} home={home}>
       {celebrate && <Celebration variant="grand" />}
       <HomePageHead
-        eyebrow="My home"
+        eyebrow={t("hi.myHome")}
         title={home.address}
-        sub="Your pros write the record. You own it."
+        sub={t("hi.myHomeSub")}
       />
 
       <HomeSetupChecklist homeowner={homeowner} />
@@ -115,7 +117,7 @@ function HomeOverview() {
 
       {openInvoices.length > 0 && (
         <Card className="anim-fade-up mb-6 border-indigo/30">
-          <Eyebrow accent="indigo">Amount due</Eyebrow>
+          <Eyebrow accent="indigo">{t("hi.amountDue")}</Eyebrow>
           <div className="mt-3 space-y-3">
             {openInvoices.map((inv) => (
               <AmountDueRow
@@ -123,7 +125,7 @@ function HomeOverview() {
                 inv={inv}
                 onPaid={async () => {
                   if (home) setInvoices(await listInvoicesForHome(home.id));
-                  setToast("Payment complete");
+                  setToast(t("hi.paymentComplete"));
                 }}
                 onError={(msg) => setToast(msg)}
               />
@@ -133,13 +135,14 @@ function HomeOverview() {
       )}
 
       <div className="anim-fade-up mb-6 text-sm text-muted">
-        {equipment.length} item{equipment.length === 1 ? "" : "s"} · {pros.length} pro
-        {pros.length === 1 ? "" : "s"} · {jobs.length} visit{jobs.length === 1 ? "" : "s"}
+        {equipment.length} {equipment.length === 1 ? t("hi.item.one") : t("hi.item.other")} ·{" "}
+        {pros.length} {pros.length === 1 ? t("hi.pro.one") : t("hi.pro.other")} ·{" "}
+        {jobs.length} {jobs.length === 1 ? t("hi.visit.one") : t("hi.visit.other")}
         {verifiedCount > 0 && (
           <>
             {" · "}
             <span className="inline-flex items-center gap-1 text-indigo font-semibold">
-              <ShieldCheck size={13} animate={false} /> all verified
+              <ShieldCheck size={13} animate={false} /> {t("hi.allVerified")}
             </span>
           </>
         )}
@@ -159,18 +162,16 @@ function HomeOverview() {
 
         <Card className="anim-fade-up d-2">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">On file</Eyebrow>
+            <Eyebrow accent="indigo">{t("hi.onFile")}</Eyebrow>
             <Link
               to="/home/add"
               className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
             >
-              + Add something
+              {t("hi.addSomething")}
             </Link>
           </div>
           {equipment.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">
-              Nothing yet. Records from your pros will show up here.
-            </p>
+            <p className="mt-3 text-sm text-muted">{t("hi.onFileEmpty")}</p>
           ) : (
             <div className="mt-3 space-y-2">
               {equipment.map((e) => (
@@ -181,18 +182,18 @@ function HomeOverview() {
                   className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
                 >
                   <div className="min-w-0">
-                    <div className="font-semibold text-ink truncate">{e.type ?? "Equipment"}</div>
+                    <div className="font-semibold text-ink truncate">{e.type ?? t("hi.equipment")}</div>
                     <div className="text-xs text-muted truncate">
-                      {[e.make, e.model].filter(Boolean).join(" · ") || "No details yet"}
+                      {[e.make, e.model].filter(Boolean).join(" · ") || t("hi.noDetails")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {e.source === "pro" ? (
                       <span className="inline-flex items-center gap-1 text-indigo font-semibold text-xs">
-                        <ShieldCheck size={13} animate={false} /> Verified
+                        <ShieldCheck size={13} animate={false} /> {t("hi.verified")}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted">Self-added</span>
+                      <span className="text-xs text-muted">{t("hi.selfAdded")}</span>
                     )}
                     <ChevronRight size={16} className="text-muted" />
                   </div>
@@ -206,24 +207,24 @@ function HomeOverview() {
           <Card className="anim-fade-up d-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="min-w-0">
-                <Eyebrow accent="indigo">Coming up</Eyebrow>
+                <Eyebrow accent="indigo">{t("hi.comingUp")}</Eyebrow>
                 <div className="mt-2 font-semibold text-ink truncate">{nextDue.what_done}</div>
                 <div className="text-xs text-muted mt-0.5 truncate">
-                  {proById.get(nextDue.pro_id)?.business ?? ""} · due{" "}
+                  {proById.get(nextDue.pro_id)?.business ?? ""} · {t("hi.due")}{" "}
                   {formatDate(nextDue.next_service_date)}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/home/reminders">
                   <Btn variant="secondary" size="sm">
-                    Remind me
+                    {t("hi.remindMe")}
                   </Btn>
                 </Link>
                 <Link
                   to="/home/reminders"
                   className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
                 >
-                  All reminders
+                  {t("hi.allReminders")}
                 </Link>
               </div>
             </div>
@@ -232,16 +233,16 @@ function HomeOverview() {
 
         <Card className="anim-fade-up d-3">
           <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">My pros</Eyebrow>
+            <Eyebrow accent="indigo">{t("hi.myPros")}</Eyebrow>
             <Link
               to="/home/pros"
               className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
             >
-              See all
+              {t("hi.seeAll")}
             </Link>
           </div>
           {pros.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">No pros yet.</p>
+            <p className="mt-3 text-sm text-muted">{t("hi.noProsYet")}</p>
           ) : (
             <div className="mt-3 space-y-3">
               {pros.slice(0, 3).map((p) => {
@@ -254,13 +255,14 @@ function HomeOverview() {
                         <div className="font-semibold text-ink truncate">{p.business}</div>
                         <div className="text-xs text-muted flex items-center gap-1.5">
                           <TradeIcon trade={p.trade} size={13} className="text-indigo" />
-                          {tradeLabel(p.trade)} · {visits} visit{visits === 1 ? "" : "s"}
+                          {tradeLabel(p.trade)} · {visits}{" "}
+                          {visits === 1 ? t("hi.visit.one") : t("hi.visit.other")}
                         </div>
                       </div>
                     </div>
                     <Link to="/home/pros">
                       <Btn variant="secondary" size="sm">
-                        Rebook
+                        {t("hi.rebook")}
                       </Btn>
                     </Link>
                   </div>
@@ -311,6 +313,7 @@ function ActivityCard({
   pros: ReturnType<typeof useHomeownerGuard>["pros"];
   onView: (recordId: string) => void | Promise<void>;
 }) {
+  const t = useT();
   const jobById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
   const rows: FeedRow[] = useMemo(() => {
@@ -327,8 +330,8 @@ function ActivityCard({
           key: `r-${r.id}`,
           href: { to: "/home/records/$recordId" as const, params: { recordId: r.id } },
           onTap: !r.viewed_at ? () => onView(r.id) : undefined,
-          proName: pro?.business ?? "Your pro",
-          what: j?.what_done ?? "New service record",
+          proName: pro?.business ?? t("hi.yourPro"),
+          what: j?.what_done ?? t("hi.serviceRecord"),
           when: formatDate(r.created_at),
           isNew: !r.viewed_at,
         };
@@ -345,30 +348,28 @@ function ActivityCard({
           href: j.equipment_id
             ? { to: "/home/items/$itemId" as const, params: { itemId: j.equipment_id } }
             : null,
-          proName: pro?.business ?? "Your pro",
-          what: j.what_done ?? "Service visit",
+          proName: pro?.business ?? t("hi.yourPro"),
+          what: j.what_done ?? t("hi.serviceVisit"),
           when: formatDate(j.created_at),
           isNew: false,
         };
       });
     return [...fromRecords, ...fromJobs].slice(0, 8);
-  }, [records, jobs, jobById, proById, onView]);
+  }, [records, jobs, jobById, proById, onView, t]);
 
   return (
     <Card className="anim-fade-up d-1">
       <div className="flex items-center justify-between">
-        <Eyebrow accent="indigo">Recent activity</Eyebrow>
+        <Eyebrow accent="indigo">{t("hi.recentActivity")}</Eyebrow>
         <Link
           to="/home/pros"
           className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
         >
-          See all
+          {t("hi.seeAll")}
         </Link>
       </div>
       {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">
-          Nothing yet. When your pros log a job, it'll show up here.
-        </p>
+        <p className="mt-3 text-sm text-muted">{t("hi.recentEmpty")}</p>
       ) : (
         <div className="mt-3 space-y-2">
           {rows.map((row) => {
@@ -377,7 +378,7 @@ function ActivityCard({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <div className="font-semibold text-ink truncate">{row.proName}</div>
-                    {row.isNew && <Pill accent="coral">New</Pill>}
+                    {row.isNew && <Pill accent="coral">{t("hi.new")}</Pill>}
                   </div>
                   <div className="text-xs text-muted truncate">
                     {row.what} · {row.when}
@@ -436,8 +437,9 @@ function AmountDueRow({
   onPaid: () => void | Promise<void>;
   onError: (msg: string) => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
-  const proName = inv.pros?.business ?? "Your pro";
+  const proName = inv.pros?.business ?? t("hi.yourPro");
   const canPay = !!inv.pros?.stripe_charges_enabled;
   const description = inv.items[0]?.description ?? "Service";
   async function pay() {
@@ -458,13 +460,13 @@ function AmountDueRow({
         <div className="text-sm text-muted truncate">{description}</div>
         {inv.due_date && (
           <div className="text-xs text-muted mt-0.5">
-            Due {formatDate(inv.due_date)}
-            {isOverdue(inv) ? " · overdue" : ""}
+            {t("hi.dueLabel")} {formatDate(inv.due_date)}
+            {isOverdue(inv) ? ` · ${t("hi.overdue")}` : ""}
           </div>
         )}
         {!canPay && (
           <div className="text-xs text-muted mt-1">
-            {proName} hasn't turned on card payments yet.
+            {proName} {t("hi.noCards")}
           </div>
         )}
       </div>
@@ -477,7 +479,7 @@ function AmountDueRow({
           disabled={!canPay || busy}
           onClick={pay}
         >
-          Pay {formatMoney(Number(inv.total))}
+          {t("hi.pay")} {formatMoney(Number(inv.total))}
         </Btn>
       </div>
     </div>
@@ -493,20 +495,21 @@ function NextStepsCard({
   addedAppliance: boolean;
   invitedPro: boolean;
 }) {
+  const t = useT();
   return (
     <Card className="anim-fade-up mb-6">
-      <Eyebrow accent="indigo">Make your record complete</Eyebrow>
+      <Eyebrow accent="indigo">{t("hi.makeComplete")}</Eyebrow>
       <div className="mt-3 space-y-2">
         <ChecklistRow
           done={addedAppliance}
-          label="Add your appliances"
-          sub="Warranty and recall checks start with a model number."
+          label={t("hi.addAppliancesTitle")}
+          sub={t("hi.addAppliancesSub")}
           to="/home/add"
         />
         <ChecklistRow
           done={invitedPro}
-          label="Invite your other pros"
-          sub="Every trade you add deepens your home's record."
+          label={t("hi.inviteProsTitle")}
+          sub={t("hi.inviteProsSub")}
           to="/home/pros"
         />
       </div>
@@ -556,6 +559,7 @@ function OnboardingNoHome({
   homeowner: HomeownerRow | null;
   onCreated: () => void;
 }) {
+  const t = useT();
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState(homeowner?.phone ?? "");
   const [busy, setBusy] = useState(false);
@@ -591,18 +595,18 @@ function OnboardingNoHome({
   return (
     <>
       <HomePageHead
-        eyebrow="Welcome"
-        title="Let's set up your home"
-        sub="Add your address to start your home's living record. You can invite your pros anytime."
+        eyebrow={t("hi.welcome")}
+        title={t("hi.setUp")}
+        sub={t("hi.setUpSub")}
       />
       <Card className="anim-fade-up">
-        <Eyebrow accent="indigo">Add your home</Eyebrow>
+        <Eyebrow accent="indigo">{t("hi.addYourHome")}</Eyebrow>
         <div className="mt-3 space-y-3">
-          <Field label="Home address">
+          <Field label={t("hi.homeAddress")}>
             <Input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="123 Main St, Austin, TX"
+              placeholder={t("hi.homeAddressPh")}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter" && address.trim() && !busy) addHome();
@@ -610,17 +614,13 @@ function OnboardingNoHome({
             />
           </Field>
           <Field
-            label="Your phone"
-            hint={
-              homeowner?.phone
-                ? "From the number you signed in with. Change it here if it's wrong."
-                : "So your pros can reach you. Optional."
-            }
+            label={t("hi.yourPhone")}
+            hint={homeowner?.phone ? t("hi.phoneHintExisting") : t("hi.phoneHintNew")}
           >
             <Input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="555-555-1234"
+              placeholder={t("hi.phonePh")}
               type="tel"
             />
           </Field>
@@ -636,17 +636,14 @@ function OnboardingNoHome({
             disabled={!address.trim() || busy}
             onClick={addHome}
           >
-            {busy ? "Saving…" : "Add my home"}
+            {busy ? t("hi.saving") : t("hi.addMyHome")}
           </Btn>
         </div>
       </Card>
 
       <Card className="anim-fade-up d-1 mt-4">
-        <Eyebrow accent="indigo">Or claim from a pro</Eyebrow>
-        <p className="mt-2 text-sm text-muted">
-          If your pro sent you a service record link, open it to claim your home in one tap. The
-          record and any equipment they logged come with it.
-        </p>
+        <Eyebrow accent="indigo">{t("hi.orClaim")}</Eyebrow>
+        <p className="mt-2 text-sm text-muted">{t("hi.orClaimSub")}</p>
       </Card>
     </>
   );
