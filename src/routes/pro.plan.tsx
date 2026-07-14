@@ -124,21 +124,7 @@ function PlanPage() {
             features={freeFeatures}
             currentPlan={plan}
             highlight={false}
-            action={
-              plan === "free" ? (
-                <Pill accent="indigo">Your plan</Pill>
-              ) : (
-                <Btn
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  loading={busy === "free"}
-                  onClick={() => switchTo("free")}
-                >
-                  Switch back to Free
-                </Btn>
-              )
-            }
+            action={<Pill accent="indigo">Included</Pill>}
           />
 
           <PlanCard
