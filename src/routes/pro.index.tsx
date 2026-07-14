@@ -47,6 +47,7 @@ type CustomerBucketRow = {
 };
 
 function ProHome() {
+  const t = useT();
   const { proId, pro } = useProGuard();
   const navigate = useNavigate();
   const [rows, setRows] = useState<FollowUpRow[]>([]);
