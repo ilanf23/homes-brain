@@ -75,8 +75,8 @@ function ProHome() {
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
-  const [datePickerFor, setDatePickerFor] = useState<string | null>(null);
-  const [pickerValue, setPickerValue] = useState<string>("");
+  const [expanded, setExpanded] = useState(false);
+  const [sheetFor, setSheetFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!proId) return;
