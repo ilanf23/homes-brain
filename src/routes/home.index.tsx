@@ -437,8 +437,9 @@ function AmountDueRow({
   onPaid: () => void | Promise<void>;
   onError: (msg: string) => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
-  const proName = inv.pros?.business ?? "Your pro";
+  const proName = inv.pros?.business ?? t("hi.yourPro");
   const canPay = !!inv.pros?.stripe_charges_enabled;
   const description = inv.items[0]?.description ?? "Service";
   async function pay() {
@@ -459,13 +460,13 @@ function AmountDueRow({
         <div className="text-sm text-muted truncate">{description}</div>
         {inv.due_date && (
           <div className="text-xs text-muted mt-0.5">
-            Due {formatDate(inv.due_date)}
-            {isOverdue(inv) ? " · overdue" : ""}
+            {t("hi.dueLabel")} {formatDate(inv.due_date)}
+            {isOverdue(inv) ? ` · ${t("hi.overdue")}` : ""}
           </div>
         )}
         {!canPay && (
           <div className="text-xs text-muted mt-1">
-            {proName} hasn't turned on card payments yet.
+            {proName} {t("hi.noCards")}
           </div>
         )}
       </div>
@@ -478,7 +479,7 @@ function AmountDueRow({
           disabled={!canPay || busy}
           onClick={pay}
         >
-          Pay {formatMoney(Number(inv.total))}
+          {t("hi.pay")} {formatMoney(Number(inv.total))}
         </Btn>
       </div>
     </div>
@@ -494,20 +495,21 @@ function NextStepsCard({
   addedAppliance: boolean;
   invitedPro: boolean;
 }) {
+  const t = useT();
   return (
     <Card className="anim-fade-up mb-6">
-      <Eyebrow accent="indigo">Make your record complete</Eyebrow>
+      <Eyebrow accent="indigo">{t("hi.makeComplete")}</Eyebrow>
       <div className="mt-3 space-y-2">
         <ChecklistRow
           done={addedAppliance}
-          label="Add your appliances"
-          sub="Warranty and recall checks start with a model number."
+          label={t("hi.addAppliancesTitle")}
+          sub={t("hi.addAppliancesSub")}
           to="/home/add"
         />
         <ChecklistRow
           done={invitedPro}
-          label="Invite your other pros"
-          sub="Every trade you add deepens your home's record."
+          label={t("hi.inviteProsTitle")}
+          sub={t("hi.inviteProsSub")}
           to="/home/pros"
         />
       </div>
