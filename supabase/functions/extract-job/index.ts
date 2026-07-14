@@ -101,11 +101,22 @@ Deno.serve(async (req) => {
     const clean = (v: unknown) =>
       typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim() : null;
 
+    const cleanAmount = (v: unknown): number | null => {
+      const n =
+        typeof v === "number"
+          ? v
+          : typeof v === "string"
+            ? parseFloat(v.replace(/[^0-9.\-]/g, ""))
+            : NaN;
+      return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+    };
+
     const base = {
       type: clean(fields.type),
       make: clean(fields.make),
       model: clean(fields.model),
       next_service_date: clean(fields.next_service_date),
+      charge_amount: cleanAmount(fields.charge_amount),
       what_done_clean: clean(fields.what_done_clean),
     };
     if (!full) return json(base);
