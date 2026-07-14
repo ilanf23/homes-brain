@@ -22,6 +22,7 @@ function SmsOptIn() {
       title="SMS opt-in flow"
       updated="July 14, 2026"
       intro="How homeowners consent to receive text messages from HomesBrain."
+      draft={false}
     >
       <LegalSection title="Program">
         <p>

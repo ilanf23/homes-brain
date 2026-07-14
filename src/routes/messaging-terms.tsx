@@ -24,6 +24,7 @@ function MessagingTerms() {
       title="Messaging & SMS Terms"
       updated="July 13, 2026"
       intro="These terms describe the HomesBrain SMS Program: what we send, who consented, and how to stop it. They supplement our Terms of Service and Privacy Policy."
+      draft={false}
     >
       <LegalSection title="1. Program name">
         <p>HomesBrain SMS Program.</p>
