@@ -36,28 +36,8 @@ function timeOfDayGreeting() {
   return "Good evening";
 }
 
-function dueLabel(iso: string): { text: string; tone: "red" | "amber" | "indigo" } {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(`${iso}T00:00:00`);
-  const diffDays = Math.round((target.getTime() - now.getTime()) / DAY);
-  if (diffDays < 0) {
-    const n = -diffDays;
-    return {
-      text: `Overdue by ${n} day${n === 1 ? "" : "s"}`,
-      tone: "red",
-    };
-  }
-  if (diffDays === 0) return { text: "Due today", tone: "amber" };
-  if (diffDays === 1) return { text: "Due tomorrow", tone: "amber" };
-  if (diffDays <= 14) return { text: `Due in ${diffDays} days`, tone: "amber" };
-  if (diffDays <= 60) {
-    const weeks = Math.round(diffDays / 7);
-    return { text: `Due in ${weeks} week${weeks === 1 ? "" : "s"}`, tone: "indigo" };
-  }
-  const months = Math.round(diffDays / 30);
-  return { text: `Due in ${months} month${months === 1 ? "" : "s"}`, tone: "indigo" };
-}
+
+
 
 type CustomerBucketRow = {
   customerId: string;
