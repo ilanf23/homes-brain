@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, ChevronRight, Plus, AlertCircle, X } from "lucide-react";
-import { Btn, Card, Pill, Toast, Field, Input } from "@/lib/ui";
+import { MapPin, ChevronRight, Plus, ChevronDown, Check } from "lucide-react";
+import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl, recordTitle } from "@/lib/hb";
 import { track } from "@/lib/events";
@@ -75,8 +75,8 @@ function ProHome() {
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
-  const [datePickerFor, setDatePickerFor] = useState<string | null>(null);
-  const [pickerValue, setPickerValue] = useState<string>("");
+  const [expanded, setExpanded] = useState(false);
+  const [sheetFor, setSheetFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!proId) return;
@@ -178,7 +178,7 @@ function ProHome() {
     setRows((prev) =>
       prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
     );
-    setDatePickerFor(null);
+    setSheetFor(null);
     setToast("Follow-up scheduled");
   }
 
@@ -293,181 +293,129 @@ function ProHome() {
       <ProSetupChecklist proId={proId} />
 
       {/* What's Next */}
-      <section className="anim-fade-up d-2 mt-8">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="text-lg font-semibold text-ink">What's Next</h2>
-          {needsDecision.length > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-2.5 py-1 text-xs font-semibold">
-              <AlertCircle size={12} />
-              {needsDecision.length} need{needsDecision.length === 1 ? "s" : ""} a decision
-            </span>
-          )}
-        </div>
+      {(() => {
+        const overdueCount = dated.filter(
+          (r) => new Date(`${r.next_service_date}T00:00:00`).getTime() < new Date().setHours(0, 0, 0, 0),
+        ).length;
+        const upcomingCount = dated.length - overdueCount;
+        const totalOpen = needsDecision.length + dated.length;
+        const activeRow = sheetFor
+          ? [...needsDecision, ...dated].find((r) => r.id === sheetFor) ?? null
+          : null;
 
-        {totalOpen === 0 ? (
-          <Card className="text-center py-8">
-            <div className="text-base font-semibold text-ink">
-              You're all caught up
-            </div>
-            <div className="mt-1 text-sm text-muted">
-              No follow-ups due. Log another job and it'll show up here.
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {/* Tier A: needs a decision */}
-            {needsDecision.map((row) => {
-              const title = recordTitle(row.what_done, row.equipment_type);
-              const isPicking = datePickerFor === row.id;
-              return (
-                <Card
-                  key={row.id}
-                  className="!p-4 sm:!p-5 border-amber/40 bg-amberbg/40"
+        return (
+          <section className="anim-fade-up d-2 mt-8">
+            <h2 className="text-lg font-semibold text-ink mb-3">What's Next</h2>
+
+            {totalOpen === 0 ? (
+              <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
+                <Check size={16} strokeWidth={2.5} />
+                <span>You're all caught up</span>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
+                  aria-expanded={expanded}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-base sm:text-lg font-semibold text-ink truncate">
-                        {row.customer?.name ?? "Customer"}
-                      </div>
-                      <div className="mt-0.5 text-sm text-ink/80">{title}</div>
-                      {row.address && (
-                        <div className="mt-0.5 text-xs text-muted truncate">
-                          {row.address}
-                        </div>
-                      )}
-                      <div className="mt-2 text-sm text-amberdark">
-                        Set when you'll check back in — or mark this one as no follow-up needed.
-                      </div>
-                    </div>
-                  </div>
-                  {isPicking ? (
-                    <div className="mt-3 border-t border-amber/30 pt-3">
-                      <Field label="Follow-up date">
-                        <Input
-                          type="date"
-                          value={pickerValue}
-                          onChange={(e) => setPickerValue(e.target.value)}
-                        />
-                      </Field>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {[3, 6, 12].map((m) => (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => setPickerValue(addMonthsIso(m))}
-                            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink hover:border-indigo hover:text-indigo transition-colors"
-                          >
-                            {m} months
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <Btn
-                          variant="indigo"
-                          size="sm"
-                          loading={busy === row.id}
-                          disabled={!pickerValue}
-                          onClick={() => saveFollowUpDate(row, pickerValue)}
-                        >
-                          Save
-                        </Btn>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDatePickerFor(null);
-                            setPickerValue("");
-                          }}
-                          className="text-sm text-muted hover:text-ink"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Btn
-                        variant="indigo"
-                        size="sm"
-                        onClick={() => {
-                          setPickerValue(addMonthsIso(6));
-                          setDatePickerFor(row.id);
-                        }}
-                      >
-                        Set follow-up date
-                      </Btn>
-                      <Btn
-                        variant="ghost"
-                        size="sm"
-                        loading={busy === row.id}
-                        onClick={() => markNoFollowUp(row)}
-                      >
-                        No follow-up needed
-                      </Btn>
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
-
-            {/* Tier B: dated */}
-            {dated.map((row) => {
-              const label = dueLabel(row.next_service_date!);
-              const title = recordTitle(row.what_done, row.equipment_type);
-              const canEmail = !!row.customer?.email;
-              return (
-                <Card key={row.id} className="!p-4 sm:!p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-base sm:text-lg font-semibold text-ink truncate">
-                        {row.customer?.name ?? "Customer"}
-                      </div>
-                      <div className="mt-0.5 text-sm text-ink/80">{title}</div>
-                      <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        <Pill accent={label.tone === "red" ? "coral" : label.tone === "amber" ? "amber" : "indigo"}>
-                          {label.text}
-                        </Pill>
-                        <span className="text-xs text-muted">
-                          {formatDate(row.next_service_date)}
-                        </span>
-                        {row.address && (
-                          <span className="text-xs text-muted truncate">
-                            · {row.address}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Btn
-                      variant="indigo"
-                      size="sm"
-                      loading={busy === row.id}
-                      disabled={!canEmail}
-                      title={canEmail ? undefined : "No email on file."}
-                      onClick={() => sendReminder(row)}
-                    >
-                      Send reminder
-                    </Btn>
-                    <Btn
-                      variant="ghost"
-                      size="sm"
-                      loading={busy === row.id}
-                      onClick={() => markDone(row)}
-                    >
-                      Mark done
-                    </Btn>
-                    {!canEmail && (
-                      <span className="text-xs text-muted inline-flex items-center gap-1">
-                        <X size={12} /> No email on file
+                  <div className="flex flex-wrap items-center gap-2">
+                    {needsDecision.length > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-amber" />
+                        {needsDecision.length} to set
+                      </span>
+                    )}
+                    {overdueCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-redbg text-red px-3 py-1 text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-red" />
+                        {overdueCount} overdue
+                      </span>
+                    )}
+                    {upcomingCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-muted" />
+                        {upcomingCount} upcoming
                       </span>
                     )}
                   </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                  <ChevronDown
+                    size={20}
+                    className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {expanded && (
+                  <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+                    {needsDecision.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSheetFor(row.id)}
+                          className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-base font-semibold text-ink truncate">
+                              {row.customer?.name ?? "Customer"}
+                            </span>
+                            <span className="block text-sm text-muted truncate">
+                              {recordTitle(row.what_done, row.equipment_type)}
+                            </span>
+                          </span>
+                          <ChevronRight size={18} className="shrink-0 text-muted" />
+                        </button>
+                      </li>
+                    ))}
+                    {dated.map((row) => {
+                      const overdue =
+                        new Date(`${row.next_service_date}T00:00:00`).getTime() <
+                        new Date().setHours(0, 0, 0, 0);
+                      return (
+                        <li key={row.id}>
+                          <button
+                            type="button"
+                            onClick={() => setSheetFor(row.id)}
+                            className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                          >
+                            <span
+                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${overdue ? "bg-red" : "bg-muted"}`}
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-base font-semibold text-ink truncate">
+                                {row.customer?.name ?? "Customer"}
+                              </span>
+                              <span className="block text-sm text-muted truncate">
+                                {recordTitle(row.what_done, row.equipment_type)}
+                              </span>
+                            </span>
+                            <ChevronRight size={18} className="shrink-0 text-muted" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </>
+            )}
+
+            {activeRow && (
+              <FollowUpSheet
+                row={activeRow}
+                busy={busy === activeRow.id}
+                onClose={() => setSheetFor(null)}
+                onSchedule={(months) => saveFollowUpDate(activeRow, addMonthsIso(months))}
+                onNoFollowUp={() => markNoFollowUp(activeRow)}
+                onRemind={() => sendReminder(activeRow)}
+                onMarkDone={() => markDone(activeRow)}
+              />
+            )}
+          </section>
+        );
+      })()}
+
+
 
       {googleConnected && (
         <section className="anim-fade-up d-3 mt-8">
@@ -506,5 +454,99 @@ function ProHome() {
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
+  );
+}
+
+function FollowUpSheet({
+  row,
+  busy,
+  onClose,
+  onSchedule,
+  onNoFollowUp,
+  onRemind,
+  onMarkDone,
+}: {
+  row: FollowUpRow;
+  busy: boolean;
+  onClose: () => void;
+  onSchedule: (months: number) => void;
+  onNoFollowUp: () => void;
+  onRemind: () => void;
+  onMarkDone: () => void;
+}) {
+  const needsDate = !row.next_service_date;
+  const canEmail = !!row.customer?.email;
+  const name = row.customer?.name ?? "Customer";
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm anim-fade-up"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-md bg-paper rounded-t-3xl sm:rounded-3xl border border-line shadow-xl p-5 sm:p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4">
+          <div className="text-lg font-semibold text-ink truncate">{name}</div>
+          <div className="text-sm text-muted truncate">
+            {recordTitle(row.what_done, row.equipment_type)}
+          </div>
+        </div>
+
+        {needsDate ? (
+          <>
+            <div className="text-base font-semibold text-ink mb-3">
+              When should you check back?
+            </div>
+            <div className="space-y-2">
+              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(3)}>
+                In 3 months
+              </Btn>
+              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(6)}>
+                In 6 months
+              </Btn>
+              <Btn variant="indigo" size="lg" className="w-full" loading={busy} onClick={() => onSchedule(12)}>
+                In 1 year
+              </Btn>
+              <Btn variant="ghost" size="lg" className="w-full" loading={busy} onClick={onNoFollowUp}>
+                No follow-up
+              </Btn>
+            </div>
+          </>
+        ) : (
+          <>
+            <Btn
+              variant="indigo"
+              size="lg"
+              className="w-full"
+              loading={busy}
+              disabled={!canEmail}
+              onClick={onRemind}
+            >
+              Remind them
+            </Btn>
+            {!canEmail && (
+              <div className="mt-2 text-xs text-muted text-center">No email on file</div>
+            )}
+            <button
+              type="button"
+              onClick={onMarkDone}
+              disabled={busy}
+              className="mt-3 w-full text-sm text-muted hover:text-ink py-2"
+            >
+              Mark done
+            </button>
+          </>
+        )}
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-4 w-full text-sm text-muted hover:text-ink py-2"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
