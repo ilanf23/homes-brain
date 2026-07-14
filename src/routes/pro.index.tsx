@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MapPin, ChevronRight, Plus, ChevronDown, Check } from "lucide-react";
-import { Btn, Toast } from "@/lib/ui";
+import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl, recordTitle } from "@/lib/hb";
 import { track } from "@/lib/events";
