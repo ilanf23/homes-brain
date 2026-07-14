@@ -133,6 +133,11 @@ function deliveryErrorMessage(code: string | null) {
   if (code === "opted_out") return "This customer has opted out of email.";
   if (code === "daily_limit") return "Your daily email limit has been reached.";
   if (code === "not_configured") return "Email delivery is temporarily unavailable.";
+  if (code === "no_email") return "Add the customer's email before sending.";
+  if (code === "bad_request") return "The email couldn't be sent — the record is missing details. Try again.";
+  if (code === "forbidden") return "You don't have access to send for this customer.";
+  if (code === "unauthorized") return "Your session expired. Sign in again and retry.";
+  if (code === "send_failed") return "The email service rejected the send. Try again in a moment.";
   return "Check your connection and try the email again.";
 }
 
@@ -1084,11 +1089,26 @@ function NewJob() {
               : null,
         },
       });
-      const ok = !sendErr && !!sendResp && (sendResp as { ok?: boolean }).ok !== false;
+      // On non-2xx, supabase-js sets `sendErr` and leaves `sendResp` null,
+      // discarding the JSON `{code}` in the error body. Read it off
+      // `sendErr.context` (a Response) so the pro sees the real reason
+      // instead of a generic "check your connection" fallback.
+      let parsedResp = sendResp as { ok?: boolean; code?: string } | null;
+      if (sendErr && !parsedResp) {
+        const ctx = (sendErr as { context?: Response } | null)?.context;
+        if (ctx && typeof ctx.clone === "function") {
+          try {
+            parsedResp = (await ctx.clone().json()) as { ok?: boolean; code?: string };
+          } catch {
+            /* body wasn't JSON — fall through to generic code */
+          }
+        }
+      }
+      const ok = !sendErr && !!parsedResp && parsedResp.ok !== false;
       if (!ok) {
         return {
           ok: false as const,
-          code: (sendResp as { code?: string } | null)?.code || sendErr?.message || "send_failed",
+          code: parsedResp?.code || sendErr?.message || "send_failed",
         };
       }
 
