@@ -725,6 +725,10 @@ function NewJob() {
         setNextService(r.next_service_date);
         filled.push("next service");
       }
+      if (typeof r.charge_amount === "number" && r.charge_amount > 0 && !chargeAmount.trim()) {
+        setChargeAmount(String(r.charge_amount));
+        filled.push("charge");
+      }
       setExtractFilled(filled);
       setExtractState(filled.length ? "done" : "idle");
       if (filled.length) {
@@ -1016,6 +1020,13 @@ function NewJob() {
         setWhatDone(extract.what_done_clean ?? note);
       } else if (key === "next") {
         if (extract.next_service_date) setNextService(extract.next_service_date);
+        if (
+          typeof extract.charge_amount === "number" &&
+          extract.charge_amount > 0 &&
+          !chargeAmount.trim()
+        ) {
+          setChargeAmount(String(extract.charge_amount));
+        }
       }
     };
 
@@ -1052,6 +1063,7 @@ function NewJob() {
         extract.make && "make",
         extract.model && "model",
         extract.next_service_date && "next_service",
+        typeof extract.charge_amount === "number" && extract.charge_amount > 0 && "charge",
       ].filter(Boolean),
       matched_existing: !!match,
     });

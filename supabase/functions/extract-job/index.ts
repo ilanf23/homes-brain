@@ -31,6 +31,7 @@ Respond with strict JSON, no markdown, using exactly these keys:
   "make": brand name if mentioned (e.g. "EcoWater", "Rheem", "Carrier") or null,
   "model": model number/name if mentioned or null,
   "next_service_date": "YYYY-MM-DD" if the note says when to come back (e.g. "next service in 6 months", "check back in a year"), computed from today = {TODAY}. Only set if a duration or explicit date is present. Otherwise null,
+  "charge_amount": a positive number in US dollars if the note clearly states what the pro charged/billed/quoted for THIS job (e.g. "charged 145", "it was $220", "total 89.50", "cost was two hundred bucks"). Numbers only, no currency symbol, no thousands separators. Do NOT infer from prices of parts alone unless clearly the total. Otherwise null,
   "what_done_clean": a tidy one-to-two sentence version of the work performed, in past tense, professional tone, no fluff. Preserve the pro's meaning. Do not add facts.
 }`;
 
@@ -46,6 +47,7 @@ Respond with strict JSON, no markdown, using exactly these keys:
   "make": brand name if mentioned or null,
   "model": model number/name if mentioned or null,
   "next_service_date": "YYYY-MM-DD" if the note says when to come back (e.g. "next service in 6 months", "check back in a year"), computed from today = {TODAY}. Only set if a duration or explicit date is present. Otherwise null,
+  "charge_amount": a positive number in US dollars if the note clearly states what the pro charged/billed/quoted for THIS job (e.g. "charged 145", "it was $220", "total 89.50", "cost was two hundred bucks"). Numbers only, no currency symbol, no thousands separators. Otherwise null,
   "what_done_clean": a tidy one-to-two sentence version of the work performed, in past tense, professional tone, no fluff. Preserve the pro's meaning. Do not add facts.
 }`;
 
@@ -99,11 +101,22 @@ Deno.serve(async (req) => {
     const clean = (v: unknown) =>
       typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim() : null;
 
+    const cleanAmount = (v: unknown): number | null => {
+      const n =
+        typeof v === "number"
+          ? v
+          : typeof v === "string"
+            ? parseFloat(v.replace(/[^0-9.\-]/g, ""))
+            : NaN;
+      return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+    };
+
     const base = {
       type: clean(fields.type),
       make: clean(fields.make),
       model: clean(fields.model),
       next_service_date: clean(fields.next_service_date),
+      charge_amount: cleanAmount(fields.charge_amount),
       what_done_clean: clean(fields.what_done_clean),
     };
     if (!full) return json(base);
