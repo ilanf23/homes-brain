@@ -335,7 +335,7 @@ function ProHome() {
                           {row.address}
                         </div>
                       )}
-                      <div className="mt-2 text-sm text-amber-dark">
+                      <div className="mt-2 text-sm text-amberdark">
                         Set when you'll check back in — or mark this one as no follow-up needed.
                       </div>
                     </div>
