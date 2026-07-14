@@ -297,7 +297,7 @@ function ProHome() {
         <div className="flex items-center justify-between gap-3 mb-3">
           <h2 className="text-lg font-semibold text-ink">What's Next</h2>
           {needsDecision.length > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amber-dark px-2.5 py-1 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-2.5 py-1 text-xs font-semibold">
               <AlertCircle size={12} />
               {needsDecision.length} need{needsDecision.length === 1 ? "s" : ""} a decision
             </span>
