@@ -7,7 +7,7 @@
 
 When a pro logs a job on a unit that HomesBrain already knows about, the app does not reliably attach the job to that unit. Two failures, one of them structural:
 
-1. **The unit roster is keyed on the customer, not the home.** `pro.jobs.new.tsx:556` loads equipment only when the pro picks an *existing customer*. But a home is keyed by address and is shared across pros. A plumber invited by a homeowner types the address as a new customer and never sees the water softener the water-treatment pro logged. They retype it, and a duplicate `equipment` row lands on a home that already knew that unit. This is the `second_pro_added` moment, and today it is the one place the unit history is invisible.
+1. **The unit roster is keyed on the customer, not the home.** `pro.jobs.new.tsx:568` loads equipment only when the pro picks an *existing customer*. But a home is keyed by address and is shared across pros. A plumber invited by a homeowner types the address as a new customer and never sees the water softener the water-treatment pro logged. They retype it, and a duplicate `equipment` row lands on a home that already knew that unit. This is the `second_pro_added` moment, and today it is the one place the unit history is invisible.
 
 2. **HomesBrain AI cannot resolve which appliance the pro means.** `extract-job` receives only `(note, trade)`. It never sees what is on the home, so "replaced the sediment filter on the softener" can only come back as free-text `type: "Water softener"` and become a *new* unit, even when a Kinetico K5 is already on file.
 
@@ -60,7 +60,7 @@ Four rules, in priority order:
 ### Part 4: two prompt traps
 
 - **Consumables are not units.** "Replaced the sediment filter on the softener" must bind to the *softener*. The sediment filter is `what_done`. Naive type extraction will happily mint a "Sediment filter" equipment row. The prompt must instruct the model to identify the durable installed unit, never the part or consumable that was worked on.
-- **A correction must not clobber.** "It's actually the K5 Plus" on a matched unit proposes a change through "Correct unit details" (open the drawer, prefill the new value, let the pro confirm). It never silently overwrites the `equipment` row. This respects the existing `editDetails` gate at `pro.jobs.new.tsx:1358`.
+- **A correction must not clobber.** "It's actually the K5 Plus" on a matched unit proposes a change through "Correct unit details" (open the drawer, prefill the new value, let the pro confirm). It never silently overwrites the `equipment` row. This respects the existing `editDetails` gate at `pro.jobs.new.tsx:1383`.
 
 ## Out of scope
 
