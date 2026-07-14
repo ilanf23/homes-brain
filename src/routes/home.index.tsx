@@ -24,6 +24,7 @@ export const Route = createFileRoute("/home/")({
 });
 
 function HomeOverview() {
+  const t = useT();
   const {
     homeownerId,
     homeowner,
