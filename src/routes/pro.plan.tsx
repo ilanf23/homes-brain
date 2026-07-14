@@ -149,28 +149,11 @@ function PlanPage() {
             slots={slots}
             myInfo={myInfo}
             action={
-              isPro ? (
-                <div className="space-y-2">
-                  {myInfo?.founding_member ? (
-                    <Pill accent="coral">
-                      Founding · ${myInfo.locked_price ?? 19}/mo locked for life
-                    </Pill>
-                  ) : (
-                    <Pill accent="indigo">Your plan — demo (not billed)</Pill>
-                  )}
-                </div>
-              ) : (
-                <Btn
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  loading={busy === "pro"}
-                  onClick={() => switchTo("pro")}
-                >
-                  Upgrade to Pro — ${proPlan?.founding_price ?? proPlan?.price_monthly}/mo ({DEMO_SHORT})
-                </Btn>
-              )
+              <div className="space-y-2">
+                <Pill accent="indigo">Included — free right now</Pill>
+              </div>
             }
+
           />
         </div>
       )}
