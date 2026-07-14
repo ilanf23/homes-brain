@@ -23,9 +23,10 @@ the review slide: editing the customer row is a free-text rename only.
    auto-links: always one tap to confirm, per the existing "when in doubt, do
    not guess" rule.
 2. **Customer picker in the review name editor.** Tapping to edit the customer
-   name on review shows existing customers (name + address) beneath the input,
-   filtered as the pro types, closest first. Picking one links the record to
-   them; free text still works for a genuinely new person.
+   name on review shows existing customers (name + address) beneath the input.
+   Until the pro types (the input opens prefilled), the list shows as-is;
+   typing filters it, substring matches first, then sounds-alike. Picking one
+   links the record to them; free text still works for a genuinely new person.
 
 ## Behavior on link
 
