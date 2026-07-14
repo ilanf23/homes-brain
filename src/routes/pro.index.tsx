@@ -59,23 +59,22 @@ function dueLabel(iso: string): { text: string; tone: "red" | "amber" | "indigo"
   return { text: `Due in ${months} month${months === 1 ? "" : "s"}`, tone: "indigo" };
 }
 
-function addMonthsIso(months: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().slice(0, 10);
-}
+type CustomerBucketRow = {
+  customerId: string;
+  name: string;
+  date: string | null;
+};
 
 function ProHome() {
   const { proId, pro } = useProGuard();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<FollowUpRow[]>([]);
   const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
   const [locationText, setLocationText] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [sheetFor, setSheetFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!proId) return;
@@ -146,96 +145,42 @@ function ProHome() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const needsDecision = useMemo(
-    () => rows.filter((r) => !r.next_service_date),
-    [rows],
-  );
-  const dated = useMemo(
-    () =>
-      rows
-        .filter((r) => !!r.next_service_date)
-        .sort((a, b) => (a.next_service_date! < b.next_service_date! ? -1 : 1)),
-    [rows],
-  );
-
-  function removeRow(id: string) {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-  }
-
-  async function saveFollowUpDate(row: FollowUpRow, iso: string) {
-    if (!iso) return;
-    setBusy(row.id);
-    const { error } = await supabase
-      .from("jobs")
-      .update({ next_service_date: iso })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast("Couldn't save that date. Try again.");
-      return;
-    }
-    setRows((prev) =>
-      prev.map((r) => (r.id === row.id ? { ...r, next_service_date: iso } : r)),
-    );
-    setSheetFor(null);
-    setToast("Follow-up scheduled");
-  }
-
-  async function markNoFollowUp(row: FollowUpRow) {
-    setBusy(row.id);
-    const { error } = await supabase
-      .from("jobs")
-      .update({ no_follow_up: true })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast("Couldn't update. Try again.");
-      return;
-    }
-    removeRow(row.id);
-    setToast("Marked as no follow-up needed");
-  }
-
-  async function markDone(row: FollowUpRow) {
-    setBusy(row.id);
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from("jobs")
-      .update({ follow_up_handled_at: now })
-      .eq("id", row.id);
-    setBusy(null);
-    if (error) {
-      setToast("Couldn't update. Try again.");
-      return;
-    }
-    removeRow(row.id);
-    setToast("Marked done");
-  }
-
-  async function sendReminder(row: FollowUpRow) {
-    if (!row.customer?.email) return;
-    setBusy(row.id);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-follow-up", {
-        body: {
-          job_id: row.id,
-          origin: typeof window !== "undefined" ? window.location.origin : undefined,
-        },
-      });
-      if (error || !(data as { ok?: boolean } | null)?.ok) {
-        setToast("Couldn't send email. Try again.");
-        return;
+  // Group open follow-up jobs by customer. A customer with any undated job goes
+  // in "to set"; otherwise, take their soonest upcoming date for "upcoming".
+  const customerBuckets = useMemo(() => {
+    const byCustomer = new Map<
+      string,
+      { name: string; needsDate: boolean; soonest: string | null }
+    >();
+    for (const r of rows) {
+      if (!r.customer) continue;
+      const key = r.customer.id;
+      const prev = byCustomer.get(key) ?? {
+        name: r.customer.name,
+        needsDate: false,
+        soonest: null,
+      };
+      if (!r.next_service_date) {
+        prev.needsDate = true;
+      } else if (!prev.soonest || r.next_service_date < prev.soonest) {
+        prev.soonest = r.next_service_date;
       }
-      await track("pro", proId, "follow_up_reminder_sent", {
-        job_id: row.id,
-        customer_id: row.customer.id,
-      });
-      removeRow(row.id);
-      setToast(`Reminder sent to ${row.customer.name.split(" ")[0]}`);
-    } finally {
-      setBusy(null);
+      byCustomer.set(key, prev);
     }
-  }
+    const toSet: CustomerBucketRow[] = [];
+    const upcoming: CustomerBucketRow[] = [];
+    for (const [customerId, v] of byCustomer) {
+      if (v.needsDate) {
+        toSet.push({ customerId, name: v.name, date: null });
+      } else if (v.soonest) {
+        upcoming.push({ customerId, name: v.name, date: v.soonest });
+      }
+    }
+    toSet.sort((a, b) => a.name.localeCompare(b.name));
+    upcoming.sort((a, b) => (a.date! < b.date! ? -1 : 1));
+    return { toSet, upcoming, total: toSet.length + upcoming.length };
+  }, [rows]);
+
 
   if (loading || !pro) {
     return (
