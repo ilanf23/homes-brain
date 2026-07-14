@@ -30,15 +30,15 @@ type FollowUpRow = {
   address: string | null;
 };
 
-function timeOfDayGreetingKey(): "pi.greeting.morning" | "pi.greeting.afternoon" | "pi.greeting.evening" {
+function timeOfDayGreetingKey():
+  | "pi.greeting.morning"
+  | "pi.greeting.afternoon"
+  | "pi.greeting.evening" {
   const h = new Date().getHours();
   if (h < 12) return "pi.greeting.morning";
   if (h < 18) return "pi.greeting.afternoon";
   return "pi.greeting.evening";
 }
-
-
-
 
 type CustomerBucketRow = {
   customerId: string;
@@ -78,20 +78,19 @@ function ProHome() {
           .eq("actor", `pro:${proId}`)
           .eq("type", "review_requested")
           .gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
-        supabase
-          .from("jobs")
-          .select("id", { count: "exact", head: true })
-          .eq("pro_id", proId),
+        supabase.from("jobs").select("id", { count: "exact", head: true }).eq("pro_id", proId),
       ]);
       if (cancelled) return;
-      const mapped: FollowUpRow[] = ((j ?? []) as unknown as Array<{
-        id: string;
-        what_done: string;
-        next_service_date: string | null;
-        customers: FollowUpRow["customer"];
-        homes: { address: string } | null;
-        equipment: { type: string | null } | null;
-      }>).map((row) => ({
+      const mapped: FollowUpRow[] = (
+        (j ?? []) as unknown as Array<{
+          id: string;
+          what_done: string;
+          next_service_date: string | null;
+          customers: FollowUpRow["customer"];
+          homes: { address: string } | null;
+          equipment: { type: string | null } | null;
+        }>
+      ).map((row) => ({
         id: row.id,
         what_done: row.what_done,
         next_service_date: row.next_service_date,
@@ -163,7 +162,6 @@ function ProHome() {
     return { toSet, upcoming, total: toSet.length + upcoming.length };
   }, [rows]);
 
-
   if (loading || !pro) {
     return (
       <ProShell pro={pro} active="home" hideMobileCta>
@@ -172,13 +170,11 @@ function ProHome() {
     );
   }
 
-  const firstName =
-    (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
+  const firstName = (pro.owner_first_name?.trim() || pro.business?.split(" ")[0] || "").trim();
   const greetingWord = t(timeOfDayGreetingKey());
   const greeting = firstName ? `${greetingWord}, ${firstName}.` : `${greetingWord}.`;
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
-
 
   return (
     <ProShell pro={pro} active="home" hideMobileCta>
@@ -307,9 +303,6 @@ function ProHome() {
         )}
       </section>
 
-
-
-
       {googleConnected && (
         <section className="anim-fade-up d-3 mt-8">
           <Card className="flex items-center justify-between gap-3">
@@ -322,7 +315,8 @@ function ProHome() {
               </div>
               {reviewAsks7d > 0 && (
                 <div className="mt-0.5 text-sm text-muted">
-                  {reviewAsks7d} {reviewAsks7d === 1 ? t("pi.reviewAsk.one") : t("pi.reviewAsk.other")}
+                  {reviewAsks7d}{" "}
+                  {reviewAsks7d === 1 ? t("pi.reviewAsk.one") : t("pi.reviewAsk.other")}
                 </div>
               )}
             </div>
@@ -349,4 +343,3 @@ function ProHome() {
     </ProShell>
   );
 }
-

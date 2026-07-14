@@ -238,8 +238,7 @@ const en = {
   "hi.homeAddress": "Home address",
   "hi.homeAddressPh": "123 Main St, Austin, TX",
   "hi.yourPhone": "Your phone",
-  "hi.phoneHintExisting":
-    "From the number you signed in with. Change it here if it's wrong.",
+  "hi.phoneHintExisting": "From the number you signed in with. Change it here if it's wrong.",
   "hi.phoneHintNew": "So your pros can reach you. Optional.",
   "hi.phonePh": "555-555-1234",
   "hi.saving": "Saving…",
@@ -257,7 +256,6 @@ const en = {
   "setup.item.trade": "Choose your trades",
   "setup.item.service_area": "Service area",
   "setup.item.phone": "Contact phone",
-
 } as const;
 
 export type TKey = keyof typeof en;
@@ -443,7 +441,8 @@ const es: Partial<Record<TKey, string>> = {
   "hi.pay": "Pagar",
   "hi.makeComplete": "Completa tu registro",
   "hi.addAppliancesTitle": "Agrega tus electrodomésticos",
-  "hi.addAppliancesSub": "Las garantías y las revisiones de retiro empiezan con un número de modelo.",
+  "hi.addAppliancesSub":
+    "Las garantías y las revisiones de retiro empiezan con un número de modelo.",
   "hi.inviteProsTitle": "Invita a tus otros profesionales",
   "hi.inviteProsSub": "Cada oficio que agregas hace más completo el registro de tu hogar.",
   "hi.welcome": "Bienvenido",
@@ -454,8 +453,7 @@ const es: Partial<Record<TKey, string>> = {
   "hi.homeAddress": "Dirección del hogar",
   "hi.homeAddressPh": "Calle 123, Ciudad, Estado",
   "hi.yourPhone": "Tu teléfono",
-  "hi.phoneHintExisting":
-    "Del número con el que iniciaste sesión. Cámbialo aquí si está mal.",
+  "hi.phoneHintExisting": "Del número con el que iniciaste sesión. Cámbialo aquí si está mal.",
   "hi.phoneHintNew": "Para que tus profesionales puedan contactarte. Opcional.",
   "hi.phonePh": "555-555-1234",
   "hi.saving": "Guardando…",
@@ -473,7 +471,6 @@ const es: Partial<Record<TKey, string>> = {
   "setup.item.trade": "Elige tus oficios",
   "setup.item.service_area": "Área de servicio",
   "setup.item.phone": "Teléfono de contacto",
-
 };
 
 const ru: Partial<Record<TKey, string>> = {
@@ -668,8 +665,7 @@ const ru: Partial<Record<TKey, string>> = {
   "hi.homeAddress": "Адрес дома",
   "hi.homeAddressPh": "ул. Ленина 1, кв. 5, Москва",
   "hi.yourPhone": "Ваш телефон",
-  "hi.phoneHintExisting":
-    "Номер, с которым вы вошли. Измените, если он неверный.",
+  "hi.phoneHintExisting": "Номер, с которым вы вошли. Измените, если он неверный.",
   "hi.phoneHintNew": "Чтобы ваши специалисты могли связаться. Необязательно.",
   "hi.phonePh": "+7 999 000-00-00",
   "hi.saving": "Сохранение…",
@@ -687,7 +683,6 @@ const ru: Partial<Record<TKey, string>> = {
   "setup.item.trade": "Выберите свои специальности",
   "setup.item.service_area": "Зона обслуживания",
   "setup.item.phone": "Контактный телефон",
-
 };
 
 const uk: Partial<Record<TKey, string>> = {
@@ -881,8 +876,7 @@ const uk: Partial<Record<TKey, string>> = {
   "hi.homeAddress": "Адреса дому",
   "hi.homeAddressPh": "вул. Хрещатик 1, кв. 5, Київ",
   "hi.yourPhone": "Ваш телефон",
-  "hi.phoneHintExisting":
-    "Номер, з яким ви ввійшли. Змініть, якщо він неправильний.",
+  "hi.phoneHintExisting": "Номер, з яким ви ввійшли. Змініть, якщо він неправильний.",
   "hi.phoneHintNew": "Щоб ваші фахівці могли зв’язатися. Необов’язково.",
   "hi.phonePh": "+380 00 000 00 00",
   "hi.saving": "Зберігаємо…",
@@ -900,7 +894,6 @@ const uk: Partial<Record<TKey, string>> = {
   "setup.item.trade": "Оберіть свої спеціальності",
   "setup.item.service_area": "Зона обслуговування",
   "setup.item.phone": "Контактний телефон",
-
 };
 
 const DICTS: Record<Locale, Partial<Record<TKey, string>>> = { en, es, ru, uk };
