@@ -330,6 +330,24 @@ function HomeownerSettings() {
                       disabled={optedOut}
                     />
                   </SettingRow>
+                  <p className="px-1 pb-3 -mt-1 text-xs text-muted leading-relaxed">
+                    By turning this on, I agree to receive recurring automated service and
+                    reminder text messages from HomesBrain at the mobile number on my profile.
+                    Consent is not a condition of any purchase or service. Msg &amp; data rates
+                    may apply. Message frequency varies. Reply STOP to opt out, HELP for help.
+                    See our{" "}
+                    <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                      Privacy Policy
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="/messaging-terms"
+                      className="font-semibold text-indigo hover:underline"
+                    >
+                      Messaging Terms
+                    </Link>
+                    .
+                  </p>
                 </div>
 
                 <div className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
