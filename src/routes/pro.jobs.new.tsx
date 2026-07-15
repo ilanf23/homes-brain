@@ -1997,7 +1997,6 @@ function NewJob() {
     // Attach media. Wait out an in-flight upload (progress stays visible);
     // a failed upload never blocks the job or the record.
     if (videoBusy.current) await videoBusy.current;
-    if (photoBusy.current) await photoBusy.current;
     const mediaRows: Array<{
       job_id: string;
       kind: "photo" | "video";
@@ -2014,15 +2013,6 @@ function NewJob() {
         duration_seconds: videoFinal.current.duration,
       });
     }
-    if (photoFinal.current) {
-      mediaRows.push({
-        job_id: job.id,
-        kind: "photo",
-        url: photoFinal.current.path,
-        thumbnail_url: null,
-        duration_seconds: null,
-      });
-    }
     if (!(await insertJobMedia(mediaRows))) {
       setToast("The video didn't attach. The record still sent without it.");
       setTimeout(() => setToast(null), 4500);
@@ -2035,7 +2025,6 @@ function NewJob() {
     if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
     if (videoFinal.current) presentKeys.add(FIELD_VIDEO);
-    if (photoFinal.current) presentKeys.add(FIELD_PHOTOS);
     const hidden = Array.from(hiddenFields).filter((key) => presentKeys.has(key));
 
     const recordPayload = {
