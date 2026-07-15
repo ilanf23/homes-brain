@@ -1091,8 +1091,20 @@ function NewJob() {
   const reviewEmailInvalid = !!trimmedReviewEmail && !isEmail(trimmedReviewEmail);
   const missingReviewAddress = !previewAddress.trim();
   const missingReviewEmail = !trimmedReviewEmail;
+  const reviewEmailValid = !missingReviewEmail && !reviewEmailInvalid;
   const reviewRequiredComplete =
     !missingReviewAddress && !missingReviewEmail && !reviewEmailInvalid;
+  // Once the email is valid on the Review step, glide the Send button into
+  // view so the pro can't miss what to do next. Fires only on the transition
+  // to valid, and only while on Review, so we never yank focus later.
+  const sendBtnRef = useRef<HTMLButtonElement>(null);
+  const prevEmailValid = useRef(false);
+  useEffect(() => {
+    if (stage === "review" && reviewEmailValid && !prevEmailValid.current) {
+      sendBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    prevEmailValid.current = reviewEmailValid;
+  }, [reviewEmailValid, stage]);
   const effectiveCustomerLocale: Locale = translationState === "failed" ? "en" : customerLocale;
   const customerCopy = customerPreviewCopy(effectiveCustomerLocale);
   const previewWork = translatedRecord?.whatDone ?? whatDone;
