@@ -187,6 +187,7 @@ export function useHomeownerGuard() {
     homeowner: bundle.homeowner,
     setHomeowner: (h: HomeownerRow) => setBundle((b) => ({ ...b, homeowner: h })),
     home: bundle.home,
+    homes: bundle.homes,
     equipment: bundle.equipment,
     jobs: bundle.jobs,
     pros: bundle.pros,
