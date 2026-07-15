@@ -30,6 +30,7 @@ function HomeOverview() {
     homeownerId,
     homeowner,
     home,
+    homes,
     equipment,
     jobs,
     pros,
