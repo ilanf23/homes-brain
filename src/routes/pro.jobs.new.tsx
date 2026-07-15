@@ -1863,6 +1863,11 @@ function NewJob() {
       if (customerLocale !== (isLocale(c.preferred_locale) ? c.preferred_locale : "en")) {
         customerUpdates.preferred_locale = customerLocale;
       }
+      // On dedupe, fill in a phone we did not have on file so future SMS works.
+      if (dedupeCustomer && !phoneAddr && newCustomer.phone.trim()) {
+        phoneAddr = newCustomer.phone.trim();
+        (customerUpdates as { phone?: string }).phone = phoneAddr;
+      }
       if (Object.keys(customerUpdates).length) {
         const { error: customerUpdateErr } = await supabase
           .from("customers")
