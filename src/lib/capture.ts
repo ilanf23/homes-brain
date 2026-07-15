@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Locale } from "@/lib/i18n";
 
 /* Magic capture for log-a-job: nameplate photo → equipment fields, and live
    voice dictation → "what was done". */
+
+/* BCP-47 tags for the browser speech recognizer, keyed by the pro's UI locale
+   so dictation listens in the language the pro is working in (not the device's
+   OS language). es-US suits the US home-services market. */
+const SPEECH_LANG: Record<Locale, string> = {
+  en: "en-US",
+  es: "es-US",
+  ru: "ru-RU",
+  uk: "uk-UA",
+};
 
 export type NameplateScan = {
   type: string | null;
@@ -43,7 +54,7 @@ async function decodeImage(
   }
 }
 
-async function toJpegDataUri(file: File): Promise<string> {
+async function drawToCanvas(file: File): Promise<HTMLCanvasElement> {
   const { source, width, height, release } = await decodeImage(file);
   try {
     const scale = Math.min(1, MAX_EDGE / Math.max(width, height));
@@ -51,10 +62,26 @@ async function toJpegDataUri(file: File): Promise<string> {
     canvas.width = Math.max(1, Math.round(width * scale));
     canvas.height = Math.max(1, Math.round(height * scale));
     canvas.getContext("2d")!.drawImage(source, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.85);
+    return canvas;
   } finally {
     release();
   }
+}
+
+async function toJpegDataUri(file: File): Promise<string> {
+  return (await drawToCanvas(file)).toDataURL("image/jpeg", 0.85);
+}
+
+/* Resized JPEG as a Blob, for uploading the unit photo to storage. */
+export async function toJpegBlob(file: File): Promise<Blob> {
+  const canvas = await drawToCanvas(file);
+  return await new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Couldn't read that photo. Try a JPEG."))),
+      "image/jpeg",
+      0.85,
+    ),
+  );
 }
 
 export async function scanNameplate(file: File): Promise<NameplateScan> {
@@ -107,9 +134,10 @@ export async function extractFromNotes(
   note: string,
   trade?: string,
   units?: UnitHint[],
+  locale?: Locale,
 ): Promise<JobExtract> {
   const { data, error } = await supabase.functions.invoke("extract-job", {
-    body: { note, trade, units },
+    body: { note, trade, units, locale },
   });
   if (error) {
     const ctx = (error as { context?: Response }).context;
@@ -133,9 +161,13 @@ export type FullJobExtract = JobExtract & {
   address: string | null;
 };
 
-export async function extractFullJob(note: string, trade?: string): Promise<FullJobExtract> {
+export async function extractFullJob(
+  note: string,
+  trade?: string,
+  locale?: Locale,
+): Promise<FullJobExtract> {
   const { data, error } = await supabase.functions.invoke("extract-job", {
-    body: { note, trade, mode: "full" },
+    body: { note, trade, mode: "full", locale },
   });
   if (error) {
     const ctx = (error as { context?: Response }).context;
@@ -147,6 +179,44 @@ export async function extractFullJob(note: string, trade?: string): Promise<Full
   }
   if (data?.error) throw new Error(data.error);
   return data as FullJobExtract;
+}
+
+/* ---------- Server-side transcription ---------- */
+
+/* Read a recorded clip as base64 (no data: prefix) for JSON transport. */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Couldn't read the recording."));
+    reader.onload = () => {
+      const result = String(reader.result);
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+/* Transcribe a recorded voice clip on the server. Far more accurate than the
+   browser Web Speech API, and it handles mixed-language speech (e.g. an English
+   customer name inside a Russian sentence), which the browser recognizer cannot.
+   The pro's locale is passed for an optional hint; the caller keeps the Web
+   Speech text as a fallback if this throws. */
+export async function transcribeAudio(blob: Blob, locale?: Locale): Promise<string> {
+  const audio = await blobToBase64(blob);
+  const { data, error } = await supabase.functions.invoke("transcribe", {
+    body: { audio, mime: blob.type || "audio/webm", locale },
+  });
+  if (error) {
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.json().catch(() => null);
+      if (body?.error) throw new Error(body.error);
+    }
+    throw new Error("Couldn't transcribe the recording.");
+  }
+  if (data?.error) throw new Error(data.error);
+  return typeof data?.text === "string" ? data.text : "";
 }
 
 /* ---------- Voice dictation (Web Speech API) ---------- */
@@ -173,7 +243,7 @@ function recognitionCtor(): (new () => Recognition) | undefined {
   return (w.SpeechRecognition ?? w.webkitSpeechRecognition) as (new () => Recognition) | undefined;
 }
 
-export function useDictation(onText: (finalText: string) => void) {
+export function useDictation(onText: (finalText: string) => void, locale?: Locale) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const recRef = useRef<Recognition | null>(null);
@@ -187,7 +257,8 @@ export function useDictation(onText: (finalText: string) => void) {
     const rec = new Ctor();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = navigator.language || "en-US";
+    // Listen in the pro's chosen UI language; fall back to the device language.
+    rec.lang = (locale && SPEECH_LANG[locale]) || navigator.language || "en-US";
     rec.onresult = (e) => {
       let pending = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -232,6 +303,15 @@ export function useDictation(onText: (finalText: string) => void) {
    stop() tears down the stream + context + rAF so the mic never stays hot. */
 export const MIC_BAND_COUNT = 48;
 
+/* Container/codec for the recorded clip. We prefer Opus in WebM (Chrome/Firefox)
+   and fall back to MP4/AAC (Safari); both are accepted by the transcription
+   model, which infers the format from the blob's MIME type. */
+function pickRecorderMime(): string | undefined {
+  if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) return undefined;
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+  return candidates.find((m) => MediaRecorder.isTypeSupported(m));
+}
+
 export function useMicLevel() {
   const levelRef = useRef(0);
   const bandsRef = useRef(new Float32Array(MIC_BAND_COUNT));
@@ -239,6 +319,13 @@ export function useMicLevel() {
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number | null>(null);
+  // Recording rides the same getUserMedia stream as the level meter so we never
+  // open a second microphone (a third acquisition alongside Web Speech is what
+  // breaks on mobile Safari). Chunks accrue in `ondataavailable`; the finished
+  // Blob is only assembled in `onstop`, after the final chunk lands.
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordingSupported = typeof MediaRecorder !== "undefined";
   const supported =
     typeof window !== "undefined" &&
     !!navigator.mediaDevices?.getUserMedia &&
@@ -249,6 +336,22 @@ export function useMicLevel() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+      // Start recording off the same stream for server-side transcription.
+      if (recordingSupported) {
+        try {
+          chunksRef.current = [];
+          const mime = pickRecorderMime();
+          const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+          rec.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+          };
+          rec.start();
+          recorderRef.current = rec;
+        } catch {
+          // Recording unavailable: the level meter and Web Speech still work.
+          recorderRef.current = null;
+        }
+      }
       const ctx = new AudioContext();
       // Resume in case the context started suspended (autoplay policy).
       if (ctx.state === "suspended") await ctx.resume();
@@ -310,9 +413,44 @@ export function useMicLevel() {
     }
   }
 
+  /* Stop the recorder and resolve with the finished clip. Resolves from the
+     `onstop` event (fired after the final `dataavailable`), never synchronously
+     from `.stop()` - resolving early would ship a truncated or empty blob.
+     Resolves null when nothing was recorded or recording is unsupported. Call
+     this BEFORE stop(), while the stream is still live. */
+  function stopRecording(): Promise<Blob | null> {
+    const rec = recorderRef.current;
+    recorderRef.current = null;
+    if (!rec || rec.state === "inactive") return Promise.resolve(null);
+    return new Promise((resolve) => {
+      rec.onstop = () => {
+        const chunks = chunksRef.current;
+        chunksRef.current = [];
+        if (!chunks.length) return resolve(null);
+        resolve(new Blob(chunks, { type: rec.mimeType || chunks[0].type || "audio/webm" }));
+      };
+      try {
+        rec.stop();
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
   function stop() {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
+    // Discard any in-progress recording (finish handlers call stopRecording()
+    // first to keep the blob; a bare stop() is a cancel/teardown).
+    if (recorderRef.current) {
+      try {
+        recorderRef.current.stop();
+      } catch {
+        /* already inactive */
+      }
+      recorderRef.current = null;
+    }
+    chunksRef.current = [];
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     void ctxRef.current?.close();
@@ -324,5 +462,5 @@ export function useMicLevel() {
 
   useEffect(() => () => stop(), []);
 
-  return { levelRef, bandsRef, active, supported, start, stop };
+  return { levelRef, bandsRef, active, supported, recordingSupported, start, stop, stopRecording };
 }
