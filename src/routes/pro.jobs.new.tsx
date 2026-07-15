@@ -3500,7 +3500,7 @@ function NewJob() {
                   {/* Send action area. The Google review ask is always-on by
                       policy (no gating), so it is not a per-send toggle here. */}
                   <div
-                    ref={sendBtnRef as unknown as React.RefObject<HTMLDivElement>}
+                    ref={sendBtnRef}
                     className={`mt-5 rounded-2xl border-t border-line pt-4 transition-all duration-500 ${
                       reviewEmailValid
                         ? "shadow-[0_0_0_2px_var(--indigo)] shadow-indigo/20"
