@@ -413,7 +413,7 @@ export function ProShell({
             />
             <div
               id="pro-mobile-menu"
-              className="absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col bg-paper shadow-[-24px_0_60px_-24px_rgba(22,22,15,0.35)] anim-slide-in-right"
+              className="absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col bg-paper shadow-[-24px_0_60px_-24px_rgba(22,22,15,0.35)] anim-fade-up"
             >
               <div className="flex h-14 items-center justify-between border-b border-line px-4">
                 <Link
