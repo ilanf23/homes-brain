@@ -229,6 +229,10 @@ function ClaimByToken() {
         p_first_name: resp.first_name ?? undefined,
       });
       if (ensureErr) console.error("pro_ensure failed", ensureErr);
+      // Idempotent one-time welcome. Guarded server-side by pros.welcomed_at.
+      supabase.functions
+        .invoke("pro-welcome", { body: { origin: window.location.origin } })
+        .catch((err) => console.error("pro-welcome failed", err));
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
       if (user) {
@@ -238,6 +242,7 @@ function ClaimByToken() {
       navigate({ to: "/pro" });
       return;
     }
+
     // Default: homeowner login-only. Ensure a homeowners row exists for
     // this auth user (works even if the same email already has a pros
     // row - one auth user can hold both). get_home_view calls
