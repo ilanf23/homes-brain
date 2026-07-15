@@ -2255,10 +2255,6 @@ function NewJob() {
     setApplianceHistory([]);
     setAttrValues({});
     setActiveTrade(proTrade);
-    if (scanPreview) URL.revokeObjectURL(scanPreview);
-    setScanPreview(null);
-    setScanState("idle");
-    setScanError(null);
     dictation.stop();
     amendDictation.stop();
     micLevel.stop();
