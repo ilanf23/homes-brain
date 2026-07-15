@@ -56,6 +56,7 @@ import {
 import {
   probeVideo,
   uploadJobMedia,
+  removeJobMediaObject,
   insertJobMedia,
   VIDEO_MAX_BYTES,
   VIDEO_MAX_SECONDS,
