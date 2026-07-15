@@ -14,7 +14,7 @@ ALTER TABLE public.job_media ENABLE ROW LEVEL SECURITY;
 
 -- Pros manage media on their own jobs.
 CREATE POLICY job_media_pro_all ON public.job_media
-  FOR ALL
+  FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM public.jobs j
                  WHERE j.id = job_media.job_id AND j.pro_id = public.my_pro_id()))
   WITH CHECK (EXISTS (SELECT 1 FROM public.jobs j
@@ -42,6 +42,11 @@ CREATE POLICY "job media pro delete" ON storage.objects
   USING (bucket_id = 'job-media'
          AND (storage.foldername(name))[1] = public.my_pro_id()::text);
 
+-- records.hidden_fields was written by the app since 20260708 but its
+-- migration never landed in the repo or the database; add it for real so
+-- both the existing hide-a-field feature and the function below work.
+ALTER TABLE public.records ADD COLUMN IF NOT EXISTS hidden_fields text[];
+
 -- get_home_view: records entries gain hidden_fields so the homeowner record
 -- page can hide exactly what the pro excluded (video/photos included).
 CREATE OR REPLACE FUNCTION public.get_home_view()
@@ -51,6 +56,7 @@ AS $$
 DECLARE v_ho_id uuid := public.my_homeowner_id();
 BEGIN
   IF v_ho_id IS NULL THEN
+    -- Auto-create on first authenticated view (magic-link login without prior signup)
     IF auth.uid() IS NOT NULL THEN v_ho_id := public.homeowner_ensure(NULL); END IF;
   END IF;
   IF v_ho_id IS NULL THEN RETURN NULL; END IF;
