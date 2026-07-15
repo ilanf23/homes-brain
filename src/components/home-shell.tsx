@@ -136,6 +136,7 @@ export function useHomeownerGuard() {
       setBundle({
         homeowner: view.homeowner,
         home: view.home,
+        homes: view.homes ?? (view.home ? [view.home] : []),
         equipment: view.equipment ?? [],
         jobs: view.jobs ?? [],
         pros: view.pros ?? [],
