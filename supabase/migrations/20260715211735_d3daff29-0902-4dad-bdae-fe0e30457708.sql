@@ -1,0 +1,1 @@
+ALTER TABLE public.pros ADD COLUMN IF NOT EXISTS welcomed_at timestamptz;

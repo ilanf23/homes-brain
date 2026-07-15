@@ -120,10 +120,16 @@ function AuthCallback() {
           });
           if (ensureErr) console.error("pro_ensure failed", ensureErr);
         }
+        // Idempotent one-time welcome. Safe to call on every login; the
+        // edge function guards on pros.welcomed_at and only sends once.
+        supabase.functions
+          .invoke("pro-welcome", { body: { origin: window.location.origin } })
+          .catch((err) => console.error("pro-welcome failed", err));
         await logEvent(`user:${user.id}`, "pro_signed_in", { via: "google" });
         navigate({ to: "/pro" });
         return;
       }
+
 
       // Default and explicit-homeowner path. If a pros row exists but no
       // homeowner role was chosen, keep the legacy behavior of routing

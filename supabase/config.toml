@@ -92,3 +92,9 @@ verify_jwt = false
 [functions.sms-inbound]
 verify_jwt = false
 
+# One-time welcome email for a newly created pro. Same in-handler
+# authenticated-pro pattern as invite-claim.
+[functions.pro-welcome]
+verify_jwt = false
+
+
