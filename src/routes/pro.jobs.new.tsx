@@ -3409,8 +3409,23 @@ function NewJob() {
                     }`}
                   >
                     <Field
-                      label={uiCopy.email}
-                      hint={reviewEmailInvalid ? uiCopy.emailInvalid : uiCopy.emailHelp}
+                      label={
+                        <span className="flex items-center gap-2">
+                          <span>{uiCopy.email}</span>
+                          {missingReviewEmail && (
+                            <span className="rounded-full bg-redbg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red">
+                              Needed to send
+                            </span>
+                          )}
+                        </span>
+                      }
+                      hint={
+                        reviewEmailInvalid
+                          ? uiCopy.emailInvalid
+                          : missingReviewEmail
+                            ? "Add the customer's email so we can send the record."
+                            : uiCopy.emailHelp
+                      }
                     >
                       <Input
                         type="email"
@@ -3423,9 +3438,17 @@ function NewJob() {
                         className={
                           missingReviewEmail || reviewEmailInvalid
                             ? "border-red bg-redbg/30 focus:border-red focus:ring-red/10"
-                            : ""
+                            : reviewEmailValid
+                              ? "border-indigo bg-indigobg/30"
+                              : ""
                         }
                       />
+                      {reviewEmailValid && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                          <Check size={14} aria-hidden="true" />
+                          Ready to send. Tap {uiCopy.sendRecord} below.
+                        </div>
+                      )}
                     </Field>
                   </div>
 
