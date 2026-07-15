@@ -7,11 +7,13 @@ import {
   Gift,
   LayoutDashboard,
   LogOut,
+  Menu,
   Plus,
   ReceiptText,
   Settings,
   Star,
   Users,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
