@@ -103,6 +103,9 @@ export async function uploadJobMedia(opts: {
   await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", data.signedUrl);
+    xhr.timeout = 180000;
+    xhr.ontimeout = () =>
+      reject(new Error("Upload timed out. Check your connection and try again."));
     xhr.setRequestHeader("content-type", opts.contentType);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) opts.onProgress?.(e.loaded / e.total);

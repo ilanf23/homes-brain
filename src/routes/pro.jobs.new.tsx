@@ -16,7 +16,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { Celebration } from "@/components/celebration";
-import { AlertTriangle, Check, ChevronRight, Pencil, QrCode } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  Pencil,
+  QrCode,
+  Video as VideoIcon,
+} from "lucide-react";
 import { matchVoiceCustomer, normalizedName, suggestCloseCustomers } from "@/lib/customer-match";
 import {
   buildRecordUrl,
@@ -38,10 +45,18 @@ import {
   extractFromNotes,
   extractFullJob,
   scanNameplate,
+  toJpegBlob,
   transcribeAudio,
   useDictation,
   useMicLevel,
 } from "@/lib/capture";
+import {
+  probeVideo,
+  uploadJobMedia,
+  removeJobMediaObject,
+  VIDEO_MAX_BYTES,
+  VIDEO_MAX_SECONDS,
+} from "@/lib/media";
 import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 import { Select } from "@/lib/ui";
@@ -110,19 +125,39 @@ function deliveryErrorMessage(code: string | null) {
   return "Check your connection and try the email again.";
 }
 
+/* Bound a network call so a busy overlay can never trap the pro: a stalled
+   connection becomes a normal error instead of an endless spinner. */
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        window.clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 const STAGES: Stage[] = ["customer", "location", "work", "review"];
 const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
 
 /* Rows of the "Building the record" modal, in reveal order. Also used to seed
    the modal in its loading state the moment the voice overlay closes, so the
-   pro never lands back on the customer list wondering if the AI heard them. */
+   pro never lands back on the customer list wondering if the AI heard them.
+   skeletonWidth is the loading placeholder's width (%), roughly matching how
+   long each row's real value tends to be. */
 const FULL_REVEAL_ROWS = [
-  { key: "customer", label: "Customer" },
-  { key: "address", label: "Location" },
-  { key: "contact", label: "Contact" },
-  { key: "equipment", label: "Equipment" },
-  { key: "work", label: "What was done" },
-  { key: "next", label: "Next service" },
+  { key: "customer", label: "Customer", skeletonWidth: 72 },
+  { key: "address", label: "Location", skeletonWidth: 58 },
+  { key: "contact", label: "Contact", skeletonWidth: 66 },
+  { key: "equipment", label: "Equipment", skeletonWidth: 48 },
+  { key: "work", label: "What was done", skeletonWidth: 86 },
+  { key: "next", label: "Next service", skeletonWidth: 40 },
 ] as const;
 
 /* Canonical keys for the optional record rows the pro can hide from the
@@ -360,6 +395,28 @@ function NewJob() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanFilledDetails, setScanFilledDetails] = useState(false);
 
+  // Walkthrough video (optional). The upload starts the moment the pro picks
+  // it so the end of the form is never a long network wait. `videoFinal` and
+  // `photoFinal` are refs, not state: submit reads them after awaiting the
+  // busy promise and must not see a stale closure.
+  type VideoUploadState = {
+    status: "uploading" | "done" | "error";
+    progress: number; // 0..1
+    error?: string;
+  };
+  const videoRef = useRef<HTMLInputElement>(null);
+  const [videoUpload, setVideoUpload] = useState<VideoUploadState | null>(null);
+  const videoBusy = useRef<Promise<void> | null>(null);
+  const videoFinal = useRef<{
+    url: string;
+    path: string;
+    posterUrl: string | null;
+    posterPath: string | null;
+    duration: number | null;
+  } | null>(null);
+  const photoBusy = useRef<Promise<void> | null>(null);
+  const photoFinal = useRef<{ url: string; path: string } | null>(null);
+
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
   const [extractState, setExtractState] = useState<"idle" | "working" | "done" | "error">("idle");
@@ -387,6 +444,7 @@ function NewJob() {
   type RevealStep = {
     key: string;
     label: string;
+    skeletonWidth: number;
     value: string | null;
     status: "pending" | "active" | "done";
   };
@@ -403,6 +461,22 @@ function NewJob() {
   const amendDictation = useDictation((text) => {
     setAmendNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
   }, uiLocale);
+  /* The HomesBrain AI mark is a bundled PNG; if it ever fails to load, the
+     voice buttons fall back to the vector mic so the flagship CTA never
+     renders as a broken-image slot. */
+  const [micImgOk, setMicImgOk] = useState(true);
+
+  /* Monotonic id for the busy voice flows (full capture, review amend).
+     Cancelling or starting a new run bumps it, so a stale in-flight request
+     that later resolves can no longer touch state. */
+  const voiceRunRef = useRef(0);
+  function cancelVoiceBusy() {
+    voiceRunRef.current++;
+    setFullBusy(false);
+    setAmendBusy(false);
+    setFullReveal(null);
+  }
+
   // Review rows the AI just changed, flashed indigo so the edit is visible.
   const [aiFlash, setAiFlash] = useState<Set<string>>(new Set());
   const aiFlashTimer = useRef<number | null>(null);
@@ -444,7 +518,9 @@ function NewJob() {
     const fb = fallback.trim();
     if (!clip) return fb;
     try {
-      const text = (await transcribeAudio(clip, uiLocale)).trim();
+      const text = (
+        await withTimeout(transcribeAudio(clip, uiLocale), 20_000, "transcription timed out")
+      ).trim();
       return text || fb;
     } catch {
       return fb;
@@ -735,6 +811,22 @@ function NewJob() {
     setScanError(null);
     if (scanPreview) URL.revokeObjectURL(scanPreview);
     setScanPreview(URL.createObjectURL(file));
+    // Persist the photo too: until now it only fed the AI scan and was lost.
+    if (proId) {
+      photoFinal.current = null;
+      photoBusy.current = (async () => {
+        const blob = await toJpegBlob(file);
+        const up = await uploadJobMedia({
+          proId,
+          file: blob,
+          ext: "jpg",
+          contentType: "image/jpeg",
+        });
+        photoFinal.current = { url: up.publicUrl, path: up.path };
+      })().catch(() => {
+        // Photo persistence is best effort; the scan result is the payoff.
+      });
+    }
     try {
       const r = await scanNameplate(file);
       const filled: string[] = [];
@@ -761,6 +853,76 @@ function NewJob() {
     } catch (e) {
       setScanState("error");
       setScanError(e instanceof Error ? e.message : "Scan failed. Try again.");
+    }
+  }
+
+  async function onPickVideo(file: File) {
+    if (!proId) return;
+    if (file.size > VIDEO_MAX_BYTES) {
+      setToast("That video is too big. Keep it under 200MB.");
+      setTimeout(() => setToast(null), 4500);
+      return;
+    }
+    // Replacing a video: the old objects are orphans now, clean them up.
+    const old = videoFinal.current;
+    videoFinal.current = null;
+    if (old) {
+      void removeJobMediaObject(old.path);
+      if (old.posterPath) void removeJobMediaObject(old.posterPath);
+    }
+    setVideoUpload({ status: "uploading", progress: 0 });
+    const task = (async () => {
+      const probe = await probeVideo(file);
+      if (probe.duration && probe.duration > VIDEO_MAX_SECONDS) {
+        setVideoUpload({ status: "error", progress: 0, error: "Keep it under 3 minutes." });
+        return;
+      }
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const video = await uploadJobMedia({
+        proId,
+        file,
+        ext,
+        contentType: file.type || "video/mp4",
+        onProgress: (f) =>
+          setVideoUpload((v) => (v && v.status === "uploading" ? { ...v, progress: f } : v)),
+      });
+      let poster: { path: string; publicUrl: string } | null = null;
+      if (probe.poster) {
+        poster = await uploadJobMedia({
+          proId,
+          file: probe.poster,
+          ext: "jpg",
+          contentType: "image/jpeg",
+        }).catch(() => null);
+      }
+      videoFinal.current = {
+        url: video.publicUrl,
+        path: video.path,
+        posterUrl: poster?.publicUrl ?? null,
+        posterPath: poster?.path ?? null,
+        duration: probe.duration,
+      };
+      setVideoUpload({ status: "done", progress: 1 });
+      await logEvent(`pro:${proId}`, "video_recorded", { duration: probe.duration });
+    })().catch((e) => {
+      setVideoUpload({
+        status: "error",
+        progress: 0,
+        error: e instanceof Error ? e.message : "Upload failed. Try again.",
+      });
+    });
+    videoBusy.current = task;
+    await task;
+  }
+
+  function removeVideo() {
+    const old = videoFinal.current;
+    videoFinal.current = null;
+    videoBusy.current = null;
+    setVideoUpload(null);
+    if (old) {
+      void removeJobMediaObject(old.path);
+      if (old.posterPath) void removeJobMediaObject(old.posterPath);
     }
   }
 
@@ -1091,6 +1253,7 @@ function NewJob() {
     // until stop; combine it with `fullNote` as the fallback transcript.
     const combined = `${fullNote} ${fullDictation.interim ?? ""}`.replace(/\s+/g, " ").trim();
     fullDictation.stop();
+    const run = ++voiceRunRef.current;
     // Close the overlay and open the "Building the record" modal right away in
     // its loading state - it also covers the transcription wait. Dropping the
     // pro back on the customer list while we read the note looks like a failure.
@@ -1099,6 +1262,7 @@ function NewJob() {
     setFullReveal(FULL_REVEAL_ROWS.map((row) => ({ ...row, value: null, status: "pending" })));
     // Accurate server transcript is the note; Web Speech text is the fallback.
     const note = await settleSpoken(combined);
+    if (run !== voiceRunRef.current) return;
     if (note.length < 3) {
       setFullBusy(false);
       setFullReveal(null);
@@ -1108,15 +1272,24 @@ function NewJob() {
     }
     let extract;
     try {
-      extract = await extractFullJob(note, proTrade, uiLocale);
+      extract = await withTimeout(
+        extractFullJob(note, proTrade, uiLocale),
+        30_000,
+        "That took too long. Check your connection and try again.",
+      );
     } catch (e) {
+      if (run !== voiceRunRef.current) return;
       const msg = e instanceof Error ? e.message : "Couldn't read that. Try again.";
       setFullBusy(false);
       setFullReveal(null);
-      setToast(msg);
-      setTimeout(() => setToast(null), 3500);
+      // The dictation survives the failure: park the transcript in the work
+      // note so the pro finishes the job by hand instead of re-saying it all.
+      setWhatDone((prev) => (prev.trim() ? prev : note));
+      setToast(`${msg} Your note is saved under "What did you do?".`);
+      setTimeout(() => setToast(null), 5000);
       return;
     }
+    if (run !== voiceRunRef.current) return;
     setFullBusy(false);
 
     // Reuse the customer on file when the voice note points at exactly one.
@@ -1270,6 +1443,7 @@ function NewJob() {
   async function finishAmendVoice() {
     const combined = `${amendNote} ${amendDictation.interim ?? ""}`.replace(/\s+/g, " ").trim();
     amendDictation.stop();
+    const run = ++voiceRunRef.current;
     setVoiceOpen(false);
     setAmendBusy(true);
     // Open the modal in its loading state right away, exactly like the full
@@ -1278,6 +1452,7 @@ function NewJob() {
     setFullReveal(FULL_REVEAL_ROWS.map((row) => ({ ...row, value: null, status: "pending" })));
     // Accurate server transcript is the instruction; Web Speech is the fallback.
     const instruction = await settleSpoken(combined);
+    if (run !== voiceRunRef.current) return;
     if (instruction.length < 3) {
       setAmendBusy(false);
       setFullBusy(false);
@@ -1299,9 +1474,23 @@ function NewJob() {
       email: reviewEmail.trim() || null,
       charge_amount: Number.isFinite(chargeNow) && chargeNow > 0 ? chargeNow : null,
     };
-    const { data, error } = await supabase.functions.invoke("edit-record", {
-      body: { instruction, fields: current },
-    });
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.functions.invoke("edit-record", { body: { instruction, fields: current } }),
+        30_000,
+        "That took too long. Check your connection and try again.",
+      ));
+    } catch (e) {
+      if (run !== voiceRunRef.current) return;
+      setAmendBusy(false);
+      setFullBusy(false);
+      setFullReveal(null);
+      setToast(e instanceof Error ? e.message : "Couldn't reach HomesBrain AI. Try again.");
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    if (run !== voiceRunRef.current) return;
     setAmendBusy(false);
     setFullBusy(false);
     if (error || !data || data.error) {
@@ -1451,10 +1640,10 @@ function NewJob() {
           record_id: recordId,
           locale: customerLocale,
           translations:
-            translationState === "ready" && customerLocale !== "en"
+            translationState === "ready" && translatedRecord
               ? {
-                  what_done: translatedRecord?.whatDone ?? null,
-                  equipment_type: translatedRecord?.equipmentType ?? null,
+                  what_done: translatedRecord.whatDone,
+                  equipment_type: translatedRecord.equipmentType,
                 }
               : null,
         },
@@ -2235,6 +2424,88 @@ function NewJob() {
     </div>
   );
 
+  /* Optional walkthrough video. Native camera via the file input (reliable on
+     mobile Safari where an in-app recorder is not); also accepts a library
+     pick. Upload runs in the background while the pro finishes the form. */
+  const videoCapture = (
+    <div>
+      <input
+        ref={videoRef}
+        type="file"
+        accept="video/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void onPickVideo(f);
+          e.target.value = "";
+        }}
+      />
+      {!videoUpload ? (
+        <button
+          type="button"
+          onClick={() => videoRef.current?.click()}
+          className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
+        >
+          <div className="flex items-center justify-center gap-2 text-indigo">
+            <VideoIcon size={22} />
+            <span className="text-sm font-semibold">Record a walkthrough video (optional)</span>
+          </div>
+          <div className="mt-1 text-xs text-muted">
+            30 to 60 seconds showing what you did. It goes on their record.
+          </div>
+        </button>
+      ) : (
+        <div className="rounded-xl border border-line bg-paper p-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              {videoUpload.status === "uploading" && (
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
+                    <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                    Uploading video... {Math.round(videoUpload.progress * 100)}%
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-indigobg">
+                    <div
+                      className="h-1.5 rounded-full bg-indigo transition-all"
+                      style={{ width: `${Math.round(videoUpload.progress * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {videoUpload.status === "done" && (
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
+                  <ShieldCheck size={16} animate={false} /> Video added
+                </div>
+              )}
+              {videoUpload.status === "error" && (
+                <div className="text-sm text-red">{videoUpload.error}</div>
+              )}
+            </div>
+            {videoUpload.status !== "uploading" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => videoRef.current?.click()}
+                  className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
+                >
+                  Retake
+                </button>
+                <button
+                  type="button"
+                  onClick={removeVideo}
+                  className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-red hover:border-red/30 transition-colors"
+                >
+                  Remove
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   if (!proId) {
     return (
       <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
@@ -2304,22 +2575,29 @@ function NewJob() {
                     className="pressable group w-full rounded-3xl bg-indigo px-5 py-5 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
                   >
                     <div className="flex items-center gap-4">
-                      <img
-                        src="/images/homesbrain-ai-mic.png"
-                        alt=""
-                        aria-hidden="true"
-                        className="h-16 w-16 shrink-0 rounded-2xl shadow-[0_6px_16px_-6px_rgba(0,0,0,0.45)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-105"
-                      />
+                      {micImgOk ? (
+                        <img
+                          src="/images/homesbrain-ai-mic.png"
+                          alt=""
+                          aria-hidden="true"
+                          onError={() => setMicImgOk(false)}
+                          className="h-16 w-16 shrink-0 rounded-2xl shadow-[0_6px_16px_-6px_rgba(0,0,0,0.45)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-105"
+                        />
+                      ) : (
+                        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+                          <MicIcon size={26} />
+                        </span>
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-75">
                           HomesBrain AI
                         </div>
                         <div className="mt-0.5 text-xl font-extrabold tracking-tight">
-                          Just talk, I'll fill it in
+                          {t("voice.justTalk")}
                         </div>
                       </div>
                       <span className="shrink-0 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide">
-                        Tap to talk
+                        {t("voice.tapToTalk")}
                       </span>
                     </div>
                   </button>
@@ -2599,6 +2877,7 @@ function NewJob() {
 
                 {/* Photo (optional) */}
                 {photoCapture}
+                {videoCapture}
 
                 {/* Recall alert - only when there's an actual recall. No recall
                     is the norm, so we don't surface it as noise. */}
@@ -3112,7 +3391,10 @@ function NewJob() {
 
                   {/* Photo also offered here: the AI voice flow skips the work
                       step, so Review is that path's only chance to add one. */}
-                  <div className="mt-5 border-t border-line pt-4">{photoCapture}</div>
+                  <div className="mt-5 border-t border-line pt-4">
+                    {photoCapture}
+                    {videoCapture}
+                  </div>
 
                   <div
                     className={`mt-5 border-t border-line pt-4 transition-colors duration-700 ${
@@ -3364,12 +3646,19 @@ function NewJob() {
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)" }}
         >
           {/* Same HomesBrain AI mark as the "Just talk" card on step one. */}
-          <img
-            src="/images/homesbrain-ai-mic.png"
-            alt=""
-            aria-hidden="true"
-            className="block h-14 w-14 rounded-2xl ring-1 ring-white/25"
-          />
+          {micImgOk ? (
+            <img
+              src="/images/homesbrain-ai-mic.png"
+              alt=""
+              aria-hidden="true"
+              onError={() => setMicImgOk(false)}
+              className="block h-14 w-14 rounded-2xl ring-1 ring-white/25"
+            />
+          ) : (
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo text-white ring-1 ring-white/25">
+              <MicIcon size={24} />
+            </span>
+          )}
           {amendBusy && (
             <span className="absolute inset-0 grid place-items-center rounded-2xl bg-indigo/60">
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
@@ -3408,7 +3697,7 @@ function NewJob() {
               HomesBrain AI
             </div>
             <div className="mt-1 text-lg font-extrabold tracking-tight text-ink">
-              Building the record
+              {t("voice.building")}
             </div>
             {fullBusy && (
               <div
@@ -3416,7 +3705,7 @@ function NewJob() {
                 role="status"
               >
                 <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-indigo/25 border-t-indigo" />
-                Reading what you said…
+                {t("voice.reading")}
               </div>
             )}
             <ul className="relative mt-4 space-y-2 overflow-hidden rounded-2xl">
@@ -3480,7 +3769,7 @@ function NewJob() {
                         <span
                           className="skeleton mt-1.5 block h-3.5"
                           style={{
-                            width: `${[72, 58, 66, 48, 86, 40][i] ?? 60}%`,
+                            width: `${s.skeletonWidth}%`,
                             animationDelay: `${i * 0.12}s`,
                           }}
                         />
@@ -3490,7 +3779,7 @@ function NewJob() {
                             s.value ? "text-ink" : "text-muted"
                           }`}
                         >
-                          {s.value ?? (active || done ? "Not mentioned" : "…")}
+                          {s.value ?? (active || done ? t("voice.notMentioned") : "…")}
                         </div>
                       )}
                     </div>
@@ -3498,6 +3787,19 @@ function NewJob() {
                 );
               })}
             </ul>
+            {/* While a request is in flight the pro can always bail out: a
+                stalled connection must never wall them off from the form. */}
+            {fullBusy && (
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={cancelVoiceBusy}
+                  className="pressable rounded-full px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-soft hover:text-ink"
+                >
+                  {t("voice.cancel")}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
