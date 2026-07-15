@@ -523,6 +523,11 @@ export function ProShell({
             </Link>
           </div>
         )}
+
+        {/* Floating setup progress. Auto-hides at 100%; lifts above the
+            mobile "Log a job" CTA when it's rendered so both stay usable. */}
+        <ProSetupWidget proId={pro?.id ?? null} hasBottomCta={!hideMobileCta} />
+
       </div>
     </div>
   );
