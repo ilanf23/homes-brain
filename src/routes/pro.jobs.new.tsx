@@ -174,7 +174,7 @@ const FIELD_WORK_DONE = "work_done";
 const FIELD_NEXT_SERVICE = "next_service";
 const FIELD_RECALL = "recall";
 const FIELD_VIDEO = "video";
-const FIELD_PHOTOS = "photos";
+
 
 /* Small square checkmark used as the "include this row" control. */
 function CheckSquare({ on }: { on: boolean }) {
