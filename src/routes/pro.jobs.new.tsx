@@ -2792,29 +2792,25 @@ function NewJob() {
               ))}
 
             {stage === "work" && (
-              <Card className="space-y-5">
-                {/* Big voice button - opens the immersive white mic mode */}
+              <Card className="space-y-4">
+                {/* Giant mic - the single, unmistakable primary action. The
+                    manual textarea below is a de-emphasized fallback. */}
                 <div>
                   {dictation.supported ? (
-                    <button
-                      type="button"
-                      onClick={openVoice}
-                      aria-label="Tap and tell me what you did"
-                      className="pressable w-full rounded-2xl bg-indigobg px-6 py-8 text-center text-indigo transition-all duration-200 hover:bg-indigo hover:text-white"
-                    >
-                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/70">
-                        <MicIcon size={36} />
+                    <>
+                      <button
+                        type="button"
+                        onClick={openVoice}
+                        aria-label="Tap and tell me what you did"
+                        className="pressable group mx-auto flex h-56 w-56 sm:h-64 sm:w-64 flex-col items-center justify-center rounded-full bg-indigo text-white shadow-[0_24px_60px_-20px_rgba(71,63,176,0.55)] transition-transform duration-200 active:scale-95 hover:brightness-110"
+                      >
+                        <MicIcon size={72} />
+                        <div className="mt-3 text-lg font-bold tracking-tight">Tap and talk</div>
+                      </button>
+                      <div className="mt-3 text-center text-xs text-muted">
+                        Just tell HomesBrain AI about the job.
                       </div>
-                      <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] opacity-70">
-                        HomesBrain AI
-                      </div>
-                      <div className="mt-1 text-lg font-bold tracking-tight">
-                        Tap and tell me what you did
-                      </div>
-                      <div className="mt-1 text-xs opacity-80">
-                        HomesBrain AI turns your words into the record.
-                      </div>
-                    </button>
+                    </>
                   ) : (
                     <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
                       Voice input isn't supported in this browser. Type below instead.
@@ -2822,36 +2818,46 @@ function NewJob() {
                   )}
                 </div>
 
-                {/* Small text box - always visible, required. While listening it
-                    shows live interim words; typing is disabled mid-dictation so
-                    the interim suffix can't collide with a manual edit. */}
-                <Field label="What was done">
-                  <Textarea
-                    value={liveWhatDone}
-                    onChange={(e) => setWhatDone(e.target.value)}
-                    readOnly={dictation.listening || transcribing}
-                    placeholder="Or type here…"
-                    rows={3}
-                  />
-                  {transcribing && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
-                      <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                      HomesBrain AI improving the transcription…
-                    </div>
-                  )}
-                  {extractState === "working" && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
-                      <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                      HomesBrain AI reading your note…
-                    </div>
-                  )}
-                  {extractState === "done" && extractFilled.length > 0 && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
-                      <ShieldCheck size={13} animate={false} />
-                      HomesBrain AI filled {extractFilled.join(", ")} below
-                    </div>
-                  )}
-                </Field>
+                {/* Fallback textarea - present but visually secondary. */}
+                <details className="rounded-xl border border-line bg-paper">
+                  <summary className="cursor-pointer list-none px-4 py-2.5 text-xs font-semibold text-muted hover:text-ink">
+                    Or type it instead
+                  </summary>
+                  <div className="border-t border-line px-4 py-3">
+                    <Textarea
+                      value={liveWhatDone}
+                      onChange={(e) => setWhatDone(e.target.value)}
+                      readOnly={dictation.listening || transcribing}
+                      placeholder="What was done…"
+                      rows={2}
+                    />
+                    {transcribing && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                        <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                        HomesBrain AI improving the transcription…
+                      </div>
+                    )}
+                    {extractState === "working" && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                        <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                        HomesBrain AI reading your note…
+                      </div>
+                    )}
+                    {extractState === "done" && extractFilled.length > 0 && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                        <ShieldCheck size={13} animate={false} />
+                        HomesBrain AI filled {extractFilled.join(", ")} below
+                      </div>
+                    )}
+                  </div>
+                </details>
+                {/* When the pro has already dictated/typed, keep the transcript
+                    visible outside the fallback so they can see the note. */}
+                {!!liveWhatDone && !dictation.listening && !transcribing && (
+                  <div className="rounded-xl bg-soft px-4 py-3 text-sm text-ink whitespace-pre-wrap">
+                    {liveWhatDone}
+                  </div>
+                )}
 
                 {videoCapture}
 
