@@ -174,12 +174,36 @@ const FIELD_VIDEO = "video";
 const FIELD_PHOTOS = "photos";
 
 /* Small square checkmark used as the "include this row" control. */
+function CheckSquare({ on }: { on: boolean }) {
+  return (
+    <span
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+        on ? "border-indigo bg-indigo" : "border-line bg-paper"
+      }`}
+      aria-hidden="true"
+    >
+      {on && (
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M3.5 8.5l3 3 6-7"
+            stroke="var(--on-accent)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 /* One row of the live record: label on the left, value on the right. Tap the
    value to open its editor. */
 function RecordRow({
   label,
   value,
   included,
+  onToggle,
   onEdit,
   flash = false,
 }: {
@@ -199,13 +223,26 @@ function RecordRow({
         flash ? "rounded-xl bg-indigobg" : ""
       }`}
     >
-      <span
-        className={`flex min-h-11 shrink-0 items-center text-sm text-muted ${
-          dim ? "opacity-50" : ""
-        }`}
-      >
-        {label}
-      </span>
+      {onToggle ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-pressed={included}
+          aria-label={`${included ? "Exclude" : "Include"} ${label}`}
+          className="pressable flex min-h-11 shrink-0 items-center gap-2.5 text-left"
+        >
+          <CheckSquare on={included} />
+          <span className={`text-sm text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
+        </button>
+      ) : (
+        <span
+          className={`flex min-h-11 shrink-0 items-center text-sm text-muted ${
+            dim ? "opacity-50" : ""
+          }`}
+        >
+          {label}
+        </span>
+      )}
       {onEdit ? (
         <button
           type="button"

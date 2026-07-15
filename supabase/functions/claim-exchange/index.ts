@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         .eq("id", row.record_id)
         .maybeSingle();
       let recordRow = initial.data;
-      if (initial.error) {
+      if (initial.error && initial.error.code === "42703") {
         const retry = await admin
           .from("records")
           .select("id,created_at,jobs(id,what_done,equipment_id,localized_content,homes(address))")
