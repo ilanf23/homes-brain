@@ -431,17 +431,10 @@ function NewJob() {
   const setAttr = (key: string, value: string | boolean) =>
     setAttrValues((prev) => ({ ...prev, [key]: value }));
 
-  // Nameplate scan
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
-  const [scanPreview, setScanPreview] = useState<string | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [scanFilledDetails, setScanFilledDetails] = useState(false);
-
   // Walkthrough video (optional). The upload starts the moment the pro picks
-  // it so the end of the form is never a long network wait. `videoFinal` and
-  // `photoFinal` are refs, not state: submit reads them after awaiting the
-  // busy promise and must not see a stale closure.
+  // it so the end of the form is never a long network wait. `videoFinal` is a
+  // ref, not state: submit reads it after awaiting the busy promise and must
+  // not see a stale closure.
   type VideoUploadState = {
     status: "uploading" | "done" | "error";
     progress: number; // 0..1
@@ -455,11 +448,6 @@ function NewJob() {
     posterPath: string | null;
     duration: number | null;
   } | null>(null);
-  const photoBusy = useRef<Promise<void> | null>(null);
-  const photoFinal = useRef<{ path: string } | null>(null);
-  // Bumped on every scan so a slower, older upload can tell it has been
-  // superseded and must not clobber a newer scan's result.
-  const photoGen = useRef(0);
 
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
