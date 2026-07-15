@@ -26,6 +26,8 @@ import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
+import { ProSetupWidget } from "@/components/pro-setup-checklist";
+
 import { LanguageToggle, useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
 import { phIdentify, phReset } from "@/lib/posthog";
@@ -521,6 +523,11 @@ export function ProShell({
             </Link>
           </div>
         )}
+
+        {/* Floating setup progress. Auto-hides at 100%; lifts above the
+            mobile "Log a job" CTA when it's rendered so both stay usable. */}
+        <ProSetupWidget proId={pro?.id ?? null} hasBottomCta={!hideMobileCta} />
+
       </div>
     </div>
   );

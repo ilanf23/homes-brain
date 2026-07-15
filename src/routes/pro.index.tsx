@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl } from "@/lib/hb";
 import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { ProSetupChecklist } from "@/components/pro-setup-checklist";
+
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/pro/")({
@@ -209,7 +209,9 @@ function ProHome() {
         </button>
       </Link>
 
-      <ProSetupChecklist proId={proId} />
+      {/* Setup progress now lives as a floating widget mounted in ProShell. */}
+
+
 
       {/* What's Next */}
       <section className="anim-fade-up d-2 mt-8">
