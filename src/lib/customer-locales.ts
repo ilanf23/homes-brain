@@ -331,6 +331,7 @@ export type HomeRecordCopy = {
   noKnownRecalls: string;
   openItemHistory: string;
   videoFromPro: string;
+  photosFromPro: string;
   downloadVideo: string;
   jobPhoto: string;
 };
@@ -371,6 +372,7 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     noKnownRecalls: "No known recalls",
     openItemHistory: "Open item history",
     videoFromPro: "A video from your pro",
+    photosFromPro: "Photos from your pro",
     downloadVideo: "Download the video",
     jobPhoto: "Job photo",
   },
@@ -409,6 +411,7 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     noKnownRecalls: "No hay retiradas conocidas",
     openItemHistory: "Abrir historial del equipo",
     videoFromPro: "Un video de tu profesional",
+    photosFromPro: "Fotos de tu profesional",
     downloadVideo: "Descargar el video",
     jobPhoto: "Foto del trabajo",
   },
@@ -447,6 +450,7 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     noKnownRecalls: "Известных отзывов нет",
     openItemHistory: "Открыть историю устройства",
     videoFromPro: "Видео от вашего мастера",
+    photosFromPro: "Фото от вашего мастера",
     downloadVideo: "Скачать видео",
     jobPhoto: "Фото работы",
   },
@@ -485,6 +489,7 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     noKnownRecalls: "Відомих відкликань немає",
     openItemHistory: "Відкрити історію пристрою",
     videoFromPro: "Відео від вашого майстра",
+    photosFromPro: "Фото від вашого майстра",
     downloadVideo: "Завантажити відео",
     jobPhoto: "Фото роботи",
   },

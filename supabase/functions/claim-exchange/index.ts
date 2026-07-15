@@ -91,13 +91,25 @@ Deno.serve(async (req) => {
     let preview: unknown = null;
     if (row.record_id) {
       // Load preview data even before finalizing, so the client can render.
-      const { data: recordRow } = await admin
+      // hidden_fields is added by a pending migration: if this edge function
+      // deploys first, the column won't exist yet and the select below
+      // errors. Retry without it rather than losing the whole preview.
+      const initial = await admin
         .from("records")
         .select(
           "id,created_at,hidden_fields,jobs(id,what_done,equipment_id,localized_content,homes(address))",
         )
         .eq("id", row.record_id)
         .maybeSingle();
+      let recordRow = initial.data;
+      if (initial.error) {
+        const retry = await admin
+          .from("records")
+          .select("id,created_at,jobs(id,what_done,equipment_id,localized_content,homes(address))")
+          .eq("id", row.record_id)
+          .maybeSingle();
+        recordRow = retry.data as typeof recordRow;
+      }
       const recordTyped = recordRow as unknown as {
         hidden_fields?: string[] | null;
         jobs?: {

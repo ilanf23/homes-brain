@@ -129,9 +129,10 @@ function RecordDetail() {
             m.kind === "video" ? !hidden.has("video") : !hidden.has("photos"),
           );
           if (visible.length === 0) return null;
+          const hasVideo = visible.some((m) => m.kind === "video");
           return (
             <Card className="anim-fade-up d-1">
-              <Eyebrow accent="coral">{copy.videoFromPro}</Eyebrow>
+              <Eyebrow accent="coral">{hasVideo ? copy.videoFromPro : copy.photosFromPro}</Eyebrow>
               <div className="mt-3">
                 <RecordMedia
                   media={visible}
