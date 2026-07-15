@@ -344,7 +344,7 @@ function recordEmail(opts: {
     ? `<img src="${
       esc(logo)
     }" alt="${b}" style="max-height:44px;max-width:220px;display:block;" />`
-    : `<div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">${b}</div>`;
+    : `<div translate="no" class="notranslate" style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">${b}</div>`;
 
   const previewRows = [
     `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;width:110px;">${
@@ -373,9 +373,10 @@ function recordEmail(opts: {
 <html lang="${locale}"><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
     <div style="display:flex;align-items:center;gap:12px;">${header}</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">${
+    <div translate="no" class="notranslate" style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">${
     esc(copy.via)
   }</div>
+
     <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
       <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">${
     esc(copy.title(business))
