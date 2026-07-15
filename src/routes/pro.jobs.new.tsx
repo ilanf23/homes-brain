@@ -416,6 +416,9 @@ function NewJob() {
   } | null>(null);
   const photoBusy = useRef<Promise<void> | null>(null);
   const photoFinal = useRef<{ url: string; path: string } | null>(null);
+  // Bumped on every scan so a slower, older upload can tell it has been
+  // superseded and must not clobber a newer scan's result.
+  const photoGen = useRef(0);
 
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
@@ -813,6 +816,8 @@ function NewJob() {
     setScanPreview(URL.createObjectURL(file));
     // Persist the photo too: until now it only fed the AI scan and was lost.
     if (proId) {
+      const oldPhoto = photoFinal.current;
+      const gen = ++photoGen.current;
       photoFinal.current = null;
       photoBusy.current = (async () => {
         const blob = await toJpegBlob(file);
@@ -822,7 +827,15 @@ function NewJob() {
           ext: "jpg",
           contentType: "image/jpeg",
         });
+        if (gen !== photoGen.current) {
+          // A newer scan started before this upload finished; its result is
+          // stale, so drop the object it just wrote and leave photoFinal alone.
+          void removeJobMediaObject(up.path);
+          return;
+        }
         photoFinal.current = { url: up.publicUrl, path: up.path };
+        // Replacing a photo: the old object is an orphan now, clean it up.
+        if (oldPhoto) void removeJobMediaObject(oldPhoto.path);
       })().catch(() => {
         // Photo persistence is best effort; the scan result is the payoff.
       });
@@ -863,18 +876,22 @@ function NewJob() {
       setTimeout(() => setToast(null), 4500);
       return;
     }
-    // Replacing a video: the old objects are orphans now, clean them up.
+    // Keep the old video attached until the replacement actually succeeds: a
+    // failed retake (too long, network error) must not destroy a previously-
+    // good video. It's only cleaned up once the new one is safely in place.
     const old = videoFinal.current;
-    videoFinal.current = null;
-    if (old) {
-      void removeJobMediaObject(old.path);
-      if (old.posterPath) void removeJobMediaObject(old.posterPath);
-    }
     setVideoUpload({ status: "uploading", progress: 0 });
     const task = (async () => {
       const probe = await probeVideo(file);
       if (probe.duration && probe.duration > VIDEO_MAX_SECONDS) {
-        setVideoUpload({ status: "error", progress: 0, error: "Keep it under 3 minutes." });
+        if (old) {
+          videoFinal.current = old;
+          setVideoUpload({ status: "done", progress: 1 });
+          setToast("Keep it under 3 minutes. Your earlier video is still attached.");
+          setTimeout(() => setToast(null), 4500);
+        } else {
+          setVideoUpload({ status: "error", progress: 0, error: "Keep it under 3 minutes." });
+        }
         return;
       }
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
@@ -903,13 +920,25 @@ function NewJob() {
         duration: probe.duration,
       };
       setVideoUpload({ status: "done", progress: 1 });
+      // Replacing a video: the old objects are orphans now, clean them up.
+      if (old) {
+        void removeJobMediaObject(old.path);
+        if (old.posterPath) void removeJobMediaObject(old.posterPath);
+      }
       await logEvent(`pro:${proId}`, "video_recorded", { duration: probe.duration });
     })().catch((e) => {
-      setVideoUpload({
-        status: "error",
-        progress: 0,
-        error: e instanceof Error ? e.message : "Upload failed. Try again.",
-      });
+      if (old) {
+        videoFinal.current = old;
+        setVideoUpload({ status: "done", progress: 1 });
+        setToast("That video didn't upload. Your earlier video is still attached.");
+        setTimeout(() => setToast(null), 4500);
+      } else {
+        setVideoUpload({
+          status: "error",
+          progress: 0,
+          error: e instanceof Error ? e.message : "Upload failed. Try again.",
+        });
+      }
     });
     videoBusy.current = task;
     await task;
