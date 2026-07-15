@@ -7,7 +7,7 @@ import { formatDate, formatPhone, logEvent } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { isProEntitled } from "@/lib/plan";
-import { listJobMedia, type JobMediaRow } from "@/lib/media";
+import { listJobMedia, signJobMedia, type JobMediaRow } from "@/lib/media";
 import { RecordMedia } from "@/components/job-media";
 
 export const Route = createFileRoute("/pro/records/$recordId")({
@@ -105,7 +105,7 @@ function RecordDetail() {
         .maybeSingle();
       setRecord(data as unknown as RecordRow | null);
       const jobId = (data as unknown as RecordRow | null)?.jobs?.id;
-      if (jobId) setMedia(await listJobMedia([jobId]));
+      if (jobId) setMedia(await signJobMedia(await listJobMedia([jobId])));
       setLoading(false);
     })();
   }, [proId, recordId]);

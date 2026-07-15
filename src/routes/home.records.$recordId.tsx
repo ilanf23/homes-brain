@@ -10,7 +10,7 @@ import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
 import { homeRecordCopy } from "@/lib/customer-locales";
 import { useI18n } from "@/lib/i18n";
-import { listJobMedia, type JobMediaRow } from "@/lib/media";
+import { listJobMedia, signJobMedia, type JobMediaRow } from "@/lib/media";
 import { RecordMedia } from "@/components/job-media";
 import { track } from "@/lib/events";
 
@@ -47,7 +47,7 @@ function RecordDetail() {
   const [media, setMedia] = useState<JobMediaRow[]>([]);
   useEffect(() => {
     if (!job) return;
-    (async () => setMedia(await listJobMedia([job.id])))();
+    (async () => setMedia(await signJobMedia(await listJobMedia([job.id]))))();
   }, [job]);
 
   // Play the claim celebration exactly once, on the page the new homeowner

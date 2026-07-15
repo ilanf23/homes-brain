@@ -448,14 +448,12 @@ function NewJob() {
   const [videoUpload, setVideoUpload] = useState<VideoUploadState | null>(null);
   const videoBusy = useRef<Promise<void> | null>(null);
   const videoFinal = useRef<{
-    url: string;
     path: string;
-    posterUrl: string | null;
     posterPath: string | null;
     duration: number | null;
   } | null>(null);
   const photoBusy = useRef<Promise<void> | null>(null);
-  const photoFinal = useRef<{ url: string; path: string } | null>(null);
+  const photoFinal = useRef<{ path: string } | null>(null);
   // Bumped on every scan so a slower, older upload can tell it has been
   // superseded and must not clobber a newer scan's result.
   const photoGen = useRef(0);
@@ -873,7 +871,7 @@ function NewJob() {
           void removeJobMediaObject(up.path);
           return;
         }
-        photoFinal.current = { url: up.publicUrl, path: up.path };
+        photoFinal.current = { path: up.path };
         // Replacing a photo: the old object is an orphan now, clean it up.
         if (oldPhoto) void removeJobMediaObject(oldPhoto.path);
       })().catch(() => {
@@ -943,7 +941,7 @@ function NewJob() {
         onProgress: (f) =>
           setVideoUpload((v) => (v && v.status === "uploading" ? { ...v, progress: f } : v)),
       });
-      let poster: { path: string; publicUrl: string } | null = null;
+      let poster: { path: string } | null = null;
       if (probe.poster) {
         poster = await uploadJobMedia({
           proId,
@@ -953,9 +951,7 @@ function NewJob() {
         }).catch(() => null);
       }
       videoFinal.current = {
-        url: video.publicUrl,
         path: video.path,
-        posterUrl: poster?.publicUrl ?? null,
         posterPath: poster?.path ?? null,
         duration: probe.duration,
       };
@@ -2077,8 +2073,8 @@ function NewJob() {
       mediaRows.push({
         job_id: job.id,
         kind: "video",
-        url: videoFinal.current.url,
-        thumbnail_url: videoFinal.current.posterUrl,
+        url: videoFinal.current.path,
+        thumbnail_url: videoFinal.current.posterPath,
         duration_seconds: videoFinal.current.duration,
       });
     }
@@ -2086,7 +2082,7 @@ function NewJob() {
       mediaRows.push({
         job_id: job.id,
         kind: "photo",
-        url: photoFinal.current.url,
+        url: photoFinal.current.path,
         thumbnail_url: null,
         duration_seconds: null,
       });

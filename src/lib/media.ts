@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /* Job media: the pro's walkthrough video and unit photos, stored in the
-   public job-media bucket with one job_media row per object.
+   private job-media bucket with one job_media row per object.
 
    job_media is not in the Lovable-generated types.ts yet (it regenerates
    from migrations on the Lovable side), so this module goes through an
@@ -14,6 +14,8 @@ const BUCKET = "job-media";
 
 export type JobMediaKind = "photo" | "video";
 
+/* url/thumbnail_url hold storage paths; sign with signJobMedia before
+   rendering. */
 export type JobMediaRow = {
   id: string;
   job_id: string;
@@ -28,10 +30,6 @@ export type JobMediaRow = {
    enforces the byte cap server-side too. */
 export const VIDEO_MAX_SECONDS = 180;
 export const VIDEO_MAX_BYTES = 200 * 1024 * 1024;
-
-export function publicMediaUrl(path: string): string {
-  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-}
 
 /* Duration + poster frame off a detached <video>. iPhone HEVC often cannot
    decode in this browser: metadata may load but seeking never completes, so
@@ -96,7 +94,7 @@ export async function uploadJobMedia(opts: {
   ext: string;
   contentType: string;
   onProgress?: (fraction: number) => void;
-}): Promise<{ path: string; publicUrl: string }> {
+}): Promise<{ path: string }> {
   const path = `${opts.proId}/${crypto.randomUUID()}.${opts.ext}`;
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path);
   if (error || !data) throw new Error("Couldn't start the upload. Try again.");
@@ -117,7 +115,7 @@ export async function uploadJobMedia(opts: {
     xhr.onerror = () => reject(new Error("Upload failed. Check your connection and try again."));
     xhr.send(opts.file);
   });
-  return { path, publicUrl: publicMediaUrl(path) };
+  return { path };
 }
 
 /* Best-effort delete for replaced/removed uploads before submit. */
@@ -146,4 +144,40 @@ export async function insertJobMedia(
   if (rows.length === 0) return true;
   const { error } = await db.from("job_media").insert(rows);
   return !error;
+}
+
+/* job_media.url/thumbnail_url are storage paths, not URLs (see JobMediaRow).
+   Sign every path in one batch call and return only rows whose main url
+   signed successfully; a thumbnail that failed to sign just becomes null.
+   A total batch failure returns [], which callers already render as
+   "no media" (see listJobMedia). */
+export async function signJobMedia(
+  rows: JobMediaRow[],
+  ttlSeconds = 86400,
+): Promise<JobMediaRow[]> {
+  if (rows.length === 0) return [];
+  const paths = new Set<string>();
+  for (const row of rows) {
+    paths.add(row.url);
+    if (row.thumbnail_url) paths.add(row.thumbnail_url);
+  }
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrls(Array.from(paths), ttlSeconds);
+  if (error || !data) return [];
+
+  const signed = new Map<string, string>();
+  for (const item of data) {
+    if (item.error || !item.path || !item.signedUrl) continue;
+    signed.set(item.path, item.signedUrl);
+  }
+
+  const out: JobMediaRow[] = [];
+  for (const row of rows) {
+    const url = signed.get(row.url);
+    if (!url) continue;
+    const thumbnail_url = row.thumbnail_url ? (signed.get(row.thumbnail_url) ?? null) : null;
+    out.push({ ...row, url, thumbnail_url });
+  }
+  return out;
 }

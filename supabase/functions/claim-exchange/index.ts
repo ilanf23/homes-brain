@@ -165,9 +165,37 @@ Deno.serve(async (req) => {
           .select("kind,url,thumbnail_url")
           .eq("job_id", jobId)
           .order("created_at", { ascending: true });
-        media = (mediaRows ?? []).filter((m) =>
+        const visibleRows = (mediaRows ?? []).filter((m) =>
           m.kind === "video" ? !hiddenFields.includes("video") : !hiddenFields.includes("photos"),
         );
+
+        // job_media.url/thumbnail_url are storage paths (private bucket): sign
+        // them here so the preview can render before the homeowner has a
+        // session. A signing failure degrades to empty media, never breaks
+        // the preview.
+        const paths = new Set<string>();
+        for (const m of visibleRows) {
+          paths.add(m.url);
+          if (m.thumbnail_url) paths.add(m.thumbnail_url);
+        }
+        if (paths.size > 0) {
+          const { data: signedRows, error: signErr } = await admin.storage
+            .from("job-media")
+            .createSignedUrls(Array.from(paths), 3600);
+          if (!signErr && signedRows) {
+            const signed = new Map<string, string>();
+            for (const item of signedRows) {
+              if (item.error || !item.path || !item.signedUrl) continue;
+              signed.set(item.path, item.signedUrl);
+            }
+            media = visibleRows.flatMap((m) => {
+              const url = signed.get(m.url);
+              if (!url) return [];
+              const thumbnail_url = m.thumbnail_url ? (signed.get(m.thumbnail_url) ?? null) : null;
+              return [{ kind: m.kind, url, thumbnail_url }];
+            });
+          }
+        }
       }
 
       preview = {
