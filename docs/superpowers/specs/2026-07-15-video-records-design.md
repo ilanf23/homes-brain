@@ -18,7 +18,7 @@ Validation metric: watch rate. `record_sent` and `record_viewed` events gain `ha
 ### Storage
 
 - New Supabase Storage bucket `job-media`.
-- Path convention: `job-media/{pro_id}/{job_id}/{uuid}.{ext}`.
+- Path convention: `job-media/{pro_id}/{uuid}.{ext}`. The job row does not exist yet while the background upload runs (jobs are inserted at submit), so the path cannot include a job id; the `job_media` row links object to job at submit time.
 - Policies: authenticated-context pros may upload only under their own `{pro_id}` prefix; public read (records are readable by anyone with the link, matching existing RLS philosophy).
 - Bucket and policies ship as a migration in `supabase/migrations/` via the repo/Lovable sync. Never applied through the Supabase MCP.
 
