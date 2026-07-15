@@ -209,7 +209,9 @@ function ProHome() {
         </button>
       </Link>
 
-      <ProSetupChecklist proId={proId} />
+      {/* Setup progress now lives as a floating widget mounted in ProShell. */}
+
+
 
       {/* What's Next */}
       <section className="anim-fade-up d-2 mt-8">
