@@ -830,6 +830,7 @@ export type Database = {
           stripe_payouts_enabled: boolean
           trade: string | null
           trades: string[]
+          welcomed_at: string | null
         }
         Insert: {
           auth_user_id?: string | null
@@ -861,6 +862,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean
           trade?: string | null
           trades?: string[]
+          welcomed_at?: string | null
         }
         Update: {
           auth_user_id?: string | null
@@ -892,6 +894,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean
           trade?: string | null
           trades?: string[]
+          welcomed_at?: string | null
         }
         Relationships: []
       }
