@@ -49,8 +49,6 @@ import { AddressField } from "@/components/address-field";
 import {
   extractFromNotes,
   extractFullJob,
-  scanNameplate,
-  toJpegBlob,
   transcribeAudio,
   useDictation,
   useMicLevel,
@@ -58,12 +56,11 @@ import {
 import {
   probeVideo,
   uploadJobMedia,
-  removeJobMediaObject,
   insertJobMedia,
   VIDEO_MAX_BYTES,
   VIDEO_MAX_SECONDS,
 } from "@/lib/media";
-import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
+import { CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 import { Select } from "@/lib/ui";
 import {
