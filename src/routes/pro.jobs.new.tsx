@@ -49,8 +49,6 @@ import { AddressField } from "@/components/address-field";
 import {
   extractFromNotes,
   extractFullJob,
-  scanNameplate,
-  toJpegBlob,
   transcribeAudio,
   useDictation,
   useMicLevel,
@@ -63,7 +61,7 @@ import {
   VIDEO_MAX_BYTES,
   VIDEO_MAX_SECONDS,
 } from "@/lib/media";
-import { CameraIcon, CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
+import { CheckBurst, Logo, MicIcon, ShieldCheck, UserPlusIcon } from "@/components/svg";
 import { VoiceCaptureOverlay } from "@/components/voice-orb";
 import { Select } from "@/lib/ui";
 import {
@@ -176,7 +174,7 @@ const FIELD_WORK_DONE = "work_done";
 const FIELD_NEXT_SERVICE = "next_service";
 const FIELD_RECALL = "recall";
 const FIELD_VIDEO = "video";
-const FIELD_PHOTOS = "photos";
+
 
 /* Small square checkmark used as the "include this row" control. */
 function CheckSquare({ on }: { on: boolean }) {
@@ -433,17 +431,10 @@ function NewJob() {
   const setAttr = (key: string, value: string | boolean) =>
     setAttrValues((prev) => ({ ...prev, [key]: value }));
 
-  // Nameplate scan
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
-  const [scanPreview, setScanPreview] = useState<string | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [scanFilledDetails, setScanFilledDetails] = useState(false);
-
   // Walkthrough video (optional). The upload starts the moment the pro picks
-  // it so the end of the form is never a long network wait. `videoFinal` and
-  // `photoFinal` are refs, not state: submit reads them after awaiting the
-  // busy promise and must not see a stale closure.
+  // it so the end of the form is never a long network wait. `videoFinal` is a
+  // ref, not state: submit reads it after awaiting the busy promise and must
+  // not see a stale closure.
   type VideoUploadState = {
     status: "uploading" | "done" | "error";
     progress: number; // 0..1
@@ -457,11 +448,6 @@ function NewJob() {
     posterPath: string | null;
     duration: number | null;
   } | null>(null);
-  const photoBusy = useRef<Promise<void> | null>(null);
-  const photoFinal = useRef<{ path: string } | null>(null);
-  // Bumped on every scan so a slower, older upload can tell it has been
-  // superseded and must not clobber a newer scan's result.
-  const photoGen = useRef(0);
 
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
@@ -852,65 +838,6 @@ function NewJob() {
     };
   }, [activeTrade]);
 
-  async function onNameplate(file: File) {
-    setScanState("scanning");
-    setScanError(null);
-    if (scanPreview) URL.revokeObjectURL(scanPreview);
-    setScanPreview(URL.createObjectURL(file));
-    // Persist the photo too: until now it only fed the AI scan and was lost.
-    if (proId) {
-      const oldPhoto = photoFinal.current;
-      const gen = ++photoGen.current;
-      photoFinal.current = null;
-      photoBusy.current = (async () => {
-        const blob = await toJpegBlob(file);
-        const up = await uploadJobMedia({
-          proId,
-          file: blob,
-          ext: "jpg",
-          contentType: "image/jpeg",
-        });
-        if (gen !== photoGen.current) {
-          // A newer scan started before this upload finished; its result is
-          // stale, so drop the object it just wrote and leave photoFinal alone.
-          void removeJobMediaObject(up.path);
-          return;
-        }
-        photoFinal.current = { path: up.path };
-        // Replacing a photo: the old object is an orphan now, clean it up.
-        if (oldPhoto) void removeJobMediaObject(oldPhoto.path);
-      })().catch(() => {
-        // Photo persistence is best effort; the scan result is the payoff.
-      });
-    }
-    try {
-      const r = await scanNameplate(file);
-      const filled: string[] = [];
-      // Fill blanks only. Never clobber what the pro already typed.
-      if (r.type && !eqType) {
-        setEqType(r.type);
-        filled.push("type");
-      }
-      if (r.make && !eqMake) {
-        setEqMake(r.make);
-        filled.push("make");
-      }
-      if (r.model && !eqModel) {
-        setEqModel(r.model);
-        filled.push("model");
-      }
-      if (r.warranty_until && /^\d{4}-\d{2}-\d{2}$/.test(r.warranty_until) && !warrantyUntil) {
-        setWarrantyUntil(r.warranty_until);
-        filled.push("warranty");
-      }
-      setScanFilledDetails(filled.length > 0);
-      setScanState("done");
-      await logEvent(proId ? `pro:${proId}` : null, "nameplate_scanned", { filled });
-    } catch (e) {
-      setScanState("error");
-      setScanError(e instanceof Error ? e.message : "Scan failed. Try again.");
-    }
-  }
 
   async function onPickVideo(file: File) {
     if (!proId) return;
@@ -1164,8 +1091,20 @@ function NewJob() {
   const reviewEmailInvalid = !!trimmedReviewEmail && !isEmail(trimmedReviewEmail);
   const missingReviewAddress = !previewAddress.trim();
   const missingReviewEmail = !trimmedReviewEmail;
+  const reviewEmailValid = !missingReviewEmail && !reviewEmailInvalid;
   const reviewRequiredComplete =
     !missingReviewAddress && !missingReviewEmail && !reviewEmailInvalid;
+  // Once the email is valid on the Review step, glide the Send button into
+  // view so the pro can't miss what to do next. Fires only on the transition
+  // to valid, and only while on Review, so we never yank focus later.
+  const sendBtnRef = useRef<HTMLDivElement>(null);
+  const prevEmailValid = useRef(false);
+  useEffect(() => {
+    if (stage === "review" && reviewEmailValid && !prevEmailValid.current) {
+      sendBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    prevEmailValid.current = reviewEmailValid;
+  }, [reviewEmailValid, stage]);
   const effectiveCustomerLocale: Locale = translationState === "failed" ? "en" : customerLocale;
   const customerCopy = customerPreviewCopy(effectiveCustomerLocale);
   const previewWork = translatedRecord?.whatDone ?? whatDone;
@@ -2070,7 +2009,6 @@ function NewJob() {
     // Attach media. Wait out an in-flight upload (progress stays visible);
     // a failed upload never blocks the job or the record.
     if (videoBusy.current) await videoBusy.current;
-    if (photoBusy.current) await photoBusy.current;
     const mediaRows: Array<{
       job_id: string;
       kind: "photo" | "video";
@@ -2087,15 +2025,6 @@ function NewJob() {
         duration_seconds: videoFinal.current.duration,
       });
     }
-    if (photoFinal.current) {
-      mediaRows.push({
-        job_id: job.id,
-        kind: "photo",
-        url: photoFinal.current.path,
-        thumbnail_url: null,
-        duration_seconds: null,
-      });
-    }
     if (!(await insertJobMedia(mediaRows))) {
       setToast("The video didn't attach. The record still sent without it.");
       setTimeout(() => setToast(null), 4500);
@@ -2108,7 +2037,6 @@ function NewJob() {
     if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
     if (videoFinal.current) presentKeys.add(FIELD_VIDEO);
-    if (photoFinal.current) presentKeys.add(FIELD_PHOTOS);
     const hidden = Array.from(hiddenFields).filter((key) => presentKeys.has(key));
 
     const recordPayload = {
@@ -2339,10 +2267,6 @@ function NewJob() {
     setApplianceHistory([]);
     setAttrValues({});
     setActiveTrade(proTrade);
-    if (scanPreview) URL.revokeObjectURL(scanPreview);
-    setScanPreview(null);
-    setScanState("idle");
-    setScanError(null);
     dictation.stop();
     amendDictation.stop();
     micLevel.stop();
@@ -2489,77 +2413,6 @@ function NewJob() {
     </Field>
   );
 
-  /* Optional unit photo + nameplate scan. Shared by the work step and Review:
-     the "speak the whole job" AI flow jumps from the customer step straight to
-     Review, so without this the voice path would never get a photo prompt.
-     Only one stage renders at a time, so the hidden input mounts once. */
-  const photoCapture = (
-    <div>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onNameplate(f);
-          e.target.value = "";
-        }}
-      />
-      {scanState === "idle" ? (
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
-        >
-          <div className="flex items-center justify-center gap-2 text-indigo">
-            <CameraIcon size={22} />
-            <span className="text-sm font-semibold">Take a photo of the unit (optional)</span>
-          </div>
-          <div className="mt-1 text-xs text-muted">
-            HomesBrain AI reads the make, model, and warranty for you.
-          </div>
-        </button>
-      ) : (
-        <div className="rounded-xl border border-line bg-paper p-3">
-          <div className="flex items-center gap-3">
-            {scanPreview && (
-              <img
-                src={scanPreview}
-                alt="Unit photo"
-                className="h-14 w-14 rounded-lg object-cover"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              {scanState === "scanning" && (
-                <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
-                  <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                  HomesBrain AI reading the photo…
-                </div>
-              )}
-              {scanState === "done" && (
-                <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                  <ShieldCheck size={16} animate={false} />{" "}
-                  {scanFilledDetails ? "HomesBrain AI filled the unit details" : "Photo added"}
-                </div>
-              )}
-              {scanState === "error" && <div className="text-sm text-red">{scanError}</div>}
-            </div>
-            {scanState !== "scanning" && (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
-              >
-                Retake
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   /* Optional walkthrough video. Native camera via the file input (reliable on
      mobile Safari where an in-app recorder is not); also accepts a library
@@ -2951,29 +2804,25 @@ function NewJob() {
               ))}
 
             {stage === "work" && (
-              <Card className="space-y-5">
-                {/* Big voice button - opens the immersive white mic mode */}
+              <Card className="space-y-4">
+                {/* Giant mic - the single, unmistakable primary action. The
+                    manual textarea below is a de-emphasized fallback. */}
                 <div>
                   {dictation.supported ? (
-                    <button
-                      type="button"
-                      onClick={openVoice}
-                      aria-label="Tap and tell me what you did"
-                      className="pressable w-full rounded-2xl bg-indigobg px-6 py-8 text-center text-indigo transition-all duration-200 hover:bg-indigo hover:text-white"
-                    >
-                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/70">
-                        <MicIcon size={36} />
+                    <>
+                      <button
+                        type="button"
+                        onClick={openVoice}
+                        aria-label="Tap and tell me what you did"
+                        className="pressable group mx-auto flex h-56 w-56 sm:h-64 sm:w-64 flex-col items-center justify-center rounded-full bg-indigo text-white shadow-[0_24px_60px_-20px_rgba(71,63,176,0.55)] transition-transform duration-200 active:scale-95 hover:brightness-110"
+                      >
+                        <MicIcon size={72} />
+                        <div className="mt-3 text-lg font-bold tracking-tight">Tap and talk</div>
+                      </button>
+                      <div className="mt-3 text-center text-xs text-muted">
+                        Just tell HomesBrain AI about the job.
                       </div>
-                      <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] opacity-70">
-                        HomesBrain AI
-                      </div>
-                      <div className="mt-1 text-lg font-bold tracking-tight">
-                        Tap and tell me what you did
-                      </div>
-                      <div className="mt-1 text-xs opacity-80">
-                        HomesBrain AI turns your words into the record.
-                      </div>
-                    </button>
+                    </>
                   ) : (
                     <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
                       Voice input isn't supported in this browser. Type below instead.
@@ -2981,39 +2830,47 @@ function NewJob() {
                   )}
                 </div>
 
-                {/* Small text box - always visible, required. While listening it
-                    shows live interim words; typing is disabled mid-dictation so
-                    the interim suffix can't collide with a manual edit. */}
-                <Field label="What was done">
-                  <Textarea
-                    value={liveWhatDone}
-                    onChange={(e) => setWhatDone(e.target.value)}
-                    readOnly={dictation.listening || transcribing}
-                    placeholder="Or type here…"
-                    rows={3}
-                  />
-                  {transcribing && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
-                      <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                      HomesBrain AI improving the transcription…
-                    </div>
-                  )}
-                  {extractState === "working" && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
-                      <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
-                      HomesBrain AI reading your note…
-                    </div>
-                  )}
-                  {extractState === "done" && extractFilled.length > 0 && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
-                      <ShieldCheck size={13} animate={false} />
-                      HomesBrain AI filled {extractFilled.join(", ")} below
-                    </div>
-                  )}
-                </Field>
+                {/* Fallback textarea - present but visually secondary. */}
+                <details className="rounded-xl border border-line bg-paper">
+                  <summary className="cursor-pointer list-none px-4 py-2.5 text-xs font-semibold text-muted hover:text-ink">
+                    Or type it instead
+                  </summary>
+                  <div className="border-t border-line px-4 py-3">
+                    <Textarea
+                      value={liveWhatDone}
+                      onChange={(e) => setWhatDone(e.target.value)}
+                      readOnly={dictation.listening || transcribing}
+                      placeholder="What was done…"
+                      rows={2}
+                    />
+                    {transcribing && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                        <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                        HomesBrain AI improving the transcription…
+                      </div>
+                    )}
+                    {extractState === "working" && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                        <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                        HomesBrain AI reading your note…
+                      </div>
+                    )}
+                    {extractState === "done" && extractFilled.length > 0 && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                        <ShieldCheck size={13} animate={false} />
+                        HomesBrain AI filled {extractFilled.join(", ")} below
+                      </div>
+                    )}
+                  </div>
+                </details>
+                {/* When the pro has already dictated/typed, keep the transcript
+                    visible outside the fallback so they can see the note. */}
+                {!!liveWhatDone && !dictation.listening && !transcribing && (
+                  <div className="rounded-xl bg-soft px-4 py-3 text-sm text-ink whitespace-pre-wrap">
+                    {liveWhatDone}
+                  </div>
+                )}
 
-                {/* Photo (optional) */}
-                {photoCapture}
                 {videoCapture}
 
                 {/* Recall alert - only when there's an actual recall. No recall
@@ -3538,20 +3395,11 @@ function NewJob() {
                         onToggle={() => toggleField(FIELD_VIDEO)}
                       />
                     )}
-                    {scanPreview && (
-                      <RecordRow
-                        label={customerCopy.photo}
-                        value="Unit photo"
-                        included={!hiddenFields.has(FIELD_PHOTOS)}
-                        onToggle={() => toggleField(FIELD_PHOTOS)}
-                      />
-                    )}
                   </div>
 
-                  {/* Photo also offered here: the AI voice flow skips the work
-                      step, so Review is that path's only chance to add one. */}
+                  {/* Optional walkthrough video for the AI voice flow, which
+                      skips the work step and lands here. */}
                   <div className="mt-5 border-t border-line pt-4">
-                    {photoCapture}
                     {videoCapture}
                   </div>
 
@@ -3560,10 +3408,15 @@ function NewJob() {
                       aiFlash.has("email") ? "rounded-xl bg-indigobg" : ""
                     }`}
                   >
-                    <Field
-                      label={uiCopy.email}
-                      hint={reviewEmailInvalid ? uiCopy.emailInvalid : uiCopy.emailHelp}
-                    >
+                    <label className="block">
+                      <div className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
+                        <span>{uiCopy.email}</span>
+                        {missingReviewEmail && (
+                          <span className="rounded-full bg-redbg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red">
+                            Needed to send
+                          </span>
+                        )}
+                      </div>
                       <Input
                         type="email"
                         inputMode="email"
@@ -3575,10 +3428,25 @@ function NewJob() {
                         className={
                           missingReviewEmail || reviewEmailInvalid
                             ? "border-red bg-redbg/30 focus:border-red focus:ring-red/10"
-                            : ""
+                            : reviewEmailValid
+                              ? "border-indigo bg-indigobg/30"
+                              : ""
                         }
                       />
-                    </Field>
+                      <div className="mt-1 text-xs text-muted">
+                        {reviewEmailInvalid
+                          ? uiCopy.emailInvalid
+                          : missingReviewEmail
+                            ? "Add the customer's email so we can send the record."
+                            : uiCopy.emailHelp}
+                      </div>
+                      {reviewEmailValid && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                          <Check size={14} aria-hidden="true" />
+                          Ready to send. Tap {uiCopy.sendRecord} below.
+                        </div>
+                      )}
+                    </label>
                   </div>
 
                   {/* Optional "bill this customer" amount. Leave blank to skip;
@@ -3631,7 +3499,14 @@ function NewJob() {
 
                   {/* Send action area. The Google review ask is always-on by
                       policy (no gating), so it is not a per-send toggle here. */}
-                  <div className="mt-5 border-t border-line pt-4">
+                  <div
+                    ref={sendBtnRef}
+                    className={`mt-5 rounded-2xl border-t border-line pt-4 transition-all duration-500 ${
+                      reviewEmailValid
+                        ? "shadow-[0_0_0_2px_var(--indigo)] shadow-indigo/20"
+                        : ""
+                    }`}
+                  >
                     <div className="flex gap-2">
                       <Btn variant="secondary" onClick={() => setStage("work")}>
                         {t("pro.back")}
