@@ -2853,8 +2853,6 @@ function NewJob() {
                   )}
                 </Field>
 
-                {/* Photo (optional) */}
-                {photoCapture}
                 {videoCapture}
 
                 {/* Recall alert - only when there's an actual recall. No recall
