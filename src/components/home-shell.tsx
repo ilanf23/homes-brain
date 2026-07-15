@@ -6,7 +6,7 @@ import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
-import { LanguageToggle, useT, type TKey } from "@/lib/i18n";
+import { useT, type TKey } from "@/lib/i18n";
 import { phIdentify, phReset } from "@/lib/posthog";
 
 export type HomeownerRow = {
@@ -263,9 +263,6 @@ export function HomeShell({
           ))}
         </nav>
         <div className="p-3 border-t border-line space-y-2">
-          <div className="px-2">
-            <LanguageToggle className="w-fit" />
-          </div>
           <div className="flex items-center gap-2.5 px-2">
             <Avatar name={homeowner?.name || t("chrome.homeowner")} accent="indigo" size={36} />
             <div className="flex-1 min-w-0">
@@ -307,7 +304,6 @@ export function HomeShell({
               <span className="hidden sm:inline-flex">
                 <Pill accent="indigo">{t("chrome.homeowner")}</Pill>
               </span>
-              <LanguageToggle />
               <ThemeToggle />
               <button
                 onClick={signOut}

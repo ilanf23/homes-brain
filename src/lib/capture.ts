@@ -6,8 +6,8 @@ import type { Locale } from "@/lib/i18n";
    voice dictation → "what was done". */
 
 /* BCP-47 tags for the browser speech recognizer, keyed by the pro's UI locale
-   so dictation listens in the language the pro is working in (not the device's
-   OS language). es-US suits the US home-services market. */
+   so dictation listens in the language the pro chose to work in. es-US suits
+   the US home-services market. */
 const SPEECH_LANG: Record<Locale, string> = {
   en: "en-US",
   es: "es-US",
@@ -257,8 +257,12 @@ export function useDictation(onText: (finalText: string) => void, locale?: Local
     const rec = new Ctor();
     rec.continuous = true;
     rec.interimResults = true;
-    // Listen in the pro's chosen UI language; fall back to the device language.
-    rec.lang = (locale && SPEECH_LANG[locale]) || navigator.language || "en-US";
+    // Listen in the pro's chosen UI language. "en" is the app default rather
+    // than a choice the pro necessarily made, so it defers to the device
+    // language: a Spanish-language phone dictates in Spanish even when the pro
+    // never opened the language setting.
+    rec.lang =
+      (locale && locale !== "en" && SPEECH_LANG[locale]) || navigator.language || "en-US";
     rec.onresult = (e) => {
       let pending = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {

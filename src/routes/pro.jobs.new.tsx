@@ -38,6 +38,7 @@ import {
   extractFromNotes,
   extractFullJob,
   scanNameplate,
+  transcribeAudio,
   useDictation,
   useMicLevel,
 } from "@/lib/capture";
@@ -55,7 +56,7 @@ import {
   TradeFieldInputs,
   type AttributeValues,
 } from "@/components/trade-field-inputs";
-import { LanguageToggle, LOCALES, isLocale, useI18n, useT, type Locale } from "@/lib/i18n";
+import { LOCALES, isLocale, useI18n, useT, type Locale } from "@/lib/i18n";
 import { customerPreviewCopy } from "@/lib/customer-locales";
 
 export const Route = createFileRoute("/pro/jobs/new")({
@@ -112,6 +113,18 @@ function deliveryErrorMessage(code: string | null) {
 const STAGES: Stage[] = ["customer", "location", "work", "review"];
 const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
 
+/* Rows of the "Building the record" modal, in reveal order. Also used to seed
+   the modal in its loading state the moment the voice overlay closes, so the
+   pro never lands back on the customer list wondering if the AI heard them. */
+const FULL_REVEAL_ROWS = [
+  { key: "customer", label: "Customer" },
+  { key: "address", label: "Location" },
+  { key: "contact", label: "Contact" },
+  { key: "equipment", label: "Equipment" },
+  { key: "work", label: "What was done" },
+  { key: "next", label: "Next service" },
+] as const;
+
 /* Canonical keys for the optional record rows the pro can hide from the
    customer. Stored on records.hidden_fields; the homeowner-side dashboard
    uses these to hide the corresponding rows in the equipment/job view. */
@@ -123,57 +136,38 @@ const FIELD_NEXT_SERVICE = "next_service";
 const FIELD_RECALL = "recall";
 
 /* Small square checkmark used as the "include this row" control. */
-function CheckSquare({ on }: { on: boolean }) {
-  return (
-    <span
-      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-        on ? "border-indigo bg-indigo" : "border-line bg-paper"
-      }`}
-      aria-hidden="true"
-    >
-      {on && (
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-          <path
-            d="M3.5 8.5l3 3 6-7"
-            stroke="var(--on-accent)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-    </span>
-  );
-}
-
-/* One row of the live record. The check controls customer visibility while the
-   value opens its editor; excluded rows dim and strike through. */
+/* One row of the live record: label on the left, value on the right. Tap the
+   value to open its editor. */
 function RecordRow({
   label,
   value,
   included,
-  onToggle,
   onEdit,
+  flash = false,
 }: {
   label: string;
   value: ReactNode;
   included: boolean;
   onToggle?: () => void;
   onEdit?: () => void;
+  /* Briefly true after HomesBrain AI edits this row; fades back via the
+     color transition when it clears. */
+  flash?: boolean;
 }) {
   const dim = !included;
   return (
-    <div className="flex w-full items-start justify-between gap-3 border-b border-line py-3 last:border-b-0">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-pressed={included}
-        aria-label={`${included ? "Exclude" : "Include"} ${label}`}
-        className="pressable flex min-h-11 shrink-0 items-center gap-2.5 text-left"
+    <div
+      className={`flex w-full items-start justify-between gap-3 border-b border-line py-3 transition-colors duration-700 last:border-b-0 ${
+        flash ? "rounded-xl bg-indigobg" : ""
+      }`}
+    >
+      <span
+        className={`flex min-h-11 shrink-0 items-center text-sm text-muted ${
+          dim ? "opacity-50" : ""
+        }`}
       >
-        <CheckSquare on={included} />
-        <span className={`text-sm text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
-      </button>
+        {label}
+      </span>
       {onEdit ? (
         <button
           type="button"
@@ -242,7 +236,7 @@ function SameNameChooser({
 }) {
   const spokenName = candidates[0]?.name ?? "";
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm anim-fade-up sm:items-center">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-ink/40 backdrop-blur-sm anim-fade-up sm:items-center">
       <div className="w-full rounded-t-3xl border border-line bg-paper p-5 shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6">
         <div className="mb-1 text-lg font-semibold text-ink">Which {spokenName}?</div>
         <div className="mb-4 text-sm text-muted">You have more than one customer by that name.</div>
@@ -364,6 +358,7 @@ function NewJob() {
   const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [scanFilledDetails, setScanFilledDetails] = useState(false);
 
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
@@ -377,13 +372,16 @@ function NewJob() {
   // closes the audio context).
   const dictation = useDictation((text) => {
     setWhatDone((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
-  });
+  }, uiLocale);
   const micLevel = useMicLevel();
   const [voiceOpen, setVoiceOpen] = useState(false);
+  // True while the server transcribes the recorded clip after the pro taps Done
+  // (work mode only; the full/amend flows have their own busy modals).
+  const [transcribing, setTranscribing] = useState(false);
   // "work" mode = classic dictation into the "what was done" note on the work
   // step. "full" mode = the pro talks through the whole job on the customer
   // step; on Done we run one AI extract and pre-fill every downstream field.
-  const [voiceMode, setVoiceMode] = useState<"work" | "full">("work");
+  const [voiceMode, setVoiceMode] = useState<"work" | "full" | "amend">("work");
   const [fullNote, setFullNote] = useState("");
   const [fullBusy, setFullBusy] = useState(false);
   type RevealStep = {
@@ -395,7 +393,24 @@ function NewJob() {
   const [fullReveal, setFullReveal] = useState<RevealStep[] | null>(null);
   const fullDictation = useDictation((text) => {
     setFullNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
-  });
+  }, uiLocale);
+
+  // "amend" mode = the floating AI button on Review. The pro speaks a
+  // correction ("it's a Kinetico K5, add that I flushed the tank") and
+  // edit-record applies it to the record's fields in place.
+  const [amendBusy, setAmendBusy] = useState(false);
+  const [amendNote, setAmendNote] = useState("");
+  const amendDictation = useDictation((text) => {
+    setAmendNote((prev) => (prev ? `${prev.replace(/\s+$/, "")} ` : "") + text);
+  }, uiLocale);
+  // Review rows the AI just changed, flashed indigo so the edit is visible.
+  const [aiFlash, setAiFlash] = useState<Set<string>>(new Set());
+  const aiFlashTimer = useRef<number | null>(null);
+  function flashAiChanges(keys: Set<string>) {
+    setAiFlash(keys);
+    if (aiFlashTimer.current) window.clearTimeout(aiFlashTimer.current);
+    aiFlashTimer.current = window.setTimeout(() => setAiFlash(new Set()), 2600);
+  }
 
   function openVoice() {
     // start() must run inside this tap so the AudioContext can resume.
@@ -411,11 +426,41 @@ function NewJob() {
     fullDictation.start();
     setVoiceOpen(true);
   }
-  function closeVoice() {
-    dictation.stop();
-    fullDictation.stop();
+  function openVoiceAmend() {
+    setVoiceMode("amend");
+    setAmendNote("");
+    micLevel.start();
+    amendDictation.start();
+    setVoiceOpen(true);
+  }
+  /* Turn what the pro just said into text. The recorded clip transcribed on the
+     server is the source of truth (accurate, handles mixed-language speech); the
+     live Web Speech text is only the fallback if there's no clip or the call
+     fails, so a transcription outage never loses the note. Stops the recorder
+     (keeping its blob) then tears the mic down. */
+  async function settleSpoken(fallback: string): Promise<string> {
+    const clip = await micLevel.stopRecording();
     micLevel.stop();
+    const fb = fallback.trim();
+    if (!clip) return fb;
+    try {
+      const text = (await transcribeAudio(clip, uiLocale)).trim();
+      return text || fb;
+    } catch {
+      return fb;
+    }
+  }
+
+  /* Work-mode Done: the live Web Speech text is already in `whatDone`, so show a
+     "transcribing" hint and upgrade it in place with the accurate transcript. */
+  async function finishWorkVoice() {
+    const combined = `${whatDone} ${dictation.interim ?? ""}`.replace(/\s+/g, " ").trim();
+    dictation.stop();
     setVoiceOpen(false);
+    setTranscribing(true);
+    const text = await settleSpoken(combined);
+    if (text) setWhatDone(text);
+    setTranscribing(false);
   }
 
   // Review. The record always sends (no branded-record toggle in v0); only the
@@ -460,6 +505,10 @@ function NewJob() {
   // the input can be empty; parsed to a number at submit time. When >0 we also
   // create an open invoice so the homeowner can pay it via the existing flow.
   const [chargeAmount, setChargeAmount] = useState("");
+  // Review screen keeps optional decisions collapsed by default so the send
+  // step reads as "confirm and send," not "configure and send."
+  const [langOpen, setLangOpen] = useState(false);
+  const [chargeOpen, setChargeOpen] = useState(false);
   const [billedAmount, setBilledAmount] = useState<number | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
   // Optional record rows the pro has unchecked (excluded from the customer's
@@ -706,12 +755,7 @@ function NewJob() {
         setWarrantyUntil(r.warranty_until);
         filled.push("warranty");
       }
-      const detectedNothing = !r.type && !r.make && !r.model && !r.warranty_until;
-      if (detectedNothing) {
-        setScanState("error");
-        setScanError("Couldn't read the photo. Type the details in below.");
-        return;
-      }
+      setScanFilledDetails(filled.length > 0);
       setScanState("done");
       await logEvent(proId ? `pro:${proId}` : null, "nameplate_scanned", { filled });
     } catch (e) {
@@ -741,7 +785,12 @@ function NewJob() {
         make: a.make,
         model: a.model,
       }));
-      const r = await extractFromNotes(trimmed, proTrade, hints.length ? hints : undefined);
+      const r = await extractFromNotes(
+        trimmed,
+        proTrade,
+        hints.length ? hints : undefined,
+        uiLocale,
+      );
 
       /* The pro's tap is ground truth. If they already picked a unit, the AI
          does not get to second-guess it, so resolution is skipped entirely. */
@@ -826,10 +875,15 @@ function NewJob() {
 
   /* The Review card is also the customer-message preview. Fixed labels switch
      immediately; dynamic record fields are translated once and reused by the
-     send function so the delivered email matches what the pro reviewed. */
+     send function so the delivered email matches what the pro reviewed.
+     The record narrative is authored in the pro's UI language (dictation,
+     extract-job, and typed notes all follow it), so translation is skipped
+     only when the customer reads that same language. English is a translation
+     target like any other: an English-speaking customer of a Russian-locale
+     pro still needs the pass. */
   useEffect(() => {
     if (stage !== "review") return;
-    if (customerLocale === "en") {
+    if (customerLocale === uiLocale) {
       setTranslatedRecord(null);
       setTranslationState("ready");
       return;
@@ -868,7 +922,7 @@ function NewJob() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [customerLocale, eqType, stage, whatDone]);
+  }, [customerLocale, eqType, stage, uiLocale, whatDone]);
 
   const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
@@ -1033,31 +1087,32 @@ function NewJob() {
      address, and work fields, then jumps straight to Review so the pro only
      has to eyeball it and send. */
   async function finishFullVoice() {
-    // Web Speech often keeps the last utterance in `interim` (never fires
-    // `isFinal`) until stop. Combine the finalized `fullNote` with the current
-    // interim so nothing spoken is lost, then stop the mic so any trailing
-    // final chunk still lands.
+    // Web Speech keeps the last utterance in `interim` (never fires `isFinal`)
+    // until stop; combine it with `fullNote` as the fallback transcript.
     const combined = `${fullNote} ${fullDictation.interim ?? ""}`.replace(/\s+/g, " ").trim();
     fullDictation.stop();
-    micLevel.stop();
-    // Give the recognizer one tick to flush a trailing final result on stop.
-    await new Promise((r) => setTimeout(r, 150));
-    const note = combined.length >= 3 ? combined : fullNote.trim();
+    // Close the overlay and open the "Building the record" modal right away in
+    // its loading state - it also covers the transcription wait. Dropping the
+    // pro back on the customer list while we read the note looks like a failure.
+    setVoiceOpen(false);
+    setFullBusy(true);
+    setFullReveal(FULL_REVEAL_ROWS.map((row) => ({ ...row, value: null, status: "pending" })));
+    // Accurate server transcript is the note; Web Speech text is the fallback.
+    const note = await settleSpoken(combined);
     if (note.length < 3) {
-      setVoiceOpen(false);
+      setFullBusy(false);
+      setFullReveal(null);
       setToast("Didn't catch that. Tap the AI card and try again.");
       setTimeout(() => setToast(null), 3500);
       return;
     }
-    // Close the overlay so the pro sees the busy indicator on the form.
-    setVoiceOpen(false);
-    setFullBusy(true);
     let extract;
     try {
-      extract = await extractFullJob(note, proTrade);
+      extract = await extractFullJob(note, proTrade, uiLocale);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Couldn't read that. Try again.";
       setFullBusy(false);
+      setFullReveal(null);
       setToast(msg);
       setTimeout(() => setToast(null), 3500);
       return;
@@ -1090,35 +1145,19 @@ function NewJob() {
     ].filter(Boolean) as string[];
     const equipmentBits = [extract.type, extract.make, extract.model].filter(Boolean) as string[];
 
-    const steps: RevealStep[] = [
-      { key: "customer", label: "Customer", value: customerLabel, status: "pending" },
-      { key: "address", label: "Location", value: addressLabel, status: "pending" },
-      {
-        key: "contact",
-        label: "Contact",
-        value: contactBits.length ? contactBits.join(" · ") : null,
-        status: "pending",
-      },
-      {
-        key: "equipment",
-        label: "Equipment",
-        value: equipmentBits.length ? equipmentBits.join(" ") : null,
-        status: "pending",
-      },
-      {
-        key: "work",
-        label: "What was done",
-        value: extract.what_done_clean ?? note,
-        status: "pending",
-      },
-      {
-        key: "next",
-        label: "Next service",
-        value: extract.next_service_date,
-        status: "pending",
-      },
-    ];
-    setFullReveal(steps);
+    const stepValues: Record<string, string | null> = {
+      customer: customerLabel,
+      address: addressLabel,
+      contact: contactBits.length ? contactBits.join(" · ") : null,
+      equipment: equipmentBits.length ? equipmentBits.join(" ") : null,
+      work: extract.what_done_clean ?? note,
+      next: extract.next_service_date ?? null,
+    };
+    const steps: RevealStep[] = FULL_REVEAL_ROWS.map((row) => ({
+      ...row,
+      value: stepValues[row.key] ?? null,
+      status: "pending",
+    }));
 
     // Apply each field as its step "completes" so the pro watches the record
     // build itself in real time before landing on Review.
@@ -1171,28 +1210,11 @@ function NewJob() {
       }
     };
 
-    const STEP_MS = 520;
-    const runStep = (i: number) => {
-      if (i >= steps.length) {
-        setTimeout(() => {
-          setFullReveal(null);
-          setReviewEdit(reviewAddress ? null : "address");
-          setStage("review");
-        }, 420);
-        return;
-      }
-      setFullReveal((cur) =>
-        cur ? cur.map((s, idx) => (idx === i ? { ...s, status: "active" } : s)) : cur,
-      );
-      setTimeout(() => {
-        applyStep(steps[i].key);
-        setFullReveal((cur) =>
-          cur ? cur.map((s, idx) => (idx === i ? { ...s, status: "done" } : s)) : cur,
-        );
-        runStep(i + 1);
-      }, STEP_MS);
-    };
-    runStep(0);
+    playReveal(steps, applyStep, () => {
+      setFullReveal(null);
+      setReviewEdit(reviewAddress ? null : "address");
+      setStage("review");
+    });
 
     logEvent(proId, "job_voice_full_captured", {
       filled: [
@@ -1207,6 +1229,201 @@ function NewJob() {
         typeof extract.charge_amount === "number" && extract.charge_amount > 0 && "charge",
       ].filter(Boolean),
       matched_existing: !!match,
+    });
+  }
+
+  /* Animate the "Building the record" rows: each turns active then done (with
+     onStep fired as it lands), then onFinish runs after a beat. Shared by the
+     full voice flow and the Review amend flow. */
+  function playReveal(
+    steps: RevealStep[],
+    onStep: ((key: string) => void) | null,
+    onFinish: () => void,
+  ) {
+    const STEP_MS = 280;
+    setFullReveal(steps);
+    const run = (i: number) => {
+      if (i >= steps.length) {
+        setTimeout(onFinish, 240);
+        return;
+      }
+      setFullReveal((cur) =>
+        cur ? cur.map((s, idx) => (idx === i ? { ...s, status: "active" } : s)) : cur,
+      );
+      setTimeout(() => {
+        onStep?.(steps[i].key);
+        setFullReveal((cur) =>
+          cur ? cur.map((s, idx) => (idx === i ? { ...s, status: "done" } : s)) : cur,
+        );
+        run(i + 1);
+      }, STEP_MS);
+    };
+    run(0);
+  }
+
+  /* Floating-AI done handler on Review: send the record's current fields plus
+     the spoken instruction to edit-record, apply what came back, then replay
+     the "Building the record" modal with the updated values so the pro sees
+     the record repopulate. Null never clears a field here (only next-service,
+     where the model clears on an explicit ask): edits apply instantly, so a
+     value the model dropped must not wipe good data. */
+  async function finishAmendVoice() {
+    const combined = `${amendNote} ${amendDictation.interim ?? ""}`.replace(/\s+/g, " ").trim();
+    amendDictation.stop();
+    setVoiceOpen(false);
+    setAmendBusy(true);
+    // Open the modal in its loading state right away, exactly like the full
+    // voice flow: the pro should watch the record update, not wonder.
+    setFullBusy(true);
+    setFullReveal(FULL_REVEAL_ROWS.map((row) => ({ ...row, value: null, status: "pending" })));
+    // Accurate server transcript is the instruction; Web Speech is the fallback.
+    const instruction = await settleSpoken(combined);
+    if (instruction.length < 3) {
+      setAmendBusy(false);
+      setFullBusy(false);
+      setFullReveal(null);
+      setToast("Didn't catch that. Tap the mic and try again.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    const chargeNow = parseFloat(chargeAmount);
+    const current = {
+      what_done: whatDone.trim() || null,
+      done_date: new Date().toISOString().slice(0, 10),
+      next_service_date: nextService || null,
+      equipment_type: eqType.trim() || null,
+      equipment_make: eqMake.trim() || null,
+      equipment_model: eqModel.trim() || null,
+      customer_name: previewName.trim() || null,
+      address: previewAddress.trim() || null,
+      email: reviewEmail.trim() || null,
+      charge_amount: Number.isFinite(chargeNow) && chargeNow > 0 ? chargeNow : null,
+    };
+    const { data, error } = await supabase.functions.invoke("edit-record", {
+      body: { instruction, fields: current },
+    });
+    setAmendBusy(false);
+    setFullBusy(false);
+    if (error || !data || data.error) {
+      setFullReveal(null);
+      setToast(data?.error ?? "HomesBrain AI isn't available right now. Tap a row to edit it.");
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    if (data.understood === false) {
+      setFullReveal(null);
+      setToast(data.note ?? "Couldn't tell what to change. Try saying it a different way.");
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+
+    const changed = new Set<string>();
+    const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+
+    const nameNew = str(data.customer_name);
+    if (nameNew && nameNew !== previewName.trim()) {
+      setReviewName(nameNew);
+      changed.add(FIELD_CUSTOMER);
+    }
+    const addressNew = str(data.address);
+    if (addressNew && normalizeAddress(addressNew) !== normalizeAddress(previewAddress)) {
+      addressTouched.current = true;
+      if (selectedCustomerId) setLocAddress(addressNew);
+      else setNewCustomer((n) => ({ ...n, address: addressNew }));
+      changed.add("address");
+    }
+    const emailNew = str(data.email);
+    if (emailNew && emailNew.toLowerCase() !== reviewEmail.trim().toLowerCase()) {
+      setReviewEmail(emailNew);
+      changed.add("email");
+    }
+    const workNew = str(data.what_done);
+    if (workNew && workNew !== whatDone.trim()) {
+      setWhatDone(workNew);
+      changed.add(FIELD_WORK_DONE);
+    }
+    const nextNew =
+      typeof data.next_service_date === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.next_service_date)
+        ? data.next_service_date
+        : null;
+    if ((nextNew ?? "") !== nextService) {
+      setNextService(nextNew ?? "");
+      changed.add(FIELD_NEXT_SERVICE);
+    }
+    const typeNew = str(data.equipment_type);
+    if (typeNew && typeNew !== eqType.trim()) {
+      setEqType(typeNew);
+      changed.add(FIELD_EQUIPMENT);
+    }
+    const makeNew = str(data.equipment_make);
+    if (makeNew && makeNew !== eqMake.trim()) {
+      setEqMake(makeNew);
+      changed.add(FIELD_MAKE_MODEL);
+    }
+    const modelNew = str(data.equipment_model);
+    if (modelNew && modelNew !== eqModel.trim()) {
+      setEqModel(modelNew);
+      changed.add(FIELD_MAKE_MODEL);
+    }
+    // A correction to a unit on file only persists at submit when the edit
+    // toggle is on; the AI's correction counts as the pro asking for it.
+    if (selectedEquipmentId && (changed.has(FIELD_EQUIPMENT) || changed.has(FIELD_MAKE_MODEL))) {
+      setEditDetails(true);
+    }
+    const chargeNew =
+      typeof data.charge_amount === "number" &&
+      Number.isFinite(data.charge_amount) &&
+      data.charge_amount > 0
+        ? data.charge_amount
+        : null;
+    if (chargeNew != null && chargeNew !== (Number.isFinite(chargeNow) ? chargeNow : null)) {
+      setChargeAmount(String(chargeNew));
+      changed.add("charge");
+    }
+
+    if (changed.size === 0) {
+      setFullReveal(null);
+      setToast(data.note ?? "Nothing needed changing.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+
+    // Replay the modal with the record's post-edit values, then land back on
+    // Review with the changed rows flashed.
+    const phoneVal = (selectedCustomer?.phone ?? newCustomer.phone ?? "").trim();
+    const finalValues: Record<string, string | null> = {
+      customer: (nameNew ?? previewName.trim()) || null,
+      address: (addressNew ?? previewAddress.trim()) || null,
+      contact:
+        [phoneVal || null, (emailNew ?? reviewEmail.trim()) || null].filter(Boolean).join(" · ") ||
+        null,
+      equipment:
+        [typeNew ?? eqType.trim(), makeNew ?? eqMake.trim(), modelNew ?? eqModel.trim()]
+          .filter(Boolean)
+          .join(" ") || null,
+      work: (workNew ?? whatDone.trim()) || null,
+      next: changed.has(FIELD_NEXT_SERVICE) ? nextNew : nextService || null,
+    };
+    playReveal(
+      FULL_REVEAL_ROWS.map((row) => ({
+        ...row,
+        value: finalValues[row.key] ?? null,
+        status: "pending",
+      })),
+      null,
+      () => {
+        setFullReveal(null);
+        flashAiChanges(changed);
+        if (data.note) {
+          setToast(data.note);
+          setTimeout(() => setToast(null), 4000);
+        }
+      },
+    );
+    void logEvent(`pro:${proId}`, "record_edited", {
+      via: "voice_review",
+      fields: Array.from(changed),
     });
   }
 
@@ -1801,8 +2018,12 @@ function NewJob() {
     setScanState("idle");
     setScanError(null);
     dictation.stop();
+    amendDictation.stop();
     micLevel.stop();
     setVoiceOpen(false);
+    setAmendBusy(false);
+    setAmendNote("");
+    setAiFlash(new Set());
     setAskReview(true);
     setReviewEdit(null);
     setReviewName(null);
@@ -1845,6 +2066,10 @@ function NewJob() {
     fullDictation.listening && fullDictation.interim
       ? (fullNote ? fullNote.replace(/\s+$/, "") + " " : "") + fullDictation.interim
       : fullNote;
+  const liveAmendNote =
+    amendDictation.listening && amendDictation.interim
+      ? (amendNote ? amendNote.replace(/\s+$/, "") + " " : "") + amendDictation.interim
+      : amendNote;
 
   // Manual unit fields, shared by the repeat-home picker (shown when adding a
   // new unit or correcting one) and the new-home drawer (always shown there,
@@ -1989,7 +2214,8 @@ function NewJob() {
               )}
               {scanState === "done" && (
                 <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                  <ShieldCheck size={16} animate={false} /> HomesBrain AI filled the unit details
+                  <ShieldCheck size={16} animate={false} />{" "}
+                  {scanFilledDetails ? "HomesBrain AI filled the unit details" : "Photo added"}
                 </div>
               )}
               {scanState === "error" && <div className="text-sm text-red">{scanError}</div>}
@@ -2025,7 +2251,6 @@ function NewJob() {
             <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
           </Link>
           <div className="flex items-center gap-2">
-            <LanguageToggle />
             <Pill accent="indigo">{t("pro.logJob")}</Pill>
           </div>
         </div>
@@ -2076,30 +2301,28 @@ function NewJob() {
                     type="button"
                     onClick={openVoiceFull}
                     aria-label="Talk to HomesBrain AI and it fills in the job"
-                    className="pressable group w-full rounded-3xl bg-indigo px-6 py-6 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
+                    className="pressable group w-full rounded-3xl bg-indigo px-5 py-5 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
                   >
                     <div className="flex items-center gap-4">
-                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/15">
-                        <MicIcon size={26} />
-                      </span>
+                      <img
+                        src="/images/homesbrain-ai-mic.png"
+                        alt=""
+                        aria-hidden="true"
+                        className="h-16 w-16 shrink-0 rounded-2xl shadow-[0_6px_16px_-6px_rgba(0,0,0,0.45)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-105"
+                      />
                       <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-80">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-75">
                           HomesBrain AI
                         </div>
-                        <div className="mt-0.5 text-lg font-extrabold tracking-tight">
-                          Just tell me about the job
-                        </div>
-                        <div className="mt-0.5 text-sm opacity-90">
-                          Who it's for, where, when, what you did. HomesBrain AI fills it all in.
+                        <div className="mt-0.5 text-xl font-extrabold tracking-tight">
+                          Just talk, I'll fill it in
                         </div>
                       </div>
+                      <span className="shrink-0 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide">
+                        Tap to talk
+                      </span>
                     </div>
                   </button>
-                )}
-                {fullBusy && (
-                  <div className="rounded-2xl border border-indigo/20 bg-indigobg px-4 py-3 text-sm font-semibold text-indigo">
-                    HomesBrain AI is reading what you said…
-                  </div>
                 )}
                 <Card className="space-y-3">
                   <Input
@@ -2350,10 +2573,16 @@ function NewJob() {
                   <Textarea
                     value={liveWhatDone}
                     onChange={(e) => setWhatDone(e.target.value)}
-                    readOnly={dictation.listening}
+                    readOnly={dictation.listening || transcribing}
                     placeholder="Or type here…"
                     rows={3}
                   />
+                  {transcribing && (
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                      <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
+                      HomesBrain AI improving the transcription…
+                    </div>
+                  )}
                   {extractState === "working" && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
                       <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
@@ -2577,27 +2806,6 @@ function NewJob() {
               <div className="space-y-4">
                 <p className="px-2 text-center text-sm text-muted">{t("pro.reviewAndSend")}.</p>
 
-                {!reviewRequiredComplete && (
-                  <div
-                    role="alert"
-                    className="flex items-start gap-3 rounded-xl border border-red/20 bg-redbg px-4 py-3 text-red"
-                  >
-                    <AlertTriangle size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
-                    <div>
-                      <div className="text-sm font-bold">Finish these details before sending</div>
-                      <div className="mt-0.5 text-sm">
-                        {missingReviewAddress && missingReviewEmail
-                          ? "Add the service address and customer email."
-                          : missingReviewAddress
-                            ? "Add the service address."
-                            : missingReviewEmail
-                              ? "Add the customer email."
-                              : "Enter a valid customer email."}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* One box: the live record IS the control surface. Every row is a
                     checkmark, and the Google review ask lives inside the same box. */}
                 <Card className="shadow-[0_24px_60px_-30px_rgba(22,22,15,0.18)]">
@@ -2612,27 +2820,48 @@ function NewJob() {
                   </div>
 
                   <div className="mt-5 border-t border-line pt-4">
-                    <label
-                      htmlFor="customer-language"
-                      className="block text-sm font-semibold text-ink"
-                    >
-                      {uiCopy.language}
-                    </label>
-                    <Select
-                      id="customer-language"
-                      value={customerLocale}
-                      onChange={(event) => {
-                        if (isLocale(event.target.value)) setCustomerLocale(event.target.value);
-                      }}
-                      className="mt-2"
-                    >
-                      {LOCALES.map(({ code, label }) => (
-                        <option key={code} value={code}>
-                          {label}
-                        </option>
-                      ))}
-                    </Select>
-                    <p className="mt-1.5 text-xs text-muted">{uiCopy.languageHelp}</p>
+                    {langOpen ? (
+                      <>
+                        <label
+                          htmlFor="customer-language"
+                          className="block text-sm font-semibold text-ink"
+                        >
+                          {uiCopy.language}
+                        </label>
+                        <Select
+                          id="customer-language"
+                          value={customerLocale}
+                          onChange={(event) => {
+                            if (isLocale(event.target.value)) setCustomerLocale(event.target.value);
+                          }}
+                          className="mt-2"
+                        >
+                          {LOCALES.map(({ code, label }) => (
+                            <option key={code} value={code}>
+                              {label}
+                            </option>
+                          ))}
+                        </Select>
+                        <p className="mt-1.5 text-xs text-muted">{uiCopy.languageHelp}</p>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm text-muted">
+                          {uiCopy.language}:{" "}
+                          <span className="font-semibold text-ink">
+                            {LOCALES.find((l) => l.code === customerLocale)?.label ??
+                              customerLocale}
+                          </span>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setLangOpen(true)}
+                          className="shrink-0 text-xs font-semibold text-indigo hover:underline"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    )}
                     {translationState === "loading" && (
                       <div
                         className="mt-3 flex items-center gap-2 text-sm text-muted"
@@ -2660,8 +2889,12 @@ function NewJob() {
                   </div>
 
                   <div
-                    className={`mt-4 border-y px-1 py-3 ${
-                      missingReviewAddress ? "border-red/30 bg-redbg/50" : "border-line"
+                    className={`mt-4 border-y px-1 py-3 transition-colors duration-700 ${
+                      missingReviewAddress
+                        ? "border-red/30 bg-redbg/50"
+                        : aiFlash.has("address")
+                          ? "border-line bg-indigobg"
+                          : "border-line"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -2730,6 +2963,7 @@ function NewJob() {
                       included={!hiddenFields.has(FIELD_CUSTOMER)}
                       onToggle={() => toggleField(FIELD_CUSTOMER)}
                       onEdit={() => setReviewEdit("customer")}
+                      flash={aiFlash.has(FIELD_CUSTOMER)}
                     />
                     {reviewEdit === "customer" && (
                       <ReviewEditor onDone={() => setReviewEdit(null)}>
@@ -2812,6 +3046,7 @@ function NewJob() {
                         included={!hiddenFields.has(FIELD_EQUIPMENT)}
                         onToggle={() => toggleField(FIELD_EQUIPMENT)}
                         onEdit={() => setReviewEdit("equipment")}
+                        flash={aiFlash.has(FIELD_EQUIPMENT)}
                       />
                     )}
                     {(eqMake || eqModel) && (
@@ -2821,6 +3056,7 @@ function NewJob() {
                         included={!hiddenFields.has(FIELD_MAKE_MODEL)}
                         onToggle={() => toggleField(FIELD_MAKE_MODEL)}
                         onEdit={() => setReviewEdit("equipment")}
+                        flash={aiFlash.has(FIELD_MAKE_MODEL)}
                       />
                     )}
                     {reviewEdit === "equipment" && (
@@ -2834,6 +3070,7 @@ function NewJob() {
                       included={!hiddenFields.has(FIELD_WORK_DONE)}
                       onToggle={() => toggleField(FIELD_WORK_DONE)}
                       onEdit={() => setReviewEdit("work")}
+                      flash={aiFlash.has(FIELD_WORK_DONE)}
                     />
                     {reviewEdit === "work" && (
                       <ReviewEditor
@@ -2857,6 +3094,7 @@ function NewJob() {
                         included={!hiddenFields.has(FIELD_NEXT_SERVICE)}
                         onToggle={() => toggleField(FIELD_NEXT_SERVICE)}
                         onEdit={() => setReviewEdit("next_service")}
+                        flash={aiFlash.has(FIELD_NEXT_SERVICE)}
                       />
                     )}
                     {reviewEdit === "next_service" && (
@@ -2876,7 +3114,11 @@ function NewJob() {
                       step, so Review is that path's only chance to add one. */}
                   <div className="mt-5 border-t border-line pt-4">{photoCapture}</div>
 
-                  <div className="mt-5 border-t border-line pt-4">
+                  <div
+                    className={`mt-5 border-t border-line pt-4 transition-colors duration-700 ${
+                      aiFlash.has("email") ? "rounded-xl bg-indigobg" : ""
+                    }`}
+                  >
                     <Field
                       label={uiCopy.email}
                       hint={reviewEmailInvalid ? uiCopy.emailInvalid : uiCopy.emailHelp}
@@ -2901,48 +3143,55 @@ function NewJob() {
                   {/* Optional "bill this customer" amount. Leave blank to skip;
                       any positive number creates an open invoice tied to the job
                       so the homeowner can pay it from /home. */}
-                  <div className="mt-5 border-t border-line pt-4">
-                    <label htmlFor="charge-amount" className="block text-sm font-semibold text-ink">
-                      {t("pro.chargeJob")}
-                    </label>
-                    <div className="mt-2 relative">
-                      <span
-                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted"
-                        aria-hidden
+                  <div
+                    className={`mt-5 border-t border-line pt-4 transition-colors duration-700 ${
+                      aiFlash.has("charge") ? "rounded-xl bg-indigobg" : ""
+                    }`}
+                  >
+                    {chargeOpen || chargeAmount ? (
+                      <>
+                        <label
+                          htmlFor="charge-amount"
+                          className="block text-sm font-semibold text-ink"
+                        >
+                          {t("pro.chargeJob")}
+                        </label>
+                        <div className="mt-2 relative">
+                          <span
+                            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted"
+                            aria-hidden
+                          >
+                            $
+                          </span>
+                          <input
+                            id="charge-amount"
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={chargeAmount}
+                            onChange={(e) => setChargeAmount(e.target.value)}
+                            className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-2xl font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                          />
+                        </div>
+                        <p className="mt-1.5 text-xs text-muted">{t("pro.chargeHelp")}</p>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setChargeOpen(true)}
+                        className="pressable flex w-full items-center gap-2 text-left text-sm font-semibold text-indigo hover:underline"
                       >
-                        $
-                      </span>
-                      <input
-                        id="charge-amount"
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={chargeAmount}
-                        onChange={(e) => setChargeAmount(e.target.value)}
-                        className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-2xl font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
-                      />
-                    </div>
-                    <p className="mt-1.5 text-xs text-muted">{t("pro.chargeHelp")}</p>
+                        <span className="text-lg leading-none">+</span> {t("pro.chargeJob")}
+                      </button>
+                    )}
                   </div>
 
-                  {/* Google review ask: a checkmark in the same box, styled as an
-                      action rather than a record row. */}
+                  {/* Send action area. The Google review ask is always-on by
+                      policy (no gating), so it is not a per-send toggle here. */}
                   <div className="mt-5 border-t border-line pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setAskReview((v) => !v)}
-                      aria-pressed={askReview}
-                      className="pressable flex w-full items-center gap-2.5 rounded-xl bg-soft px-3 py-3 text-left text-sm transition-colors hover:bg-line/50"
-                    >
-                      <CheckSquare on={askReview} />
-                      <span className={askReview ? "text-ink" : "text-muted"}>
-                        {t("pro.askGoogleReview")}
-                      </span>
-                    </button>
-
-                    <div className="mt-3 flex gap-2">
+                    <div className="flex gap-2">
                       <Btn variant="secondary" onClick={() => setStage("work")}>
                         {t("pro.back")}
                       </Btn>
@@ -2958,9 +3207,6 @@ function NewJob() {
                       >
                         {uiCopy.sendRecord}
                       </Btn>
-                    </div>
-                    <div className="mt-3 text-xs text-muted">
-                      {tradeLabel(proTrade)} · {proName}
                     </div>
                   </div>
                 </Card>
@@ -3104,12 +3350,53 @@ function NewJob() {
         </div>
       </div>
 
+      {/* Floating HomesBrain AI button: on Review only, hovering over the
+          record. Tap it and speak a correction or addition; edit-record
+          applies it and the changed rows flash indigo. */}
+      {stage === "review" && amendDictation.supported && !voiceOpen && (
+        <button
+          type="button"
+          onClick={openVoiceAmend}
+          disabled={amendBusy}
+          aria-label="Tell HomesBrain AI what to change or add"
+          title="Tell HomesBrain AI what to change or add"
+          className="pressable fixed right-5 z-40 rounded-2xl shadow-[0_16px_34px_-12px_rgba(71,63,176,0.65)] transition-transform hover:scale-105"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)" }}
+        >
+          {/* Same HomesBrain AI mark as the "Just talk" card on step one. */}
+          <img
+            src="/images/homesbrain-ai-mic.png"
+            alt=""
+            aria-hidden="true"
+            className="block h-14 w-14 rounded-2xl ring-1 ring-white/25"
+          />
+          {amendBusy && (
+            <span className="absolute inset-0 grid place-items-center rounded-2xl bg-indigo/60">
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            </span>
+          )}
+        </button>
+      )}
+
       {voiceOpen && (
         <VoiceCaptureOverlay
           levelRef={micLevel.levelRef}
           bandsRef={micLevel.bandsRef}
-          text={voiceMode === "full" ? liveFullNote : liveWhatDone}
-          onDone={voiceMode === "full" ? finishFullVoice : closeVoice}
+          text={
+            voiceMode === "full"
+              ? liveFullNote
+              : voiceMode === "amend"
+                ? liveAmendNote
+                : liveWhatDone
+          }
+          prompt={voiceMode === "amend" ? "Listening. What should I change or add?" : undefined}
+          onDone={
+            voiceMode === "full"
+              ? finishFullVoice
+              : voiceMode === "amend"
+                ? finishAmendVoice
+                : finishWorkVoice
+          }
         />
       )}
 
@@ -3123,8 +3410,26 @@ function NewJob() {
             <div className="mt-1 text-lg font-extrabold tracking-tight text-ink">
               Building the record
             </div>
-            <ul className="mt-4 space-y-2">
-              {fullReveal.map((s) => {
+            {fullBusy && (
+              <div
+                className="mt-1 flex items-center gap-2 text-sm font-semibold text-indigo"
+                role="status"
+              >
+                <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-indigo/25 border-t-indigo" />
+                Reading what you said…
+              </div>
+            )}
+            <ul className="relative mt-4 space-y-2 overflow-hidden rounded-2xl">
+              {/* While the AI reads the note, an indigo beam sweeps the ghost
+                  rows (same beam as the nameplate scan) over shimmering
+                  placeholders, so the wait reads as active work. */}
+              {fullBusy && (
+                <span
+                  aria-hidden
+                  className="scan-beam pointer-events-none absolute inset-x-0 z-10 h-0.5 rounded-full bg-gradient-to-r from-transparent via-indigo to-transparent shadow-[0_0_16px_3px_rgba(71,63,176,0.35)]"
+                />
+              )}
+              {fullReveal.map((s, i) => {
                 const done = s.status === "done";
                 const active = s.status === "active";
                 return (
@@ -3144,8 +3449,9 @@ function NewJob() {
                           ? "bg-indigo text-white"
                           : active
                             ? "bg-indigo text-white"
-                            : "bg-line text-muted"
+                            : `bg-line text-muted ${fullBusy ? "pulse-dot" : ""}`
                       }`}
+                      style={fullBusy ? { animationDelay: `${i * 0.15}s` } : undefined}
                       aria-hidden
                     >
                       {done ? (
@@ -3170,13 +3476,23 @@ function NewJob() {
                       >
                         {s.label}
                       </div>
-                      <div
-                        className={`mt-0.5 truncate text-sm font-semibold ${
-                          s.value ? "text-ink" : "text-muted"
-                        }`}
-                      >
-                        {s.value ?? (active || done ? "Not mentioned" : "…")}
-                      </div>
+                      {fullBusy ? (
+                        <span
+                          className="skeleton mt-1.5 block h-3.5"
+                          style={{
+                            width: `${[72, 58, 66, 48, 86, 40][i] ?? 60}%`,
+                            animationDelay: `${i * 0.12}s`,
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className={`mt-0.5 truncate text-sm font-semibold ${
+                            s.value ? "text-ink" : "text-muted"
+                          }`}
+                        >
+                          {s.value ?? (active || done ? "Not mentioned" : "…")}
+                        </div>
+                      )}
                     </div>
                   </li>
                 );

@@ -83,10 +83,20 @@ Respond with strict JSON, no markdown, using exactly these keys:
   "what_done_clean": a tidy one-to-two sentence version of the work performed, in past tense, professional tone, no fluff. Preserve the pro's meaning. Do not add facts.
 }`;
 
+/* The pro's UI language. Only the free-text narrative ("what_done_clean") is
+   localized; type/make/model/dates/amounts stay canonical so the equipment
+   record reads the same for every pro and homeowner on the home, whatever
+   language each one uses. English is the default and needs no directive. */
+const LANG_NAMES: Record<string, string> = {
+  es: "Spanish",
+  ru: "Russian",
+  uk: "Ukrainian",
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { note, trade, mode, units } = await req.json();
+    const { note, trade, mode, units, locale } = await req.json();
     if (typeof note !== "string" || note.trim().length < 3) {
       return json({ error: "Note too short" }, 400);
     }
@@ -100,11 +110,17 @@ Deno.serve(async (req) => {
         })
       : [];
 
+    const langName = typeof locale === "string" ? LANG_NAMES[locale] : undefined;
+    const localeBlock = langName
+      ? `\n\nWrite the "what_done_clean" value in ${langName}. Every other field stays as specified above: keep "type" in English, keep "make" and "model" exactly as printed, dates as YYYY-MM-DD, and amounts as plain numbers.`
+      : "";
+
     const today = new Date().toISOString().slice(0, 10);
     const full = mode === "full";
     const prompt =
       (full ? SYSTEM_FULL : SYSTEM_WORK).replace("{TODAY}", today) +
-      (roster.length ? unitsBlock(roster) : "");
+      (roster.length ? unitsBlock(roster) : "") +
+      localeBlock;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

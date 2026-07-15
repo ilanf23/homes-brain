@@ -24,7 +24,7 @@ import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
-import { LanguageToggle, useI18n, useT, type TKey } from "@/lib/i18n";
+import { useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
 import { phIdentify, phReset } from "@/lib/posthog";
 
@@ -359,7 +359,6 @@ export function ProShell({
                 <span className="hidden lg:inline">{t("pro.logJob")}</span>
               </Btn>
             </Link>
-            <LanguageToggle />
             <ThemeToggle />
             {pro ? (
               <NotificationsBell proId={pro.id} align="right" />
@@ -376,7 +375,6 @@ export function ProShell({
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
             <div className="flex items-center gap-1">
-              <LanguageToggle />
               <ThemeToggle />
               {pro && <NotificationsBell proId={pro.id} align="right" />}
               <button

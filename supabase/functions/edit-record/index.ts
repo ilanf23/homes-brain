@@ -21,8 +21,12 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const SYSTEM = `You are HomesBrain AI. A home-services pro wants to fix a service record they already saved. You get the record's current fields and the pro's instruction in plain words.
-Apply the instruction to the fields. Change ONLY what the instruction clearly asks to change. Never invent brands, models, dates, or work that was not mentioned. Keep the pro's meaning and wording where possible.
+const SYSTEM = `You are HomesBrain AI. A home-services pro wants to fix or add to a service record. You get the record's current fields and the pro's instruction. The instruction is usually spoken and machine-transcribed: punctuation may be missing, and it often packs SEVERAL changes into one breath.
+Rules:
+- Work through the instruction clause by clause and apply EVERY change it asks for. Before answering, re-read the instruction and confirm nothing it mentions is missing from your output.
+- Change ONLY what the instruction clearly asks to change. Never invent brands, models, dates, amounts, or work that was not mentioned.
+- When the pro ADDS work ("also", "and I", "add that", "mention that"), APPEND it to the existing work description; never drop what is already there.
+- Keep the pro's meaning and wording where possible.
 Today is {TODAY}. Use it for relative dates like "yesterday", "last Tuesday", or "in 6 months".
 Respond with strict JSON, no markdown, using exactly these keys, and return ALL of them every time (keep the original value for anything the instruction does not mention):
 {
@@ -33,7 +37,11 @@ Respond with strict JSON, no markdown, using exactly these keys, and return ALL 
   "next_service_date": "YYYY-MM-DD" or null,
   "equipment_type": short equipment type (e.g. "Water heater", "Water softener") or null,
   "equipment_make": brand name or null,
-  "equipment_model": model number/name or null
+  "equipment_model": model number/name or null,
+  "customer_name": the customer's full name or null,
+  "address": the service address on one line or null,
+  "email": the customer's email address or null,
+  "charge_amount": the amount to bill in dollars as a plain number or null
 }`;
 
 type Fields = {
@@ -43,6 +51,11 @@ type Fields = {
   equipment_type: string | null;
   equipment_make: string | null;
   equipment_model: string | null;
+  /* Sent by the log-a-job Review step only; the saved-record page omits them. */
+  customer_name?: string | null;
+  address?: string | null;
+  email?: string | null;
+  charge_amount?: number | null;
 };
 
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
@@ -68,6 +81,7 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        temperature: 0,
         messages: [
           { role: "system", content: SYSTEM.replace("{TODAY}", today) },
           {
@@ -105,6 +119,11 @@ Deno.serve(async (req) => {
       const s = clean(v);
       return s && YMD.test(s) ? s : fallback;
     };
+    /* A malformed amount keeps the current one; amounts are dollars > 0. */
+    const cleanAmount = (v: unknown, fallback: number | null) => {
+      const n = typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) : NaN;
+      return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : fallback;
+    };
 
     return json({
       understood: out.understood !== false,
@@ -118,6 +137,10 @@ Deno.serve(async (req) => {
       equipment_type: clean(out.equipment_type),
       equipment_make: clean(out.equipment_make),
       equipment_model: clean(out.equipment_model),
+      customer_name: clean(out.customer_name) ?? current.customer_name ?? null,
+      address: clean(out.address) ?? current.address ?? null,
+      email: clean(out.email) ?? current.email ?? null,
+      charge_amount: cleanAmount(out.charge_amount, current.charge_amount ?? null),
     });
   } catch (e) {
     console.error("edit-record error", e);

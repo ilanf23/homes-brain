@@ -14,6 +14,7 @@ import {
   SettingsSection,
 } from "@/components/settings";
 import { refreshStripeStatus, startStripeOnboarding } from "@/lib/stripe-connect";
+import { LanguageToggle } from "@/lib/i18n";
 
 import { DemoNotice } from "@/components/plan-lock";
 
@@ -40,6 +41,7 @@ type ProPrefs = {
 
 const NAV = [
   { id: "profile", label: "Business profile" },
+  { id: "language", label: "Language" },
   { id: "google", label: "Google Business" },
   { id: "plan", label: "Plan & billing" },
   { id: "notifications", label: "Notifications" },
@@ -355,6 +357,14 @@ function ProSettings() {
               >
                 Save changes
               </Btn>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="language" eyebrow="Language" delay={2}>
+            <div className="mt-3">
+              <SettingRow label="Display language" sub="The language HomesBrain shows you.">
+                <LanguageToggle />
+              </SettingRow>
             </div>
           </SettingsSection>
 

@@ -238,11 +238,14 @@ export function VoiceCaptureOverlay({
   bandsRef,
   text,
   onDone,
+  prompt = "Listening. Talk through the job.",
 }: {
   levelRef: MutableRefObject<number>;
   bandsRef?: MutableRefObject<Float32Array>;
   text: string;
   onDone: () => void;
+  /* Shown until the first words land; each voice mode brings its own ask. */
+  prompt?: string;
 }) {
   // Lock body scroll while the immersive view is up.
   useEffect(() => {
@@ -265,9 +268,7 @@ export function VoiceCaptureOverlay({
           {text ? (
             <p className="text-lg leading-relaxed text-ink">{text}</p>
           ) : (
-            <p className="text-lg font-semibold tracking-tight text-muted">
-              Listening. Talk through the job.
-            </p>
+            <p className="text-lg font-semibold tracking-tight text-muted">{prompt}</p>
           )}
         </div>
       </div>

@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent } from "@/lib/hb";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import { LanguageToggle } from "@/lib/i18n";
 import {
   DeleteAccountRow,
   downloadJson,
@@ -64,6 +65,7 @@ type DbPrefs = {
 
 const NAV = [
   { id: "profile", label: "Profile" },
+  { id: "language", label: "Language" },
   { id: "notifications", label: "Notifications" },
   { id: "myhome", label: "My home" },
   { id: "mypros", label: "My pros" },
@@ -301,6 +303,14 @@ function HomeownerSettings() {
               <Btn variant="indigo" loading={saving} onClick={saveContact}>
                 Save
               </Btn>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="language" eyebrow="Language" delay={2}>
+            <div className="mt-3">
+              <SettingRow label="Display language" sub="The language HomesBrain shows you.">
+                <LanguageToggle />
+              </SettingRow>
             </div>
           </SettingsSection>
 
