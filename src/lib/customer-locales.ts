@@ -140,6 +140,9 @@ export type ClaimCopy = {
   alreadyClaimedTitle: string;
   alreadyClaimedBody: string;
   goDashboard: string;
+  videoFromPro: string;
+  downloadVideo: string;
+  jobPhoto: string;
 };
 
 const CLAIM_COPY: Record<Locale, ClaimCopy> = {
@@ -175,6 +178,9 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
     alreadyClaimedBody:
       "Another account already owns this home's record book. If this is your home, ask your service pro to help sort it out.",
     goDashboard: "Go to my dashboard",
+    videoFromPro: "A video from your pro",
+    downloadVideo: "Download the video",
+    jobPhoto: "Job photo",
   },
   es: {
     yourServicePro: "Tu profesional de servicio",
@@ -208,6 +214,9 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
     alreadyClaimedBody:
       "Otra cuenta ya es dueña del registro de este hogar. Si es tu hogar, pide ayuda a tu profesional de servicio.",
     goDashboard: "Ir a mi panel",
+    videoFromPro: "Un video de tu profesional",
+    downloadVideo: "Descargar el video",
+    jobPhoto: "Foto del trabajo",
   },
   ru: {
     yourServicePro: "Ваш специалист",
@@ -241,6 +250,9 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
     alreadyClaimedBody:
       "Записи этого дома уже принадлежат другому аккаунту. Если это ваш дом, обратитесь к вашему специалисту.",
     goDashboard: "Перейти в мой кабинет",
+    videoFromPro: "Видео от вашего мастера",
+    downloadVideo: "Скачать видео",
+    jobPhoto: "Фото работы",
   },
   uk: {
     yourServicePro: "Ваш фахівець",
@@ -274,6 +286,9 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
     alreadyClaimedBody:
       "Записи цього дому вже належать іншому акаунту. Якщо це ваш дім, зверніться до вашого фахівця.",
     goDashboard: "Перейти до мого кабінету",
+    videoFromPro: "Відео від вашого майстра",
+    downloadVideo: "Завантажити відео",
+    jobPhoto: "Фото роботи",
   },
 };
 

@@ -94,23 +94,24 @@ Deno.serve(async (req) => {
       const { data: recordRow } = await admin
         .from("records")
         .select(
-          "id,created_at,jobs(what_done,equipment_id,localized_content,homes(address))",
+          "id,created_at,hidden_fields,jobs(id,what_done,equipment_id,localized_content,homes(address))",
         )
         .eq("id", row.record_id)
         .maybeSingle();
-      const job = (
-        recordRow as unknown as {
-          jobs?: {
-            what_done?: string;
-            equipment_id?: string | null;
-            localized_content?: Record<
-              string,
-              { what_done?: string; equipment_type?: string }
-            >;
-            homes?: { address?: string };
-          };
-        } | null
-      )?.jobs;
+      const recordTyped = recordRow as unknown as {
+        hidden_fields?: string[] | null;
+        jobs?: {
+          id?: string;
+          what_done?: string;
+          equipment_id?: string | null;
+          localized_content?: Record<
+            string,
+            { what_done?: string; equipment_type?: string }
+          >;
+          homes?: { address?: string };
+        };
+      } | null;
+      const job = recordTyped?.jobs;
       const address = job?.homes?.address ?? null;
       const localized = job?.localized_content?.[row.locale ?? "en"];
       const whatDone = localized?.what_done ?? job?.what_done ?? null;
@@ -141,6 +142,22 @@ Deno.serve(async (req) => {
         ).maybeSingle()
         : { data: null };
 
+      const hiddenFields: string[] = Array.isArray(recordTyped?.hidden_fields)
+        ? recordTyped.hidden_fields
+        : [];
+      let media: Array<{ kind: string; url: string; thumbnail_url: string | null }> = [];
+      const jobId = job?.id;
+      if (jobId) {
+        const { data: mediaRows } = await admin
+          .from("job_media")
+          .select("kind,url,thumbnail_url")
+          .eq("job_id", jobId)
+          .order("created_at", { ascending: true });
+        media = (mediaRows ?? []).filter((m) =>
+          m.kind === "video" ? !hiddenFields.includes("video") : !hiddenFields.includes("photos"),
+        );
+      }
+
       preview = {
         record_id: row.record_id,
         equipment_id: equipmentId,
@@ -148,6 +165,7 @@ Deno.serve(async (req) => {
         what_done: whatDone,
         equipment,
         pro: pro ? { business: pro.business, logo: pro.logo } : null,
+        media,
       };
     }
 

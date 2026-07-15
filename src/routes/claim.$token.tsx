@@ -6,6 +6,7 @@ import { formatDate, logEvent } from "@/lib/hb";
 import { queueCelebration } from "@/components/celebration";
 import { claimCopy } from "@/lib/customer-locales";
 import { isLocale, LanguageToggle, useI18n } from "@/lib/i18n";
+import { RecordMedia } from "@/components/job-media";
 
 export const Route = createFileRoute("/claim/$token")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -34,6 +35,7 @@ type Preview = {
   what_done: string | null;
   equipment: EquipmentPreview | null;
   pro: { business: string; logo: string | null } | null;
+  media?: Array<{ kind: "photo" | "video"; url: string; thumbnail_url: string | null }> | null;
 };
 
 type ExchangeResp = {
@@ -84,6 +86,24 @@ function RecordPreview({ preview }: { preview: Preview }) {
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-ink">
         {preview.pro?.business ? copy.recordAddedBy(preview.pro.business) : copy.recordAddedGeneric}
       </h1>
+      {preview.media && preview.media.length > 0 && (
+        <div className="mt-4">
+          <RecordMedia
+            media={preview.media.map((m, i) => ({
+              id: String(i),
+              job_id: "",
+              kind: m.kind,
+              url: m.url,
+              thumbnail_url: m.thumbnail_url,
+              duration_seconds: null,
+              created_at: "",
+            }))}
+            videoLabel={copy.videoFromPro}
+            downloadLabel={copy.downloadVideo}
+            photoAlt={copy.jobPhoto}
+          />
+        </div>
+      )}
       <div className="mt-4 space-y-2">
         {preview.address && <KV k={copy.address} v={preview.address} mono={false} />}
         {preview.what_done && <KV k={copy.workDone} v={preview.what_done} mono={false} />}
