@@ -164,7 +164,10 @@ export async function signJobMedia(
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .createSignedUrls(Array.from(paths), ttlSeconds);
-  if (error || !data) return [];
+  if (error || !data) {
+    console.error("job media signing failed", error);
+    return [];
+  }
 
   const signed = new Map<string, string>();
   for (const item of data) {
