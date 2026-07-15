@@ -84,6 +84,7 @@ export type HomeRecord = {
   viewed_at: string | null;
   created_at: string;
   job_id: string;
+  hidden_fields: string[] | null;
 };
 
 export type HomeViewBundle = {

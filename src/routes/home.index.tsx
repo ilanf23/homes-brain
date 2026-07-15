@@ -17,6 +17,7 @@ import {
 import { InviteProsCard } from "@/components/invite-pros";
 import { HomeSetupChecklist } from "@/components/home-setup-checklist";
 import { useT } from "@/lib/i18n";
+import { listJobMedia } from "@/lib/media";
 
 export const Route = createFileRoute("/home/")({
   head: () => ({ meta: [{ title: "My home - HomesBrain" }] }),
@@ -154,8 +155,20 @@ function HomeOverview() {
           jobs={jobs}
           pros={pros}
           onView={async (recordId) => {
+            const rec = records.find((r) => r.id === recordId);
+            let hasVideo = false;
+            try {
+              const recMedia = rec ? await listJobMedia([rec.job_id]) : [];
+              hasVideo = recMedia.some((m) => m.kind === "video");
+            } catch {
+              // A media-fetch failure must not block mark_record_viewed below.
+            }
             await supabase.rpc("mark_record_viewed", { p_record_id: recordId });
-            await logEvent("system", "record_viewed", { role: "system", record_id: recordId });
+            await logEvent("system", "record_viewed", {
+              role: "system",
+              record_id: recordId,
+              has_video: hasVideo,
+            });
             refresh();
           }}
         />

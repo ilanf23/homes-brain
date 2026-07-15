@@ -315,6 +315,9 @@ export type HomeRecordCopy = {
   recall: string;
   noKnownRecalls: string;
   openItemHistory: string;
+  videoFromPro: string;
+  downloadVideo: string;
+  jobPhoto: string;
 };
 
 const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
@@ -352,6 +355,9 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     recall: "Recall",
     noKnownRecalls: "No known recalls",
     openItemHistory: "Open item history",
+    videoFromPro: "A video from your pro",
+    downloadVideo: "Download the video",
+    jobPhoto: "Job photo",
   },
   es: {
     loadingRecord: "Cargando registro",
@@ -387,6 +393,9 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     recall: "Retirada",
     noKnownRecalls: "No hay retiradas conocidas",
     openItemHistory: "Abrir historial del equipo",
+    videoFromPro: "Un video de tu profesional",
+    downloadVideo: "Descargar el video",
+    jobPhoto: "Foto del trabajo",
   },
   ru: {
     loadingRecord: "Загружаем запись",
@@ -422,6 +431,9 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     recall: "Отзыв",
     noKnownRecalls: "Известных отзывов нет",
     openItemHistory: "Открыть историю устройства",
+    videoFromPro: "Видео от вашего мастера",
+    downloadVideo: "Скачать видео",
+    jobPhoto: "Фото работы",
   },
   uk: {
     loadingRecord: "Завантажуємо запис",
@@ -457,6 +469,9 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     recall: "Відкликання",
     noKnownRecalls: "Відомих відкликань немає",
     openItemHistory: "Відкрити історію пристрою",
+    videoFromPro: "Відео від вашого майстра",
+    downloadVideo: "Завантажити відео",
+    jobPhoto: "Фото роботи",
   },
 };
 

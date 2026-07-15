@@ -10,6 +10,9 @@ import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
 import { homeRecordCopy } from "@/lib/customer-locales";
 import { useI18n } from "@/lib/i18n";
+import { listJobMedia, type JobMediaRow } from "@/lib/media";
+import { RecordMedia } from "@/components/job-media";
+import { track } from "@/lib/events";
 
 export const Route = createFileRoute("/home/records/$recordId")({
   head: () => ({ meta: [{ title: "Service record - HomesBrain" }] }),
@@ -21,7 +24,8 @@ function RecordDetail() {
 
   const { locale } = useI18n();
   const copy = homeRecordCopy(locale);
-  const { homeowner, home, records, jobs, equipment, pros, loading } = useHomeownerGuard();
+  const { homeownerId, homeowner, home, records, jobs, equipment, pros, loading } =
+    useHomeownerGuard();
 
   const record = useMemo(() => records.find((r) => r.id === recordId) ?? null, [records, recordId]);
   const job = useMemo(
@@ -39,6 +43,12 @@ function RecordDetail() {
 
   const [invoices, setInvoices] = useState<HomeInvoice[]>([]);
   const [payErr, setPayErr] = useState<string | null>(null);
+
+  const [media, setMedia] = useState<JobMediaRow[]>([]);
+  useEffect(() => {
+    if (!job) return;
+    (async () => setMedia(await listJobMedia([job.id])))();
+  }, [job]);
 
   // Play the claim celebration exactly once, on the page the new homeowner
   // lands on. Set in effect (not render) so SSR markup stays clean.
@@ -113,6 +123,32 @@ function RecordDetail() {
       />
 
       <div className="space-y-6">
+        {(() => {
+          const hidden = new Set(record.hidden_fields ?? []);
+          const visible = media.filter((m) =>
+            m.kind === "video" ? !hidden.has("video") : !hidden.has("photos"),
+          );
+          if (visible.length === 0) return null;
+          return (
+            <Card className="anim-fade-up d-1">
+              <Eyebrow accent="coral">{copy.videoFromPro}</Eyebrow>
+              <div className="mt-3">
+                <RecordMedia
+                  media={visible}
+                  videoLabel={copy.videoFromPro}
+                  downloadLabel={copy.downloadVideo}
+                  photoAlt={copy.jobPhoto}
+                  onVideoPlay={() => {
+                    void track("homeowner", homeownerId, "video_watched", {
+                      record_id: record.id,
+                    });
+                  }}
+                />
+              </div>
+            </Card>
+          );
+        })()}
+
         <Card className="anim-fade-up d-1">
           <Eyebrow accent="indigo">{copy.details}</Eyebrow>
           <div className="mt-2">
