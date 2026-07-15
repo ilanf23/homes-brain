@@ -3408,25 +3408,15 @@ function NewJob() {
                       aiFlash.has("email") ? "rounded-xl bg-indigobg" : ""
                     }`}
                   >
-                    <Field
-                      label={
-                        <span className="flex items-center gap-2">
-                          <span>{uiCopy.email}</span>
-                          {missingReviewEmail && (
-                            <span className="rounded-full bg-redbg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red">
-                              Needed to send
-                            </span>
-                          )}
-                        </span>
-                      }
-                      hint={
-                        reviewEmailInvalid
-                          ? uiCopy.emailInvalid
-                          : missingReviewEmail
-                            ? "Add the customer's email so we can send the record."
-                            : uiCopy.emailHelp
-                      }
-                    >
+                    <label className="block">
+                      <div className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
+                        <span>{uiCopy.email}</span>
+                        {missingReviewEmail && (
+                          <span className="rounded-full bg-redbg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red">
+                            Needed to send
+                          </span>
+                        )}
+                      </div>
                       <Input
                         type="email"
                         inputMode="email"
@@ -3443,13 +3433,20 @@ function NewJob() {
                               : ""
                         }
                       />
+                      <div className="mt-1 text-xs text-muted">
+                        {reviewEmailInvalid
+                          ? uiCopy.emailInvalid
+                          : missingReviewEmail
+                            ? "Add the customer's email so we can send the record."
+                            : uiCopy.emailHelp}
+                      </div>
                       {reviewEmailValid && (
                         <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-indigo">
                           <Check size={14} aria-hidden="true" />
                           Ready to send. Tap {uiCopy.sendRecord} below.
                         </div>
                       )}
-                    </Field>
+                    </label>
                   </div>
 
                   {/* Optional "bill this customer" amount. Leave blank to skip;
