@@ -613,9 +613,10 @@ Deno.serve(async (req) => {
       }
     }
 
+    const safeBusiness = (pro.business ?? "").replace(/[<>]/g, "").trim();
     const email = recordEmail({
       locale: localeUsed,
-      business: pro.business,
+      business: safeBusiness,
       logo: pro.logo ?? null,
       address,
       whatDone: latestJob?.what_done ?? null,
@@ -628,8 +629,13 @@ Deno.serve(async (req) => {
     });
 
     // Display name is the pro; sending address stays on the verified
-    // homesbrain.com domain so deliverability doesn't crater.
-    const fromDisplay = `${pro.business.replace(/[<>]/g, "")} via HomesBrain`;
+    // homesbrain.com domain so deliverability doesn't crater. Fall back to
+    // plain "HomesBrain" when the pro has no business name yet, so a blank
+    // never leaks into the sender line.
+    const fromDisplay = safeBusiness
+      ? `${safeBusiness} via HomesBrain`
+      : `HomesBrain`;
+
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
