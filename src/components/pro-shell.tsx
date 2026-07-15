@@ -304,8 +304,21 @@ export function ProShell({
   const navigate = useNavigate();
   const [theme] = useTheme();
   const t = useT();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Lock body scroll while the mobile menu is open so the underlying page
+  // doesn't scroll under the pro's finger.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
 
   async function signOut() {
+    setMenuOpen(false);
     await supabase.auth.signOut();
     phReset();
     navigate({ to: "/" });
