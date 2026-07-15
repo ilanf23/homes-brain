@@ -16,10 +16,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, logEvent } from "@/lib/hb";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
-import { LanguageToggle } from "@/lib/i18n";
 import {
   DeleteAccountRow,
   downloadJson,
+  LanguageSettingsSection,
   SettingsNav,
   SettingsSection,
 } from "@/components/settings";
@@ -306,13 +306,7 @@ function HomeownerSettings() {
             </div>
           </SettingsSection>
 
-          <SettingsSection id="language" eyebrow="Language" delay={2}>
-            <div className="mt-3">
-              <SettingRow label="Display language" sub="The language HomesBrain shows you.">
-                <LanguageToggle />
-              </SettingRow>
-            </div>
-          </SettingsSection>
+          <LanguageSettingsSection delay={2} />
 
           <SettingsSection id="notifications" eyebrow="Notifications" delay={2}>
             {prefs ? (

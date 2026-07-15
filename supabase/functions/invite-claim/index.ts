@@ -517,17 +517,22 @@ Deno.serve(async (req) => {
       translations?.equipment_type,
       300,
     );
-    const translationComplete = requestedLocale === "en" ||
-      ((!latestJob?.what_done?.trim() || !!translatedWhatDone) &&
-        (!equipment?.type?.trim() || !!translatedEquipmentType));
-    const localeUsed: SupportedLocale = translationComplete
-      ? requestedLocale
-      : "en";
+    const translationProvided = !!(translatedWhatDone || translatedEquipmentType);
+    const translationComplete =
+      (!latestJob?.what_done?.trim() || !!translatedWhatDone) &&
+      (!equipment?.type?.trim() || !!translatedEquipmentType);
+    // English sends either way: with no translations the record text is
+    // assumed to already be English, and a pro who authored the record in
+    // another language supplies an English translation like any other target.
+    const localeUsed: SupportedLocale =
+      requestedLocale === "en" || translationComplete ? requestedLocale : "en";
     const translationFallback = localeUsed !== requestedLocale;
+    const translationUsed = translationProvided && translationComplete &&
+      localeUsed === requestedLocale;
 
     // Snapshot the exact translation shown in Review. The original job text
     // remains untouched and each locale lives under its own JSON key.
-    if (localeUsed !== "en" && latestJob?.id) {
+    if (translationUsed && latestJob?.id) {
       const prior = latestJob.localized_content &&
           typeof latestJob.localized_content === "object" &&
           !Array.isArray(latestJob.localized_content)
@@ -593,10 +598,8 @@ Deno.serve(async (req) => {
       ctaUrl,
       claimed,
       unsubUrl,
-      translatedWhatDone: localeUsed === "en" ? null : translatedWhatDone,
-      translatedEquipmentType: localeUsed === "en"
-        ? null
-        : translatedEquipmentType,
+      translatedWhatDone: translationUsed ? translatedWhatDone : null,
+      translatedEquipmentType: translationUsed ? translatedEquipmentType : null,
     });
 
     // Display name is the pro; sending address stays on the verified

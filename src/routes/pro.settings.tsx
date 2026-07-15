@@ -10,11 +10,11 @@ import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/component
 import {
   DeleteAccountRow,
   downloadJson,
+  LanguageSettingsSection,
   SettingsNav,
   SettingsSection,
 } from "@/components/settings";
 import { refreshStripeStatus, startStripeOnboarding } from "@/lib/stripe-connect";
-import { LanguageToggle } from "@/lib/i18n";
 
 import { DemoNotice } from "@/components/plan-lock";
 
@@ -360,13 +360,7 @@ function ProSettings() {
             </div>
           </SettingsSection>
 
-          <SettingsSection id="language" eyebrow="Language" delay={2}>
-            <div className="mt-3">
-              <SettingRow label="Display language" sub="The language HomesBrain shows you.">
-                <LanguageToggle />
-              </SettingRow>
-            </div>
-          </SettingsSection>
+          <LanguageSettingsSection delay={2} />
 
           <SettingsSection id="google" eyebrow="Google Business" delay={2}>
             <GoogleConnect

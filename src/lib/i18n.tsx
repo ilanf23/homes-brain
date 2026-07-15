@@ -256,6 +256,14 @@ const en = {
   "setup.item.trade": "Choose your trades",
   "setup.item.service_area": "Service area",
   "setup.item.phone": "Contact phone",
+
+  // Log-a-job voice capture (AI card + "Building the record" modal)
+  "voice.justTalk": "Just talk, I'll fill it in",
+  "voice.tapToTalk": "Tap to talk",
+  "voice.building": "Building the record",
+  "voice.reading": "Reading what you said…",
+  "voice.notMentioned": "Not mentioned",
+  "voice.cancel": "Cancel",
 } as const;
 
 export type TKey = keyof typeof en;
@@ -471,6 +479,13 @@ const es: Partial<Record<TKey, string>> = {
   "setup.item.trade": "Elige tus oficios",
   "setup.item.service_area": "Área de servicio",
   "setup.item.phone": "Teléfono de contacto",
+
+  "voice.justTalk": "Solo habla, yo lo completo",
+  "voice.tapToTalk": "Toca para hablar",
+  "voice.building": "Creando el registro",
+  "voice.reading": "Leyendo lo que dijiste…",
+  "voice.notMentioned": "No mencionado",
+  "voice.cancel": "Cancelar",
 };
 
 const ru: Partial<Record<TKey, string>> = {
@@ -683,6 +698,13 @@ const ru: Partial<Record<TKey, string>> = {
   "setup.item.trade": "Выберите свои специальности",
   "setup.item.service_area": "Зона обслуживания",
   "setup.item.phone": "Контактный телефон",
+
+  "voice.justTalk": "Просто говорите, я всё заполню",
+  "voice.tapToTalk": "Нажмите и говорите",
+  "voice.building": "Составляем запись",
+  "voice.reading": "Читаем, что вы сказали…",
+  "voice.notMentioned": "Не упомянуто",
+  "voice.cancel": "Отмена",
 };
 
 const uk: Partial<Record<TKey, string>> = {
@@ -894,6 +916,13 @@ const uk: Partial<Record<TKey, string>> = {
   "setup.item.trade": "Оберіть свої спеціальності",
   "setup.item.service_area": "Зона обслуговування",
   "setup.item.phone": "Контактний телефон",
+
+  "voice.justTalk": "Просто говоріть, я все заповню",
+  "voice.tapToTalk": "Натисніть і говоріть",
+  "voice.building": "Складаємо запис",
+  "voice.reading": "Читаємо, що ви сказали…",
+  "voice.notMentioned": "Не згадано",
+  "voice.cancel": "Скасувати",
 };
 
 const DICTS: Record<Locale, Partial<Record<TKey, string>>> = { en, es, ru, uk };

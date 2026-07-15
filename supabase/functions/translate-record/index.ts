@@ -67,14 +67,8 @@ Deno.serve(async (req) => {
       return json({ ok: false, code: "nothing_to_translate" }, 400);
     }
 
-    if (target === "en") {
-      return json({
-        ok: true,
-        locale: target,
-        what_done: whatDone,
-        equipment_type: equipmentType,
-      });
-    }
+    // English is a real translation target: the caller only asks when the
+    // record was authored in another language, so never echo the input back.
 
     const key = Deno.env.get("LOVABLE_API_KEY");
     if (!key) return json({ ok: false, code: "not_configured" }, 503);

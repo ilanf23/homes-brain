@@ -7,6 +7,7 @@ import { logEvent, TRADES, isGoogleUrl, proTrades } from "@/lib/hb";
 import { Logo, TradeIcon } from "@/components/svg";
 import { GoogleConnect } from "@/components/google-connect";
 import { startStripeOnboarding } from "@/lib/stripe-connect";
+import { LanguageToggle } from "@/lib/i18n";
 import type { ProRow } from "@/components/pro-shell";
 
 const STEP_KEYS = ["business", "trade", "service_area", "phone", "payments", "google"] as const;
@@ -218,6 +219,9 @@ function ProSetupWizard() {
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
+            {/* A pro whose UI came up in the wrong language must be able to
+                fix it here: settings are unreachable until setup is done. */}
+            <LanguageToggle />
             <Pill accent="indigo">
               Step {stepIdx + 1} of {STEP_KEYS.length}
             </Pill>

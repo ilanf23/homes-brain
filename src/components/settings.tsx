@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Btn, Card, Eyebrow, Input } from "@/lib/ui";
+import { Btn, Card, Eyebrow, Input, SettingRow } from "@/lib/ui";
 import { logEvent } from "@/lib/hb";
+import { LanguageToggle } from "@/lib/i18n";
 import type { ReactNode } from "react";
 
 /* Shared building blocks for /pro/settings and /home/settings. */
@@ -39,6 +40,20 @@ export function SettingsSection({
         {children}
       </Card>
     </section>
+  );
+}
+
+/* The Language section is identical on the pro and homeowner settings pages;
+   one component keeps the copy and layout from drifting apart. */
+export function LanguageSettingsSection({ delay }: { delay?: 1 | 2 | 3 | 4 }) {
+  return (
+    <SettingsSection id="language" eyebrow="Language" delay={delay}>
+      <div className="mt-3">
+        <SettingRow label="Display language" sub="The language HomesBrain shows you.">
+          <LanguageToggle />
+        </SettingRow>
+      </div>
+    </SettingsSection>
   );
 }
 
