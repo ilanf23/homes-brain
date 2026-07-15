@@ -24,7 +24,7 @@ import {
   QrCode,
   Video as VideoIcon,
 } from "lucide-react";
-import { matchVoiceCustomer, normalizedName, suggestCloseCustomers } from "@/lib/customer-match";
+import { matchVoiceCustomer, normalizedName, normalizedPhone, suggestCloseCustomers } from "@/lib/customer-match";
 import {
   buildRecordUrl,
   checkRecall,
