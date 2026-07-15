@@ -61,7 +61,7 @@ function Reviews() {
       <ProPageHead
         eyebrow="Reviews"
         title="Google reviews"
-        sub="Review asks are on automatically — every record we send includes one. Connecting Google is optional: it routes asks to your listing, shows your rating, and helps you get Verified & rank higher."
+        sub="Review asks are on automatically; every record we send includes one. Connecting Google is optional: it routes asks to your listing, shows your rating, and helps you get Verified & rank higher."
       />
       <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-indigobg px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-indigo">
         Reviews are always free

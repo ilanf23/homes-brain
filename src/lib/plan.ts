@@ -1,4 +1,4 @@
-// Mock freemium plan helpers. NO real payments — see /pro/plan.
+// Mock freemium plan helpers. NO real payments: see /pro/plan.
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,8 +44,8 @@ export type PlanFeature = {
 };
 
 export const DEMO_NOTICE =
-  "Demo — you won't be charged. No card required. Payments come later.";
-export const DEMO_SHORT = "Demo — not charged";
+  "Demo: you won't be charged. No card required. Payments come later.";
+export const DEMO_SHORT = "Demo: not charged";
 
 export async function fetchPlans(): Promise<Plan[]> {
   const { data } = await supabase

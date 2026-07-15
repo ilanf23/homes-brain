@@ -6,7 +6,7 @@
    send, and the email truthfully names their home.
 
    Service role is used only for the outbound Resend send and for the
-   messages log — never for identity. */
+   messages log: never for identity. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
@@ -69,7 +69,7 @@ function inviteEmail(opts: {
   const text = [
     `Hi ${toName},`,
     "",
-    `${fromName} at ${address} invited you${tradeLine} to keep their home's service record on HomesBrain — free for pros.`,
+    `${fromName} at ${address} invited you${tradeLine} to keep their home's service record on HomesBrain: free for pros.`,
     "",
     "Log the work in 30 seconds, own the customer relationship, and get rebooked.",
     "",
@@ -77,7 +77,7 @@ function inviteEmail(opts: {
     "",
     "Free to start. No card.",
     "",
-    "— HomesBrain",
+    "- HomesBrain",
     complianceFooterText(unsubUrl, reason),
   ].join("\n");
 
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Caller-scoped client — RLS + SECURITY DEFINER helpers see the user's JWT.
+    // Caller-scoped client: RLS + SECURITY DEFINER helpers see the user's JWT.
     const asCaller = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false, autoRefreshToken: false },

@@ -85,7 +85,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
       <svg viewBox="0 0 460 360" className="absolute inset-0 h-full w-full" aria-hidden="true">
         {/* ground */}
         <path d="M20 300h420" {...stroke} stroke="var(--line)" />
-        {/* house — warm cottage; solid ink roof + arched indigo door echo the logo mark */}
+        {/* house: warm cottage; solid ink roof + arched indigo door echo the logo mark */}
         <g style={{ color: "var(--ink)" }}>
           {/* chimney + smoke */}
           <path
@@ -321,7 +321,7 @@ function CompactScene({
     >
       {/* ground */}
       <path d="M20 210h260" {...stroke} stroke="var(--line)" />
-      {/* house — same cottage as the full scene, scaled for small placements */}
+      {/* house: same cottage as the full scene, scaled for small placements */}
       <g style={{ color: "var(--ink)" }}>
         {/* chimney */}
         <path d="M108 100V78h16v8.5Z" {...stroke} strokeWidth={2} fill="var(--bg)" />

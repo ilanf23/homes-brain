@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       options: { redirectTo: `${origin}/reset-password` },
     });
 
-    // If the user doesn't exist we don't leak that — respond ok.
+    // If the user doesn't exist we don't leak that: respond ok.
     if (linkErr || !linkData?.properties?.action_link) {
       console.error("password-reset generateLink failed", linkErr);
       return json({ ok: true });

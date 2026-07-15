@@ -220,7 +220,7 @@ export function GoogleConnect({
     <div className="mt-3 space-y-3">
       {!connected && (
         <p className="text-sm text-muted">
-          Optional. Review asks already go out with every record — connecting Google routes them to your listing, shows your rating on records, and helps you get Verified & rank higher.
+          Optional. Review asks already go out with every record; connecting Google routes them to your listing, shows your rating on records, and helps you get Verified & rank higher.
         </p>
       )}
 

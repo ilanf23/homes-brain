@@ -22,7 +22,7 @@ import {
 
 export const Route = createFileRoute("/pro/plan")({
   head: () => ({
-    meta: [{ title: "Plan — HomesBrain" }],
+    meta: [{ title: "Plan: HomesBrain" }],
   }),
   component: PlanPage,
 });
@@ -70,7 +70,7 @@ function PlanPage() {
       if (pro) setPro({ ...pro, plan: target });
       setToast(
         target === "pro"
-          ? "You're on Pro (demo). No payment was taken — you won't be charged."
+          ? "You're on Pro (demo). No payment was taken: you won't be charged."
           : "Switched back to Free (demo). No payment involved.",
       );
     } catch (e) {
@@ -104,7 +104,7 @@ function PlanPage() {
         <div className="flex items-start gap-3">
           <Pill accent="indigo">All included</Pill>
           <div className="text-sm text-ink">
-            <div className="font-semibold">Free for all pros — no upgrade needed.</div>
+            <div className="font-semibold">Free for all pros: no upgrade needed.</div>
             <div className="text-muted mt-0.5">
               We're keeping HomesBrain free while we grow. Paid tiers will return later; when they do, founding pros keep their price locked for life.
             </div>
@@ -137,7 +137,7 @@ function PlanPage() {
             myInfo={myInfo}
             action={
               <div className="space-y-2">
-                <Pill accent="indigo">Included — free right now</Pill>
+                <Pill accent="indigo">Included: free right now</Pill>
               </div>
             }
 
@@ -222,7 +222,7 @@ function PlanCard({
       {isPro && (
         <p className="mt-1 text-xs text-muted">
           {myInfo?.founding_member
-            ? `Your founding price: $${myInfo.locked_price ?? 19}/mo — locked for life. Reviews are always free.`
+            ? `Your founding price: $${myInfo.locked_price ?? 19}/mo, locked for life. Reviews are always free.`
             : `Founding price for the first ${slots?.cap ?? 1000} pros. $${anchorPrice ?? 59}/mo after. Reviews are always free.`}
         </p>
       )}

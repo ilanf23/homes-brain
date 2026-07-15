@@ -253,7 +253,7 @@ function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
         fill="#dcebf1"
         opacity="0.6"
       />
-      {/* Jacksonville region (north) — coming soon, greyed */}
+      {/* Jacksonville region (north): coming soon, greyed */}
       <path
         d="M66 42 C120 28 190 26 240 42 C262 36 282 44 290 64 C294 96 292 120 286 140 L74 140 C58 116 58 78 66 42 Z"
         fill="#edeff2"
@@ -287,7 +287,7 @@ function CountyMap({ selected }: { selected: ServiceAreaKey | null }) {
         St. Johns County
       </text>
 
-      {/* Community dots — label only the selected one */}
+      {/* Community dots: label only the selected one */}
       {(Object.keys(TOWN_POINTS) as ServiceAreaKey[]).map((key) => {
         const p = TOWN_POINTS[key];
         const isSelected = selected === key;

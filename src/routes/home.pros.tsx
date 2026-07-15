@@ -321,7 +321,7 @@ function ProSearch({
 
       {showEmpty && (
         <div className="mt-4 text-sm text-muted">
-          No pros match that yet. Try a different name, ZIP, or trade — or invite them below.
+          No pros match that yet. Try a different name, ZIP, or trade, or invite them below.
         </div>
       )}
 

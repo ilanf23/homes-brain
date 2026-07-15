@@ -180,7 +180,7 @@ export function InviteProsCard({
         </Field>
       </div>
       <p className="mt-2 text-xs text-muted">
-        Email delivers a real invitation. Phone is captured for now — texting isn't live yet.
+        Email delivers a real invitation. Phone is captured for now; texting isn't live yet.
       </p>
       <div className="mt-3">
         <Btn

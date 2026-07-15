@@ -24,7 +24,12 @@ import {
   QrCode,
   Video as VideoIcon,
 } from "lucide-react";
-import { matchVoiceCustomer, normalizedName, normalizedPhone, suggestCloseCustomers } from "@/lib/customer-match";
+import {
+  matchVoiceCustomer,
+  normalizedName,
+  normalizedPhone,
+  suggestCloseCustomers,
+} from "@/lib/customer-match";
 import {
   buildRecordUrl,
   checkRecall,
@@ -119,7 +124,7 @@ function deliveryErrorMessage(code: string | null) {
   if (code === "not_configured") return "Email delivery is temporarily unavailable.";
   if (code === "no_email") return "Add the customer's email before sending.";
   if (code === "bad_request")
-    return "The email couldn't be sent — the record is missing details. Try again.";
+    return "The email couldn't be sent: the record is missing details. Try again.";
   if (code === "forbidden") return "You don't have access to send for this customer.";
   if (code === "unauthorized") return "Your session expired. Sign in again and retry.";
   if (code === "send_failed") return "The email service rejected the send. Try again in a moment.";
@@ -1724,7 +1729,7 @@ function NewJob() {
           try {
             parsedResp = (await ctx.clone().json()) as { ok?: boolean; code?: string };
           } catch {
-            /* body wasn't JSON — fall through to generic code */
+            /* body wasn't JSON: fall through to generic code */
           }
         }
       }
@@ -1893,7 +1898,11 @@ function NewJob() {
         setTimeout(() => setToast(null), 3500);
         return;
       }
-      if (!dedupeCustomer && confirmed && normalizeAddress(confirmed) !== normalizeAddress(onFile)) {
+      if (
+        !dedupeCustomer &&
+        confirmed &&
+        normalizeAddress(confirmed) !== normalizeAddress(onFile)
+      ) {
         const { error: addrErr } = await supabase
           .from("homes")
           .update({ address: confirmed })

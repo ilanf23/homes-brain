@@ -356,7 +356,7 @@ function ProDashboard() {
           />
           <PlanLockCompact
             title="Automated rebooking & win-backs"
-            description="We work your whole book — seasonal, overdue, and win-back outreach, automatically."
+            description="We work your whole book: seasonal, overdue, and win-back outreach, automatically."
           />
           <PlanLockCompact
             title="Customer map"

@@ -32,7 +32,7 @@ export type ProRow = {
   id: string;
   business: string;
   owner_first_name: string | null;
-  /* Legacy single trade — kept as the primary trade for backwards-compatible surfaces. */
+  /* Legacy single trade: kept as the primary trade for backwards-compatible surfaces. */
   trade: string;
   /* Multi-trade selection. Source of truth for the trade set; `trade` mirrors trades[0]. */
   trades: string[];
@@ -70,7 +70,7 @@ export function useProGuard() {
         .maybeSingle();
       if (cancelled) return;
       if (!data) {
-        // Authenticated user is not a pro yet — send them through pro signup
+        // Authenticated user is not a pro yet: send them through pro signup
         // instead of showing another pro's data or bouncing to /login.
         navigate({ to: "/pro/signup" });
         return;

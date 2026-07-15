@@ -5,7 +5,7 @@ import { Btn, Card, PageLoader } from "@/lib/ui";
 
 // Keep in sync with supabase/functions/_shared/email-compliance.ts.
 export const POSTAL_ADDRESS =
-  "HomesBrain — Story Equity Inc., 72 Sunshine Bass Ct, Ponte Vedra, FL 32081";
+  "HomesBrain - Story Equity Inc., 72 Sunshine Bass Ct, Ponte Vedra, FL 32081";
 
 const CONTACT_EMAIL = "ilan@maverich.ai";
 
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/unsubscribe")({
   validateSearch: (s) => search.parse(s),
   head: () => ({
     meta: [
-      { title: "Manage email preferences — HomesBrain" },
+      { title: "Manage email preferences: HomesBrain" },
       { name: "description", content: "Unsubscribe or resubscribe from HomesBrain marketing emails." },
       { name: "robots", content: "noindex, nofollow" },
     ],

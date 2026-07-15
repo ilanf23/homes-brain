@@ -2,7 +2,7 @@
 // Import from other edge functions with a relative path.
 
 export const POSTAL_ADDRESS =
-  "HomesBrain — Story Equity Inc., 72 Sunshine Bass Ct, Ponte Vedra, FL 32081";
+  "HomesBrain - Story Equity Inc., 72 Sunshine Bass Ct, Ponte Vedra, FL 32081";
 
 export const CONTACT_EMAIL = "ilan@maverich.ai";
 

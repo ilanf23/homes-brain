@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Admin: HomesBrain" }] }),
   component: AdminPage,
 });
 
@@ -322,7 +322,7 @@ function ProsTab({
               <RoleTag role={e.role} />
               <div className="font-semibold text-ink flex-1 min-w-0 truncate">{e.type}</div>
               <div className="text-xs text-muted font-mono truncate max-w-[220px] hidden sm:block">
-                {e.actor ?? "—"}
+                {e.actor ?? "-"}
               </div>
               <div className="text-xs text-muted tnum shrink-0">{formatDate(e.created_at)}</div>
             </div>
@@ -447,7 +447,7 @@ function HomeownersTab({
               <RoleTag role={e.role} />
               <div className="font-semibold text-ink flex-1 min-w-0 truncate">{e.type}</div>
               <div className="text-xs text-muted font-mono truncate max-w-[220px] hidden sm:block">
-                {e.actor ?? "—"}
+                {e.actor ?? "-"}
               </div>
               <div className="text-xs text-muted tnum shrink-0">{formatDate(e.created_at)}</div>
             </div>

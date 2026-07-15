@@ -11,7 +11,7 @@ import { LanguageToggle } from "@/lib/i18n";
    creates the pros row and routes to /pro/setup for business + trade +
    service area. Google is also here as the one-tap alternative.
 
-   No password, no business, no trade on this screen — everything is
+   No password, no business, no trade on this screen: everything is
    deferred into /pro/setup to keep the first ask trivial for the pro. */
 
 type ProSignupSearch = { email?: string };

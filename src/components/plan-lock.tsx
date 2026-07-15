@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
 import { ALL_FEATURES_FREE, DEMO_SHORT } from "@/lib/plan";
 
-/** Small inline demo notice — repeat wherever price/upgrade appears. */
+/** Small inline demo notice: repeat wherever price/upgrade appears. */
 export function DemoNotice({ className = "" }: { className?: string }) {
   if (ALL_FEATURES_FREE) return null;
   return (
@@ -11,7 +11,7 @@ export function DemoNotice({ className = "" }: { className?: string }) {
       className={`rounded-xl border border-indigo/20 bg-indigobg text-indigo px-3 py-2 text-xs font-semibold flex items-center gap-2 ${className}`}
     >
       <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo" />
-      Demo — you won't be charged. No card required. Payments come later.
+      Demo: you won't be charged. No card required. Payments come later.
     </div>
   );
 }
@@ -41,10 +41,10 @@ export function PlanLock({
       <div className="mt-5 flex flex-col gap-3">
         <Link to="/pro/plan">
           <Btn variant="primary" size="lg" className="w-full">
-            Upgrade to Pro — $19/mo ({DEMO_SHORT})
+            Upgrade to Pro: $19/mo ({DEMO_SHORT})
           </Btn>
         </Link>
-        <Pill accent="indigo">Demo — no charge. No card required.</Pill>
+        <Pill accent="indigo">Demo: no charge. No card required.</Pill>
       </div>
     </Card>
   );
@@ -70,17 +70,17 @@ export function PlanLockCompact({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Eyebrow accent="indigo">Pro feature</Eyebrow>
-            <Pill accent="indigo">Demo — not charged</Pill>
+            <Pill accent="indigo">Demo: not charged</Pill>
           </div>
           <div className="mt-1 font-semibold text-ink">{title}</div>
           <p className="text-sm text-muted mt-0.5">{description}</p>
           <p className="text-xs text-muted mt-1">
-            Demo — you won't be charged. No card required.
+            Demo: you won't be charged. No card required.
           </p>
         </div>
         <Link to="/pro/plan" className="shrink-0">
           <Btn variant="primary" size="sm">
-            Upgrade to Pro — $19/mo ({DEMO_SHORT})
+            Upgrade to Pro: $19/mo ({DEMO_SHORT})
           </Btn>
         </Link>
       </div>

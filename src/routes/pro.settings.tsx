@@ -374,7 +374,7 @@ function ProSettings() {
           <SettingsSection id="plan" eyebrow="Plan & billing" delay={3}>
             <div className="mt-3 flex items-center justify-between">
               <div>
-                <div className="font-extrabold text-ink">Everything included — free</div>
+                <div className="font-extrabold text-ink">Everything included: free</div>
                 <div className="text-xs text-muted">
                   Every HomesBrain feature is free for all pros right now. No card, no billing.
                 </div>
@@ -383,8 +383,8 @@ function ProSettings() {
             </div>
             <div className="mt-4 rounded-xl border border-line bg-soft p-4">
               <div className="text-sm text-ink">
-                <span className="font-semibold">Reviews, records, CRM, invoicing, rebooking, analytics</span>{" "}
-                — all yours, no upgrade needed.
+                <span className="font-semibold">Reviews, records, CRM, invoicing, rebooking, analytics:</span>{" "}
+                all yours, no upgrade needed.
               </div>
               <div className="mt-2">
                 <Link
