@@ -838,65 +838,6 @@ function NewJob() {
     };
   }, [activeTrade]);
 
-  async function onNameplate(file: File) {
-    setScanState("scanning");
-    setScanError(null);
-    if (scanPreview) URL.revokeObjectURL(scanPreview);
-    setScanPreview(URL.createObjectURL(file));
-    // Persist the photo too: until now it only fed the AI scan and was lost.
-    if (proId) {
-      const oldPhoto = photoFinal.current;
-      const gen = ++photoGen.current;
-      photoFinal.current = null;
-      photoBusy.current = (async () => {
-        const blob = await toJpegBlob(file);
-        const up = await uploadJobMedia({
-          proId,
-          file: blob,
-          ext: "jpg",
-          contentType: "image/jpeg",
-        });
-        if (gen !== photoGen.current) {
-          // A newer scan started before this upload finished; its result is
-          // stale, so drop the object it just wrote and leave photoFinal alone.
-          void removeJobMediaObject(up.path);
-          return;
-        }
-        photoFinal.current = { path: up.path };
-        // Replacing a photo: the old object is an orphan now, clean it up.
-        if (oldPhoto) void removeJobMediaObject(oldPhoto.path);
-      })().catch(() => {
-        // Photo persistence is best effort; the scan result is the payoff.
-      });
-    }
-    try {
-      const r = await scanNameplate(file);
-      const filled: string[] = [];
-      // Fill blanks only. Never clobber what the pro already typed.
-      if (r.type && !eqType) {
-        setEqType(r.type);
-        filled.push("type");
-      }
-      if (r.make && !eqMake) {
-        setEqMake(r.make);
-        filled.push("make");
-      }
-      if (r.model && !eqModel) {
-        setEqModel(r.model);
-        filled.push("model");
-      }
-      if (r.warranty_until && /^\d{4}-\d{2}-\d{2}$/.test(r.warranty_until) && !warrantyUntil) {
-        setWarrantyUntil(r.warranty_until);
-        filled.push("warranty");
-      }
-      setScanFilledDetails(filled.length > 0);
-      setScanState("done");
-      await logEvent(proId ? `pro:${proId}` : null, "nameplate_scanned", { filled });
-    } catch (e) {
-      setScanState("error");
-      setScanError(e instanceof Error ? e.message : "Scan failed. Try again.");
-    }
-  }
 
   async function onPickVideo(file: File) {
     if (!proId) return;
