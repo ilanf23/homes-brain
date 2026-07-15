@@ -1097,7 +1097,7 @@ function NewJob() {
   // Once the email is valid on the Review step, glide the Send button into
   // view so the pro can't miss what to do next. Fires only on the transition
   // to valid, and only while on Review, so we never yank focus later.
-  const sendBtnRef = useRef<HTMLButtonElement>(null);
+  const sendBtnRef = useRef<HTMLDivElement>(null);
   const prevEmailValid = useRef(false);
   useEffect(() => {
     if (stage === "review" && reviewEmailValid && !prevEmailValid.current) {
