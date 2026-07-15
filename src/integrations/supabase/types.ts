@@ -505,6 +505,44 @@ export type Database = {
           },
         ]
       }
+      job_media: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          job_id: string
+          kind: string
+          thumbnail_url: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          job_id: string
+          kind: string
+          thumbnail_url?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          job_id?: string
+          kind?: string
+          thumbnail_url?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_media_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           created_at: string
@@ -860,6 +898,7 @@ export type Database = {
       records: {
         Row: {
           created_at: string
+          hidden_fields: string[] | null
           id: string
           job_id: string
           public_url: string
@@ -869,6 +908,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hidden_fields?: string[] | null
           id?: string
           job_id: string
           public_url: string
@@ -878,6 +918,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hidden_fields?: string[] | null
           id?: string
           job_id?: string
           public_url?: string
