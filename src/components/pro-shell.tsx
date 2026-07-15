@@ -386,41 +386,115 @@ export function ProShell({
 
         <header className="md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
           <div className="px-4 h-14 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2" aria-label="HomesBrain">
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
-            <div className="flex items-center gap-1">
-              <ThemeToggle />
-              {pro && <NotificationsBell proId={pro.id} align="right" />}
-              <button
-                onClick={signOut}
-                aria-label={t("chrome.signOut")}
-                className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label={t("pro.navigation")}
+              aria-expanded={menuOpen}
+              aria-controls="pro-mobile-menu"
+              className="pressable -mr-1 flex h-11 w-11 items-center justify-center rounded-xl text-ink hover:bg-soft"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile slide-over menu: full nav + language + log out. */}
+        {menuOpen && (
+          <div className="md:hidden fixed inset-0 z-[70]" role="dialog" aria-modal="true">
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+              className="absolute inset-0 bg-ink/40 backdrop-blur-sm anim-fade-in"
+            />
+            <div
+              id="pro-mobile-menu"
+              className="absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col bg-paper shadow-[-24px_0_60px_-24px_rgba(22,22,15,0.35)] anim-slide-in-right"
+            >
+              <div className="flex h-14 items-center justify-between border-b border-line px-4">
+                <Link
+                  to="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2"
+                  aria-label="HomesBrain"
+                >
+                  <Logo size={24} wordmarkClassName="text-sm" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  aria-label="Close menu"
+                  className="pressable -mr-1 flex h-11 w-11 items-center justify-center rounded-xl text-ink hover:bg-soft"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              {pro && (
+                <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+                  <Avatar name={pro.business} accent="indigo" size={40} />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-bold text-ink">{pro.business}</div>
+                    <div className="truncate text-xs text-muted">
+                      {(pro.trades?.length ? pro.trades : pro.trade ? [pro.trade] : [])
+                        .map((tr) => tradeLabel(tr))
+                        .join(" · ")}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <nav
+                className="flex-1 overflow-y-auto p-2"
+                aria-label={t("pro.navigation")}
               >
-                <LogOut size={16} />
-              </button>
+                {NAV.map(({ key, labelKey, to, icon: Icon }) => (
+                  <Link
+                    key={key}
+                    to={to}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={active === key ? "page" : undefined}
+                    className={`pressable flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] ${
+                      active === key
+                        ? "bg-indigobg text-indigo font-bold"
+                        : "text-ink font-semibold hover:bg-soft"
+                    }`}
+                  >
+                    <Icon size={18} />
+                    {t(labelKey)}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="border-t border-line px-3 py-3 space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted">
+                    {t("lang.label")}
+                  </span>
+                  <LanguageToggle />
+                </div>
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted">
+                    Theme
+                  </span>
+                  <ThemeToggle />
+                </div>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="pressable mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-semibold text-ink hover:bg-soft"
+                >
+                  <LogOut size={18} /> {t("chrome.signOut")}
+                </button>
+              </div>
             </div>
           </div>
-          <nav
-            className="flex gap-1 px-3 pb-2 overflow-x-auto no-scrollbar"
-            aria-label={t("pro.navigation")}
-          >
-            {NAV.map(({ key, labelKey, to }) => (
-              <Link
-                key={key}
-                to={to}
-                aria-current={active === key ? "page" : undefined}
-                className={`pressable shrink-0 rounded-full px-3.5 py-1.5 text-[13px] ${
-                  active === key
-                    ? "bg-indigobg text-indigo font-bold"
-                    : "text-muted font-semibold hover:text-ink"
-                }`}
-              >
-                {t(labelKey)}
-              </Link>
-            ))}
-          </nav>
-        </header>
+        )}
+
 
         <main
           className={`mx-auto ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 sm:px-6 py-6 md:py-10 ${hideMobileCta ? "pb-10" : "pb-28 md:pb-10"}`}
