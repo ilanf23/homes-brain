@@ -84,12 +84,14 @@ export type HomeRecord = {
   viewed_at: string | null;
   created_at: string;
   job_id: string;
+  home_id?: string | null;
   hidden_fields: string[] | null;
 };
 
 export type HomeViewBundle = {
   homeowner: HomeownerRow | null;
   home: HomeRow | null;
+  homes: HomeRow[];
   equipment: HomeEquipment[];
   jobs: HomeJob[];
   pros: HomeProRow[];
@@ -100,6 +102,7 @@ export type HomeViewBundle = {
 const EMPTY_BUNDLE: HomeViewBundle = {
   homeowner: null,
   home: null,
+  homes: [],
   equipment: [],
   jobs: [],
   pros: [],
@@ -133,6 +136,7 @@ export function useHomeownerGuard() {
       setBundle({
         homeowner: view.homeowner,
         home: view.home,
+        homes: view.homes ?? (view.home ? [view.home] : []),
         equipment: view.equipment ?? [],
         jobs: view.jobs ?? [],
         pros: view.pros ?? [],
@@ -183,6 +187,7 @@ export function useHomeownerGuard() {
     homeowner: bundle.homeowner,
     setHomeowner: (h: HomeownerRow) => setBundle((b) => ({ ...b, homeowner: h })),
     home: bundle.home,
+    homes: bundle.homes,
     equipment: bundle.equipment,
     jobs: bundle.jobs,
     pros: bundle.pros,
