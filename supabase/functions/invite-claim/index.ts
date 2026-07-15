@@ -126,7 +126,10 @@ type EmailCopy = {
 
 const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   en: {
-    subject: (business) => `New service record from ${business}`,
+    subject: (business) =>
+      business
+        ? `${business} added a service record for your home`
+        : `You have a new service record`,
     addedAt: (business, address) =>
       `${business} added a new service record to your home at ${address}.`,
     record: "Record",
@@ -135,17 +138,20 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Equipment",
     warranty: "Warranty",
     warrantyThrough: (date) => `Warranty through ${date}`,
-    openHome: "Open my home",
-    claimRecord: "Claim your home record",
+    openHome: "Add record",
+    claimRecord: "Add record",
     tagline: "Every visit builds your home's living record. Free for life.",
     via: "via HomesBrain",
-    title: (business) => `New service record from ${business}`,
+    title: (business) =>
+      business
+        ? `${business} added a service record for your home`
+        : `You have a new service record`,
     description: (business) =>
-      `${business} added a new record to your home. It's saved to your address for life. Free.`,
+      `${business || "Your pro"} added a new record to your home. It's saved to your address for life. Free.`,
     oneTap:
       "One tap opens your record and signs you in. This link only works from your inbox.",
     reason: (business, address) =>
-      `You're receiving this because ${business} services your home at ${address}. HomesBrain hosts the record on their behalf.`,
+      `You're receiving this because ${business || "your pro"} services your home at ${address}. HomesBrain hosts the record on their behalf.`,
     footer: {
       unsubscribe: "Unsubscribe",
       optOut: "You can opt out of these emails at any time.",
@@ -154,7 +160,10 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     },
   },
   es: {
-    subject: (business) => `Nuevo registro de servicio de ${business}`,
+    subject: (business) =>
+      business
+        ? `${business} agregó un registro de servicio para tu hogar`
+        : `Tienes un nuevo registro de servicio`,
     addedAt: (business, address) =>
       `${business} agregó un nuevo registro de servicio para tu hogar en ${address}.`,
     record: "Registro",
@@ -163,18 +172,21 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Equipo",
     warranty: "Garantía",
     warrantyThrough: (date) => `Garantía hasta ${date}`,
-    openHome: "Abrir mi hogar",
-    claimRecord: "Reclamar el registro de mi hogar",
+    openHome: "Agregar registro",
+    claimRecord: "Agregar registro",
     tagline:
       "Cada visita construye el historial vivo de tu hogar. Gratis de por vida.",
     via: "a través de HomesBrain",
-    title: (business) => `Nuevo registro de servicio de ${business}`,
+    title: (business) =>
+      business
+        ? `${business} agregó un registro de servicio para tu hogar`
+        : `Tienes un nuevo registro de servicio`,
     description: (business) =>
-      `${business} agregó un nuevo registro a tu hogar. Queda guardado en tu dirección de por vida. Gratis.`,
+      `${business || "Tu profesional"} agregó un nuevo registro a tu hogar. Queda guardado en tu dirección de por vida. Gratis.`,
     oneTap:
       "Un toque abre tu registro e inicia tu sesión. Este enlace solo funciona desde tu correo.",
     reason: (business, address) =>
-      `Recibes este correo porque ${business} presta servicio a tu hogar en ${address}. HomesBrain aloja el registro en su nombre.`,
+      `Recibes este correo porque ${business || "tu profesional"} presta servicio a tu hogar en ${address}. HomesBrain aloja el registro en su nombre.`,
     footer: {
       unsubscribe: "Darse de baja",
       optOut: "Puedes dejar de recibir estos correos en cualquier momento.",
@@ -183,7 +195,10 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     },
   },
   ru: {
-    subject: (business) => `Новая запись об обслуживании от ${business}`,
+    subject: (business) =>
+      business
+        ? `${business} добавил запись об обслуживании вашего дома`
+        : `У вас новая запись об обслуживании`,
     addedAt: (business, address) =>
       `${business} добавил новую запись об обслуживании вашего дома по адресу ${address}.`,
     record: "Запись",
@@ -192,18 +207,21 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Оборудование",
     warranty: "Гарантия",
     warrantyThrough: (date) => `Гарантия до ${date}`,
-    openHome: "Открыть мой дом",
-    claimRecord: "Получить запись о моем доме",
+    openHome: "Добавить запись",
+    claimRecord: "Добавить запись",
     tagline:
       "Каждый визит дополняет живую историю вашего дома. Бесплатно навсегда.",
     via: "через HomesBrain",
-    title: (business) => `Новая запись об обслуживании от ${business}`,
+    title: (business) =>
+      business
+        ? `${business} добавил запись об обслуживании вашего дома`
+        : `У вас новая запись об обслуживании`,
     description: (business) =>
-      `${business} добавил новую запись о вашем доме. Она навсегда сохранена за вашим адресом. Бесплатно.`,
+      `${business || "Ваш специалист"} добавил новую запись о вашем доме. Она навсегда сохранена за вашим адресом. Бесплатно.`,
     oneTap:
       "Одно нажатие откроет запись и выполнит вход. Ссылка работает только из вашего почтового ящика.",
     reason: (business, address) =>
-      `Вы получили это письмо, потому что ${business} обслуживает ваш дом по адресу ${address}. HomesBrain хранит запись от имени компании.`,
+      `Вы получили это письмо, потому что ${business || "ваш специалист"} обслуживает ваш дом по адресу ${address}. HomesBrain хранит запись от имени компании.`,
     footer: {
       unsubscribe: "Отписаться",
       optOut: "Вы можете отказаться от этих писем в любое время.",
@@ -212,7 +230,10 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     },
   },
   uk: {
-    subject: (business) => `Новий запис про обслуговування від ${business}`,
+    subject: (business) =>
+      business
+        ? `${business} додав запис про обслуговування вашого дому`
+        : `У вас новий запис про обслуговування`,
     addedAt: (business, address) =>
       `${business} додав новий запис про обслуговування вашого дому за адресою ${address}.`,
     record: "Запис",
@@ -221,18 +242,21 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Обладнання",
     warranty: "Гарантія",
     warrantyThrough: (date) => `Гарантія до ${date}`,
-    openHome: "Відкрити мій дім",
-    claimRecord: "Отримати запис про мій дім",
+    openHome: "Додати запис",
+    claimRecord: "Додати запис",
     tagline:
       "Кожен візит доповнює живу історію вашого дому. Безкоштовно назавжди.",
     via: "через HomesBrain",
-    title: (business) => `Новий запис про обслуговування від ${business}`,
+    title: (business) =>
+      business
+        ? `${business} додав запис про обслуговування вашого дому`
+        : `У вас новий запис про обслуговування`,
     description: (business) =>
-      `${business} додав новий запис про ваш дім. Він назавжди зберігається за вашою адресою. Безкоштовно.`,
+      `${business || "Ваш фахівець"} додав новий запис про ваш дім. Він назавжди зберігається за вашою адресою. Безкоштовно.`,
     oneTap:
       "Одне натискання відкриє запис і виконає вхід. Посилання працює лише з вашої поштової скриньки.",
     reason: (business, address) =>
-      `Ви отримали цей лист, тому що ${business} обслуговує ваш дім за адресою ${address}. HomesBrain зберігає запис від імені компанії.`,
+      `Ви отримали цей лист, тому що ${business || "ваш фахівець"} обслуговує ваш дім за адресою ${address}. HomesBrain зберігає запис від імені компанії.`,
     footer: {
       unsubscribe: "Відписатися",
       optOut: "Ви можете відмовитися від цих листів у будь-який час.",
@@ -241,6 +265,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     },
   },
 };
+
 
 function formatEmailDate(raw: string, locale: SupportedLocale): string {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
