@@ -1829,14 +1829,34 @@ function NewJob() {
     let emailAddr = "";
     let phoneAddr = "";
 
+    // Silent dedupe: same pro, same email or same phone as a customer already on
+    // file means it is the same person. The pro just typed a different display
+    // name (nickname, typo, one-tap test) for someone we already know. Adopt the
+    // existing record so we do not stack up "Bob / John / Customer" rows against
+    // one homeowner inbox (breaks consent tracking, fragments the home's history,
+    // and looks like spam to the homeowner and to A2P 10DLC carriers).
+    let dedupeCustomer: CustomerOpt | undefined;
+    if (!customerId) {
+      const emailKey = finalEmail;
+      const phoneKey = normalizedPhone(newCustomer.phone);
+      dedupeCustomer = existing.find((c) => {
+        const em = c.email?.trim().toLowerCase() ?? "";
+        const ph = normalizedPhone(c.phone);
+        return (!!emailKey && em === emailKey) || (!!phoneKey && ph === phoneKey);
+      });
+      if (dedupeCustomer) customerId = dedupeCustomer.id;
+    }
+
     if (customerId) {
-      const c = selected!;
+      const c = selected ?? dedupeCustomer!;
       homeId = c.home_id;
-      toName = finalName;
+      toName = dedupeCustomer ? c.name : finalName;
       emailAddr = finalEmail;
       phoneAddr = c.phone?.trim() ?? "";
       const customerUpdates: { name?: string; email?: string; preferred_locale?: Locale } = {};
-      if (finalName !== c.name.trim()) customerUpdates.name = finalName;
+      // On dedupe we keep the name that is already on file (do not rename Ilan
+      // to "Bob" just because the pro one-tapped a different label today).
+      if (!dedupeCustomer && finalName !== c.name.trim()) customerUpdates.name = finalName;
       if (finalEmail !== (c.email?.trim().toLowerCase() ?? "")) {
         customerUpdates.email = finalEmail;
       }
