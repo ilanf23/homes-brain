@@ -107,9 +107,34 @@ function HomeOverview() {
       {celebrate && <Celebration variant="grand" />}
       <HomePageHead
         eyebrow={t("hi.myHome")}
-        title={home.address}
-        sub={t("hi.myHomeSub")}
+        title={homes.length > 1 ? `My ${homes.length} homes` : home.address}
+        sub={homes.length > 1 ? homes.map((h) => h.address).join(" · ") : t("hi.myHomeSub")}
       />
+
+      {homes.length > 1 && (
+        <Card className="anim-fade-up mb-6">
+          <Eyebrow accent="indigo">My homes</Eyebrow>
+          <div className="mt-3 space-y-2">
+            {homes.map((h) => {
+              const homeRecords = records.filter((r) => r.home_id === h.id);
+              const homeJobs = jobs.filter((j) => j.home_id === h.id);
+              return (
+                <div
+                  key={h.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-3"
+                >
+                  <div className="min-w-0">
+                    <div className="font-semibold text-ink truncate">{h.address}</div>
+                    <div className="text-xs text-muted">
+                      {homeRecords.length} record{homeRecords.length === 1 ? "" : "s"} · {homeJobs.length} visit{homeJobs.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <HomeSetupChecklist homeowner={homeowner} />
 
