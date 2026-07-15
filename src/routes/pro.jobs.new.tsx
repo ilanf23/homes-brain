@@ -1892,7 +1892,7 @@ function NewJob() {
         setTimeout(() => setToast(null), 3500);
         return;
       }
-      if (confirmed && normalizeAddress(confirmed) !== normalizeAddress(onFile)) {
+      if (!dedupeCustomer && confirmed && normalizeAddress(confirmed) !== normalizeAddress(onFile)) {
         const { error: addrErr } = await supabase
           .from("homes")
           .update({ address: confirmed })
