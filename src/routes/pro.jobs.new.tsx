@@ -54,6 +54,7 @@ import {
   probeVideo,
   uploadJobMedia,
   removeJobMediaObject,
+  insertJobMedia,
   VIDEO_MAX_BYTES,
   VIDEO_MAX_SECONDS,
 } from "@/lib/media";
@@ -169,6 +170,8 @@ const FIELD_MAKE_MODEL = "make_model";
 const FIELD_WORK_DONE = "work_done";
 const FIELD_NEXT_SERVICE = "next_service";
 const FIELD_RECALL = "recall";
+const FIELD_VIDEO = "video";
+const FIELD_PHOTOS = "photos";
 
 /* Small square checkmark used as the "include this row" control. */
 /* One row of the live record: label on the left, value on the right. Tap the
@@ -1997,12 +2000,48 @@ function NewJob() {
       return;
     }
 
+    // Attach media. Wait out an in-flight upload (progress stays visible);
+    // a failed upload never blocks the job or the record.
+    if (videoBusy.current) await videoBusy.current;
+    if (photoBusy.current) await photoBusy.current;
+    const mediaRows: Array<{
+      job_id: string;
+      kind: "photo" | "video";
+      url: string;
+      thumbnail_url: string | null;
+      duration_seconds: number | null;
+    }> = [];
+    if (videoFinal.current) {
+      mediaRows.push({
+        job_id: job.id,
+        kind: "video",
+        url: videoFinal.current.url,
+        thumbnail_url: videoFinal.current.posterUrl,
+        duration_seconds: videoFinal.current.duration,
+      });
+    }
+    if (photoFinal.current) {
+      mediaRows.push({
+        job_id: job.id,
+        kind: "photo",
+        url: photoFinal.current.url,
+        thumbnail_url: null,
+        duration_seconds: null,
+      });
+    }
+    if (!(await insertJobMedia(mediaRows))) {
+      setToast("The video didn't attach. The record still sent without it.");
+      setTimeout(() => setToast(null), 4500);
+    }
+
     // Record. Persist which record rows the pro excluded, scoped to rows that
     // actually have a value, so the public record can hide exactly those.
     const presentKeys = new Set<string>([FIELD_CUSTOMER, FIELD_WORK_DONE, FIELD_RECALL]);
     if (eqType) presentKeys.add(FIELD_EQUIPMENT);
     if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
+    if (videoFinal.current) presentKeys.add(FIELD_VIDEO);
+    if (photoFinal.current) presentKeys.add(FIELD_PHOTOS);
     const hidden = Array.from(hiddenFields).filter((key) => presentKeys.has(key));
 
     const recordPayload = {
@@ -2014,7 +2053,7 @@ function NewJob() {
     };
     const { data: rec, error: recordErr } = await supabase
       .from("records")
-      // hidden_fields added in migration 20260708120000_record_hidden_fields;
+      // hidden_fields added in migration 20260715090000_job_media;
       // cast until Lovable regenerates supabase types.ts from the migration.
       .insert(recordPayload as never)
       .select("id")
@@ -2087,6 +2126,7 @@ function NewJob() {
         requested_locale: customerLocale,
         locale_used: localeUsed,
         translation_fallback: fellBack,
+        has_video: !!videoFinal.current,
       });
       // Google review ask: only fires on a real delivery, so the Reviews page
       // count reflects reality. No mock SMS - texting is not live yet.
@@ -2158,6 +2198,7 @@ function NewJob() {
       requested_locale: customerLocale,
       locale_used: delivery.localeUsed,
       translation_fallback: delivery.translationFallback,
+      has_video: !!videoFinal.current,
     });
     if (askReview) {
       await logEvent(`pro:${proId}`, "review_requested", {
@@ -3415,6 +3456,28 @@ function NewJob() {
                           />
                         </Field>
                       </ReviewEditor>
+                    )}
+                    {videoUpload && (
+                      <RecordRow
+                        label={customerCopy.video}
+                        value={
+                          videoUpload.status === "uploading"
+                            ? `Uploading ${Math.round(videoUpload.progress * 100)}%`
+                            : videoUpload.status === "error"
+                              ? "Upload failed"
+                              : "Walkthrough video"
+                        }
+                        included={!hiddenFields.has(FIELD_VIDEO)}
+                        onToggle={() => toggleField(FIELD_VIDEO)}
+                      />
+                    )}
+                    {scanPreview && (
+                      <RecordRow
+                        label={customerCopy.photo}
+                        value="Unit photo"
+                        included={!hiddenFields.has(FIELD_PHOTOS)}
+                        onToggle={() => toggleField(FIELD_PHOTOS)}
+                      />
                     )}
                   </div>
 

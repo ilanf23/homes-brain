@@ -13,6 +13,8 @@ export type CustomerPreviewCopy = {
   makeModel: string;
   workDone: string;
   nextService: string;
+  video: string;
+  photo: string;
   email: string;
   emailInvalid: string;
   emailHelp: string;
@@ -34,6 +36,8 @@ export const CUSTOMER_PREVIEW_COPY: Record<Locale, CustomerPreviewCopy> = {
     makeModel: "Make / Model",
     workDone: "Work done",
     nextService: "Next service",
+    video: "Video",
+    photo: "Photo",
     email: "Customer email *",
     emailInvalid: "Enter a valid email address.",
     emailHelp: "The service record will be sent here.",
@@ -53,6 +57,8 @@ export const CUSTOMER_PREVIEW_COPY: Record<Locale, CustomerPreviewCopy> = {
     makeModel: "Marca / Modelo",
     workDone: "Trabajo realizado",
     nextService: "Próximo servicio",
+    video: "Video",
+    photo: "Foto",
     email: "Correo del cliente *",
     emailInvalid: "Ingresa un correo electrónico válido.",
     emailHelp: "El registro de servicio se enviará aquí.",
@@ -72,6 +78,8 @@ export const CUSTOMER_PREVIEW_COPY: Record<Locale, CustomerPreviewCopy> = {
     makeModel: "Марка / Модель",
     workDone: "Выполненные работы",
     nextService: "Следующее обслуживание",
+    video: "Видео",
+    photo: "Фото",
     email: "Электронная почта клиента *",
     emailInvalid: "Введите действительный адрес электронной почты.",
     emailHelp: "Сюда будет отправлена запись об обслуживании.",
@@ -91,6 +99,8 @@ export const CUSTOMER_PREVIEW_COPY: Record<Locale, CustomerPreviewCopy> = {
     makeModel: "Марка / Модель",
     workDone: "Виконані роботи",
     nextService: "Наступне обслуговування",
+    video: "Відео",
+    photo: "Фото",
     email: "Електронна пошта клієнта *",
     emailInvalid: "Введіть дійсну електронну адресу.",
     emailHelp: "Сюди буде надіслано запис про обслуговування.",
