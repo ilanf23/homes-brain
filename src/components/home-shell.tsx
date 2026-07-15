@@ -84,12 +84,14 @@ export type HomeRecord = {
   viewed_at: string | null;
   created_at: string;
   job_id: string;
+  home_id?: string | null;
   hidden_fields: string[] | null;
 };
 
 export type HomeViewBundle = {
   homeowner: HomeownerRow | null;
   home: HomeRow | null;
+  homes: HomeRow[];
   equipment: HomeEquipment[];
   jobs: HomeJob[];
   pros: HomeProRow[];
@@ -100,6 +102,7 @@ export type HomeViewBundle = {
 const EMPTY_BUNDLE: HomeViewBundle = {
   homeowner: null,
   home: null,
+  homes: [],
   equipment: [],
   jobs: [],
   pros: [],
