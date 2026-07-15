@@ -7,6 +7,8 @@ import { formatDate, formatPhone, logEvent } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { isProEntitled } from "@/lib/plan";
+import { listJobMedia, type JobMediaRow } from "@/lib/media";
+import { RecordMedia } from "@/components/job-media";
 
 export const Route = createFileRoute("/pro/records/$recordId")({
   head: () => ({ meta: [{ title: "Record - HomesBrain" }] }),
@@ -71,6 +73,7 @@ function RecordDetail() {
   const [record, setRecord] = useState<RecordRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [qrOpen, setQrOpen] = useState(false);
+  const [media, setMedia] = useState<JobMediaRow[]>([]);
 
   const [sheet, setSheet] = useState<Sheet>(null);
   const [draftText, setDraftText] = useState("");
@@ -101,6 +104,8 @@ function RecordDetail() {
         .eq("jobs.pro_id", proId)
         .maybeSingle();
       setRecord(data as unknown as RecordRow | null);
+      const jobId = (data as unknown as RecordRow | null)?.jobs?.id;
+      if (jobId) setMedia(await listJobMedia([jobId]));
       setLoading(false);
     })();
   }, [proId, recordId]);
@@ -366,6 +371,17 @@ function RecordDetail() {
             {sentTo && <div className="mt-2 px-0 text-sm text-muted">Sent to {sentTo}</div>}
           </div>
         </Card>
+
+        {media.length > 0 && (
+          <Card className="anim-fade-up d-1 !p-4">
+            <RecordMedia
+              media={media}
+              videoLabel="Walkthrough video"
+              downloadLabel="Download the video"
+              photoAlt="Job photo"
+            />
+          </Card>
+        )}
 
         <Card className="anim-fade-up d-1 !p-5 !bg-indigobg !border-indigo/25">
           <div className="flex items-center gap-2">
