@@ -3377,20 +3377,11 @@ function NewJob() {
                         onToggle={() => toggleField(FIELD_VIDEO)}
                       />
                     )}
-                    {scanPreview && (
-                      <RecordRow
-                        label={customerCopy.photo}
-                        value="Unit photo"
-                        included={!hiddenFields.has(FIELD_PHOTOS)}
-                        onToggle={() => toggleField(FIELD_PHOTOS)}
-                      />
-                    )}
                   </div>
 
-                  {/* Photo also offered here: the AI voice flow skips the work
-                      step, so Review is that path's only chance to add one. */}
+                  {/* Optional walkthrough video for the AI voice flow, which
+                      skips the work step and lands here. */}
                   <div className="mt-5 border-t border-line pt-4">
-                    {photoCapture}
                     {videoCapture}
                   </div>
 
