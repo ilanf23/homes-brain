@@ -1161,6 +1161,7 @@ export type Database = {
       mock_set_plan: { Args: { p_plan: string }; Returns: string }
       my_homeowner_id: { Args: never; Returns: string }
       my_pro_id: { Args: never; Returns: string }
+      normalize_equipment_type: { Args: { p_type: string }; Returns: string }
       pro_ensure: { Args: { p_first_name?: string }; Returns: string }
       pro_serves_home: { Args: { p_home_id: string }; Returns: boolean }
       pro_upsert_equipment: {
