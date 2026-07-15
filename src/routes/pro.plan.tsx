@@ -22,7 +22,7 @@ import {
 
 export const Route = createFileRoute("/pro/plan")({
   head: () => ({
-    meta: [{ title: "Plan: HomesBrain" }],
+    meta: [{ title: "Plan - HomesBrain" }],
   }),
   component: PlanPage,
 });

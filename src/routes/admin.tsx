@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin: HomesBrain" }] }),
+  head: () => ({ meta: [{ title: "Admin - HomesBrain" }] }),
   component: AdminPage,
 });
 
