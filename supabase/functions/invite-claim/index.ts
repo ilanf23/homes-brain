@@ -11,13 +11,22 @@
 
 import {
   buildUnsubUrl,
-  complianceFooterHtml,
   complianceFooterText,
   getUnsubToken,
   isEmailOptedOut,
   listUnsubscribeHeaders,
 } from "../_shared/email-compliance.ts";
 import type { ComplianceFooterCopy } from "../_shared/email-compliance.ts";
+import {
+  renderBodyHtml,
+  renderCta,
+  renderDetails,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+  emphasize,
+  esc as shellEsc,
+} from "../_shared/email-shell.ts";
 import { authenticatePro } from "../_shared/pro-auth.ts";
 import {
   isSupportedLocale,
