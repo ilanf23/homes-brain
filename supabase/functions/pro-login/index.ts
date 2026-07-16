@@ -59,7 +59,6 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 function loginEmail(ctaUrl: string, firstName: string | null, mode: "signup" | "signin") {
-  const url = ctaUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const greeting = firstName ? `Hi ${firstName},` : "Hi,";
   const headline =
     mode === "signup"
@@ -85,21 +84,21 @@ function loginEmail(ctaUrl: string, firstName: string | null, mode: "signup" | "
     "If you didn't request this, you can ignore this email.",
   ].join("\n");
 
-  const html = `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">HomesBrain</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">For pros</div>
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">${headline}</h1>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${greeting} tap the button to ${mode === "signup" ? "finish setting up your account" : "sign in"}. This link works from your inbox and expires in 30 minutes.</p>
-      <div style="margin-top:22px;">
-        <a href="${url}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${cta}</a>
-      </div>
-      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">If you didn't request this, you can ignore this email.</p>
-    </div>
-  </div>
-</body></html>`;
+  const bodyHtml = [
+    renderH1(headline),
+    renderBody(
+      `${greeting} tap the button to ${mode === "signup" ? "finish setting up your account" : "sign in"}. This link works from your inbox and expires in 30 minutes.`,
+    ),
+    renderCta(ctaUrl, cta),
+    renderFinePrint("If you didn't request this, you can ignore this email."),
+  ].join("\n");
+
+  const html = renderEmailShell({
+    lang: "en",
+    brandLine: "HomesBrain",
+    eyebrow: "Every home remembers",
+    bodyHtml,
+  });
   return { subject, text, html };
 }
 
