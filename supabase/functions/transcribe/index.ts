@@ -19,7 +19,7 @@ const corsHeaders = {
    the gateway's default transcription model. Kept isolated because it is the
    one thing that cannot be verified without a live round-trip. */
 const TRANSCRIBE_ENDPOINT = "https://ai.gateway.lovable.dev/v1/audio/transcriptions";
-const TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe";
+const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe";
 /* A hard language lock biases the model and can transliterate/mangle a foreign
    proper noun (e.g. an English name spoken inside Russian) - the exact case this
    feature exists to fix. Default off; rely on auto-detect + code-switching. Flip
