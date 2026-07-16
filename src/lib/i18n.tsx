@@ -589,6 +589,8 @@ const ru: Partial<Record<TKey, string>> = {
   "pro.nav.reviews": "Отзывы",
   "pro.nav.referral": "Рекомендации",
   "pro.nav.office": "Офис",
+  "pro.nav.dashboard": "Панель",
+
   "pro.nav.settings": "Настройки",
   "pro.logJob": "Записать работу",
   "pro.back": "Назад",
