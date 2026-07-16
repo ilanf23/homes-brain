@@ -477,7 +477,7 @@ export function ProShell({
                   <span className="text-xs font-bold uppercase tracking-wider text-muted">
                     {t("lang.label")}
                   </span>
-                  <LanguageToggle />
+                  <LanguageInlinePicker />
                 </div>
                 <div className="flex items-center justify-between px-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted">
