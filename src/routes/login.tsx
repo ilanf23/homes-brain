@@ -109,13 +109,13 @@ function Login() {
 
   async function continueWithEmail() {
     // Login is for existing accounts only. Look up which account types
-    // the email has and route accordingly: if the chosen role isn't
-    // present, send them to that role's sign-up (email pre-filled)
-    // rather than silently creating an account here.
+    // the email has, and whether the account already has a password.
+    // Password-first when set (magic link stays as a fallback link);
+    // otherwise send the magic link immediately.
     setBusy(true);
     setErr(null);
     const trimmed = email.trim();
-    const { data, error } = await supabase.rpc("lookup_login_method", {
+    const { data, error } = await supabase.rpc("lookup_login_context", {
       p_email: trimmed,
     });
     if (error) {
@@ -123,25 +123,38 @@ function Login() {
       setBusy(false);
       return;
     }
-    const method = (data as string) ?? "none";
+    const ctx = (data as { method?: string; has_password?: boolean } | null) ?? {};
+    const method = ctx.method ?? "none";
+    const hasPassword = ctx.has_password === true;
     const hasPro = method === "pro" || method === "both";
     const hasHo = method === "homeowner" || method === "both";
     if (role === "pro") {
       if (hasPro) {
-        await sendProMagicLink();
+        if (hasPassword) {
+          setBusy(false);
+          setStep("pro-password");
+        } else {
+          await sendProMagicLink();
+        }
       } else {
         setBusy(false);
         navigate({ to: "/pro/signup", search: { email: trimmed } });
       }
     } else {
       if (hasHo) {
-        await sendMagicLink();
+        if (hasPassword) {
+          setBusy(false);
+          setStep("ho-password");
+        } else {
+          await sendMagicLink();
+        }
       } else {
         setBusy(false);
         navigate({ to: "/home/signup", search: { email: trimmed } });
       }
     }
   }
+
 
   async function sendProMagicLink() {
     setBusy(true);
@@ -453,7 +466,7 @@ function Login() {
             >
               {t("auth.signIn")}
             </Btn>
-            <div className="text-center">
+            <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={() => {
@@ -464,11 +477,21 @@ function Login() {
               >
                 {t("login.forgotPassword")}
               </button>
+              <span className="text-xs text-muted">·</span>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={sendProMagicLink}
+                className="text-xs font-semibold text-indigo hover:underline disabled:opacity-60"
+              >
+                {t("login.emailLinkInstead")}
+              </button>
             </div>
           </>
         )}
 
         {step === "ho-password" && (
+
           <>
             <EmailSummary email={email} onChange={resetToEmail} />
             <Field label="Password">

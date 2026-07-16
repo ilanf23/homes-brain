@@ -1159,6 +1159,7 @@ export type Database = {
       is_email_opted_out: { Args: { p_email: string }; Returns: boolean }
       is_pro: { Args: never; Returns: boolean }
       is_sms_opted_out: { Args: { p_phone: string }; Returns: boolean }
+      lookup_login_context: { Args: { p_email: string }; Returns: Json }
       lookup_login_method: { Args: { p_email: string }; Returns: string }
       mark_record_viewed: { Args: { p_record_id: string }; Returns: undefined }
       mock_set_plan: { Args: { p_plan: string }; Returns: string }
