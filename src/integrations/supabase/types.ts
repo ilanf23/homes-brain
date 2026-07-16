@@ -1080,6 +1080,7 @@ export type Database = {
         Args: { p_grain?: string; p_metric: string }
         Returns: Json
       }
+      can_read_job_media: { Args: { object_name: string }; Returns: boolean }
       claim_home: {
         Args: { p_marketing_consent?: boolean; p_record_id: string }
         Returns: string
