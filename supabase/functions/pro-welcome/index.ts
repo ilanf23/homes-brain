@@ -4,6 +4,13 @@
    Safe to call on every login; only the first call actually sends. */
 
 import { authenticatePro } from "../_shared/pro-auth.ts";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
