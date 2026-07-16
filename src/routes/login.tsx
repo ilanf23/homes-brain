@@ -466,7 +466,7 @@ function Login() {
             >
               {t("auth.signIn")}
             </Btn>
-            <div className="text-center">
+            <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={() => {
@@ -477,11 +477,21 @@ function Login() {
               >
                 {t("login.forgotPassword")}
               </button>
+              <span className="text-xs text-muted">·</span>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={sendProMagicLink}
+                className="text-xs font-semibold text-indigo hover:underline disabled:opacity-60"
+              >
+                {t("login.emailLinkInstead")}
+              </button>
             </div>
           </>
         )}
 
         {step === "ho-password" && (
+
           <>
             <EmailSummary email={email} onChange={resetToEmail} />
             <Field label="Password">
