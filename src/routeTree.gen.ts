@@ -38,6 +38,7 @@ import { Route as ProReferralRouteImport } from './routes/pro.referral'
 import { Route as ProPlanRouteImport } from './routes/pro.plan'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
+import { Route as ProDashboardRouteImport } from './routes/pro.dashboard'
 import { Route as ProSlugRouteImport } from './routes/pro.$slug'
 import { Route as MakeItLastSlugRouteImport } from './routes/make-it-last.$slug'
 import { Route as HomeSignupRouteImport } from './routes/home.signup'
@@ -206,6 +207,11 @@ const ProDueRoute = ProDueRouteImport.update({
   path: '/pro/due',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProDashboardRoute = ProDashboardRouteImport.update({
+  id: '/pro/dashboard',
+  path: '/pro/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProSlugRoute = ProSlugRouteImport.update({
   id: '/pro/$slug',
   path: '/pro/$slug',
@@ -346,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/$slug': typeof ProSlugRoute
+  '/pro/dashboard': typeof ProDashboardRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/plan': typeof ProPlanRoute
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/$slug': typeof ProSlugRoute
+  '/pro/dashboard': typeof ProDashboardRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/plan': typeof ProPlanRoute
@@ -453,6 +461,7 @@ export interface FileRoutesById {
   '/home/signup': typeof HomeSignupRoute
   '/make-it-last/$slug': typeof MakeItLastSlugRoute
   '/pro/$slug': typeof ProSlugRoute
+  '/pro/dashboard': typeof ProDashboardRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/plan': typeof ProPlanRoute
@@ -508,6 +517,7 @@ export interface FileRouteTypes {
     | '/home/signup'
     | '/make-it-last/$slug'
     | '/pro/$slug'
+    | '/pro/dashboard'
     | '/pro/due'
     | '/pro/office'
     | '/pro/plan'
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/home/signup'
     | '/make-it-last/$slug'
     | '/pro/$slug'
+    | '/pro/dashboard'
     | '/pro/due'
     | '/pro/office'
     | '/pro/plan'
@@ -614,6 +625,7 @@ export interface FileRouteTypes {
     | '/home/signup'
     | '/make-it-last/$slug'
     | '/pro/$slug'
+    | '/pro/dashboard'
     | '/pro/due'
     | '/pro/office'
     | '/pro/plan'
@@ -668,6 +680,7 @@ export interface RootRouteChildren {
   HomeSignupRoute: typeof HomeSignupRoute
   MakeItLastSlugRoute: typeof MakeItLastSlugRoute
   ProSlugRoute: typeof ProSlugRoute
+  ProDashboardRoute: typeof ProDashboardRoute
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
   ProPlanRoute: typeof ProPlanRoute
@@ -898,6 +911,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProDueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/dashboard': {
+      id: '/pro/dashboard'
+      path: '/pro/dashboard'
+      fullPath: '/pro/dashboard'
+      preLoaderRoute: typeof ProDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/$slug': {
       id: '/pro/$slug'
       path: '/pro/$slug'
@@ -1084,6 +1104,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeSignupRoute: HomeSignupRoute,
   MakeItLastSlugRoute: MakeItLastSlugRoute,
   ProSlugRoute: ProSlugRoute,
+  ProDashboardRoute: ProDashboardRoute,
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
   ProPlanRoute: ProPlanRoute,

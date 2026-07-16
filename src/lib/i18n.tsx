@@ -141,6 +141,8 @@ const en = {
   "pro.nav.reviews": "Reviews",
   "pro.nav.referral": "Referral",
   "pro.nav.office": "Office",
+  "pro.nav.dashboard": "Dashboard",
+
   "pro.nav.settings": "Settings",
   "pro.logJob": "Log a job",
   "pro.back": "Back",
@@ -365,6 +367,8 @@ const es: Partial<Record<TKey, string>> = {
   "pro.nav.reviews": "Reseñas",
   "pro.nav.referral": "Referidos",
   "pro.nav.office": "Oficina",
+  "pro.nav.dashboard": "Panel",
+
   "pro.nav.settings": "Configuración",
   "pro.logJob": "Registrar un trabajo",
   "pro.back": "Volver",
@@ -585,6 +589,8 @@ const ru: Partial<Record<TKey, string>> = {
   "pro.nav.reviews": "Отзывы",
   "pro.nav.referral": "Рекомендации",
   "pro.nav.office": "Офис",
+  "pro.nav.dashboard": "Панель",
+
   "pro.nav.settings": "Настройки",
   "pro.logJob": "Записать работу",
   "pro.back": "Назад",
@@ -803,6 +809,8 @@ const uk: Partial<Record<TKey, string>> = {
   "pro.nav.reviews": "Відгуки",
   "pro.nav.referral": "Рекомендації",
   "pro.nav.office": "Офіс",
+  "pro.nav.dashboard": "Панель",
+
   "pro.nav.settings": "Налаштування",
   "pro.logJob": "Записати роботу",
   "pro.back": "Назад",

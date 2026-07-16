@@ -97,6 +97,7 @@ export function useProGuard() {
 
 export type ProNavKey =
   | "home"
+  | "dashboard"
   | "customers"
   | "records"
   | "invoices"
@@ -108,6 +109,7 @@ export type ProNavKey =
 
 const NAV: { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDashboard }[] = [
   { key: "home", labelKey: "pro.nav.home", to: "/pro", icon: LayoutDashboard },
+  { key: "dashboard", labelKey: "pro.nav.dashboard", to: "/pro/dashboard", icon: LayoutDashboard },
   { key: "customers", labelKey: "pro.nav.customers", to: "/pro/customers", icon: Users },
   { key: "records", labelKey: "pro.nav.records", to: "/pro/records", icon: FileText },
   { key: "invoices", labelKey: "pro.nav.invoices", to: "/pro/invoices", icon: ReceiptText },
@@ -117,6 +119,7 @@ const NAV: { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDash
   { key: "office", labelKey: "pro.nav.office", to: "/pro/office", icon: LayoutDashboard },
   { key: "settings", labelKey: "pro.nav.settings", to: "/pro/settings", icon: Settings },
 ];
+
 
 function timeAgo(iso: string, locale: string) {
   const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
