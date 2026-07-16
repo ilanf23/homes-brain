@@ -89,32 +89,34 @@ function inviteEmail(opts: {
     complianceFooterText(unsubUrl, reason),
   ].join("\n");
 
-  const b = esc(fromName);
-  const a = esc(address);
-  const t = esc(toName);
-  const tr = trade ? esc(trade) : null;
+  const invitedHtml = `${emphasize(fromName)} at ${emphasize(address)} invited you${trade ? ` (${escAttr(trade)})` : ""} to keep their home's service record on HomesBrain.`;
 
-  const html = `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">HomesBrain</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">A Carfax for homes</div>
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">You've been invited to HomesBrain</h1>
-      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#16160f;">Hi ${t},</p>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#16160f;"><strong>${b}</strong> at <strong>${a}</strong> invited you${tr ? ` (${tr})` : ""} to keep their home's service record on HomesBrain.</p>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#73706a;">Log the work in 30 seconds, own the customer relationship, and get rebooked. Free for pros.</p>
-      <div style="margin-top:22px;">
-        <a href="${ctaUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">Join HomesBrain</a>
-      </div>
-      <p style="margin:14px 0 0;font-size:12px;line-height:1.55;color:#73706a;">Free to start. No card.</p>
-    </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">${esc(reason)}</p>
-    ${complianceFooterHtml(unsubUrl)}
-  </div>
-</body></html>`;
+  const bodyHtml = [
+    renderH1("You've been invited to HomesBrain"),
+    renderBody(`Hi ${toName},`),
+    renderBodyHtml(invitedHtml, { marginTop: 12 }),
+    renderBody(
+      "Log the work in 30 seconds, own the customer relationship, and get rebooked. Free for pros.",
+      { marginTop: 12 },
+    ),
+    renderCta(ctaUrl, "Join HomesBrain"),
+    renderFinePrint("Free to start. No card."),
+  ].join("\n");
+
+  const html = renderEmailShell({
+    lang: "en",
+    brandLine: "HomesBrain",
+    eyebrow: "Every home remembers",
+    bodyHtml,
+    reason,
+    unsubUrl,
+  });
 
   return { subject, text, html };
+}
+
+function escAttr(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 Deno.serve(async (req) => {
