@@ -8,6 +8,13 @@
    inside claim-exchange. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
