@@ -1979,7 +1979,8 @@ function NewJob() {
         .from("equipment")
         .insert({
           home_id: homeId,
-          type: eqType || null,
+          type: savedEqType || null,
+
           make: eqMake || null,
           model: eqModel || null,
           warranty_until: warrantyUntil || null,
