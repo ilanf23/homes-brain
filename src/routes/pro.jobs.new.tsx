@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Check,
   ChevronRight,
+  Image as ImageIcon,
   Pencil,
   QrCode,
   Video as VideoIcon,
@@ -49,6 +50,7 @@ import { AddressField } from "@/components/address-field";
 import {
   extractFromNotes,
   extractFullJob,
+  toJpegBlob,
   transcribeAudio,
   useDictation,
   useMicLevel,
@@ -174,6 +176,7 @@ const FIELD_WORK_DONE = "work_done";
 const FIELD_NEXT_SERVICE = "next_service";
 const FIELD_RECALL = "recall";
 const FIELD_VIDEO = "video";
+const FIELD_PHOTOS = "photos";
 
 /* Small square checkmark used as the "include this row" control. */
 function CheckSquare({ on }: { on: boolean }) {
@@ -447,6 +450,22 @@ function NewJob() {
     posterPath: string | null;
     duration: number | null;
   } | null>(null);
+
+  // Job photos (optional, up to 6). Each upload starts the moment the pro
+  // picks it, same as the video above. `photoPaths` is a ref, not state: submit
+  // reads it after awaiting the pending uploads and must not see a stale
+  // closure. `photoItems` is what the UI renders (previews + status).
+  const MAX_PHOTOS = 6;
+  type PhotoItem = {
+    id: string;
+    status: "uploading" | "done" | "error";
+    previewUrl: string;
+    path: string | null;
+  };
+  const photosRef = useRef<HTMLInputElement>(null);
+  const [photoItems, setPhotoItems] = useState<PhotoItem[]>([]);
+  const photosBusy = useRef<Set<Promise<void>>>(new Set());
+  const photoPaths = useRef<string[]>([]);
 
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
@@ -919,6 +938,55 @@ function NewJob() {
       void removeJobMediaObject(old.path);
       if (old.posterPath) void removeJobMediaObject(old.posterPath);
     }
+  }
+
+  function onPickPhotos(files: FileList) {
+    if (!proId) return;
+    const room = MAX_PHOTOS - photoItems.length;
+    const picked = Array.from(files).slice(0, Math.max(0, room));
+    if (files.length > picked.length) {
+      setToast("Up to 6 photos per job.");
+      setTimeout(() => setToast(null), 4500);
+    }
+    for (const file of picked) {
+      const id = crypto.randomUUID();
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoItems((prev) => [...prev, { id, status: "uploading", previewUrl, path: null }]);
+      const task = (async () => {
+        const blob = await toJpegBlob(file);
+        const up = await uploadJobMedia({
+          proId,
+          file: blob,
+          ext: "jpg",
+          contentType: "image/jpeg",
+        });
+        photoPaths.current = [...photoPaths.current, up.path];
+        setPhotoItems((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, status: "done", path: up.path } : p)),
+        );
+      })()
+        .catch(() => {
+          setPhotoItems((prev) => prev.map((p) => (p.id === id ? { ...p, status: "error" } : p)));
+        })
+        .finally(() => {
+          photosBusy.current.delete(task);
+        });
+      photosBusy.current.add(task);
+    }
+  }
+
+  function removePhoto(id: string) {
+    setPhotoItems((prev) => {
+      const item = prev.find((p) => p.id === id);
+      if (item) {
+        URL.revokeObjectURL(item.previewUrl);
+        if (item.path) {
+          photoPaths.current = photoPaths.current.filter((p) => p !== item.path);
+          void removeJobMediaObject(item.path);
+        }
+      }
+      return prev.filter((p) => p.id !== id);
+    });
   }
 
   /* Ask the AI to pull equipment + next-service out of the note. Fills blanks
@@ -2003,9 +2071,14 @@ function NewJob() {
       return;
     }
 
-    // Attach media. Wait out an in-flight upload (progress stays visible);
+    // Attach media. Wait out in-flight uploads (progress stays visible);
     // a failed upload never blocks the job or the record.
     if (videoBusy.current) await videoBusy.current;
+    try {
+      await Promise.all([...photosBusy.current]);
+    } catch {
+      // A failed photo upload never blocks submit: it's simply not in photoPaths.
+    }
     const mediaRows: Array<{
       job_id: string;
       kind: "photo" | "video";
@@ -2022,6 +2095,15 @@ function NewJob() {
         duration_seconds: videoFinal.current.duration,
       });
     }
+    for (const path of photoPaths.current) {
+      mediaRows.push({
+        job_id: job.id,
+        kind: "photo",
+        url: path,
+        thumbnail_url: null,
+        duration_seconds: null,
+      });
+    }
     if (!(await insertJobMedia(mediaRows))) {
       setToast("The video didn't attach. The record still sent without it.");
       setTimeout(() => setToast(null), 4500);
@@ -2034,6 +2116,7 @@ function NewJob() {
     if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
     if (videoFinal.current) presentKeys.add(FIELD_VIDEO);
+    if (photoPaths.current.length) presentKeys.add(FIELD_PHOTOS);
     const hidden = Array.from(hiddenFields).filter((key) => presentKeys.has(key));
 
     const recordPayload = {
@@ -2119,6 +2202,7 @@ function NewJob() {
         locale_used: localeUsed,
         translation_fallback: fellBack,
         has_video: !!videoFinal.current,
+        photo_count: photoPaths.current.length,
       });
       // Google review ask: only fires on a real delivery, so the Reviews page
       // count reflects reality. No mock SMS - texting is not live yet.
@@ -2191,6 +2275,7 @@ function NewJob() {
       locale_used: delivery.localeUsed,
       translation_fallback: delivery.translationFallback,
       has_video: !!videoFinal.current,
+      photo_count: photoPaths.current.length,
     });
     if (askReview) {
       await logEvent(`pro:${proId}`, "review_requested", {
@@ -2487,6 +2572,81 @@ function NewJob() {
               </>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+
+  /* Optional job photos (up to 6). No `capture` attribute on the input: the
+     picker offers both camera and library, unlike the video input which is
+     locked to the camera. Uploads run in the background as each is picked. */
+  const photoCapture = (
+    <div>
+      <input
+        ref={photosRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = e.target.files;
+          if (files && files.length) onPickPhotos(files);
+          e.target.value = "";
+        }}
+      />
+      {photoItems.length === 0 ? (
+        <button
+          type="button"
+          onClick={() => photosRef.current?.click()}
+          className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
+        >
+          <div className="flex items-center justify-center gap-2 text-indigo">
+            <ImageIcon size={22} />
+            <span className="text-sm font-semibold">Add photos (optional)</span>
+          </div>
+          <div className="mt-1 text-xs text-muted">
+            Before and after shots. They go on their record.
+          </div>
+        </button>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {photoItems.map((item) => (
+            <div key={item.id} className="relative h-16 w-16 shrink-0">
+              <img
+                src={item.previewUrl}
+                alt=""
+                className="h-16 w-16 rounded-xl border border-line object-cover"
+              />
+              {item.status === "uploading" && (
+                <div className="absolute inset-0 grid place-items-center rounded-xl bg-ink/40">
+                  <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                </div>
+              )}
+              {item.status === "error" && (
+                <div className="absolute inset-0 grid place-items-center rounded-xl bg-redbg/90">
+                  <AlertTriangle size={16} className="text-red" />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => removePhoto(item.id)}
+                aria-label="Remove photo"
+                className="pressable absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-paper text-muted hover:text-red hover:border-red/30 transition-colors"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+          ))}
+          {photoItems.length < MAX_PHOTOS && (
+            <button
+              type="button"
+              onClick={() => photosRef.current?.click()}
+              aria-label="Add more photos"
+              className="pressable grid h-16 w-16 shrink-0 place-items-center rounded-xl border-2 border-dashed border-indigo/40 bg-paper text-indigo hover:border-indigo hover:bg-indigobg/40 transition-colors"
+            >
+              <ImageIcon size={18} />
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -2865,6 +3025,8 @@ function NewJob() {
                 )}
 
                 {videoCapture}
+
+                {photoCapture}
 
                 {/* Recall alert - only when there's an actual recall. No recall
                     is the norm, so we don't surface it as noise. */}
@@ -3388,11 +3550,21 @@ function NewJob() {
                         onToggle={() => toggleField(FIELD_VIDEO)}
                       />
                     )}
+                    {photoItems.length > 0 && (
+                      <RecordRow
+                        label={customerCopy.photo}
+                        value={`${photoItems.length} photo${photoItems.length === 1 ? "" : "s"}`}
+                        included={!hiddenFields.has(FIELD_PHOTOS)}
+                        onToggle={() => toggleField(FIELD_PHOTOS)}
+                      />
+                    )}
                   </div>
 
                   {/* Optional walkthrough video for the AI voice flow, which
                       skips the work step and lands here. */}
                   <div className="mt-5 border-t border-line pt-4">{videoCapture}</div>
+
+                  <div className="mt-4">{photoCapture}</div>
 
                   <div
                     className={`mt-5 border-t border-line pt-4 transition-colors duration-700 ${
