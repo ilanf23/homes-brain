@@ -272,6 +272,19 @@
     transform: scale(0.8);
   }
 }
+/* Spoken words materializing in the voice-capture transcript. */
+@keyframes hb-word-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
 @keyframes hb-shimmer {
   from {
     background-position: 200% 0;
@@ -478,6 +491,12 @@
 }
 @utility anim-float {
   animation: hb-float 5s ease-in-out infinite;
+}
+@utility anim-word-in {
+  animation: hb-word-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: hb-fade-in 0.2s ease-out both;
+  }
 }
 @utility d-1 {
   animation-delay: 40ms;

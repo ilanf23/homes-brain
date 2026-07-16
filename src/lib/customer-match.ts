@@ -114,9 +114,16 @@ export function nameCloseness(spoken: string, onFile: string): number {
   return Math.max(whole, (first + last) / 2);
 }
 
-/* Suggestions only: a close name is never linked without the pro's tap.
-   Above this, a misheard transcription is more likely than a coincidence. */
+/* Above this, ask "did you mean...?": a misheard transcription is more
+   likely than a coincidence, but not certain enough to act on alone. */
 export const CLOSE_NAME_THRESHOLD = 0.7;
+
+/* Above this, the names are the same spoken person for practical purposes:
+   transcription mishears ("Kristen" heard as "Christian") and short forms
+   ("Bob" for "Bob Smith") score here, coincidences rarely do. The voice flow
+   links these automatically; the Review "did you mean...?" card still covers
+   the 0.7..0.85 gray zone with a tap to confirm. */
+export const AUTO_LINK_THRESHOLD = 0.85;
 
 /* Customers whose names are close enough to the spoken one to ask "did you
    mean...?", best first. Exact matches are included so the caller can offer a
@@ -134,12 +141,14 @@ export function suggestCloseCustomers<T extends MatchableCustomer>(
 }
 
 /* `linked` when the note points at exactly one customer, `ambiguous` when
-   several share the spoken name (the pro picks: guessing between two real
+   several answer to the spoken name (the pro picks: guessing between two real
    people would file the job under the wrong person's home), `new` when nobody
    matches.
 
-   Known limitation: matching is exact on the normalized name, so "Bob" and
-   "Bob Smith" are still two people. */
+   An exact normalized name is tried first. When nobody matches exactly, a
+   single customer whose name is close enough to be a transcription mishear
+   or short form (>= AUTO_LINK_THRESHOLD) is linked automatically, so "Bob"
+   finds "Bob Smith" and "Christian" finds "Kristen" without a tap. */
 export function matchVoiceCustomer<T extends MatchableCustomer>(
   existing: T[],
   extract: VoiceCustomerExtract,
@@ -160,7 +169,17 @@ export function matchVoiceCustomer<T extends MatchableCustomer>(
   if (!name) return { kind: "new" };
 
   const sameName = existing.filter((customer) => normalizedName(customer.name) === name);
-  if (sameName.length === 0) return { kind: "new" };
+  if (sameName.length === 0) {
+    // Nobody matches exactly: fall back to sounds-like/short-form matching.
+    // One clear candidate is them; several is a real question, so ask.
+    const close = existing
+      .map((customer) => ({ customer, score: nameCloseness(name, customer.name) }))
+      .filter((s) => s.score >= AUTO_LINK_THRESHOLD)
+      .sort((x, y) => y.score - x.score);
+    if (close.length === 1) return { kind: "linked", customer: close[0].customer };
+    if (close.length > 1) return { kind: "ambiguous", candidates: close.map((s) => s.customer) };
+    return { kind: "new" };
+  }
   // The name was said before and only one person answers to it: that is them.
   if (sameName.length === 1) return { kind: "linked", customer: sameName[0] };
 

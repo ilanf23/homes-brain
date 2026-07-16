@@ -1,247 +1,124 @@
-import { useEffect, useRef, type MutableRefObject } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { MicIcon } from "@/components/svg";
-import { MIC_BAND_COUNT } from "@/lib/capture";
 
-/* The reactive voice orb, "aurora wave": an indigo mic core with a soft
-   rotating aurora glow breathing behind it and the voice drawn as a smooth
-   wave ring around it. Every frame it reads `bandsRef` (per-frequency-band
-   loudness from useMicLevel) and traces a continuous closed curve: low
-   frequencies at the bottom, highs at the top, mirrored left/right, so
-   speech makes the ring flow with every syllable. Loud syllables throw tiny
-   sparks off the wave; in silence a soft swell travels around the ring and
-   the aurora keeps turning so it still feels alive. Pure visual: it writes
-   to canvas + DOM transforms directly, no per-frame React renders. */
-export function VoiceOrb({
-  levelRef,
-  bandsRef,
-  size = 300,
-}: {
-  levelRef: MutableRefObject<number>;
-  bandsRef?: MutableRefObject<Float32Array>;
-  size?: number;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const coreRef = useRef<HTMLDivElement>(null);
-  const auraRef = useRef<HTMLDivElement>(null);
+/* The HomesBrain AI glyph with a voice-reactive halo: the brand icon sits
+   still while a single soft indigo glow behind it breathes on its own and
+   swells with loudness. Reads `levelRef` every frame and writes DOM styles
+   directly, no per-frame React renders. Replaces the old canvas orb
+   (aurora + wave ring + sparks): one quiet reactive element instead of many. */
+function AiGlyph({ levelRef }: { levelRef: MutableRefObject<number> }) {
+  const glowRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLDivElement>(null);
+  const [imgOk, setImgOk] = useState(true);
 
   useEffect(() => {
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    // The canvas is bigger than the orb's layout box so loud swells and
-    // sparks can flare past it: waves, not a trim.
-    const cSize = size * 1.3;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = cSize * dpr;
-    canvas.height = cSize * dpr;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.lineCap = "round";
-
-    const cx = cSize / 2;
-    const cy = cSize / 2;
-    const baseR = size * 0.3; // wave ring rest radius, outside the core's max swell
-    const maxAmp = size * 0.15; // how far a full-loudness swell reaches
-    const PTS = 120;
-
-    // One radial gradient for the wave: brand indigo at the base lifting
-    // toward a lighter tone at the swells; a faint fill inside the curve.
-    const strokeGrad = ctx.createRadialGradient(cx, cy, baseR, cx, cy, baseR + maxAmp + 12);
-    strokeGrad.addColorStop(0, "#473fb0");
-    strokeGrad.addColorStop(1, "#9a93f0");
-    const fillGrad = ctx.createRadialGradient(cx, cy, baseR, cx, cy, baseR + maxAmp + 12);
-    fillGrad.addColorStop(0, "rgba(71,63,176,0.14)");
-    fillGrad.addColorStop(1, "rgba(154,147,240,0.02)");
-
-    // Loudness at angle theta: samples the frequency bands with lows at the
-    // bottom of the ring, highs at the top, mirrored left/right. The pow
-    // curve stretches the energetic low bands across most of the ring
-    // (speech energy is bottom-heavy in the spectrum).
-    const sample = (theta: number, lvl: number, t: number) => {
-      const bands = bandsRef?.current;
-      const d = Math.abs(((theta - Math.PI / 2 + Math.PI * 3) % (Math.PI * 2)) - Math.PI) / Math.PI;
-      if (bands) {
-        const f = Math.pow(d, 1.6) * (MIC_BAND_COUNT - 1);
-        const i0 = Math.floor(f);
-        const frac = f - i0;
-        const v = bands[i0] * (1 - frac) + bands[Math.min(MIC_BAND_COUNT - 1, i0 + 1)] * frac;
-        return Math.min(1, v * 1.25);
-      }
-      // No spectrum available (mic denied / old caller): shimmer from the
-      // scalar level so the ring still responds.
-      return lvl * (0.3 + 0.7 * Math.abs(Math.sin(d * 9 + t * 7)));
-    };
-
-    // Sparks thrown off the wave on rising loudness spikes.
-    const sparks: { x: number; y: number; vx: number; vy: number; a: number }[] = [];
-    let prevLvl = 0;
-    let lastSpark = 0;
-    let auraAngle = 0;
-    let prevT = performance.now() / 1000;
-
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
     let raf = 0;
+    let smooth = 0;
     const loop = () => {
-      const now = performance.now();
-      const t = now / 1000;
-      const dt = Math.min(0.05, t - prevT);
-      prevT = t;
-      const lvl = levelRef.current; // 0..1 loudness
-      // How "quiet" we are (1 = silence): scales the idle traveling swell out
-      // as soon as real speech energy arrives.
-      const quiet = Math.max(0, 1 - lvl * 4);
-
-      ctx.clearRect(0, 0, cSize, cSize);
-
-      // The wave ring: an outer curve (filled + stroked) and a softer inner
-      // echo, phase-shifted so they flow against each other.
-      const trace = (mult: number, phase: number) => {
-        ctx.beginPath();
-        for (let i = 0; i <= PTS; i++) {
-          const theta = -Math.PI / 2 + (i / PTS) * Math.PI * 2;
-          const v = sample(theta + phase, lvl, t);
-          const idle = reduce
-            ? 0.05
-            : 0.05 + quiet * (0.05 + 0.045 * Math.sin(t * 2.2 + theta * 3));
-          const r = baseR + maxAmp * Math.max(Math.pow(v, 0.8) * mult, idle);
-          const x = cx + Math.cos(theta) * r;
-          const y = cy + Math.sin(theta) * r;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-      };
-      trace(1, 0);
-      ctx.fillStyle = fillGrad;
-      ctx.fill();
-      ctx.strokeStyle = strokeGrad;
-      ctx.lineWidth = size * 0.009;
-      ctx.stroke();
-      trace(0.7, 0.4);
-      ctx.strokeStyle = "rgba(122,114,224,0.45)";
-      ctx.lineWidth = size * 0.006;
-      ctx.stroke();
-
-      // Sparks on loud syllables.
-      if (!reduce) {
-        if (lvl > 0.5 && lvl - prevLvl > 0.015 && now - lastSpark > 160 && sparks.length < 24) {
-          for (let n = 0; n < 3; n++) {
-            const theta = Math.random() * Math.PI * 2;
-            const r = baseR + maxAmp * sample(theta, lvl, t);
-            sparks.push({
-              x: cx + Math.cos(theta) * r,
-              y: cy + Math.sin(theta) * r,
-              vx: Math.cos(theta) * size * 0.1,
-              vy: Math.sin(theta) * size * 0.1,
-              a: 0.8,
-            });
-          }
-          lastSpark = now;
-        }
-        for (let i = sparks.length - 1; i >= 0; i--) {
-          const p = sparks[i];
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.a *= Math.exp(-dt * 2.4);
-          if (p.a < 0.03) {
-            sparks.splice(i, 1);
-            continue;
-          }
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, size * 0.007, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(122,114,224,${p.a})`;
-          ctx.fill();
-        }
+      const t = performance.now() / 1000;
+      // Ease toward the live level so the halo swells instead of jittering.
+      smooth += (levelRef.current - smooth) * 0.16;
+      const breathe = 0.5 + 0.5 * Math.sin(t * 1.3);
+      if (glowRef.current) {
+        glowRef.current.style.transform = `scale(${1 + breathe * 0.08 + smooth * 0.6})`;
+        glowRef.current.style.opacity = String(0.38 + breathe * 0.12 + smooth * 0.5);
       }
-      prevLvl = lvl;
-
-      // Aurora: slow rotation, swelling and brightening with loudness.
-      if (auraRef.current) {
-        if (!reduce) auraAngle += dt * 40;
-        const scale = 1 + lvl * 0.24;
-        auraRef.current.style.transform = `rotate(${auraAngle}deg) scale(${scale})`;
-        auraRef.current.style.opacity = String(0.42 + lvl * 0.4);
-      }
-
-      // Core sphere: gentle breath baseline, swell on voice.
-      const breathe = reduce ? 0.5 : 0.5 + 0.5 * Math.sin(t * 1.3);
-      const core = 1 + breathe * 0.04 + lvl * 0.16;
-      if (coreRef.current) coreRef.current.style.transform = `scale(${core})`;
-
+      if (iconRef.current) iconRef.current.style.transform = `scale(${1 + smooth * 0.07})`;
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-    // levelRef/bandsRef identities are stable; size is fixed per mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const coreSize = size * 0.42;
-  const auraSize = size * 0.68;
+  }, [levelRef]);
 
   return (
-    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
-      {/* Aurora glow behind everything */}
+    <div className="relative grid h-36 w-36 place-items-center">
       <div
-        ref={auraRef}
-        className="absolute rounded-full"
+        ref={glowRef}
+        className="absolute h-28 w-28 rounded-full"
         style={{
-          width: auraSize,
-          height: auraSize,
-          background: "conic-gradient(#473fb0, #7a72e0, #b7b1f5, #5b52c9, #8d85ea, #473fb0)",
-          filter: `blur(${size * 0.075}px)`,
-          opacity: 0.42,
+          background:
+            "radial-gradient(circle, rgba(71,63,176,0.5) 0%, rgba(122,114,224,0.28) 45%, rgba(122,114,224,0) 72%)",
+          filter: "blur(16px)",
+          opacity: 0.45,
           willChange: "transform, opacity",
         }}
       />
-
-      {/* Wave ring + sparks, oversized so loud swells flare past the layout box */}
-      <canvas
-        ref={canvasRef}
-        className="pointer-events-none absolute"
-        style={{
-          width: size * 1.3,
-          height: size * 1.3,
-          left: -size * 0.15,
-          top: -size * 0.15,
-        }}
-      />
-
-      {/* Core sphere with mic */}
-      <div
-        ref={coreRef}
-        className="relative grid place-items-center rounded-full text-white"
-        style={{
-          width: coreSize,
-          height: coreSize,
-          background:
-            "radial-gradient(circle at 34% 28%, #7a72e0 0%, var(--indigo) 58%, var(--indigo-dark) 100%)",
-          boxShadow:
-            "0 24px 70px -18px rgba(71,63,176,0.65), inset 0 1px 8px rgba(255,255,255,0.25)",
-          willChange: "transform",
-        }}
-      >
-        <MicIcon size={coreSize * 0.34} />
+      <div ref={iconRef} className="relative" style={{ willChange: "transform" }}>
+        {imgOk ? (
+          <img
+            src="/images/homesbrain-ai-mic.png"
+            alt=""
+            aria-hidden="true"
+            onError={() => setImgOk(false)}
+            className="h-24 w-24 rounded-3xl shadow-[0_18px_40px_-16px_rgba(71,63,176,0.55)] ring-1 ring-black/5"
+          />
+        ) : (
+          <span className="grid h-24 w-24 place-items-center rounded-3xl bg-indigo text-white shadow-[0_18px_40px_-16px_rgba(71,63,176,0.55)]">
+            <MicIcon size={36} />
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
+/* Live transcript where each word materializes as it is spoken: blur-lift in,
+   then settles. Spans are keyed by word index, so words already on screen
+   keep their DOM node and only newly appended words animate. When the
+   recognizer revises an interim word, the text swaps in place with no
+   re-animation, which reads as the AI correcting itself. */
+function TranscriptWords({ text }: { text: string }) {
+  const words = text.split(/\s+/).filter(Boolean);
+  return (
+    <p className="text-[22px] font-semibold leading-snug tracking-tight text-ink">
+      {words.map((w, i) => (
+        <span key={i} className="anim-word-in inline-block">
+          {w}&nbsp;
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/* Caps the transcript's height with the latest words pinned to the bottom.
+   The top fade-out mask only turns on once the text is actually taller than
+   the cap; a short transcript renders at full strength, no washed-out first
+   words. */
+function TranscriptViewport({ text }: { text: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [clipped, setClipped] = useState(false);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (el) setClipped(el.scrollHeight > el.clientHeight + 1);
+  }, [text]);
+
+  const mask = clipped ? "linear-gradient(to bottom, transparent 0, black 3.5rem)" : undefined;
+
+  return (
+    <div
+      ref={boxRef}
+      className="flex max-h-56 flex-col justify-end overflow-hidden"
+      style={{ maskImage: mask, WebkitMaskImage: mask }}
+    >
+      <TranscriptWords text={text} />
+    </div>
+  );
+}
+
 /* Full-screen white voice-capture mode. Presentational: the parent owns the
-   audio hooks (so start() fires inside the tap gesture) and passes the loudness
-   + spectrum refs, live transcript, and a done handler. Everything on the work
+   audio hooks (so start() fires inside the tap gesture) and passes the
+   loudness ref, live transcript, and a done handler. Everything on the work
    step stays mounted underneath and is revealed again on close. */
 export function VoiceCaptureOverlay({
   levelRef,
-  bandsRef,
   text,
   onDone,
   prompt = "Listening. Talk through the job.",
 }: {
   levelRef: MutableRefObject<number>;
-  bandsRef?: MutableRefObject<Float32Array>;
   text: string;
   onDone: () => void;
   /* Shown until the first words land; each voice mode brings its own ask. */
@@ -257,18 +134,28 @@ export function VoiceCaptureOverlay({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-background px-6 anim-fade-in">
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-        <VoiceOrb levelRef={levelRef} bandsRef={bandsRef} />
+    <div className="fixed inset-0 z-[70] flex flex-col items-center bg-background px-6 anim-fade-in">
+      <div className="flex w-full flex-1 flex-col items-center justify-center gap-6 text-center">
+        <AiGlyph levelRef={levelRef} />
 
-        <div className="min-h-24 max-w-lg">
-          <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-indigo">
-            HomesBrain AI
-          </div>
+        <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo">
+          HomesBrain AI
+        </div>
+
+        <div className="min-h-28 w-full max-w-lg">
           {text ? (
-            <p className="text-lg leading-relaxed text-ink">{text}</p>
+            <TranscriptViewport text={text} />
           ) : (
-            <p className="text-lg font-semibold tracking-tight text-muted">{prompt}</p>
+            <div>
+              <p className="text-[22px] font-semibold leading-snug tracking-tight text-muted">
+                {prompt}
+              </p>
+              <span className="mt-4 inline-flex items-center gap-1.5" aria-hidden="true">
+                <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-indigo/70" />
+                <span className="pulse-dot d-3 h-1.5 w-1.5 rounded-full bg-indigo/70" />
+                <span className="pulse-dot d-6 h-1.5 w-1.5 rounded-full bg-indigo/70" />
+              </span>
+            </div>
           )}
         </div>
       </div>

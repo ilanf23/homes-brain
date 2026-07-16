@@ -6,14 +6,15 @@
    - "refresh"  → after onboarding return, re-fetch charges/payouts flags and
                   persist them to pros so the UI can show "Payments on".
 
-   verify_jwt=false to match the app's mocked v0 sessions. We validate by
-   requiring pro_id in the body and reading the pros row with the service
-   role. Every action is scoped to the caller's own account. The Stripe
-   secret key is only read here (edge-function env), never client-side.
+   Authorization: the caller must present a valid pro session JWT
+   (validated via authenticatePro). The pro is resolved from that token and a
+   body-supplied pro_id is ignored, so every action is scoped to the caller's
+   own account. The Stripe secret key is only read here (edge-function env),
+   never client-side.
 */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17.5.0";
+import { authenticatePro } from "../_shared/pro-auth.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -38,22 +39,24 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const secret = Deno.env.get("STRIPE_SECRET_KEY");
-  const supaUrl = Deno.env.get("SUPABASE_URL");
-  const supaKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!secret || !supaUrl || !supaKey) return json({ error: "server_misconfigured" }, 500);
+  if (!secret) return json({ error: "server_misconfigured" }, 500);
+
+  // The pro is resolved from the session JWT; a body-supplied pro_id is
+  // ignored so a caller can never onboard or mutate an account they do
+  // not own.
+  const auth = await authenticatePro(req);
+  if (!auth) return json({ error: "unauthorized" }, 401);
+  const db = auth.admin;
+  const proId = auth.pro.id;
 
   const stripe = new Stripe(secret, { apiVersion: "2024-11-20.acacia" });
-  const db = createClient(supaUrl, supaKey);
 
-  let body: { action?: string; pro_id?: string; return_url?: string; refresh_url?: string };
+  let body: { action?: string; return_url?: string; refresh_url?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: "bad_json" }, 400);
   }
-
-  const proId = body.pro_id;
-  if (!proId || typeof proId !== "string") return json({ error: "missing_pro_id" }, 400);
 
   const { data: pro, error: proErr } = await db
     .from("pros")

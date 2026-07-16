@@ -48,9 +48,6 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const token = typeof body?.token === "string" ? body.token : "";
-    const providedEmail = typeof body?.email === "string"
-      ? body.email.trim().toLowerCase()
-      : "";
     if (!token || token.length < 20) {
       return json({ ok: false, code: "invalid" }, 400);
     }
@@ -209,8 +206,12 @@ Deno.serve(async (req) => {
       };
     }
 
-    // If the token has no email, ask for it (one-time capture path).
-    const email = row.email ?? providedEmail;
+    // A session may only be minted for the email the token was bound to at
+    // mint time (proven by delivery to that inbox). A request-body email is
+    // never trusted here: accepting one would let a caller mint a login
+    // session for any address they type. Tokens with no bound email cannot
+    // establish a session.
+    const email = row.email;
     if (!email) {
       return json({
         ok: false,

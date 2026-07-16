@@ -175,7 +175,6 @@ const FIELD_NEXT_SERVICE = "next_service";
 const FIELD_RECALL = "recall";
 const FIELD_VIDEO = "video";
 
-
 /* Small square checkmark used as the "include this row" control. */
 function CheckSquare({ on }: { on: boolean }) {
   return (
@@ -317,7 +316,7 @@ function SameNameChooser({
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-ink/40 backdrop-blur-sm anim-fade-up sm:items-center">
       <div className="w-full rounded-t-3xl border border-line bg-paper p-5 shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6">
         <div className="mb-1 text-lg font-semibold text-ink">Which {spokenName}?</div>
-        <div className="mb-4 text-sm text-muted">You have more than one customer by that name.</div>
+        <div className="mb-4 text-sm text-muted">More than one customer matches that name.</div>
 
         <div className="space-y-2">
           {candidates.map((c) => (
@@ -838,7 +837,6 @@ function NewJob() {
     };
   }, [activeTrade]);
 
-
   async function onPickVideo(file: File) {
     if (!proId) return;
     if (file.size > VIDEO_MAX_BYTES) {
@@ -1301,9 +1299,10 @@ function NewJob() {
     if (run !== voiceRunRef.current) return;
     setFullBusy(false);
 
-    // Reuse the customer on file when the voice note points at exactly one.
-    // When several share the name, ask rather than guess: picking wrong would
-    // file a job under the wrong person's home.
+    // Reuse the customer on file when the voice note points at exactly one,
+    // including close-but-not-exact names (transcription mishears, short
+    // forms) via the auto-link threshold. When several match, ask rather
+    // than guess: picking wrong would file a job under the wrong person's home.
     const decision = matchVoiceCustomer(existing, extract);
     let match: CustomerOpt | undefined;
     if (decision.kind === "linked") {
@@ -2427,7 +2426,6 @@ function NewJob() {
     </Field>
   );
 
-
   /* Optional walkthrough video. Native camera via the file input (reliable on
      mobile Safari where an in-app recorder is not); also accepts a library
      pick. Upload runs in the background while the pro finishes the form. */
@@ -2588,22 +2586,37 @@ function NewJob() {
                     </div>
                   </button>
                 )}
+                {fullDictation.supported && (
+                  <div className="flex items-center gap-3" aria-hidden="true">
+                    <span className="h-px flex-1 bg-line" />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
+                      or
+                    </span>
+                    <span className="h-px flex-1 bg-line" />
+                  </div>
+                )}
                 <Card className="space-y-3">
+                  <div>
+                    <div className="text-base font-semibold text-ink tracking-tight">
+                      Search or add a customer
+                    </div>
+                    <div className="mt-0.5 text-sm text-muted">Type a name to add someone new.</div>
+                  </div>
                   <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search a customer by name or address, or type a new name…"
+                    placeholder="Name or address…"
                     autoFocus
-                    aria-label="Search customers or type a new name"
+                    aria-label="Search customers or type a new name to add one"
                   />
 
-                  <div className="max-h-[560px] overflow-auto -mx-1 px-1">
-                    <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="max-h-[560px] overflow-y-auto overflow-x-hidden -mx-1 px-1">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {q && !hasExactMatch && (
                         <button
                           type="button"
                           onClick={() => startNewCustomer(query.trim())}
-                          className="pressable flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/60 sm:col-span-2"
+                          className="pressable flex w-full min-w-0 items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/60 sm:col-span-2"
                         >
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
                             <UserPlusIcon size={18} />
@@ -2624,7 +2637,7 @@ function NewJob() {
                             key={c.id}
                             type="button"
                             onClick={() => pickExisting(c)}
-                            className={`group pressable flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
+                            className={`group pressable flex w-full min-w-0 items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
                               isMatch
                                 ? "border-indigo/40 bg-indigobg hover:bg-indigobg/80"
                                 : "border-line bg-paper hover:border-indigo/30 hover:bg-indigobg/40"
@@ -3395,9 +3408,7 @@ function NewJob() {
 
                   {/* Optional walkthrough video for the AI voice flow, which
                       skips the work step and lands here. */}
-                  <div className="mt-5 border-t border-line pt-4">
-                    {videoCapture}
-                  </div>
+                  <div className="mt-5 border-t border-line pt-4">{videoCapture}</div>
 
                   <div
                     className={`mt-5 border-t border-line pt-4 transition-colors duration-700 ${
@@ -3498,9 +3509,7 @@ function NewJob() {
                   <div
                     ref={sendBtnRef}
                     className={`mt-5 rounded-2xl border-t border-line pt-4 transition-all duration-500 ${
-                      reviewEmailValid
-                        ? "shadow-[0_0_0_2px_var(--indigo)] shadow-indigo/20"
-                        : ""
+                      reviewEmailValid ? "shadow-[0_0_0_2px_var(--indigo)] shadow-indigo/20" : ""
                     }`}
                   >
                     <div className="flex gap-2">
@@ -3659,7 +3668,6 @@ function NewJob() {
         </div>
       </div>
 
-
       {/* Floating HomesBrain AI button: on Review only, hovering over the
           record. Tap it and speak a correction or addition; edit-record
           applies it and the changed rows flash indigo. */}
@@ -3698,7 +3706,6 @@ function NewJob() {
       {voiceOpen && (
         <VoiceCaptureOverlay
           levelRef={micLevel.levelRef}
-          bandsRef={micLevel.bandsRef}
           text={
             voiceMode === "full"
               ? liveFullNote
