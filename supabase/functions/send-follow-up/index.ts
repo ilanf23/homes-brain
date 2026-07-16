@@ -11,12 +11,18 @@
 
 import {
   buildUnsubUrl,
-  complianceFooterHtml,
   complianceFooterText,
   getUnsubToken,
   isEmailOptedOut,
   listUnsubscribeHeaders,
 } from "../_shared/email-compliance.ts";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 import { authenticatePro } from "../_shared/pro-auth.ts";
 
 declare const Deno: {
