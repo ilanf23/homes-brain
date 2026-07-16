@@ -131,6 +131,23 @@ function ProDashboard() {
   const sentCount = jobs.length;
   const viewedCount = jobs.filter((j) => j.records?.[0]?.viewed_at).length;
 
+  // Who to talk to about a home. Jobs first (a customer can hold several
+  // properties, and jobs are newest-first so the latest visitor wins), then
+  // each customer's primary home for anyone without a job yet.
+  const customerByHome = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; name: string; phone: string | null; email: string | null }
+    >();
+    for (const j of jobs) {
+      if (j.customers && !map.has(j.home_id)) map.set(j.home_id, j.customers);
+    }
+    for (const c of customers) {
+      if (c.home_id && !map.has(c.home_id)) map.set(c.home_id, c);
+    }
+    return map;
+  }, [jobs, customers]);
+
   const weeklyJobs = useMemo(() => {
     const buckets = new Array(8).fill(0);
     const now = Date.now();
@@ -177,7 +194,6 @@ function ProDashboard() {
 
   // Queue source 3: unclaimed homes whose latest record went out 7+ days ago.
   const staleHomes = useMemo<QueueStaleHome[]>(() => {
-    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
     const latestSentByHome = new Map<string, string>();
     for (const j of jobs) {
       const sent = j.records?.[0]?.sent_sms_at;
@@ -201,11 +217,10 @@ function ProDashboard() {
         ];
       })
       .sort((a, b) => (a.sentAt < b.sentAt ? -1 : 1));
-  }, [homes, jobs, customers]);
+  }, [homes, jobs, customerByHome]);
 
   // Map pins: status priority owes > due > unclaimed > active.
   const pins = useMemo<MapPin[]>(() => {
-    const customerByHome = new Map(customers.map((c) => [c.home_id, c]));
     const owesHomes = new Set(invoices.filter((i) => i.status === "open").map((i) => i.home_id));
     const dueHomes = new Set(
       jobs
@@ -237,7 +252,7 @@ function ProDashboard() {
           status,
         };
       });
-  }, [homes, customers, invoices, jobs]);
+  }, [homes, customerByHome, invoices, jobs]);
 
   const wins = useMemo<Win[]>(() => {
     const jobById = new Map(jobs.map((j) => [j.id, j]));
@@ -294,12 +309,10 @@ function ProDashboard() {
     );
   }
 
-  
   const viewRate = sentCount ? viewedCount / sentCount : 0;
 
   const hour = new Date().getHours();
-  const timeOfDay =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const timeOfDay = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const firstName = pro.owner_first_name?.trim();
   const businessName = pro.business?.trim();
   const greetingName =
@@ -315,10 +328,7 @@ function ProDashboard() {
         sub={pro.google_rating ? `${pro.google_rating} ★ on Google` : undefined}
       />
 
-
       <ProSetupChecklist proId={proId} />
-
-
 
       <ActionQueue
         proId={proId!}
@@ -364,7 +374,6 @@ function ProDashboard() {
           />
         </div>
       )}
-
 
       <div className="mt-4 grid grid-cols-3 gap-4">
         <Card className="anim-fade-up d-4">

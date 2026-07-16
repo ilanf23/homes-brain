@@ -47,7 +47,6 @@ export const Route = createFileRoute("/pro/customers/$customerId")({
   component: CustomerDetail,
 });
 
-
 type Customer = {
   id: string;
   name: string;
@@ -75,6 +74,8 @@ type JobRow = {
   what_done: string;
   created_at: string;
   next_service_date: string | null;
+  home_id: string;
+  homes: { address: string } | null;
   records:
     | {
         id: string;
@@ -115,7 +116,6 @@ function CustomerDetail() {
   const [toast, setToast] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-
   useEffect(() => {
     if (!proId) return;
     (async () => {
@@ -130,19 +130,17 @@ function CustomerDetail() {
       const cust = c as unknown as Customer | null;
       setCustomer(cust);
       if (cust) {
-        const [{ data: j }, { data: eq }, inv, ns, { data: ev }] = await Promise.all([
+        // Jobs belong to the person, not to one house: a customer can hold
+        // several properties, so fetch by customer_id and carry each job's
+        // home along to say where it happened.
+        const [{ data: j }, inv, ns, { data: ev }] = await Promise.all([
           supabase
             .from("jobs")
             .select(
-              "id,what_done,created_at,next_service_date,records(id,viewed_at,sent_sms_at,sent_email_at)",
+              "id,what_done,created_at,next_service_date,home_id,homes(address),records(id,viewed_at,sent_sms_at,sent_email_at)",
             )
-            .eq("home_id", cust.home_id)
+            .eq("customer_id", customerId)
             .eq("pro_id", proId)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("equipment")
-            .select("id,type,make,model,warranty_until,recall_status")
-            .eq("home_id", cust.home_id)
             .order("created_at", { ascending: false }),
           listInvoicesForCustomer(proId, customerId),
           listNotes(proId, customerId),
@@ -154,11 +152,21 @@ function CustomerDetail() {
             .contains("props", { customer_id: customerId })
             .order("created_at", { ascending: false }),
         ]);
-        setJobs((j ?? []) as unknown as JobRow[]);
-        setEquipment((eq ?? []) as EquipmentRow[]);
+        const jobRows = (j ?? []) as unknown as JobRow[];
+        setJobs(jobRows);
         setInvoices(inv);
         setNotes(ns);
         setNudges((ev ?? []) as NudgeEvent[]);
+        // Equipment across every home this customer has, primary included.
+        const homeIds = [
+          ...new Set([cust.home_id, ...jobRows.map((row) => row.home_id)].filter(Boolean)),
+        ];
+        const { data: eq } = await supabase
+          .from("equipment")
+          .select("id,type,make,model,warranty_until,recall_status")
+          .in("home_id", homeIds)
+          .order("created_at", { ascending: false });
+        setEquipment((eq ?? []) as EquipmentRow[]);
       }
       setLoading(false);
     })();
@@ -225,6 +233,14 @@ function CustomerDetail() {
   }
 
   const latestJob = jobs[0] ?? null;
+  // Every property this customer holds: their primary home first, then any
+  // other home they have jobs at (a person can own several).
+  const addresses = useMemo(() => {
+    const list = [customer?.homes?.address, ...jobs.map((j) => j.homes?.address)].filter(
+      (a): a is string => !!a,
+    );
+    return [...new Set(list)];
+  }, [customer, jobs]);
   const upcomingJob = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return (
@@ -274,7 +290,6 @@ function CustomerDetail() {
     setChangingFollowUp(false);
     setToast("No follow-up needed");
   }
-
 
   async function sendNudge() {
     if (!proId || !customer || nudging) return;
@@ -480,7 +495,6 @@ function CustomerDetail() {
     return { ...past, overdue: true };
   }, [jobs]);
 
-
   if (!pro || loading) {
     return (
       <ProShell pro={pro} active="customers" wide>
@@ -499,8 +513,6 @@ function CustomerDetail() {
       </ProShell>
     );
   }
-
-
 
   if (!customer) {
     return (
@@ -538,20 +550,22 @@ function CustomerDetail() {
       {/* Simple v0 surface: identity, follow-up hero, contact, past jobs. */}
       <div className="anim-fade-up mb-2">
         <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{customer.name}</h1>
-        {customer.homes?.address && (
-          <div className="mt-1 text-sm text-muted">{customer.homes.address}</div>
-        )}
+        {addresses.map((a) => (
+          <div key={a} className="mt-1 text-sm text-muted">
+            {a}
+          </div>
+        ))}
       </div>
 
       <section className="anim-fade-up d-1 mt-6">
         {!latestJob ? (
           <Card className="text-center py-8">
-            <p className="text-sm text-muted">
-              No jobs yet. Log a job to set a follow-up.
-            </p>
+            <p className="text-sm text-muted">No jobs yet. Log a job to set a follow-up.</p>
             <div className="mt-4">
               <Link to="/pro/jobs/new">
-                <Btn variant="indigo" size="sm">Log a job</Btn>
+                <Btn variant="indigo" size="sm">
+                  Log a job
+                </Btn>
               </Link>
             </div>
           </Card>
@@ -571,9 +585,7 @@ function CustomerDetail() {
           </Card>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold text-ink mb-3">
-              When are you coming back?
-            </h2>
+            <h2 className="text-xl font-semibold text-ink mb-3">When are you coming back?</h2>
             <div className="space-y-2">
               <Btn
                 variant="indigo"
@@ -631,7 +643,9 @@ function CustomerDetail() {
           <KV k="Name" v={customer.name} />
           <KV k="Phone" v={customer.phone ? formatPhone(customer.phone) : "-"} />
           <KV k="Email" v={customer.email ?? "-"} />
-          {customer.homes?.address && <KV k="Address" v={customer.homes.address} />}
+          {addresses.map((a, i) => (
+            <KV key={a} k={i === 0 ? "Address" : `Address ${i + 1}`} v={a} />
+          ))}
         </Card>
       </section>
 
@@ -650,10 +664,11 @@ function CustomerDetail() {
               const content = (
                 <div className="flex items-center gap-3 px-4 py-4">
                   <div className="min-w-0 flex-1">
-                    <div className="text-base font-semibold text-ink truncate">
-                      {j.what_done}
+                    <div className="text-base font-semibold text-ink truncate">{j.what_done}</div>
+                    <div className="text-xs text-muted tnum">
+                      {formatDate(j.created_at)}
+                      {addresses.length > 1 && j.homes?.address ? ` · ${j.homes.address}` : ""}
                     </div>
-                    <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
                   </div>
                   {rec && <ChevronRight size={18} className="shrink-0 text-muted" />}
                 </div>
@@ -679,369 +694,370 @@ function CustomerDetail() {
       </section>
 
       {SHOW_ADVANCED && (
-      <div className="mt-8 grid gap-5 items-start lg:grid-cols-[300px_minmax(0,1fr)_320px]">
-
-        {/* Left: identity, actions, properties */}
-        <div className="space-y-5">
-          <Card className="anim-fade-up text-center">
-            <div className="flex justify-center">
-              <Avatar name={customer.name} accent="indigo" size={64} />
-            </div>
-            <h1 className="mt-3 text-2xl tracking-tight">{customer.name}</h1>
-            <div className="mt-1 text-sm text-muted">{customer.homes?.address}</div>
-            {customer.phone && (
-              <div className="mt-1.5 text-xs text-muted font-mono tnum">{formatPhone(customer.phone)}</div>
-            )}
-            {customer.email && (
-              <div className="text-xs text-muted font-mono tnum">{customer.email}</div>
-            )}
-            <div className="mt-5 flex justify-center gap-4">
-              <ActionCircle icon={StickyNote} label="Note" onClick={focusComposer} />
-              <ActionCircle
-                icon={Wrench}
-                label="Job"
-                onClick={() => navigate({ to: "/pro/jobs/new" })}
-              />
-              <ActionCircle
-                icon={ReceiptText}
-                label="Invoice"
-                onClick={() =>
-                  navigate({
-                    to: "/pro/invoices/new",
-                    search: { customer: customerId, job: undefined },
-                  })
-                }
-              />
-              <ActionCircle
-                icon={BellRing}
-                label="Nudge"
-                onClick={sendNudge}
-                disabled={(!customer.phone && !customer.email) || nudging}
-                title={
-                  !customer.phone && !customer.email
-                    ? "No phone or email on file"
-                    : "Send a rebook nudge (mock)"
-                }
-              />
-              {!customer.homes?.claimed_at && (
-                <>
-                  <ActionCircle
-                    icon={Mail}
-                    label="Invite"
-                    onClick={sendClaimInvite}
-                    disabled={!customer.email || inviting || inviteOnCooldown}
-                    title={
-                      !customer.email
-                        ? "No email on file"
-                        : inviteOnCooldown
-                          ? `Invited ${formatDate(customer.claim_invited_at!)} · resend available ${formatDate(inviteCooldownUntil!)}`
-                          : "Email an invite to claim this home record"
-                    }
-                  />
-                  <ActionCircle
-                    icon={QrCode}
-                    label="Show QR"
-                    onClick={() => setQrOpen(true)}
-                    disabled={!customer.email}
-                    title={
-                      !customer.email
-                        ? "No email on file"
-                        : "Show a QR the homeowner can scan to claim"
-                    }
-                  />
-                </>
+        <div className="mt-8 grid gap-5 items-start lg:grid-cols-[300px_minmax(0,1fr)_320px]">
+          {/* Left: identity, actions, properties */}
+          <div className="space-y-5">
+            <Card className="anim-fade-up text-center">
+              <div className="flex justify-center">
+                <Avatar name={customer.name} accent="indigo" size={64} />
+              </div>
+              <h1 className="mt-3 text-2xl tracking-tight">{customer.name}</h1>
+              <div className="mt-1 text-sm text-muted">{customer.homes?.address}</div>
+              {customer.phone && (
+                <div className="mt-1.5 text-xs text-muted font-mono tnum">
+                  {formatPhone(customer.phone)}
+                </div>
               )}
+              {customer.email && (
+                <div className="text-xs text-muted font-mono tnum">{customer.email}</div>
+              )}
+              <div className="mt-5 flex justify-center gap-4">
+                <ActionCircle icon={StickyNote} label="Note" onClick={focusComposer} />
+                <ActionCircle
+                  icon={Wrench}
+                  label="Job"
+                  onClick={() => navigate({ to: "/pro/jobs/new" })}
+                />
+                <ActionCircle
+                  icon={ReceiptText}
+                  label="Invoice"
+                  onClick={() =>
+                    navigate({
+                      to: "/pro/invoices/new",
+                      search: { customer: customerId, job: undefined },
+                    })
+                  }
+                />
+                <ActionCircle
+                  icon={BellRing}
+                  label="Nudge"
+                  onClick={sendNudge}
+                  disabled={(!customer.phone && !customer.email) || nudging}
+                  title={
+                    !customer.phone && !customer.email
+                      ? "No phone or email on file"
+                      : "Send a rebook nudge (mock)"
+                  }
+                />
+                {!customer.homes?.claimed_at && (
+                  <>
+                    <ActionCircle
+                      icon={Mail}
+                      label="Invite"
+                      onClick={sendClaimInvite}
+                      disabled={!customer.email || inviting || inviteOnCooldown}
+                      title={
+                        !customer.email
+                          ? "No email on file"
+                          : inviteOnCooldown
+                            ? `Invited ${formatDate(customer.claim_invited_at!)} · resend available ${formatDate(inviteCooldownUntil!)}`
+                            : "Email an invite to claim this home record"
+                      }
+                    />
+                    <ActionCircle
+                      icon={QrCode}
+                      label="Show QR"
+                      onClick={() => setQrOpen(true)}
+                      disabled={!customer.email}
+                      title={
+                        !customer.email
+                          ? "No email on file"
+                          : "Show a QR the homeowner can scan to claim"
+                      }
+                    />
+                  </>
+                )}
+              </div>
+            </Card>
 
-            </div>
-          </Card>
-
-          <div className="anim-fade-up d-1">
-            <CollapsibleCard title="About this customer">
-              <PropertyRow
-                label="Name"
-                value={customer.name}
-                onSave={(v) => saveField("name", v)}
-              />
-              <PropertyRow
-                label="Phone"
-                value={customer.phone ?? ""}
-                onSave={(v) => saveField("phone", v)}
-                type="phone"
-              />
-              <PropertyRow
-                label="Email"
-                value={customer.email ?? ""}
-                onSave={(v) => saveField("email", v)}
-              />
-              <PropertyRow
-                label="Consent"
-                display={
-                  customer.consent_at ? (
-                    <Pill accent="indigo">On file · {formatDate(customer.consent_at)}</Pill>
-                  ) : (
-                    <Pill accent="red">Missing</Pill>
-                  )
-                }
-              />
-              <PropertyRow label="Customer since" value={formatDate(customer.created_at)} />
-              <PropertyRow
-                label="Next service"
-                display={
-                  nextService ? (
-                    <Pill accent={nextService.overdue ? "red" : "indigo"}>
-                      {nextService.overdue ? "Overdue · " : ""}
-                      {formatDate(nextService.date)} · {nextService.what}
-                    </Pill>
-                  ) : (
-                    <Pill accent="ink">None scheduled</Pill>
-                  )
-                }
-              />
-              <PropertyRow
-                label="Home claimed"
-                display={
-                  customer.homes?.claimed_at ? (
-                    <Pill accent="coral">Yes · {formatDate(customer.homes.claimed_at)}</Pill>
-                  ) : (
-                    <Pill accent="ink">Not yet</Pill>
-                  )
-                }
-              />
-              {!customer.homes?.claimed_at && (
+            <div className="anim-fade-up d-1">
+              <CollapsibleCard title="About this customer">
                 <PropertyRow
-                  label="Claim invite"
+                  label="Name"
+                  value={customer.name}
+                  onSave={(v) => saveField("name", v)}
+                />
+                <PropertyRow
+                  label="Phone"
+                  value={customer.phone ?? ""}
+                  onSave={(v) => saveField("phone", v)}
+                  type="phone"
+                />
+                <PropertyRow
+                  label="Email"
+                  value={customer.email ?? ""}
+                  onSave={(v) => saveField("email", v)}
+                />
+                <PropertyRow
+                  label="Consent"
                   display={
-                    customer.claim_invited_at ? (
-                      <Pill accent="indigo">Sent · {formatDate(customer.claim_invited_at)}</Pill>
+                    customer.consent_at ? (
+                      <Pill accent="indigo">On file · {formatDate(customer.consent_at)}</Pill>
                     ) : (
-                      <Pill accent="ink">Not sent</Pill>
+                      <Pill accent="red">Missing</Pill>
                     )
                   }
                 />
-              )}
-            </CollapsibleCard>
-          </div>
-        </div>
-
-        {/* Middle: tabs, composer, timeline */}
-        <div className="anim-fade-up d-1 min-w-0">
-          <UnderlineTabs
-            tabs={[
-              { key: "activity", label: "Activity" },
-              { key: "notes", label: "Notes", count: notes.length },
-              { key: "jobs", label: "Jobs", count: jobs.length },
-              { key: "invoices", label: "Invoices", count: invoices.length },
-            ]}
-            active={tab}
-            onChange={(k) => setTab(k as TabKey)}
-          />
-
-          {(tab === "activity" || tab === "notes") && (
-            <Card className="mt-4 !p-4">
-              {/* Native textarea (needs a ref for the Note action): mirrors ui.tsx input styling. */}
-              <textarea
-                ref={composerRef}
-                value={noteDraft}
-                onChange={(e) => setNoteDraft(e.target.value)}
-                placeholder={`Leave a note about ${customer.name.split(" ")[0]}...`}
-                rows={noteDraft ? 3 : 1}
-                aria-label="New note"
-                className="w-full resize-none rounded-xl border border-line bg-paper px-3.5 py-2.5 text-[16px] sm:text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:ring-2 focus:ring-ink/10 hover:border-ink/30"
-              />
-              {noteDraft.trim() && (
-                <div className="mt-2 flex justify-end">
-                  <Btn size="sm" variant="indigo" loading={savingNote} onClick={onSaveNote}>
-                    Save note
-                  </Btn>
-                </div>
-              )}
-            </Card>
-          )}
-
-          <div className="mt-4">
-            <Timeline
-              entries={visibleEntries}
-              empty={
-                <Card className="text-center py-10">
-                  <p className="text-sm text-muted">
-                    No activity yet. Log a job at this home to start the record.
-                  </p>
-                  <div className="mt-4">
-                    <Link to="/pro/jobs/new">
-                      <Btn variant="indigo" size="sm">
-                        Log a job
-                      </Btn>
-                    </Link>
-                  </div>
-                </Card>
-              }
-            />
-          </div>
-        </div>
-
-        {/* Right: association cards */}
-        <div className="space-y-4">
-          <div className="anim-fade-up d-1">
-            <CollapsibleCard title="Home" count={1}>
-              <div className="font-semibold text-ink">{customer.homes?.address}</div>
-              <div className="mt-2">
-                {customer.homes?.claimed_at ? (
-                  <Pill accent="coral">Claimed</Pill>
-                ) : (
-                  <Pill accent="ink">Unclaimed</Pill>
+                <PropertyRow label="Customer since" value={formatDate(customer.created_at)} />
+                <PropertyRow
+                  label="Next service"
+                  display={
+                    nextService ? (
+                      <Pill accent={nextService.overdue ? "red" : "indigo"}>
+                        {nextService.overdue ? "Overdue · " : ""}
+                        {formatDate(nextService.date)} · {nextService.what}
+                      </Pill>
+                    ) : (
+                      <Pill accent="ink">None scheduled</Pill>
+                    )
+                  }
+                />
+                <PropertyRow
+                  label="Home claimed"
+                  display={
+                    customer.homes?.claimed_at ? (
+                      <Pill accent="coral">Yes · {formatDate(customer.homes.claimed_at)}</Pill>
+                    ) : (
+                      <Pill accent="ink">Not yet</Pill>
+                    )
+                  }
+                />
+                {!customer.homes?.claimed_at && (
+                  <PropertyRow
+                    label="Claim invite"
+                    display={
+                      customer.claim_invited_at ? (
+                        <Pill accent="indigo">Sent · {formatDate(customer.claim_invited_at)}</Pill>
+                      ) : (
+                        <Pill accent="ink">Not sent</Pill>
+                      )
+                    }
+                  />
                 )}
-              </div>
-              {homeowner ? (
+              </CollapsibleCard>
+            </div>
+          </div>
+
+          {/* Middle: tabs, composer, timeline */}
+          <div className="anim-fade-up d-1 min-w-0">
+            <UnderlineTabs
+              tabs={[
+                { key: "activity", label: "Activity" },
+                { key: "notes", label: "Notes", count: notes.length },
+                { key: "jobs", label: "Jobs", count: jobs.length },
+                { key: "invoices", label: "Invoices", count: invoices.length },
+              ]}
+              active={tab}
+              onChange={(k) => setTab(k as TabKey)}
+            />
+
+            {(tab === "activity" || tab === "notes") && (
+              <Card className="mt-4 !p-4">
+                {/* Native textarea (needs a ref for the Note action): mirrors ui.tsx input styling. */}
+                <textarea
+                  ref={composerRef}
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  placeholder={`Leave a note about ${customer.name.split(" ")[0]}...`}
+                  rows={noteDraft ? 3 : 1}
+                  aria-label="New note"
+                  className="w-full resize-none rounded-xl border border-line bg-paper px-3.5 py-2.5 text-[16px] sm:text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:ring-2 focus:ring-ink/10 hover:border-ink/30"
+                />
+                {noteDraft.trim() && (
+                  <div className="mt-2 flex justify-end">
+                    <Btn size="sm" variant="indigo" loading={savingNote} onClick={onSaveNote}>
+                      Save note
+                    </Btn>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            <div className="mt-4">
+              <Timeline
+                entries={visibleEntries}
+                empty={
+                  <Card className="text-center py-10">
+                    <p className="text-sm text-muted">
+                      No activity yet. Log a job at this home to start the record.
+                    </p>
+                    <div className="mt-4">
+                      <Link to="/pro/jobs/new">
+                        <Btn variant="indigo" size="sm">
+                          Log a job
+                        </Btn>
+                      </Link>
+                    </div>
+                  </Card>
+                }
+              />
+            </div>
+          </div>
+
+          {/* Right: association cards */}
+          <div className="space-y-4">
+            <div className="anim-fade-up d-1">
+              <CollapsibleCard title="Home" count={1}>
+                <div className="font-semibold text-ink">{customer.homes?.address}</div>
                 <div className="mt-2">
-                  <KV k="Phone" v={homeowner.phone ? formatPhone(homeowner.phone) : "-"} />
-                  <KV k="Email" v={homeowner.email ?? "-"} />
-                  <KV k="Joined" v={formatDate(homeowner.created_at)} />
-                </div>
-              ) : (
-                <p className="mt-3 text-sm text-muted">
-                  The homeowner has not claimed this home yet. The record link they open becomes the
-                  claim.
-                </p>
-              )}
-            </CollapsibleCard>
-          </div>
-
-          <div className="anim-fade-up d-2">
-            <CollapsibleCard
-              title="Jobs"
-              count={jobs.length}
-              action={
-                <>
-                  <button
-                    onClick={() => setTab("jobs")}
-                    className="text-xs font-semibold text-indigo hover:underline"
-                  >
-                    View all
-                  </button>
-                  <Link
-                    to="/pro/jobs/new"
-                    className="text-xs font-semibold text-indigo hover:underline"
-                  >
-                    + Add
-                  </Link>
-                </>
-              }
-            >
-              {jobs.length === 0 ? (
-                <p className="text-sm text-muted">No jobs logged yet.</p>
-              ) : (
-                <div className="divide-y divide-line">
-                  {jobs.slice(0, 3).map((j) => (
-                    <div key={j.id} className="py-2.5 first:pt-0 last:pb-0">
-                      <div className="text-sm font-semibold text-ink truncate">{j.what_done}</div>
-                      <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
-                      {j.next_service_date && (
-                        <div className="mt-1 text-xs font-semibold text-indigo tnum">
-                          Next service {formatDate(j.next_service_date)}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CollapsibleCard>
-          </div>
-
-          <div className="anim-fade-up d-2">
-            <CollapsibleCard title="Equipment" count={equipment.length}>
-              {equipment.length === 0 ? (
-                <p className="text-sm text-muted">Nothing on file yet.</p>
-              ) : (
-                <div className="divide-y divide-line">
-                  {equipment.map((e) => (
-                    <div key={e.id} className="py-2.5 first:pt-0 last:pb-0">
-                      <div className="text-sm font-semibold text-ink">{e.type ?? "Equipment"}</div>
-                      <div className="text-xs text-muted">
-                        {[e.make, e.model].filter(Boolean).join(" · ") || "Make/model unknown"}
-                      </div>
-                      <div className="mt-1 flex gap-1.5 flex-wrap">
-                        {e.warranty_until && (
-                          <Pill accent="indigo">Warranty to {formatDate(e.warranty_until)}</Pill>
-                        )}
-                        <Pill accent={e.recall_status === "none" ? "indigo" : "red"}>
-                          {e.recall_status === "none" ? "No recalls" : "Recall"}
-                        </Pill>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CollapsibleCard>
-          </div>
-
-          <div className="anim-fade-up d-2">
-            <CollapsibleCard
-              title="Invoices"
-              count={invoices.length}
-              action={
-                <Link
-                  to="/pro/invoices/new"
-                  search={{ customer: customer.id, job: undefined }}
-                  className="text-xs font-semibold text-indigo hover:underline"
-                >
-                  + New invoice
-                </Link>
-              }
-            >
-              {invoices.length === 0 ? (
-                <p className="text-sm text-muted">No invoices yet.</p>
-              ) : (
-                <>
-                  {openBalance > 0 && (
-                    <div className="text-sm text-muted">
-                      Open balance{" "}
-                      <span className="font-bold text-coraldark tnum">
-                        {formatMoney(openBalance)}
-                      </span>
-                    </div>
+                  {customer.homes?.claimed_at ? (
+                    <Pill accent="coral">Claimed</Pill>
+                  ) : (
+                    <Pill accent="ink">Unclaimed</Pill>
                   )}
-                  <div className="mt-1 divide-y divide-line">
-                    {invoices.slice(0, 3).map((inv) => (
-                      <div
-                        key={inv.id}
-                        className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-ink tnum">
-                            {formatMoney(Number(inv.total))}
+                </div>
+                {homeowner ? (
+                  <div className="mt-2">
+                    <KV k="Phone" v={homeowner.phone ? formatPhone(homeowner.phone) : "-"} />
+                    <KV k="Email" v={homeowner.email ?? "-"} />
+                    <KV k="Joined" v={formatDate(homeowner.created_at)} />
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-muted">
+                    The homeowner has not claimed this home yet. The record link they open becomes
+                    the claim.
+                  </p>
+                )}
+              </CollapsibleCard>
+            </div>
+
+            <div className="anim-fade-up d-2">
+              <CollapsibleCard
+                title="Jobs"
+                count={jobs.length}
+                action={
+                  <>
+                    <button
+                      onClick={() => setTab("jobs")}
+                      className="text-xs font-semibold text-indigo hover:underline"
+                    >
+                      View all
+                    </button>
+                    <Link
+                      to="/pro/jobs/new"
+                      className="text-xs font-semibold text-indigo hover:underline"
+                    >
+                      + Add
+                    </Link>
+                  </>
+                }
+              >
+                {jobs.length === 0 ? (
+                  <p className="text-sm text-muted">No jobs logged yet.</p>
+                ) : (
+                  <div className="divide-y divide-line">
+                    {jobs.slice(0, 3).map((j) => (
+                      <div key={j.id} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="text-sm font-semibold text-ink truncate">{j.what_done}</div>
+                        <div className="text-xs text-muted tnum">{formatDate(j.created_at)}</div>
+                        {j.next_service_date && (
+                          <div className="mt-1 text-xs font-semibold text-indigo tnum">
+                            Next service {formatDate(j.next_service_date)}
                           </div>
-                          <div className="text-xs text-muted truncate">
-                            {inv.items[0]?.description ?? ""}
-                            {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
-                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CollapsibleCard>
+            </div>
+
+            <div className="anim-fade-up d-2">
+              <CollapsibleCard title="Equipment" count={equipment.length}>
+                {equipment.length === 0 ? (
+                  <p className="text-sm text-muted">Nothing on file yet.</p>
+                ) : (
+                  <div className="divide-y divide-line">
+                    {equipment.map((e) => (
+                      <div key={e.id} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="text-sm font-semibold text-ink">
+                          {e.type ?? "Equipment"}
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {inv.status === "open" ? (
-                            <>
-                              <Pill accent={isOverdue(inv) ? "amber" : "indigo"}>
-                                {isOverdue(inv) ? "Overdue" : "Open"}
-                              </Pill>
-                              <Btn variant="secondary" size="sm" onClick={() => onMarkPaid(inv)}>
-                                Mark paid
-                              </Btn>
-                            </>
-                          ) : (
-                            <Pill accent={inv.status === "paid" ? "coral" : "ink"}>
-                              {inv.status === "paid" ? "Paid" : "Void"}
-                            </Pill>
+                        <div className="text-xs text-muted">
+                          {[e.make, e.model].filter(Boolean).join(" · ") || "Make/model unknown"}
+                        </div>
+                        <div className="mt-1 flex gap-1.5 flex-wrap">
+                          {e.warranty_until && (
+                            <Pill accent="indigo">Warranty to {formatDate(e.warranty_until)}</Pill>
                           )}
+                          <Pill accent={e.recall_status === "none" ? "indigo" : "red"}>
+                            {e.recall_status === "none" ? "No recalls" : "Recall"}
+                          </Pill>
                         </div>
                       </div>
                     ))}
                   </div>
-                </>
-              )}
-            </CollapsibleCard>
+                )}
+              </CollapsibleCard>
+            </div>
+
+            <div className="anim-fade-up d-2">
+              <CollapsibleCard
+                title="Invoices"
+                count={invoices.length}
+                action={
+                  <Link
+                    to="/pro/invoices/new"
+                    search={{ customer: customer.id, job: undefined }}
+                    className="text-xs font-semibold text-indigo hover:underline"
+                  >
+                    + New invoice
+                  </Link>
+                }
+              >
+                {invoices.length === 0 ? (
+                  <p className="text-sm text-muted">No invoices yet.</p>
+                ) : (
+                  <>
+                    {openBalance > 0 && (
+                      <div className="text-sm text-muted">
+                        Open balance{" "}
+                        <span className="font-bold text-coraldark tnum">
+                          {formatMoney(openBalance)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="mt-1 divide-y divide-line">
+                      {invoices.slice(0, 3).map((inv) => (
+                        <div
+                          key={inv.id}
+                          className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-ink tnum">
+                              {formatMoney(Number(inv.total))}
+                            </div>
+                            <div className="text-xs text-muted truncate">
+                              {inv.items[0]?.description ?? ""}
+                              {inv.due_date ? ` · due ${formatDate(inv.due_date)}` : ""}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {inv.status === "open" ? (
+                              <>
+                                <Pill accent={isOverdue(inv) ? "amber" : "indigo"}>
+                                  {isOverdue(inv) ? "Overdue" : "Open"}
+                                </Pill>
+                                <Btn variant="secondary" size="sm" onClick={() => onMarkPaid(inv)}>
+                                  Mark paid
+                                </Btn>
+                              </>
+                            ) : (
+                              <Pill accent={inv.status === "paid" ? "coral" : "ink"}>
+                                {inv.status === "paid" ? "Paid" : "Void"}
+                              </Pill>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CollapsibleCard>
+            </div>
           </div>
         </div>
-      </div>
       )}
-
 
       {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
 

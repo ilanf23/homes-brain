@@ -24,7 +24,13 @@ type CustomerRow = {
   home_id: string;
   homes: { address: string } | null;
 };
-type JobRow = { id: string; what_done: string; created_at: string };
+type JobRow = {
+  id: string;
+  what_done: string;
+  created_at: string;
+  home_id: string;
+  homes: { address: string } | null;
+};
 
 type ItemDraft = { description: string; amount: string };
 
@@ -58,24 +64,25 @@ function NewInvoice() {
   }, [proId]);
 
   const customer = customers.find((c) => c.id === customerId) ?? null;
-  const customerHomeId = customer?.home_id ?? null;
 
   // Jobs for the picked customer, so an invoice can start from logged work.
+  // By customer, not by home: a customer can hold several properties, and the
+  // picked job decides which house the invoice belongs to.
   useEffect(() => {
-    if (!proId || !customerHomeId) {
+    if (!proId || !customerId) {
       setJobs([]);
       return;
     }
     (async () => {
       const { data } = await supabase
         .from("jobs")
-        .select("id,what_done,created_at")
+        .select("id,what_done,created_at,home_id,homes(address)")
         .eq("pro_id", proId)
-        .eq("home_id", customerHomeId)
+        .eq("customer_id", customerId)
         .order("created_at", { ascending: false });
-      setJobs((data ?? []) as JobRow[]);
+      setJobs((data ?? []) as unknown as JobRow[]);
     })();
-  }, [proId, customerHomeId]);
+  }, [proId, customerId]);
 
   function pickJob(j: JobRow | null) {
     const next = j?.id === jobId ? null : j;
@@ -110,10 +117,13 @@ function NewInvoice() {
     }
     setError(null);
     setSaving(true);
+    // A linked job pins the invoice to the house the work happened at; without
+    // one, fall back to the customer's primary home.
+    const pickedJob = jobs.find((j) => j.id === jobId) ?? null;
     const inv = await createInvoice({
       proId,
       customerId: customer.id,
-      homeId: customer.home_id,
+      homeId: pickedJob?.home_id ?? customer.home_id,
       jobId: jobId || null,
       items: parsed,
       dueDate: dueDate || null,
@@ -145,7 +155,6 @@ function NewInvoice() {
       </ProShell>
     );
   }
-
 
   return (
     <ProShell pro={pro} active="invoices">
@@ -216,7 +225,12 @@ function NewInvoice() {
                       : "border-line hover:border-ink/20"
                   }`}
                 >
-                  <div className="font-semibold text-ink truncate">{j.what_done}</div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-ink truncate">{j.what_done}</div>
+                    {new Set(jobs.map((x) => x.home_id)).size > 1 && j.homes?.address && (
+                      <div className="text-xs text-muted truncate">{j.homes.address}</div>
+                    )}
+                  </div>
                   <div className="text-xs text-muted font-mono tnum shrink-0">
                     {formatDate(j.created_at)}
                   </div>

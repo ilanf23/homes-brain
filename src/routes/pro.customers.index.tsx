@@ -22,8 +22,19 @@ type CustomerRow = {
   created_at: string;
   home_id: string | null;
   homes: { address: string; claimed_at: string | null } | null;
-  jobs: { id: string }[] | null;
+  jobs: { id: string; home_id: string | null }[] | null;
 };
+
+/* Homes this customer has jobs at beyond their primary one: a person can hold
+   several properties. */
+function extraHomeCount(customer: CustomerRow): number {
+  const others = new Set(
+    (customer.jobs ?? [])
+      .map((j) => j.home_id)
+      .filter((id): id is string => !!id && id !== customer.home_id),
+  );
+  return others.size;
+}
 
 function CustomersList() {
   const { proId, pro } = useProGuard();
@@ -45,7 +56,7 @@ function CustomersList() {
     (async () => {
       const { data } = await supabase
         .from("customers")
-        .select("id,name,phone,email,created_at,home_id,homes(address,claimed_at),jobs(id)")
+        .select("id,name,phone,email,created_at,home_id,homes(address,claimed_at),jobs(id,home_id)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setCustomers((data ?? []) as unknown as CustomerRow[]);
@@ -53,8 +64,9 @@ function CustomersList() {
     })();
   }, [proId]);
 
-  // Same name, same home: the same person logged twice. Anything less certain
-  // is left alone rather than risking a merge of two real people.
+  // Same phone/email anywhere, or same name at the same home: the same person
+  // logged twice. Anything less certain is left alone rather than risking a
+  // merge of two real people.
   const duplicateGroups = useMemo(() => findDuplicateGroups(customers), [customers]);
 
   async function runMerge(group: DuplicateGroup<CustomerRow>) {
@@ -138,7 +150,12 @@ function CustomersList() {
                     <Merge size={20} className="shrink-0 text-amber" aria-hidden="true" />
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-ink">Possible duplicate</div>
-                      <div className="mt-0.5 truncate text-sm text-muted">{group.name}</div>
+                      <div className="mt-0.5 truncate text-sm text-muted">
+                        {group.name}
+                        {group.addresses.length > 1
+                          ? ` at ${group.addresses.length} addresses`
+                          : ""}
+                      </div>
                     </div>
                     <Btn variant="amber" size="sm" onClick={() => setConfirming(group)}>
                       Review
@@ -183,6 +200,7 @@ function CustomersList() {
             <div className="anim-fade-up d-1 space-y-3">
               {filtered.map((customer) => {
                 const claimed = Boolean(customer.homes?.claimed_at);
+                const extraHomes = extraHomeCount(customer);
                 return (
                   <Link
                     key={customer.id}
@@ -201,6 +219,9 @@ function CustomersList() {
                           </div>
                           <div className="mt-1 text-sm text-muted truncate">
                             {customer.homes?.address ?? "No address added"}
+                            {extraHomes > 0
+                              ? ` + ${extraHomes} more propert${extraHomes === 1 ? "y" : "ies"}`
+                              : ""}
                           </div>
                         </div>
                         {claimed && (
@@ -257,13 +278,22 @@ function MergeConfirm({
         <div className="text-lg font-semibold text-ink">
           Merge {copies + 1} into one {group.name}?
         </div>
-        <div className="mt-1 text-sm text-muted">{group.address ?? "No address"}</div>
+        <ul className="mt-2 space-y-1 text-sm text-muted">
+          {[group.survivor, ...group.duplicates].map((c) => (
+            <li key={c.id} className="truncate">
+              {c.name} ({c.homes?.address ?? "no address"})
+            </li>
+          ))}
+        </ul>
 
         <ul className="mt-4 space-y-2 text-sm text-ink">
           <li>
             All {group.jobCount} job{group.jobCount === 1 ? "" : "s"} and any invoices move to the
             original {group.name}.
           </li>
+          {group.addresses.length > 1 && (
+            <li>Each visit stays with the house where it happened.</li>
+          )}
           <li>
             The {copies} duplicate record{copies === 1 ? "" : "s"} {copies === 1 ? "is" : "are"}{" "}
             deleted. This can't be undone.

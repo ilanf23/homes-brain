@@ -1723,18 +1723,13 @@ function NewJob() {
     // translated version for the preview. Persist THAT as the record so the
     // saved job matches what the customer will read forever.
     const useTranslated =
-      customerLocale !== uiLocale &&
-      translationState === "ready" &&
-      !!translatedRecord?.whatDone;
+      customerLocale !== uiLocale && translationState === "ready" && !!translatedRecord?.whatDone;
     const work = (useTranslated ? translatedRecord!.whatDone! : whatDone).trim();
-    const savedEqType = useTranslated
-      ? (translatedRecord?.equipmentType ?? eqType)
-      : eqType;
+    const savedEqType = useTranslated ? (translatedRecord?.equipmentType ?? eqType) : eqType;
     const selected = existing.find((customer) => customer.id === selectedCustomerId);
     const finalName = (reviewName ?? selected?.name ?? newCustomer.name).trim() || "Customer";
     const finalAddress = (selectedCustomerId ? locAddress : newCustomer.address).trim();
     const finalEmail = reviewEmail.trim().toLowerCase();
-
 
     if (!work) {
       setStage("review");
@@ -1836,38 +1831,27 @@ function NewJob() {
           ),
         );
       }
-      // Pro confirmed the address on the location slide; if they changed it
-      // (moved, corrected a typo), update the home in place.
+      // Pro confirmed the address on the location slide. A different address
+      // is a SECOND PROPERTY for this customer, never an in-place edit of the
+      // home on file: each home carries its own history, and "they moved /
+      // fix a typo" is an explicit edit on the customer page. Upsert by
+      // address so a home another pro already serves is reused, not
+      // duplicated. The customer row keeps its original home as primary;
+      // the job (and any new equipment) attaches to the confirmed home.
       const onFile = c.homes?.address ?? "";
-      const confirmed = finalAddress;
-      if (!confirmed) {
-        setSubmitting(false);
-        setStage("review");
-        setReviewEdit("address");
-        setToast("Confirm the service address before saving this job.");
-        setTimeout(() => setToast(null), 3500);
-        return;
-      }
-      if (
-        !dedupeCustomer &&
-        confirmed &&
-        normalizeAddress(confirmed) !== normalizeAddress(onFile)
-      ) {
-        const { error: addrErr } = await supabase
-          .from("homes")
-          .update({ address: confirmed })
-          .eq("id", homeId);
-        if (addrErr) {
+      if (normalizeAddress(finalAddress) !== normalizeAddress(onFile)) {
+        const { data: upsertedHomeId, error: homeErr } = await supabase.rpc(
+          "upsert_home_by_address",
+          { p_address: finalAddress },
+        );
+        if (homeErr || !upsertedHomeId) {
           setSubmitting(false);
-          setToast(
-            addrErr.message.toLowerCase().includes("duplicate")
-              ? "That address is already on file for another home."
-              : "Could not update the address.",
-          );
+          setToast(homeErr?.message ?? "Could not save home");
           setTimeout(() => setToast(null), 3500);
           return;
         }
-        void geocodeHome(homeId, confirmed, coordsFor(confirmed));
+        homeId = upsertedHomeId as string;
+        void geocodeHome(homeId, finalAddress, coordsFor(finalAddress));
       }
     } else {
       // Upsert home by address via RPC so a second pro serving the same
