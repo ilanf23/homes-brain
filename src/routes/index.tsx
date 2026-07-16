@@ -257,7 +257,7 @@ function RepeatLoop() {
 
 function Landing() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
+    <MarketingShell mobileCta={{ label: "Create account", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero: customers waiting to book, led by the workflow phone */}
       <section className="mx-auto max-w-6xl px-5 pt-12 sm:pt-16 pb-14">
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
@@ -274,7 +274,7 @@ function Landing() {
             <div className="mt-8 flex justify-center lg:justify-start">
               <Link to="/pro/signup" className="w-full sm:w-auto">
                 <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-                  Claim your profile
+                  Create account
                 </Btn>
               </Link>
             </div>

@@ -292,7 +292,7 @@ function ProProfile() {
               )}`}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo hover:underline"
             >
-              <MailQuestion size={14} strokeWidth={2} /> Are you this pro? Claim your profile
+              <MailQuestion size={14} strokeWidth={2} /> Are you this pro? Create account
             </a>
           </div>
         )}

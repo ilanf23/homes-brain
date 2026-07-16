@@ -99,7 +99,7 @@ const en = {
   "login.continuePro": "Continue as pro",
   "login.continueHomeowner": "Continue as homeowner",
   "login.newHere": "New here?",
-  "login.startFreePro": "Claim your profile",
+  "login.startFreePro": "Create account",
   "login.createHomeAccountLink": "create your home account",
   "login.createHomeAccountBtn": "Create your home account",
   "login.forgotPassword": "Forgot password?",

@@ -17,7 +17,7 @@ import { LanguageToggle } from "@/lib/i18n";
 type ProSignupSearch = { email?: string };
 
 export const Route = createFileRoute("/pro/signup")({
-  head: () => ({ meta: [{ title: "Claim your profile - HomesBrain for pros" }] }),
+  head: () => ({ meta: [{ title: "Create account - HomesBrain for pros" }] }),
   validateSearch: (s: Record<string, unknown>): ProSignupSearch => ({
     email: typeof s.email === "string" ? s.email : undefined,
   }),
@@ -154,7 +154,7 @@ function ProSignup() {
 
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="text-center mb-8">
-          <h1 className="text-3xl tracking-tight">Claim your profile</h1>
+          <h1 className="text-3xl tracking-tight">Create account</h1>
           <p className="mt-2 text-sm text-muted">Claim the record with your name on it. Two fields to start, no password.</p>
         </div>
 

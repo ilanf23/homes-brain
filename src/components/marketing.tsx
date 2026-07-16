@@ -109,7 +109,7 @@ export function MarketingShell({
   children: ReactNode;
   /* Fixed thumb-zone CTA shown only on small screens. Pass null to hide.
      If omitted, the shell falls back to the persistent primary CTA which
-     is indigo (Claim your profile) on pro-oriented routes and coral
+     is indigo (Create account) on pro-oriented routes and coral
      (Get my record) on homeowner-oriented routes. */
   mobileCta?: { label: string; to: string; variant: "indigo" | "coral" | "indigo" } | null;
 }) {
@@ -123,7 +123,7 @@ export function MarketingShell({
   const primaryCta: { label: string; to: string; variant: "coral" | "indigo" } =
     isHomeownerRoute(pathname)
       ? { label: "Get my record", to: "/home/signup", variant: "coral" }
-      : { label: "Claim your profile", to: "/pro/signup", variant: "indigo" };
+      : { label: "Create account", to: "/pro/signup", variant: "indigo" };
 
   const resolvedMobileCta =
     mobileCta === undefined ? { ...primaryCta } : mobileCta;
@@ -290,7 +290,7 @@ export function MarketingShell({
                   For pros
                 </div>
                 <div className="mt-1 text-sm text-ink/70">
-                  Claim your profile and turn every job into a review.
+                  Create account and turn every job into a review.
                 </div>
               </Link>
               <Link
