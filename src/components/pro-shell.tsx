@@ -28,7 +28,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
 import { ProSetupWidget } from "@/components/pro-setup-checklist";
 
-import { LanguageToggle, useI18n, useT, type TKey } from "@/lib/i18n";
+import { LanguageToggle, LanguageInlinePicker, useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
 import { phIdentify, phReset } from "@/lib/posthog";
 
