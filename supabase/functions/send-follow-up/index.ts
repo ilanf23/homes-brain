@@ -11,12 +11,18 @@
 
 import {
   buildUnsubUrl,
-  complianceFooterHtml,
   complianceFooterText,
   getUnsubToken,
   isEmailOptedOut,
   listUnsubscribeHeaders,
 } from "../_shared/email-compliance.ts";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 import { authenticatePro } from "../_shared/pro-auth.ts";
 
 declare const Deno: {
@@ -184,37 +190,24 @@ Deno.serve(async (req) => {
       ),
     ].join("\n");
 
-    const b = esc(pro.business);
-    const header =
-      pro.logo && isHttpsUrl(pro.logo)
-        ? `<img src="${esc(pro.logo)}" alt="${b}" style="max-height:44px;max-width:220px;display:block;" />`
-        : `<div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">${b}</div>`;
-
-    const html = `<!doctype html>
-<html lang="en"><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="display:flex;align-items:center;gap:12px;">${header}</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">via HomesBrain</div>
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">${esc(subject)}</h1>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#16160f;">${esc(intro)}</p>
-      <div style="margin-top:22px;">
-        <a href="${ctaUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${esc(cta)}</a>
-      </div>
-      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">Reply to this email and we'll get back to you.</p>
-    </div>
-    ${complianceFooterHtml(
+    const bodyHtml = [
+      renderH1(subject),
+      renderBody(intro),
+      renderCta(ctaUrl, cta),
+      renderFinePrint("Reply to this email and we'll get back to you."),
+    ].join("");
+    const html = renderEmailShell({
+      brandLine: pro.business,
+      eyebrow: "via HomesBrain",
+      bodyHtml,
       unsubUrl,
-      undefined,
-      {
+      footerCopy: {
         unsubscribe: "Unsubscribe",
         optOut: "You can opt out of these emails at any time.",
         questions: "Questions?",
         email: "Email",
       },
-    )}
-  </div>
-</body></html>`;
+    });
 
     const fromDisplay = `${pro.business.replace(/[<>]/g, "")} via HomesBrain`;
     const resp = await fetch("https://api.resend.com/emails", {

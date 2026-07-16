@@ -10,6 +10,13 @@
    an auth user, and never reveal whether the email exists. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -39,7 +46,6 @@ function resetOrigin(raw: unknown): string {
 }
 
 function resetEmail(link: string) {
-  const url = link.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const text = [
     "You asked to reset your HomesBrain password.",
     "",
@@ -47,21 +53,17 @@ function resetEmail(link: string) {
     "",
     "This link expires in 1 hour. If you didn't request this, you can ignore this email.",
   ].join("\n");
-  const html = `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">HomesBrain</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">Password reset</div>
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">Reset your password</h1>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#73706a;">Tap the button to choose a new password. This link expires in 1 hour.</p>
-      <div style="margin-top:22px;">
-        <a href="${url}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">Reset password</a>
-      </div>
-      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">If you didn't request this, you can ignore this email.</p>
-    </div>
-  </div>
-</body></html>`;
+  const bodyHtml = [
+    renderH1("Reset your password"),
+    renderBody("Tap the button to choose a new password. This link expires in 1 hour."),
+    renderCta(link, "Reset password"),
+    renderFinePrint("If you didn't request this, you can ignore this email."),
+  ].join("");
+  const html = renderEmailShell({
+    brandLine: "HomesBrain",
+    eyebrow: "Password reset",
+    bodyHtml,
+  });
   return { subject: "Reset your HomesBrain password", text, html };
 }
 
