@@ -296,21 +296,24 @@ export function MarketingShell({
             <div className="mt-8 space-y-3 anim-fade-up">
               <Link to="/pro/signup" onClick={() => setMenuOpen(false)} className="block w-full">
                 <Btn variant="indigo" size="lg" className="w-full">
-                  Create pro account
+                  Create account as a pro
                 </Btn>
               </Link>
               <Link to="/home/signup" onClick={() => setMenuOpen(false)} className="block w-full">
                 <Btn variant="coral" size="lg" className="w-full">
-                  I'm a homeowner
+                  Create account as a homeowner
                 </Btn>
               </Link>
-              <Link
-                to="/login"
-                onClick={() => setMenuOpen(false)}
-                className="block w-full text-center py-3 text-[15px] font-semibold text-ink hover:text-indigo transition-colors"
-              >
-                Already have an account? <span className="text-indigo">Log in</span>
-              </Link>
+              <div className="pt-3">
+                <Link to="/login" onClick={() => setMenuOpen(false)} className="block w-full">
+                  <button
+                    type="button"
+                    className="pressable w-full rounded-full border-2 border-ink bg-background px-6 py-4 text-lg font-extrabold text-ink hover:bg-soft transition-colors"
+                  >
+                    Log in
+                  </button>
+                </Link>
+              </div>
             </div>
 
             {/* Quiet marketing links at the bottom */}
