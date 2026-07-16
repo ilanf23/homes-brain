@@ -37,6 +37,7 @@ export type Database = {
           first_name: string | null
           home_id: string | null
           id: string
+          in_band: boolean
           intent: string | null
           locale: string
           pro_id: string | null
@@ -51,6 +52,7 @@ export type Database = {
           first_name?: string | null
           home_id?: string | null
           id?: string
+          in_band?: boolean
           intent?: string | null
           locale?: string
           pro_id?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           first_name?: string | null
           home_id?: string | null
           id?: string
+          in_band?: boolean
           intent?: string | null
           locale?: string
           pro_id?: string | null
@@ -340,6 +343,7 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          place_id: string | null
         }
         Insert: {
           address: string
@@ -351,6 +355,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          place_id?: string | null
         }
         Update: {
           address?: string
@@ -362,6 +367,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          place_id?: string | null
         }
         Relationships: [
           {
@@ -1095,6 +1101,7 @@ export type Database = {
         Returns: Json
       }
       get_unsub_token: { Args: { p_email: string }; Returns: string }
+      hb_normalize_address: { Args: { a: string }; Returns: string }
       homeowner_add_equipment: {
         Args: {
           p_label?: string
@@ -1181,7 +1188,15 @@ export type Database = {
         }
         Returns: string
       }
-      upsert_home_by_address: { Args: { p_address: string }; Returns: string }
+      upsert_home_by_address: {
+        Args: {
+          p_address: string
+          p_lat?: number
+          p_lng?: number
+          p_place_id?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
