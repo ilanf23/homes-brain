@@ -342,70 +342,42 @@ function recordEmail(opts: {
   const reason = copy.reason(business, address);
   textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
-  const b = esc(business);
-  const a = esc(address);
-  const w = localizedWork?.trim() ? esc(localizedWork.trim()) : "";
-  const eqEsc = eqLine ? esc(eqLine) : "";
-  const warrantyEsc = warranty ? esc(warranty) : "";
+  const detailRows: Array<{ label: string; value: string }> = [
+    { label: copy.address, value: address },
+  ];
+  if (localizedWork?.trim()) {
+    detailRows.push({ label: copy.work, value: localizedWork.trim() });
+  }
+  if (eqLine) detailRows.push({ label: copy.equipment, value: eqLine });
+  if (warranty) detailRows.push({ label: copy.warranty, value: warranty });
 
-  const header = logo && isHttpsUrl(logo)
-    ? `<img src="${
-      esc(logo)
-    }" alt="${b}" style="max-height:44px;max-width:220px;display:block;" />`
-    : `<div translate="no" class="notranslate" style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">${b}</div>`;
+  const bodyHtml = [
+    renderH1(copy.title(business)),
+    renderBodyHtml(
+      esc(copy.description(business)).replace(
+        esc(business || ""),
+        business ? emphasize(business) : esc(business),
+      ),
+    ),
+    renderDetails(detailRows),
+    renderCta(ctaUrl, cta),
+    renderFinePrint(copy.oneTap),
+  ].join("\n");
 
-  const previewRows = [
-    `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;width:110px;">${
-      esc(copy.address)
-    }</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${a}</td></tr>`,
-    w
-      ? `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;">${
-        esc(copy.work)
-      }</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${w}</td></tr>`
-      : "",
-    eqEsc
-      ? `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;">${
-        esc(copy.equipment)
-      }</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${eqEsc}</td></tr>`
-      : "",
-    warrantyEsc
-      ? `<tr><td style="padding:8px 0;color:#73706a;font-size:13px;">${
-        esc(copy.warranty)
-      }</td><td style="padding:8px 0;color:#16160f;font-size:14px;font-weight:600;">${warrantyEsc}</td></tr>`
-      : "",
-  ]
-    .filter(Boolean)
-    .join("");
+  // logo image is intentionally not shown in the branded shell header; the
+  // approved design uses the HomesBrain house mark + business name title.
+  void logo;
+  void isHttpsUrl;
 
-  const html = `<!doctype html>
-<html lang="${locale}"><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="display:flex;align-items:center;gap:12px;">${header}</div>
-    <div translate="no" class="notranslate" style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">${
-    esc(copy.via)
-  }</div>
-
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">${
-    esc(copy.title(business))
-  }</h1>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#73706a;">${
-    esc(copy.description(business))
-  }</p>
-      <table role="presentation" style="width:100%;margin-top:18px;border-collapse:collapse;border-top:1px solid #e7e5de;">${previewRows}</table>
-      <div style="margin-top:22px;">
-        <a href="${ctaUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">${cta}</a>
-      </div>
-      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">${
-    esc(copy.oneTap)
-  }</p>
-    </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">${
-    esc(reason)
-  }</p>
-    ${complianceFooterHtml(unsubUrl, undefined, copy.footer)}
-  </div>
-</body></html>`;
+  const html = renderEmailShell({
+    lang: locale,
+    brandLine: business,
+    eyebrow: copy.via,
+    bodyHtml,
+    reason,
+    unsubUrl,
+    footerCopy: copy.footer,
+  });
   return {
     subject: copy.subject(business),
     text: textLines.join("\n"),
