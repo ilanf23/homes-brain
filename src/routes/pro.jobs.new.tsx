@@ -45,7 +45,7 @@ import {
 } from "@/lib/hb";
 import { createInvoice, formatMoney } from "@/lib/invoices";
 
-import { reverseGeocode, type ResolvedAddress } from "@/lib/geo";
+import { forwardGeocodeCapped, reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
 import {
   extractFromNotes,
@@ -1704,6 +1704,34 @@ function NewJob() {
     return null;
   }
 
+  /* The best identity we have for the home being saved. A Places pick made
+     for THIS address carries its own placeId; a freehand-typed address gets
+     one time-capped forward geocode to canonicalize it, so "72 Sunshine bass"
+     lands on the same home as "72 Sunshine Bass Court". Geocoding trouble
+     never blocks the save: the fallback is the typed string, exactly like
+     before. */
+  async function homeIdentityFor(addr: string): Promise<{
+    address: string;
+    placeId: string | null;
+    lat: number | null;
+    lng: number | null;
+  }> {
+    if (resolved?.placeId && normalizeAddress(resolved.address) === normalizeAddress(addr)) {
+      return {
+        address: resolved.address,
+        placeId: resolved.placeId,
+        lat: resolved.lat,
+        lng: resolved.lng,
+      };
+    }
+    const hit = await forwardGeocodeCapped(addr);
+    if (hit?.address && hit.placeId) {
+      return { address: hit.address, placeId: hit.placeId, lat: hit.lat, lng: hit.lng };
+    }
+    const coords = hit ?? coordsFor(addr);
+    return { address: addr, placeId: null, lat: coords?.lat ?? null, lng: coords?.lng ?? null };
+  }
+
   async function deliverRecord(customerId: string, recordId: string) {
     try {
       const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
@@ -1905,9 +1933,17 @@ function NewJob() {
       // the job (and any new equipment) attaches to the confirmed home.
       const onFile = c.homes?.address ?? "";
       if (normalizeAddress(finalAddress) !== normalizeAddress(onFile)) {
+        const identity = await homeIdentityFor(finalAddress);
         const { data: upsertedHomeId, error: homeErr } = await supabase.rpc(
           "upsert_home_by_address",
-          { p_address: finalAddress },
+          // Extra identity args shipped in migration 2026-07-16; cast until
+          // the Lovable-generated Database types refresh.
+          {
+            p_address: identity.address,
+            p_place_id: identity.placeId,
+            p_lat: identity.lat,
+            p_lng: identity.lng,
+          } as never,
         );
         if (homeErr || !upsertedHomeId) {
           setSubmitting(false);
@@ -1916,14 +1952,24 @@ function NewJob() {
           return;
         }
         homeId = upsertedHomeId as string;
-        void geocodeHome(homeId, finalAddress, coordsFor(finalAddress));
+        // The RPC stored coords when we had them; otherwise geocode lazily.
+        if (identity.lat == null) void geocodeHome(homeId, identity.address, null);
       }
     } else {
-      // Upsert home by address via RPC so a second pro serving the same
-      // address does not hit the unique-address 409.
+      // Upsert home by place identity (canonical address + placeId when we
+      // have or can resolve one) so a second pro serving the same address,
+      // or a retyped variant of it, reuses the same home record.
+      const identity = await homeIdentityFor(finalAddress);
       const { data: upsertedHomeId, error: homeErr } = await supabase.rpc(
         "upsert_home_by_address",
-        { p_address: finalAddress },
+        // Extra identity args shipped in migration 2026-07-16; cast until
+        // the Lovable-generated Database types refresh.
+        {
+          p_address: identity.address,
+          p_place_id: identity.placeId,
+          p_lat: identity.lat,
+          p_lng: identity.lng,
+        } as never,
       );
       if (homeErr || !upsertedHomeId) {
         setSubmitting(false);
@@ -1932,9 +1978,8 @@ function NewJob() {
         return;
       }
       homeId = upsertedHomeId as string;
-      // Fire-and-forget geocode; reuse coords from the Places pick / GPS when we
-      // have them for this exact address, else forward-geocode the string.
-      void geocodeHome(homeId, finalAddress, coordsFor(finalAddress));
+      // The RPC stored coords when we had them; otherwise geocode lazily.
+      if (identity.lat == null) void geocodeHome(homeId, identity.address, null);
 
       const { data: newC, error: customerErr } = await supabase
         .from("customers")
@@ -1960,7 +2005,8 @@ function NewJob() {
       toName = finalName;
       emailAddr = finalEmail;
       phoneAddr = newCustomer.phone.trim();
-      const savedCoords = coordsFor(finalAddress);
+      // Mirror what the RPC stored (canonical address and coords), so the
+      // local state matches the database without a refetch.
       const savedCustomer: CustomerOpt = {
         id: newC.id,
         name: finalName,
@@ -1969,10 +2015,10 @@ function NewJob() {
         preferred_locale: customerLocale,
         home_id: homeId,
         homes: {
-          address: finalAddress,
-          lat: savedCoords?.lat ?? null,
-          lng: savedCoords?.lng ?? null,
-          geocoded_at: savedCoords ? new Date().toISOString() : null,
+          address: identity.address,
+          lat: identity.lat,
+          lng: identity.lng,
+          geocoded_at: identity.lat != null ? new Date().toISOString() : null,
         },
       };
       // If a later equipment/job write fails, the retry must reuse the customer
@@ -1982,7 +2028,7 @@ function NewJob() {
         ...prev.filter((item) => item.id !== savedCustomer.id),
       ]);
       setSelectedCustomerId(savedCustomer.id);
-      setLocAddress(finalAddress);
+      setLocAddress(identity.address);
     }
 
     if (!homeId || !customerId) {

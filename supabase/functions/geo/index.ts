@@ -5,9 +5,11 @@
 
    Ops (JSON body { op, ... }):
      autocomplete { input, lat?, lng?, sessionToken? } -> { predictions: [{ placeId, description }] }
-     details      { placeId, sessionToken? }            -> { address, lat, lng }
+     details      { placeId, sessionToken? }            -> { address, lat, lng, placeId }
      reverse      { lat, lng }                          -> { address, lat, lng }
-     forward      { address }                           -> { lat, lng }
+     forward      { address }                           -> { lat, lng, address, placeId }
+                  address/placeId only on a building-precision match, so a
+                  vague input never canonicalizes to a city or street.
      findBusiness { query, area? }                       -> { candidates: [{ placeId, name, address, rating, ratingCount, mapsUrl }] }
 
    Autocomplete + details share a sessionToken so Google bills them as one
@@ -114,6 +116,7 @@ Deno.serve(async (req) => {
           address: data.formattedAddress ?? null,
           lat: data.location?.latitude ?? null,
           lng: data.location?.longitude ?? null,
+          placeId,
         });
       }
 
@@ -139,9 +142,24 @@ Deno.serve(async (req) => {
         const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${key}`;
         const resp = await fetch(url);
         const data = await resp.json();
-        const loc = data.results?.[0]?.geometry?.location;
-        if (!loc) return json({ lat: null, lng: null });
-        return json({ lat: loc.lat, lng: loc.lng });
+        const hit = data.results?.[0];
+        const loc = hit?.geometry?.location;
+        if (!loc) return json({ lat: null, lng: null, address: null, placeId: null });
+        // Canonical identity (address + placeId) only when Google matched an
+        // actual building, so "72 Sunshine" typed sloppily never becomes the
+        // identity of a whole street or city. Coordinates return regardless.
+        const precise =
+          hit.geometry?.location_type === "ROOFTOP" ||
+          hit.geometry?.location_type === "RANGE_INTERPOLATED" ||
+          (hit.types ?? []).some((t: string) =>
+            ["street_address", "premise", "subpremise"].includes(t),
+          );
+        return json({
+          lat: loc.lat,
+          lng: loc.lng,
+          address: precise ? (hit.formatted_address ?? null) : null,
+          placeId: precise ? (hit.place_id ?? null) : null,
+        });
       }
 
       case "findBusiness": {

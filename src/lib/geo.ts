@@ -6,7 +6,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type AddressPrediction = { placeId: string; description: string };
-export type ResolvedAddress = { address: string; lat: number | null; lng: number | null };
+export type ResolvedAddress = {
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  /* Google place identity when the address came through Places/Geocoding at
+     building precision. This is what keys a home to one physical house. */
+  placeId?: string | null;
+};
 
 /* A Places session token groups the autocomplete keystrokes + the one details
    lookup into a single billed session. Make one per editing session. */
@@ -45,12 +52,19 @@ export async function placeDetails(
   placeId: string,
   sessionToken: string,
 ): Promise<ResolvedAddress | null> {
-  const data = await call<{ address?: string | null; lat?: number | null; lng?: number | null }>(
-    { op: "details", placeId, sessionToken },
-    {},
-  );
+  const data = await call<{
+    address?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    placeId?: string | null;
+  }>({ op: "details", placeId, sessionToken }, {});
   if (!data.address) return null;
-  return { address: data.address, lat: data.lat ?? null, lng: data.lng ?? null };
+  return {
+    address: data.address,
+    lat: data.lat ?? null,
+    lng: data.lng ?? null,
+    placeId: data.placeId ?? placeId,
+  };
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<ResolvedAddress | null> {
@@ -62,15 +76,39 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Resolved
   return { address: data.address, lat: data.lat ?? lat, lng: data.lng ?? lng };
 }
 
-export async function forwardGeocode(
-  address: string,
-): Promise<{ lat: number; lng: number } | null> {
-  const data = await call<{ lat?: number | null; lng?: number | null }>(
-    { op: "forward", address },
-    {},
-  );
+export async function forwardGeocode(address: string): Promise<{
+  lat: number;
+  lng: number;
+  address: string | null;
+  placeId: string | null;
+} | null> {
+  const data = await call<{
+    lat?: number | null;
+    lng?: number | null;
+    address?: string | null;
+    placeId?: string | null;
+  }>({ op: "forward", address }, {});
   if (typeof data.lat !== "number" || typeof data.lng !== "number") return null;
-  return { lat: data.lat, lng: data.lng };
+  // address/placeId are only present on a building-precision match (the edge
+  // function withholds them otherwise), so they are safe to use as identity.
+  return {
+    lat: data.lat,
+    lng: data.lng,
+    address: data.address ?? null,
+    placeId: data.placeId ?? null,
+  };
+}
+
+/* forwardGeocode with a hard time cap, for the save path: a slow network can
+   never hold up the save. Null means "proceed with the typed string". */
+export async function forwardGeocodeCapped(
+  address: string,
+  timeoutMs = 2500,
+): Promise<Awaited<ReturnType<typeof forwardGeocode>>> {
+  return Promise.race([
+    forwardGeocode(address),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
 }
 
 export type BusinessCandidate = {

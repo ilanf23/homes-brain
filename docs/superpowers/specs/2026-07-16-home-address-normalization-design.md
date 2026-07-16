@@ -38,7 +38,7 @@ Detect candidate pairs: same `hb_normalize_address(address)`, or coordinates wit
 
 - Never auto-merge two homes claimed by different homeowners; leave those alone (surface manually if they ever appear).
 - Survivor: the claimed home, else the geocoded one, else the oldest. Loser's claim (if any and survivor unclaimed) moves to the survivor.
-- Repoint `jobs.home_id`, `equipment.home_id`, `customers.home_id`, `invoices.home_id`, `invites.home_id`; backfill survivor `place_id`/coords from the loser when missing; delete the loser.
+- Repoint every table with a home FK: `jobs`, `equipment`, `customers`, `invoices`, `invites`, `payments`, `claim_tokens`; backfill survivor claim, `place_id`, and coords from the loser when missing; delete the loser.
 
 Run as verified DML via `query_database` (candidate list reviewed first; today it is one pair), SQL kept in `supabase/migrations/` for the record.
 
