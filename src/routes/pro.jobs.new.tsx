@@ -13,7 +13,7 @@ import {
   Toast,
 } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { useProGuard } from "@/components/pro-shell";
+import { ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { Celebration } from "@/components/celebration";
 import {
