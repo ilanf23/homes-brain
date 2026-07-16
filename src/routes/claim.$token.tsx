@@ -40,7 +40,7 @@ type Preview = {
 
 type ExchangeResp = {
   ok: boolean;
-  code?: "invalid" | "expired" | "used" | "need_email" | "send_failed" | "error";
+  code?: "invalid" | "expired" | "used" | "need_email" | "verify_email" | "send_failed" | "error";
   hashed_token?: string;
   email?: string;
   record_id?: string;
@@ -126,9 +126,9 @@ function ClaimByToken() {
   const navigate = useNavigate();
   const { locale, setLocale } = useI18n();
   const copy = claimCopy(locale);
-  const [phase, setPhase] = useState<"loading" | "need_email" | "claiming" | "error" | "done">(
-    "loading",
-  );
+  const [phase, setPhase] = useState<
+    "loading" | "need_email" | "verify_email" | "emailed" | "claiming" | "error" | "done"
+  >("loading");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
@@ -273,6 +273,14 @@ function ClaimByToken() {
         setPhase("need_email");
         return;
       }
+      // In-band (QR) token: we never mint a session from it. The claimer
+      // confirms their email and we send the sign-in link to that inbox, so
+      // only the real owner of the address can finish. The preview above
+      // already rendered so the in-person QR moment still shows value.
+      if (resp.code === "verify_email") {
+        setPhase("verify_email");
+        return;
+      }
       // A used link usually means the claim already went through (second tap
       // on the email link, rescanned QR). If a session is live, skip the
       // dead-end error and open the record; the record page's own guard
@@ -323,6 +331,31 @@ function ClaimByToken() {
     }
     setPhase("error");
     setErrorCode(resp.code ?? "error");
+  }
+
+  async function submitVerifyEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!emailInput.trim() || submitting) return;
+    setSubmitting(true);
+    // Route through the emailed sign-in link. homeowner-login sends the branded
+    // link to the address entered and binds the record only when that address
+    // matches a customer/owner on this home, so a link can never claim a home
+    // for an address the recipient does not control.
+    const { data, error } = await supabase.functions.invoke("homeowner-login", {
+      body: {
+        email: emailInput.trim(),
+        claim: preview?.record_id ?? undefined,
+        origin: window.location.origin,
+      },
+    });
+    setSubmitting(false);
+    const resp = data as { ok?: boolean; code?: string } | null;
+    if (error || !resp?.ok) {
+      setPhase("error");
+      setErrorCode(resp?.code ?? "send_failed");
+      return;
+    }
+    setPhase("emailed");
   }
 
   async function requestFreshLink() {
@@ -381,6 +414,35 @@ function ClaimByToken() {
                 {submitting ? copy.opening : copy.claimRecord}
               </Btn>
             </form>
+          </Card>
+        )}
+
+        {phase === "verify_email" && (
+          <Card className="mt-6">
+            <h2 className="text-lg font-extrabold tracking-tight text-ink">{copy.confirmTitle}</h2>
+            <p className="mt-1 text-sm text-muted">{copy.confirmBody}</p>
+            <form onSubmit={submitVerifyEmail} className="mt-4 space-y-3">
+              <Field label={copy.email}>
+                <Input
+                  type="email"
+                  autoFocus
+                  required
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </Field>
+              <Btn type="submit" variant="indigo" disabled={submitting}>
+                {submitting ? copy.opening : copy.claimRecord}
+              </Btn>
+            </form>
+          </Card>
+        )}
+
+        {phase === "emailed" && (
+          <Card className="mt-6">
+            <h2 className="text-lg font-extrabold tracking-tight text-ink">{copy.linkSentTitle}</h2>
+            <p className="mt-1 text-sm text-muted">{copy.linkSentBody}</p>
           </Card>
         )}
 

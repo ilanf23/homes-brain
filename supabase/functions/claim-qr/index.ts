@@ -151,6 +151,10 @@ Deno.serve(async (req) => {
       email: customer.email,
       locale,
       expires_at: expiresAt,
+      // Returned in-band to the pro (not emailed to customer.email), so
+      // claim-exchange must not mint a login session from it directly - it
+      // emails the sign-in link so only the real inbox owner can finish.
+      in_band: true,
     });
     if (tokErr) {
       console.error("claim-qr token insert failed", tokErr);

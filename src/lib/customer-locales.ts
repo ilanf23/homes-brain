@@ -130,6 +130,8 @@ export type ClaimCopy = {
   email: string;
   opening: string;
   claimRecord: string;
+  linkSentTitle: string;
+  linkSentBody: string;
   expiredTitle: string;
   usedTitle: string;
   cannotOpenTitle: string;
@@ -164,7 +166,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "Enter the email your service pro has for you. We'll open your record and save this home to your account.",
     email: "Email",
     opening: "Opening…",
-    claimRecord: "Claim my home record",
+    claimRecord: "Email me my sign-in link",
+    linkSentTitle: "Check your email",
+    linkSentBody:
+      "We sent a sign-in link to your inbox. Tap it to open your record and save this home to your account.",
     expiredTitle: "This link has expired",
     usedTitle: "This link was already used",
     cannotOpenTitle: "We couldn't open this link",
@@ -200,7 +205,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "Ingresa el correo que tiene tu profesional. Abriremos tu registro y guardaremos este hogar en tu cuenta.",
     email: "Correo electrónico",
     opening: "Abriendo…",
-    claimRecord: "Reclamar el registro de mi hogar",
+    claimRecord: "Enviarme mi enlace de acceso",
+    linkSentTitle: "Revisa tu correo",
+    linkSentBody:
+      "Enviamos un enlace de acceso a tu bandeja de entrada. Tócalo para abrir tu registro y guardar este hogar en tu cuenta.",
     expiredTitle: "Este enlace expiró",
     usedTitle: "Este enlace ya se usó",
     cannotOpenTitle: "No pudimos abrir este enlace",
@@ -236,7 +244,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "Введите адрес электронной почты, который вы сообщили специалисту. Мы откроем запись и сохраним дом в вашем аккаунте.",
     email: "Электронная почта",
     opening: "Открываем…",
-    claimRecord: "Получить запись о моём доме",
+    claimRecord: "Прислать ссылку для входа",
+    linkSentTitle: "Проверьте почту",
+    linkSentBody:
+      "Мы отправили ссылку для входа на вашу почту. Нажмите её, чтобы открыть запись и сохранить дом в вашем аккаунте.",
     expiredTitle: "Срок действия ссылки истёк",
     usedTitle: "Эта ссылка уже использована",
     cannotOpenTitle: "Не удалось открыть ссылку",
@@ -272,7 +283,10 @@ const CLAIM_COPY: Record<Locale, ClaimCopy> = {
       "Введіть електронну адресу, яку ви повідомили фахівцю. Ми відкриємо запис і збережемо дім у вашому обліковому записі.",
     email: "Електронна пошта",
     opening: "Відкриваємо…",
-    claimRecord: "Отримати запис про мій дім",
+    claimRecord: "Надіслати посилання для входу",
+    linkSentTitle: "Перевірте пошту",
+    linkSentBody:
+      "Ми надіслали посилання для входу на вашу пошту. Натисніть його, щоб відкрити запис і зберегти дім у вашому акаунті.",
     expiredTitle: "Термін дії посилання минув",
     usedTitle: "Це посилання вже використано",
     cannotOpenTitle: "Не вдалося відкрити посилання",

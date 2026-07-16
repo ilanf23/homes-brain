@@ -58,13 +58,25 @@ Deno.serve(async (req) => {
     );
 
     const tokenHash = await sha256Hex(token);
-    const { data: row } = await admin
+    // in_band is added by a pending migration. If this function deploys first,
+    // the column won't exist yet: retry without it and treat in_band as false
+    // (email-delivered) rather than failing every claim.
+    const baseCols = "id,record_id,home_id,pro_id,email,expires_at,used_at,intent,first_name,locale";
+    const initialRow = await admin
       .from("claim_tokens")
-      .select(
-        "id,record_id,home_id,pro_id,email,expires_at,used_at,intent,first_name,locale",
-      )
+      .select(`${baseCols},in_band`)
       .eq("token_hash", tokenHash)
       .maybeSingle();
+    // deno-lint-ignore no-explicit-any
+    let row = initialRow.data as any;
+    if (initialRow.error && initialRow.error.code === "42703") {
+      const retry = await admin
+        .from("claim_tokens")
+        .select(baseCols)
+        .eq("token_hash", tokenHash)
+        .maybeSingle();
+      row = retry.data;
+    }
 
     if (!row) return json({ ok: false, code: "invalid" }, 404);
     if (row.used_at) {
@@ -204,6 +216,21 @@ Deno.serve(async (req) => {
         pro: pro ? { business: pro.business, logo: pro.logo } : null,
         media,
       };
+    }
+
+    // Tokens returned in-band to the API caller (the QR flow) must not mint a
+    // session directly: the bound email was asserted by the pro, not proven by
+    // the recipient. Route the claimer through the emailed sign-in link
+    // (homeowner-login) so only the real inbox owner can complete login. The
+    // preview above still renders, so the in-person QR moment keeps its value.
+    if (row.in_band) {
+      return json({
+        ok: false,
+        code: "verify_email",
+        preview,
+        record_id: row.record_id,
+        locale: row.locale ?? "en",
+      });
     }
 
     // A session may only be minted for the email the token was bound to at

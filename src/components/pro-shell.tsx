@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
   CalendarClock,
+  ChevronDown,
   FileText,
   Gift,
   LayoutDashboard,
@@ -26,7 +27,7 @@ import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
-import { ProSetupWidget } from "@/components/pro-setup-checklist";
+import { ProSetupNavItem } from "@/components/pro-setup-checklist";
 
 import { LanguageToggle, LanguageInlinePicker, useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
@@ -107,12 +108,19 @@ export type ProNavKey =
   | "office"
   | "settings";
 
-const NAV: { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDashboard }[] = [
+type NavItem = { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDashboard };
+
+/* The daily loop stays visible; everything else folds into "More" so a new
+   pro sees four choices, not ten. */
+const CORE_NAV: NavItem[] = [
   { key: "home", labelKey: "pro.nav.logJob", to: "/pro", icon: LayoutDashboard },
   { key: "dashboard", labelKey: "pro.nav.dashboard", to: "/pro/dashboard", icon: LayoutDashboard },
   { key: "customers", labelKey: "pro.nav.customers", to: "/pro/customers", icon: Users },
-  { key: "records", labelKey: "pro.nav.records", to: "/pro/records", icon: FileText },
   { key: "invoices", labelKey: "pro.nav.invoices", to: "/pro/invoices", icon: ReceiptText },
+];
+
+const MORE_NAV: NavItem[] = [
+  { key: "records", labelKey: "pro.nav.records", to: "/pro/records", icon: FileText },
   { key: "due", labelKey: "pro.nav.due", to: "/pro/due", icon: CalendarClock },
   { key: "reviews", labelKey: "pro.nav.reviews", to: "/pro/reviews", icon: Star },
   { key: "referral", labelKey: "pro.nav.referral", to: "/pro/referral", icon: Gift },
@@ -120,6 +128,64 @@ const NAV: { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDash
   { key: "settings", labelKey: "pro.nav.settings", to: "/pro/settings", icon: Settings },
 ];
 
+/* Core links, then a "More" disclosure holding the rest. Opens itself when
+   the active page lives inside it, so the current page is never hidden. */
+function GroupedNav({
+  active,
+  proId,
+  mobile = false,
+  onNavigate,
+}: {
+  active: ProNavKey;
+  /* Drives the setup progress entry at the top of the nav; null hides it. */
+  proId: string | null;
+  mobile?: boolean;
+  onNavigate?: () => void;
+}) {
+  const t = useT();
+  const [moreOpen, setMoreOpen] = useState(() => MORE_NAV.some((item) => item.key === active));
+  const itemClass = (isActive: boolean) =>
+    mobile
+      ? `pressable flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] ${
+          isActive ? "bg-indigobg text-indigo font-bold" : "text-ink font-semibold hover:bg-soft"
+        }`
+      : `pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
+          isActive
+            ? "bg-indigobg text-indigo font-bold"
+            : "text-muted font-semibold hover:text-ink hover:bg-soft"
+        }`;
+  const renderItem = ({ key, labelKey, to, icon: Icon }: NavItem) => (
+    <Link
+      key={key}
+      to={to}
+      onClick={onNavigate}
+      aria-current={active === key ? "page" : undefined}
+      className={itemClass(active === key)}
+    >
+      <Icon size={mobile ? 18 : 17} />
+      {t(labelKey)}
+    </Link>
+  );
+  return (
+    <>
+      <ProSetupNavItem proId={proId} mobile={mobile} onNavigate={onNavigate} />
+      {CORE_NAV.map(renderItem)}
+      <button
+        type="button"
+        onClick={() => setMoreOpen((v) => !v)}
+        aria-expanded={moreOpen}
+        className={`${itemClass(false)} w-full`}
+      >
+        <ChevronDown
+          size={mobile ? 18 : 17}
+          className={`transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`}
+        />
+        {t("pro.nav.more")}
+      </button>
+      {moreOpen && <div className={mobile ? "pl-3" : "pl-2.5"}>{MORE_NAV.map(renderItem)}</div>}
+    </>
+  );
+}
 
 function timeAgo(iso: string, locale: string) {
   const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
@@ -349,21 +415,7 @@ export function ProShell({
           </Link>
         </div>
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto" aria-label={t("pro.navigation")}>
-          {NAV.map(({ key, labelKey, to, icon: Icon }) => (
-            <Link
-              key={key}
-              to={to}
-              aria-current={active === key ? "page" : undefined}
-              className={`pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
-                active === key
-                  ? "bg-indigobg text-indigo font-bold"
-                  : "text-muted font-semibold hover:text-ink hover:bg-soft"
-              }`}
-            >
-              <Icon size={17} />
-              {t(labelKey)}
-            </Link>
-          ))}
+          <GroupedNav active={active} proId={pro?.id ?? null} />
         </nav>
       </aside>
 
@@ -453,26 +505,13 @@ export function ProShell({
                 </div>
               )}
 
-              <nav
-                className="flex-1 overflow-y-auto p-2"
-                aria-label={t("pro.navigation")}
-              >
-                {NAV.map(({ key, labelKey, to, icon: Icon }) => (
-                  <Link
-                    key={key}
-                    to={to}
-                    onClick={() => setMenuOpen(false)}
-                    aria-current={active === key ? "page" : undefined}
-                    className={`pressable flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] ${
-                      active === key
-                        ? "bg-indigobg text-indigo font-bold"
-                        : "text-ink font-semibold hover:bg-soft"
-                    }`}
-                  >
-                    <Icon size={18} />
-                    {t(labelKey)}
-                  </Link>
-                ))}
+              <nav className="flex-1 overflow-y-auto p-2" aria-label={t("pro.navigation")}>
+                <GroupedNav
+                  active={active}
+                  proId={pro?.id ?? null}
+                  mobile
+                  onNavigate={() => setMenuOpen(false)}
+                />
               </nav>
 
               <div className="border-t border-line px-3 py-3 space-y-2">
@@ -500,7 +539,6 @@ export function ProShell({
           </div>
         )}
 
-
         <main
           className={`mx-auto ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 sm:px-6 py-6 md:py-10 ${hideMobileCta ? "pb-10" : "pb-28 md:pb-10"}`}
         >
@@ -526,11 +564,6 @@ export function ProShell({
             </Link>
           </div>
         )}
-
-        {/* Floating setup progress. Auto-hides at 100%; lifts above the
-            mobile "Log a job" CTA when it's rendered so both stay usable. */}
-        <ProSetupWidget proId={pro?.id ?? null} hasBottomCta={!hideMobileCta} />
-
       </div>
     </div>
   );

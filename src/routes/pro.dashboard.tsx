@@ -1,6 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, ChevronRight, ChevronDown, Check } from "lucide-react";
+import {
+  MapPin,
+  CalendarClock,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  ReceiptText,
+  Star,
+  Users,
+} from "lucide-react";
 import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl } from "@/lib/hb";
@@ -276,8 +286,36 @@ function ProDashboard() {
         )}
       </section>
 
+      {/* One tap to every working surface, so the slim sidebar never hides
+          anything: the dashboard is the map. */}
+      <section className="anim-fade-up d-3 mt-8">
+        <h2 className="text-lg font-semibold text-ink mb-3">{t("pi.quickLinks")}</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {(
+            [
+              { to: "/pro/customers", labelKey: "pro.nav.customers", icon: Users },
+              { to: "/pro/invoices", labelKey: "pro.nav.invoices", icon: ReceiptText },
+              { to: "/pro/records", labelKey: "pro.nav.records", icon: FileText },
+              { to: "/pro/due", labelKey: "pro.nav.due", icon: CalendarClock },
+              { to: "/pro/reviews", labelKey: "pro.nav.reviews", icon: Star },
+            ] as const
+          ).map(({ to, labelKey, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="pressable liftable flex flex-col gap-2.5 rounded-2xl border border-line bg-paper px-4 py-4"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigobg text-indigo">
+                <Icon size={17} />
+              </span>
+              <span className="text-sm font-semibold text-ink">{t(labelKey)}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {googleConnected && (
-        <section className="anim-fade-up d-3 mt-8">
+        <section className="anim-fade-up d-4 mt-8">
           <Card className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-sm text-muted">

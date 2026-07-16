@@ -143,6 +143,8 @@ const en = {
   "pro.nav.referral": "Referral",
   "pro.nav.office": "Office",
   "pro.nav.dashboard": "Dashboard",
+  "pro.nav.more": "More",
+  "pi.quickLinks": "Quick links",
 
   "pro.nav.settings": "Settings",
   "pro.logJob": "Log a job",
@@ -370,6 +372,8 @@ const es: Partial<Record<TKey, string>> = {
   "pro.nav.referral": "Referidos",
   "pro.nav.office": "Oficina",
   "pro.nav.dashboard": "Panel",
+  "pro.nav.more": "Más",
+  "pi.quickLinks": "Accesos rápidos",
 
   "pro.nav.settings": "Configuración",
   "pro.logJob": "Registrar un trabajo",
@@ -593,6 +597,8 @@ const ru: Partial<Record<TKey, string>> = {
   "pro.nav.referral": "Рекомендации",
   "pro.nav.office": "Офис",
   "pro.nav.dashboard": "Панель",
+  "pro.nav.more": "Ещё",
+  "pi.quickLinks": "Быстрые ссылки",
 
   "pro.nav.settings": "Настройки",
   "pro.logJob": "Записать работу",
@@ -814,6 +820,8 @@ const uk: Partial<Record<TKey, string>> = {
   "pro.nav.referral": "Рекомендації",
   "pro.nav.office": "Офіс",
   "pro.nav.dashboard": "Панель",
+  "pro.nav.more": "Більше",
+  "pi.quickLinks": "Швидкі посилання",
 
   "pro.nav.settings": "Налаштування",
   "pro.logJob": "Записати роботу",
@@ -1101,4 +1109,3 @@ export function LanguageInlinePicker({ className = "" }: { className?: string })
     </div>
   );
 }
-
