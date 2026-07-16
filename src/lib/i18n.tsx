@@ -141,6 +141,8 @@ const en = {
   "pro.nav.reviews": "Reviews",
   "pro.nav.referral": "Referral",
   "pro.nav.office": "Office",
+  "pro.nav.dashboard": "Dashboard",
+
   "pro.nav.settings": "Settings",
   "pro.logJob": "Log a job",
   "pro.back": "Back",
