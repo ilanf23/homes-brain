@@ -3638,15 +3638,13 @@ function NewJob() {
                   <Btn variant="indigo" onClick={logAnother}>
                     {t("pro.logAnother")}
                   </Btn>
-                  <Link to="/pro">
-                    <Btn variant="secondary">{t("pro.backDashboard")}</Btn>
-                  </Link>
                 </div>
               </Card>
             )}
           </div>
         </div>
       </div>
+
 
       {/* Floating HomesBrain AI button: on Review only, hovering over the
           record. Tap it and speak a correction or addition; edit-record
