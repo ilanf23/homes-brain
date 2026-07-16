@@ -277,95 +277,58 @@ export function MarketingShell({
             </button>
           </div>
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4">
-            {/* Hero destinations */}
-            <div className="space-y-3 anim-fade-up">
-              <Link
-                to="/for-pros"
-                onClick={() => setMenuOpen(false)}
-                className="pressable block rounded-3xl bg-indigobg/70 px-5 py-5 hover:bg-indigobg transition-colors"
-              >
-                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-indigodark">
-                  For pros
-                </div>
-                <div className="mt-1 text-sm text-ink/70">
-                  Create account and turn every job into a review.
-                </div>
-              </Link>
-              <Link
-                to="/for-homeowners"
-                onClick={() => setMenuOpen(false)}
-                className="pressable block rounded-3xl bg-coralbg/70 px-5 py-5 hover:bg-coralbg transition-colors"
-              >
-                <div className="text-[26px] leading-tight font-extrabold tracking-tight text-coraldark">
-                  For homeowners
-                </div>
-                <div className="mt-1 text-sm text-ink/70">
-                  Get the living record for your home.
-                </div>
-              </Link>
+          {/* Body — mobile menu is auth-first: sign up or log in is the
+              whole point. Marketing pages are demoted to a small row at
+              the bottom. */}
+          <div className="flex-1 overflow-y-auto px-6 pt-8 pb-6 flex flex-col">
+            <div className="anim-fade-up">
+              <div className="eyebrow text-indigo">Get started</div>
+              <h2 className="mt-2 text-[30px] leading-[1.1] font-extrabold tracking-tight text-ink">
+                Every home
+                <br />
+                remembers.
+              </h2>
+              <p className="mt-3 text-[15px] text-muted">
+                Free for pros and homeowners. Log a job in 30 seconds, send a branded record, own it for life.
+              </p>
             </div>
 
-            {/* Divider */}
-            <div className="my-6 h-px bg-line" />
-
-            {/* Quiet items */}
-            <nav aria-label="More" className="anim-fade-up flex flex-col">
-              {quietMobileLinks.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-between min-h-12 py-2 text-base font-medium text-muted hover:text-ink transition-colors"
-                >
-                  {l.label}
-                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="opacity-60">
-                    <path
-                      d="M5 3l4 4-4 4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.75"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </Link>
-              ))}
+            <div className="mt-8 space-y-3 anim-fade-up">
+              <Link to="/pro/signup" onClick={() => setMenuOpen(false)} className="block w-full">
+                <Btn variant="indigo" size="lg" className="w-full">
+                  Create pro account
+                </Btn>
+              </Link>
+              <Link to="/home/signup" onClick={() => setMenuOpen(false)} className="block w-full">
+                <Btn variant="coral" size="lg" className="w-full">
+                  I'm a homeowner
+                </Btn>
+              </Link>
               <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center justify-between min-h-12 py-2 text-base font-medium text-muted hover:text-ink transition-colors"
+                className="block w-full text-center py-3 text-[15px] font-semibold text-ink hover:text-indigo transition-colors"
               >
-                Log in
-                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="opacity-60">
-                  <path
-                    d="M5 3l4 4-4 4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                Already have an account? <span className="text-indigo">Log in</span>
               </Link>
-            </nav>
-          </div>
+            </div>
 
-          {/* Pinned bottom CTA */}
-          <div
-            className="border-t border-line px-5 py-4 bg-background"
-            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-          >
-            <Link
-              to={primaryCta.to}
-              onClick={() => setMenuOpen(false)}
-              className="block w-full"
-            >
-              <Btn variant={primaryCta.variant} size="lg" className="w-full">
-                {primaryCta.label}
-              </Btn>
-            </Link>
+            {/* Quiet marketing links at the bottom */}
+            <div className="mt-auto pt-10">
+              <div className="h-px bg-line mb-4" />
+              <nav aria-label="More" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+                {quietMobileLinks.map((l) => (
+                  <Link
+                    key={l.to}
+                    to={l.to}
+                    onClick={() => setMenuOpen(false)}
+                    className="hover:text-ink transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
           </div>
         </div>
       )}
