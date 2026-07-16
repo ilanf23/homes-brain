@@ -89,7 +89,7 @@ function inviteEmail(opts: {
     complianceFooterText(unsubUrl, reason),
   ].join("\n");
 
-  const invitedHtml = `${emphasize(fromName)} at ${emphasize(address)} invited you${trade ? ` (${escAttr(trade)})` : ""} to keep their home's service record on HomesBrain.`;
+  const invitedHtml = `${emphasize(fromName)} at ${emphasize(address)} invited you${trade ? ` (${esc(trade)})` : ""} to keep their home's service record on HomesBrain.`;
 
   const bodyHtml = [
     renderH1("You've been invited to HomesBrain"),
@@ -113,10 +113,6 @@ function inviteEmail(opts: {
   });
 
   return { subject, text, html };
-}
-
-function escAttr(s: string) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 Deno.serve(async (req) => {
