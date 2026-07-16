@@ -976,17 +976,14 @@ function NewJob() {
   }
 
   function removePhoto(id: string) {
-    setPhotoItems((prev) => {
-      const item = prev.find((p) => p.id === id);
-      if (item) {
-        URL.revokeObjectURL(item.previewUrl);
-        if (item.path) {
-          photoPaths.current = photoPaths.current.filter((p) => p !== item.path);
-          void removeJobMediaObject(item.path);
-        }
-      }
-      return prev.filter((p) => p.id !== id);
-    });
+    const item = photoItems.find((p) => p.id === id);
+    setPhotoItems((prev) => prev.filter((p) => p.id !== id));
+    if (!item) return;
+    URL.revokeObjectURL(item.previewUrl);
+    if (item.path) {
+      photoPaths.current = photoPaths.current.filter((p) => p !== item.path);
+      void removeJobMediaObject(item.path);
+    }
   }
 
   /* Ask the AI to pull equipment + next-service out of the note. Fills blanks
@@ -2105,7 +2102,7 @@ function NewJob() {
       });
     }
     if (!(await insertJobMedia(mediaRows))) {
-      setToast("The video didn't attach. The record still sent without it.");
+      setToast("The video or photos didn't attach. The record still sent without them.");
       setTimeout(() => setToast(null), 4500);
     }
 
