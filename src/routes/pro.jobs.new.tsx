@@ -3840,6 +3840,6 @@ function NewJob() {
           onClose={() => setQrOpen(false)}
         />
       )}
-    </div>
+    </ProShell>
   );
 }
