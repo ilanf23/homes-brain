@@ -1078,7 +1078,7 @@ function HowItWorks() {
               <div className="mt-6">
                 <Link to="/pro/signup">
                   <Btn variant="indigo" size="lg">
-                    Claim your profile
+                    Create account
                   </Btn>
                 </Link>
               </div>
@@ -1113,7 +1113,7 @@ function HowItWorks() {
       >
         <Link to="/pro/signup">
           <Btn variant="indigo" size="lg">
-            Claim your profile
+            Create account
           </Btn>
         </Link>
         <Link to="/for-pros">

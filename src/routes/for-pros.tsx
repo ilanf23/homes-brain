@@ -53,7 +53,7 @@ function Step({ n, title, body }: { n: number; title: string; body: ReactNode })
 
 function ForPros() {
   return (
-    <MarketingShell mobileCta={{ label: "Claim your profile", to: "/pro/signup", variant: "indigo" }}>
+    <MarketingShell mobileCta={{ label: "Create account", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero */}
       <section className={`${CONTAINER} pt-14 pb-14 text-center`}>
         <div className="eyebrow text-indigo">Charter Pro, Class of 2027</div>
@@ -69,7 +69,7 @@ function ForPros() {
         <div className="mt-8 flex justify-center">
           <Link to="/pro/signup" className="w-full sm:w-auto">
             <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-              Claim your profile
+              Create account
             </Btn>
           </Link>
         </div>
@@ -219,7 +219,7 @@ function ForPros() {
           <div className="mt-5 flex justify-center">
             <Link to="/pro/signup" className="w-full sm:w-auto">
               <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-                Claim your profile
+                Create account
               </Btn>
             </Link>
           </div>
