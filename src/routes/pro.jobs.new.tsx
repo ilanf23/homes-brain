@@ -1719,11 +1719,23 @@ function NewJob() {
 
   async function submit() {
     if (!proId) return;
-    const work = whatDone.trim();
+    // The pro dictates in their own language; when they've picked a different
+    // customer language on Review, translate-record already produced a
+    // translated version for the preview. Persist THAT as the record so the
+    // saved job matches what the customer will read forever.
+    const useTranslated =
+      customerLocale !== uiLocale &&
+      translationState === "ready" &&
+      !!translatedRecord?.whatDone;
+    const work = (useTranslated ? translatedRecord!.whatDone! : whatDone).trim();
+    const savedEqType = useTranslated
+      ? (translatedRecord?.equipmentType ?? eqType)
+      : eqType;
     const selected = existing.find((customer) => customer.id === selectedCustomerId);
     const finalName = (reviewName ?? selected?.name ?? newCustomer.name).trim() || "Customer";
     const finalAddress = (selectedCustomerId ? locAddress : newCustomer.address).trim();
     const finalEmail = reviewEmail.trim().toLowerCase();
+
 
     if (!work) {
       setStage("review");
