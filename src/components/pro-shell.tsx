@@ -108,7 +108,7 @@ export type ProNavKey =
   | "settings";
 
 const NAV: { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDashboard }[] = [
-  { key: "home", labelKey: "pro.nav.home", to: "/pro", icon: LayoutDashboard },
+  { key: "home", labelKey: "pro.nav.logJob", to: "/pro", icon: LayoutDashboard },
   { key: "dashboard", labelKey: "pro.nav.dashboard", to: "/pro/dashboard", icon: LayoutDashboard },
   { key: "customers", labelKey: "pro.nav.customers", to: "/pro/customers", icon: Users },
   { key: "records", labelKey: "pro.nav.records", to: "/pro/records", icon: FileText },
