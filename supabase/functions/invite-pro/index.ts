@@ -11,12 +11,20 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   buildUnsubUrl,
-  complianceFooterHtml,
   complianceFooterText,
   getUnsubToken,
   isEmailOptedOut,
   listUnsubscribeHeaders,
 } from "../_shared/email-compliance.ts";
+import {
+  emphasize,
+  renderBody,
+  renderBodyHtml,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
