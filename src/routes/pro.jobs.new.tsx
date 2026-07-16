@@ -13,7 +13,7 @@ import {
   Toast,
 } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { useProGuard } from "@/components/pro-shell";
+import { ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { Celebration } from "@/components/celebration";
 import {
@@ -2505,28 +2505,10 @@ function NewJob() {
   }
 
   return (
-    <div className="font-app min-h-dvh bg-soft">
-      <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto max-w-5xl px-5 h-16 flex items-center justify-between">
-          <Link to="/pro" className="flex items-center gap-2.5 group">
-            <Logo markClassName="transition-transform duration-300 group-hover:rotate-[-6deg]" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Pill accent="indigo">{t("pro.logJob")}</Pill>
-          </div>
-        </div>
-      </header>
-
-      <div className={`mx-auto px-5 py-10 ${stage === "customer" ? "max-w-4xl" : "max-w-xl"}`}>
+    <ProShell pro={pro} active="home" hideMobileCta>
+      <div className={`mx-auto ${stage === "customer" ? "max-w-4xl" : "max-w-xl"}`}>
         {stage !== "done" && (
           <div className="anim-fade-up max-w-xl mx-auto mb-8">
-            <Link
-              to="/pro"
-              className="mb-6 inline-flex items-center gap-2 text-xl font-extrabold tracking-tight text-indigo transition-colors hover:text-indigodark"
-            >
-              <span aria-hidden>&larr;</span>
-              {t("pro.backDashboard")}
-            </Link>
             {(() => {
               // Existing-customer flow skips the standalone location step, so
               // the step bar honestly reflects a 3-tap path (Customer → Work →
@@ -3656,15 +3638,13 @@ function NewJob() {
                   <Btn variant="indigo" onClick={logAnother}>
                     {t("pro.logAnother")}
                   </Btn>
-                  <Link to="/pro">
-                    <Btn variant="secondary">{t("pro.backDashboard")}</Btn>
-                  </Link>
                 </div>
               </Card>
             )}
           </div>
         </div>
       </div>
+
 
       {/* Floating HomesBrain AI button: on Review only, hovering over the
           record. Tap it and speak a correction or addition; edit-record
@@ -3860,6 +3840,6 @@ function NewJob() {
           onClose={() => setQrOpen(false)}
         />
       )}
-    </div>
+    </ProShell>
   );
 }
