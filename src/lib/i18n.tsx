@@ -367,6 +367,8 @@ const es: Partial<Record<TKey, string>> = {
   "pro.nav.reviews": "Reseñas",
   "pro.nav.referral": "Referidos",
   "pro.nav.office": "Oficina",
+  "pro.nav.dashboard": "Panel",
+
   "pro.nav.settings": "Configuración",
   "pro.logJob": "Registrar un trabajo",
   "pro.back": "Volver",
