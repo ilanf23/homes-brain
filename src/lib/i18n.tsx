@@ -134,6 +134,7 @@ const en = {
   // Pro workspace chrome
   "pro.navigation": "Pro navigation",
   "pro.nav.home": "Home",
+  "pro.nav.logJob": "Log a job",
   "pro.nav.customers": "Customers",
   "pro.nav.records": "Records",
   "pro.nav.invoices": "Invoices",
@@ -360,6 +361,7 @@ const es: Partial<Record<TKey, string>> = {
 
   "pro.navigation": "Navegación profesional",
   "pro.nav.home": "Inicio",
+  "pro.nav.logJob": "Registrar un trabajo",
   "pro.nav.customers": "Clientes",
   "pro.nav.records": "Registros",
   "pro.nav.invoices": "Facturas",
@@ -582,6 +584,7 @@ const ru: Partial<Record<TKey, string>> = {
 
   "pro.navigation": "Навигация специалиста",
   "pro.nav.home": "Главная",
+  "pro.nav.logJob": "Записать работу",
   "pro.nav.customers": "Клиенты",
   "pro.nav.records": "Записи",
   "pro.nav.invoices": "Счета",
@@ -802,6 +805,7 @@ const uk: Partial<Record<TKey, string>> = {
 
   "pro.navigation": "Навігація фахівця",
   "pro.nav.home": "Головна",
+  "pro.nav.logJob": "Записати роботу",
   "pro.nav.customers": "Клієнти",
   "pro.nav.records": "Записи",
   "pro.nav.invoices": "Рахунки",
