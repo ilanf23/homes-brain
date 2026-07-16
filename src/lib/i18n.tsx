@@ -809,6 +809,8 @@ const uk: Partial<Record<TKey, string>> = {
   "pro.nav.reviews": "Відгуки",
   "pro.nav.referral": "Рекомендації",
   "pro.nav.office": "Офіс",
+  "pro.nav.dashboard": "Панель",
+
   "pro.nav.settings": "Налаштування",
   "pro.logJob": "Записати роботу",
   "pro.back": "Назад",
