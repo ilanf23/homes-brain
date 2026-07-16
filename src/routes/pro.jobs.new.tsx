@@ -1957,7 +1957,8 @@ function NewJob() {
         const { error: equipmentErr } = await supabase
           .from("equipment")
           .update({
-            type: eqType || null,
+            type: savedEqType || null,
+
             make: eqMake || null,
             model: eqModel || null,
             warranty_until: warrantyUntil || null,
