@@ -1057,3 +1057,36 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
     </DropdownMenu>
   );
 }
+
+/* Inline segmented language picker. Use inside a slide-over/drawer where a
+   portalled DropdownMenu would render behind the overlay or be clipped. */
+export function LanguageInlinePicker({ className = "" }: { className?: string }) {
+  const { locale, setLocale } = useI18n();
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Language"
+      className={`inline-flex items-center gap-1 rounded-full border border-line bg-soft p-1 ${className}`}
+    >
+      {LOCALES.map(({ code, short, label }) => {
+        const active = code === locale;
+        return (
+          <button
+            key={code}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            aria-label={label}
+            onClick={() => setLocale(code)}
+            className={`pressable rounded-full px-2.5 py-1 text-xs font-bold tracking-wide transition-colors ${
+              active ? "bg-paper text-ink shadow-sm" : "text-muted hover:text-ink"
+            }`}
+          >
+            {short}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+

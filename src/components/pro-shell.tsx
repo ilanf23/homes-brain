@@ -28,7 +28,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
 import { ProSetupWidget } from "@/components/pro-setup-checklist";
 
-import { LanguageToggle, useI18n, useT, type TKey } from "@/lib/i18n";
+import { LanguageToggle, LanguageInlinePicker, useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
 import { phIdentify, phReset } from "@/lib/posthog";
 
@@ -477,7 +477,7 @@ export function ProShell({
                   <span className="text-xs font-bold uppercase tracking-wider text-muted">
                     {t("lang.label")}
                   </span>
-                  <LanguageToggle />
+                  <LanguageInlinePicker />
                 </div>
                 <div className="flex items-center justify-between px-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted">
