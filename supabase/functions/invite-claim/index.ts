@@ -25,7 +25,6 @@ import {
   renderFinePrint,
   renderH1,
   emphasize,
-  esc as shellEsc,
 } from "../_shared/email-shell.ts";
 import { authenticatePro } from "../_shared/pro-auth.ts";
 import {
