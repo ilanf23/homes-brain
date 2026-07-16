@@ -466,6 +466,9 @@ function NewJob() {
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>([]);
   const photosBusy = useRef<Set<Promise<void>>>(new Set());
   const photoPaths = useRef<string[]>([]);
+  // Ids removed while their upload is still in flight: the upload task checks
+  // this before pushing to photoPaths so a pro's removal always wins the race.
+  const removedPhotoIds = useRef<Set<string>>(new Set());
 
   // AI extract from the "What was done" note. Auto-runs on a debounce so the
   // pro dictates/types once and the equipment fields below fill themselves in.
@@ -960,6 +963,10 @@ function NewJob() {
           ext: "jpg",
           contentType: "image/jpeg",
         });
+        if (removedPhotoIds.current.has(id)) {
+          void removeJobMediaObject(up.path);
+          return;
+        }
         photoPaths.current = [...photoPaths.current, up.path];
         setPhotoItems((prev) =>
           prev.map((p) => (p.id === id ? { ...p, status: "done", path: up.path } : p)),
@@ -978,6 +985,7 @@ function NewJob() {
   function removePhoto(id: string) {
     const item = photoItems.find((p) => p.id === id);
     setPhotoItems((prev) => prev.filter((p) => p.id !== id));
+    removedPhotoIds.current.add(id);
     if (!item) return;
     URL.revokeObjectURL(item.previewUrl);
     if (item.path) {
@@ -3593,14 +3601,21 @@ function NewJob() {
                         onToggle={() => toggleField(FIELD_VIDEO)}
                       />
                     )}
-                    {photoItems.length > 0 && (
-                      <RecordRow
-                        label={customerCopy.photo}
-                        value={`${photoItems.length} photo${photoItems.length === 1 ? "" : "s"}`}
-                        included={!hiddenFields.has(FIELD_PHOTOS)}
-                        onToggle={() => toggleField(FIELD_PHOTOS)}
-                      />
-                    )}
+                    {(() => {
+                      const attachablePhotoCount = photoItems.filter(
+                        (i) => i.status !== "error",
+                      ).length;
+                      return (
+                        attachablePhotoCount > 0 && (
+                          <RecordRow
+                            label={customerCopy.photo}
+                            value={`${attachablePhotoCount} photo${attachablePhotoCount === 1 ? "" : "s"}`}
+                            included={!hiddenFields.has(FIELD_PHOTOS)}
+                            onToggle={() => toggleField(FIELD_PHOTOS)}
+                          />
+                        )
+                      );
+                    })()}
                   </div>
 
                   {/* Optional walkthrough video for the AI voice flow, which
