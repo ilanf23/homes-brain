@@ -8,6 +8,13 @@
    inside claim-exchange. */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -50,8 +57,6 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 function loginEmail(ctaUrl: string) {
-  const url = ctaUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-
   const text = [
     "Tap to sign in to your HomesBrain home.",
     "",
@@ -61,21 +66,20 @@ function loginEmail(ctaUrl: string) {
     "",
     "If you didn't request this, you can ignore this email.",
   ].join("\n");
-  const html = `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">HomesBrain</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">Sign-in link</div>
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:22px;line-height:1.3;letter-spacing:-0.02em;color:#16160f;">Sign in to your home</h1>
-      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#73706a;">Tap the button to sign in. This link works from your inbox and expires in 30 minutes.</p>
-      <div style="margin-top:22px;">
-        <a href="${url}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">Sign in to HomesBrain</a>
-      </div>
-      <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">If you didn't request this, you can ignore this email.</p>
-    </div>
-  </div>
-</body></html>`;
+  const bodyHtml = [
+    renderH1("Sign in to your home"),
+    renderBody(
+      "Tap the button to sign in. This link works from your inbox and expires in 30 minutes.",
+    ),
+    renderCta(ctaUrl, "Sign in to HomesBrain"),
+    renderFinePrint("If you didn't request this, you can ignore this email."),
+  ].join("\n");
+  const html = renderEmailShell({
+    lang: "en",
+    brandLine: "HomesBrain",
+    eyebrow: "Every home remembers",
+    bodyHtml,
+  });
   return { subject: "Your HomesBrain sign-in link", text, html };
 }
 

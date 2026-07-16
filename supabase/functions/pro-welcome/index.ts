@@ -4,6 +4,13 @@
    Safe to call on every login; only the first call actually sends. */
 
 import { authenticatePro } from "../_shared/pro-auth.ts";
+import {
+  renderBody,
+  renderCta,
+  renderEmailShell,
+  renderFinePrint,
+  renderH1,
+} from "../_shared/email-shell.ts";
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -35,14 +42,6 @@ function safeOrigin(raw: unknown): string {
   return ALLOWED_ORIGINS.some((re) => re.test(raw)) ? raw : FALLBACK_ORIGIN;
 }
 
-function esc(s: string) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function welcomeEmail(opts: { firstName: string | null; ctaUrl: string }) {
   const { firstName, ctaUrl } = opts;
   const greeting = firstName ? `Welcome to HomesBrain, ${firstName}` : `Welcome to HomesBrain`;
@@ -62,23 +61,24 @@ function welcomeEmail(opts: { firstName: string | null; ctaUrl: string }) {
     "HomesBrain",
   ].join("\n");
 
-  const html = `<!doctype html>
-<html lang="en"><body style="margin:0;padding:0;background:#f7f6f1;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div translate="no" class="notranslate" style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;">HomesBrain</div>
-    <div style="margin-top:6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#73706a;">Every home remembers</div>
-    <div style="margin-top:18px;background:#ffffff;border:1px solid #e7e5de;border-radius:20px;padding:28px;">
-      <h1 style="margin:0;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#16160f;">${esc(greeting)}.</h1>
-      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#16160f;">You're in. <span translate="no" class="notranslate">HomesBrain</span> keeps a service record for every job you do, so the customers you already earned come back to you instead of Googling a competitor.</p>
-      <p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#16160f;">Your one first step: log your first job. It takes about 30 seconds.</p>
-      <div style="margin-top:22px;">
-        <a href="${ctaUrl}" style="display:inline-block;background:#473fb0;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;padding:12px 26px;">Log your first job</a>
-      </div>
-      <p style="margin:18px 0 0;font-size:13px;line-height:1.55;color:#73706a;">Free for life. No credit card, no per-record fees.</p>
-    </div>
-    <p style="margin:18px 0 0;font-size:12px;line-height:1.55;color:#73706a;">You're receiving this because you just created a <span translate="no" class="notranslate">HomesBrain</span> pro account. Questions? Just reply.</p>
-  </div>
-</body></html>`;
+  const bodyHtml = [
+    renderH1(`${greeting}.`),
+    renderBody(
+      "You're in. HomesBrain keeps a service record for every job you do, so the customers you already earned come back to you instead of Googling a competitor.",
+    ),
+    renderBody("Your one first step: log your first job. It takes about 30 seconds."),
+    renderCta(ctaUrl, "Log your first job"),
+    renderFinePrint("Free for life. No credit card, no per-record fees."),
+  ].join("\n");
+
+  const html = renderEmailShell({
+    lang: "en",
+    brandLine: "HomesBrain",
+    eyebrow: "Every home remembers",
+    bodyHtml,
+    reason:
+      "You're receiving this because you just created a HomesBrain pro account. Questions? Just reply.",
+  });
 
   return { subject, text, html };
 }
