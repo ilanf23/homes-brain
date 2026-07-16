@@ -351,14 +351,14 @@ function recordEmail(opts: {
   if (eqLine) detailRows.push({ label: copy.equipment, value: eqLine });
   if (warranty) detailRows.push({ label: copy.warranty, value: warranty });
 
+  const descEscaped = esc(copy.description(business));
+  const descHtml = business
+    ? descEscaped.replace(esc(business), emphasize(business))
+    : descEscaped;
+
   const bodyHtml = [
     renderH1(copy.title(business)),
-    renderBodyHtml(
-      esc(copy.description(business)).replace(
-        esc(business || ""),
-        business ? emphasize(business) : esc(business),
-      ),
-    ),
+    renderBodyHtml(descHtml),
     renderDetails(detailRows),
     renderCta(ctaUrl, cta),
     renderFinePrint(copy.oneTap),
