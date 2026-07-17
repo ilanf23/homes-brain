@@ -159,6 +159,7 @@ function RootComponent() {
   const { locale } = Route.useLoaderData();
   useEffect(() => {
     initPosthog();
+    void import("../lib/pwa-register").then((m) => m.registerPWA());
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
