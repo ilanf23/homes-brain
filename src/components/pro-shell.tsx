@@ -6,7 +6,6 @@ import {
   ChevronDown,
   FileText,
   Gift,
-  Home,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -116,17 +115,17 @@ export type ProNavKey =
   | "settings";
 
 type NavItem = {
-  key: "home" | "customers" | "records" | "profile";
+  key: "dashboard" | "customers" | "records" | "profile";
   labelKey: TKey;
   to: string;
-  icon: typeof Home;
+  icon: typeof LayoutDashboard;
 };
 
 /* Desktop sidebar mirrors the mobile bottom bar exactly: same four
-   destinations, same order, one mental model everywhere. Everything else
-   lives under Profile, on desktop too. */
+   destinations, same order, one mental model everywhere. Log-a-job is its
+   own primary button above; everything else lives under Profile. */
 const SIDEBAR_NAV: NavItem[] = [
-  { key: "home", labelKey: "pro.nav.home", to: "/pro/jobs/new", icon: Home },
+  { key: "dashboard", labelKey: "pro.nav.dashboard", to: "/pro/dashboard", icon: LayoutDashboard },
   { key: "customers", labelKey: "pro.nav.customers", to: "/pro/customers", icon: Users },
   { key: "records", labelKey: "pro.nav.records", to: "/pro/records", icon: FileText },
   { key: "profile", labelKey: "pro.nav.profile", to: "/pro/profile", icon: UserRound },

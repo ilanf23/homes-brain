@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Btn } from "@/lib/ui";
+import { supabase } from "@/integrations/supabase/client";
 import { Logo, LogoMark } from "@/components/svg";
 
 /* Shared shell for the public marketing site: sticky header, mobile menu,
@@ -9,6 +10,31 @@ import { Logo, LogoMark } from "@/components/svg";
 /* Canonical origin for og:url / canonical links. Update when the production
    domain changes - this is the only place it lives. */
 export const SITE_URL = "https://homesbrain.com";
+
+/* Signed-in visitors should never be pitched an account they already have.
+   Returns the app path for the current session ("/pro" or "/home"), or null
+   while signed out / still resolving. */
+export function useAppSession(): string | null {
+  const [target, setTarget] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+      if (!user) return;
+      const { data: pro } = await supabase
+        .from("pros")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setTarget(pro ? "/pro" : "/home");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return target;
+}
 
 export function marketingHead(opts: {
   title: string;
@@ -44,7 +70,6 @@ export function marketingHead(opts: {
   };
 }
 
-
 const NAV_LINKS = [
   { to: "/how-it-works", label: "How it works" },
   { to: "/for-pros", label: "For pros" },
@@ -63,7 +88,6 @@ function isHomeownerRoute(pathname: string): boolean {
     pathname.startsWith("/pros/")
   );
 }
-
 
 type FooterLink = {
   to: string;
@@ -97,7 +121,6 @@ const FOOTER_GROUPS: { title: string; links: FooterLink[] }[] = [
       { to: "/privacy", label: "Privacy and consent" },
       { to: "/terms", label: "Terms" },
       { to: "/messaging-terms", label: "Messaging terms" },
-
     ],
   },
 ];
@@ -120,14 +143,21 @@ export function MarketingShell({
   /* The single persistent primary CTA, shown in the desktop header and the
      mobile overlay pinned bottom. Pro-first by default; homeowner routes
      get the homeowner CTA. */
-  const primaryCta: { label: string; to: string; variant: "coral" | "indigo" } =
-    isHomeownerRoute(pathname)
+  const appTarget = useAppSession();
+
+  const primaryCta: { label: string; to: string; variant: "coral" | "indigo" } = appTarget
+    ? { label: "Open app", to: appTarget, variant: "indigo" }
+    : isHomeownerRoute(pathname)
       ? { label: "Get my record", to: "/home/signup", variant: "coral" }
       : { label: "Create account", to: "/pro/signup", variant: "indigo" };
 
-  const resolvedMobileCta =
-    mobileCta === undefined ? { ...primaryCta } : mobileCta;
-
+  /* A live session overrides any page-supplied CTA: the one action that
+     matters for a signed-in visitor is getting back into the app. */
+  const resolvedMobileCta = appTarget
+    ? { ...primaryCta }
+    : mobileCta === undefined
+      ? { ...primaryCta }
+      : mobileCta;
 
   // Close the menu on navigation and keep the page from scrolling behind it.
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -204,12 +234,14 @@ export function MarketingShell({
 
           {/* Desktop actions: one primary CTA (pathname-derived), one quiet log-in link */}
           <div className="hidden min-[880px]:flex items-center gap-3">
-            <Link
-              to="/login"
-              className="text-sm font-medium text-muted hover:text-ink transition-colors"
-            >
-              Log in
-            </Link>
+            {!appTarget && (
+              <Link
+                to="/login"
+                className="text-sm font-medium text-muted hover:text-ink transition-colors"
+              >
+                Log in
+              </Link>
+            )}
             <Link to={primaryCta.to}>
               <Btn variant={primaryCta.variant} size="sm">
                 {primaryCta.label}
@@ -289,37 +321,59 @@ export function MarketingShell({
                 remembers.
               </h2>
               <p className="mt-3 text-[15px] text-muted">
-                Free for pros and homeowners. Log a job in 30 seconds, send a branded record, own it for life.
+                Free for pros and homeowners. Log a job in 30 seconds, send a branded record, own it
+                for life.
               </p>
             </div>
 
             <div className="mt-8 space-y-3 anim-fade-up">
-              <Link to="/pro/signup" onClick={() => setMenuOpen(false)} className="block w-full">
-                <Btn variant="indigo" size="lg" className="w-full">
-                  Create account as a pro
-                </Btn>
-              </Link>
-              <Link to="/home/signup" onClick={() => setMenuOpen(false)} className="block w-full">
-                <Btn variant="coral" size="lg" className="w-full">
-                  Create account as a homeowner
-                </Btn>
-              </Link>
-              <div className="pt-3">
-                <Link to="/login" onClick={() => setMenuOpen(false)} className="block w-full">
-                  <button
-                    type="button"
-                    className="pressable w-full rounded-full border-2 border-ink bg-background px-6 py-4 text-lg font-extrabold text-ink hover:bg-soft transition-colors"
-                  >
-                    Log in
-                  </button>
+              {appTarget ? (
+                <Link to={appTarget} onClick={() => setMenuOpen(false)} className="block w-full">
+                  <Btn variant="indigo" size="lg" className="w-full">
+                    Open app
+                  </Btn>
                 </Link>
-              </div>
+              ) : (
+                <>
+                  <Link
+                    to="/pro/signup"
+                    onClick={() => setMenuOpen(false)}
+                    className="block w-full"
+                  >
+                    <Btn variant="indigo" size="lg" className="w-full">
+                      Create account as a pro
+                    </Btn>
+                  </Link>
+                  <Link
+                    to="/home/signup"
+                    onClick={() => setMenuOpen(false)}
+                    className="block w-full"
+                  >
+                    <Btn variant="coral" size="lg" className="w-full">
+                      Create account as a homeowner
+                    </Btn>
+                  </Link>
+                  <div className="pt-3">
+                    <Link to="/login" onClick={() => setMenuOpen(false)} className="block w-full">
+                      <button
+                        type="button"
+                        className="pressable w-full rounded-full border-2 border-ink bg-background px-6 py-4 text-lg font-extrabold text-ink hover:bg-soft transition-colors"
+                      >
+                        Log in
+                      </button>
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Quiet marketing links at the bottom */}
             <div className="mt-auto pt-10">
               <div className="h-px bg-line mb-4" />
-              <nav aria-label="More" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+              <nav
+                aria-label="More"
+                className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted"
+              >
                 {quietMobileLinks.map((l) => (
                   <Link
                     key={l.to}
@@ -336,8 +390,9 @@ export function MarketingShell({
         </div>
       )}
 
-
-      <main className={`flex-1 ${resolvedMobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}>{children}</main>
+      <main className={`flex-1 ${resolvedMobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}>
+        {children}
+      </main>
 
       {/* Fixed thumb-reachable CTA on mobile. Footer padding below makes room for it. */}
       {resolvedMobileCta && !menuOpen && (
@@ -357,7 +412,6 @@ export function MarketingShell({
         className={`border-t border-line bg-soft ${resolvedMobileCta ? "pb-24 min-[880px]:pb-0" : ""}`}
       >
         <div className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
-
           <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
             <div>
               <Logo size={26} />
@@ -409,7 +463,6 @@ export function MarketingShell({
     </div>
   );
 }
-
 
 /* ---- Phone mockup - the brand's one product visual, shared by every
    marketing page. Real-handset proportions (screen ≈ 9:19.5), a thin uniform
@@ -755,7 +808,6 @@ export function PipelinePhone({ floatDelay }: { floatDelay?: string }) {
     </Phone>
   );
 }
-
 
 /* Dual- or single-CTA closing band used at the bottom of marketing pages. */
 export function CtaBand({

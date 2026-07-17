@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  MapPin,
   CalendarClock,
   Check,
   ChevronDown,
@@ -14,7 +13,6 @@ import {
 import { Btn, Card, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl } from "@/lib/hb";
-import { reverseGeocode } from "@/lib/geo";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 import { useT } from "@/lib/i18n";
@@ -63,7 +61,6 @@ function ProDashboard() {
   const [rows, setRows] = useState<FollowUpRow[]>([]);
   const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [locationText, setLocationText] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
@@ -114,18 +111,6 @@ function ProDashboard() {
       cancelled = true;
     };
   }, [proId]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        if (r?.address) setLocationText(r.address);
-      },
-      () => {},
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 },
-    );
-  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -185,14 +170,6 @@ function ProDashboard() {
     <ProShell pro={pro} active="dashboard">
       <div className="anim-fade-up mb-2">
         <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{greeting}</h1>
-        {locationText && (
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-paper border border-line px-3 py-1.5 text-xs text-muted">
-            <MapPin size={13} className="text-indigo" />
-            <span>
-              {t("pi.youreAt")} <span className="text-ink font-semibold">{locationText}</span>
-            </span>
-          </div>
-        )}
       </div>
 
       <section className="anim-fade-up d-2 mt-8">

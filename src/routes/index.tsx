@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Btn } from "@/lib/ui";
-import { MarketingShell, marketingHead, PipelinePhone } from "@/components/marketing";
+import {
+  MarketingShell,
+  marketingHead,
+  PipelinePhone,
+  useAppSession,
+} from "@/components/marketing";
 import { VoiceToRecord } from "@/components/voice-record-visual";
 
 export const Route = createFileRoute("/")({
@@ -19,10 +24,22 @@ const H_SANS = "font-sans font-extrabold tracking-[-0.02em] text-ink";
 function GoogleGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true" className="shrink-0">
-      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.7 30.2.5 24 .5 14.8.5 6.9 5.8 3 13.4l7.9 6.1C12.7 13.7 17.9 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.6z"/>
-      <path fill="#FBBC05" d="M10.9 28.5A14.6 14.6 0 0 1 10 24c0-1.6.3-3.1.9-4.5l-7.9-6.1A24 24 0 0 0 .5 24c0 3.9.9 7.6 2.5 10.6l7.9-6.1z"/>
-      <path fill="#34A853" d="M24 47.5c6.2 0 11.5-2 15.4-5.5l-7.6-5.9c-2.1 1.4-4.8 2.3-7.8 2.3-6.1 0-11.3-4.1-13.1-9.9l-7.9 6.1C6.9 42.2 14.8 47.5 24 47.5z"/>
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.7 30.2.5 24 .5 14.8.5 6.9 5.8 3 13.4l7.9 6.1C12.7 13.7 17.9 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.6z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.9 28.5A14.6 14.6 0 0 1 10 24c0-1.6.3-3.1.9-4.5l-7.9-6.1A24 24 0 0 0 .5 24c0 3.9.9 7.6 2.5 10.6l7.9-6.1z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 47.5c6.2 0 11.5-2 15.4-5.5l-7.6-5.9c-2.1 1.4-4.8 2.3-7.8 2.3-6.1 0-11.3-4.1-13.1-9.9l-7.9 6.1C6.9 42.2 14.8 47.5 24 47.5z"
+      />
     </svg>
   );
 }
@@ -78,7 +95,10 @@ function MiniGoogleReviewCard() {
             aria-hidden="true"
             className={`anim-fade-in d-${i + 1}`}
           >
-            <path d="M10 1.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9L10 15.3l-5.3 2.7 1-5.9L1.4 7.9l5.9-.9L10 1.7z" fill="#f5b400" />
+            <path
+              d="M10 1.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9L10 15.3l-5.3 2.7 1-5.9L1.4 7.9l5.9-.9L10 1.7z"
+              fill="#f5b400"
+            />
           </svg>
         ))}
       </div>
@@ -181,7 +201,13 @@ const LOOP_NODES = [
     pos: "left-[91%] top-1/2",
     tone: "indigo" as const,
     label: "Record, your name on it",
-    d: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z", "M14 2v6h6", "M16 13H8", "M16 17H8", "M10 9H8"],
+    d: [
+      "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
+      "M14 2v6h6",
+      "M16 13H8",
+      "M16 17H8",
+      "M10 9H8",
+    ],
   },
   {
     pos: "left-1/2 top-[91%]",
@@ -208,8 +234,22 @@ function RepeatLoop() {
         aria-hidden="true"
       >
         <defs>
-          <marker id="loopArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
-            <path d="M1 1 6 3.5 1 6" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <marker
+            id="loopArrow"
+            markerWidth="7"
+            markerHeight="7"
+            refX="3.5"
+            refY="3.5"
+            orient="auto"
+          >
+            <path
+              d="M1 1 6 3.5 1 6"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </marker>
         </defs>
         <path
@@ -225,7 +265,12 @@ function RepeatLoop() {
       <div className="absolute left-1/2 top-1/2 flex h-[132px] w-[132px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-coral text-center text-(--on-accent) shadow-[0_12px_30px_-8px_rgba(194,70,31,0.45)]">
         <LoopStroke
           size={28}
-          d={["M3 12a9 9 0 0 1 15-6.7L21 8", "M21 3v5h-5", "M21 12a9 9 0 0 1-15 6.7L3 16", "M3 21v-5h5"]}
+          d={[
+            "M3 12a9 9 0 0 1 15-6.7L21 8",
+            "M21 3v5h-5",
+            "M21 12a9 9 0 0 1-15 6.7L3 16",
+            "M3 21v-5h5",
+          ]}
         />
         <div className="mt-1.5 text-[15px] font-extrabold leading-tight tracking-[-0.01em]">
           Again
@@ -256,6 +301,7 @@ function RepeatLoop() {
 }
 
 function Landing() {
+  const appTarget = useAppSession();
   return (
     <MarketingShell mobileCta={{ label: "Create account", to: "/pro/signup", variant: "indigo" }}>
       {/* Hero: customers waiting to book, led by the workflow phone */}
@@ -269,18 +315,26 @@ function Landing() {
               <span className="text-coral">you already earned.</span>
             </h1>
             <p className="mt-6 max-w-xl mx-auto lg:mx-0 text-lg text-muted">
-              Log a job in 30 seconds. Win more repeat customers, more reviews, and a professional record with your name on it.
+              Log a job in 30 seconds. Win more repeat customers, more reviews, and a professional
+              record with your name on it.
             </p>
             <div className="mt-8 flex justify-center lg:justify-start">
-              <Link to="/pro/signup" className="w-full sm:w-auto">
+              <Link to={appTarget ?? "/pro/signup"} className="w-full sm:w-auto">
                 <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-                  Create account
+                  {appTarget ? "Open app" : "Create account"}
                 </Btn>
               </Link>
             </div>
-            <p className="mt-4 text-sm text-muted">
-              No card. No password. Free to start.
-            </p>
+            {appTarget ? (
+              <p className="mt-4 text-sm text-muted">Welcome back. Pick up where you left off.</p>
+            ) : (
+              <p className="mt-4 text-sm text-muted">
+                No card. No password. Free to start.{" "}
+                <Link to="/login" className="font-semibold text-indigo hover:underline">
+                  Already have an account? Log in
+                </Link>
+              </p>
+            )}
           </div>
 
           {/* Booking workflow phone: desktop only, mobile leads with the words. */}
@@ -288,9 +342,7 @@ function Landing() {
             <PipelinePhone />
           </div>
         </div>
-
       </section>
-
 
       {/* The core promise: turn one job into a customer who keeps coming back */}
       <section className="border-t border-line py-16 sm:py-24">
@@ -320,7 +372,6 @@ function Landing() {
           </div>
         </div>
       </section>
-
 
       {/* HomesBrain AI: voice in, record out */}
       <section className="py-16 sm:py-20">
@@ -363,8 +414,8 @@ function Landing() {
               <BellCircleIcon />
               <h3 className={`${H_SANS} mt-4 text-xl`}>The nudge</h3>
               <p className="mt-3 text-[15px] text-muted leading-relaxed">
-                We tell you when each customer is due. Your callback list builds itself and
-                hands you the name.
+                We tell you when each customer is due. Your callback list builds itself and hands
+                you the name.
               </p>
               <div className="mt-6">
                 <MiniNudgeCard />
