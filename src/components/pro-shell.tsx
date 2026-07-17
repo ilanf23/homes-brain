@@ -482,6 +482,10 @@ export function ProShell({
           create={{ to: "/pro/jobs/new", label: t("pro.logJob") }}
           swipeEnabled={active !== "home"}
         />
+
+        {/* PWA install hint - pro-only, mobile-only, dismissible. */}
+        {pro ? <InstallAppPrompt /> : null}
+
       </div>
     </div>
   );
