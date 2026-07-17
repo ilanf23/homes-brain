@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { Btn, Card, Pill } from "@/lib/ui";
+import { Avatar, Btn, Card } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
@@ -54,11 +54,7 @@ function RecordsList() {
 
   return (
     <ProShell pro={pro} active="records">
-      <ProPageHead
-        eyebrow="Records"
-        title="Your records"
-        sub="One card for every job you've sent. Tap a card to open it."
-      />
+      <ProPageHead eyebrow="Records" title="Your records" />
 
       {records.length === 0 ? (
         <Card className="anim-fade-up text-center py-14">
@@ -75,46 +71,43 @@ function RecordsList() {
           </div>
         </Card>
       ) : (
-        <div className="anim-fade-up d-1 space-y-3">
-          {records.map((r) => {
-            const claimed = Boolean(r.jobs?.homes?.claimed_at);
-            const seen = Boolean(r.viewed_at);
-            return (
-              <Link
-                key={r.id}
-                to="/pro/records/$recordId"
-                params={{ recordId: r.id }}
-                className="block"
-              >
-                <Card
-                  lift
-                  className="!p-5 hover:bg-soft active:bg-line/50 transition-colors duration-150"
+        <Card className="anim-fade-up d-1 !p-2">
+          {/* One quiet ledger, not a wall of cards: the work done leads, the
+              customer and date whisper, status is one small colored word. */}
+          <div className="divide-y divide-line">
+            {records.map((r) => {
+              const claimed = Boolean(r.jobs?.homes?.claimed_at);
+              const seen = Boolean(r.viewed_at);
+              const name = r.jobs?.customers?.name ?? "Customer";
+              return (
+                <Link
+                  key={r.id}
+                  to="/pro/records/$recordId"
+                  params={{ recordId: r.id }}
+                  className="pressable flex items-center gap-3 px-2.5 py-3.5 hover:bg-soft rounded-xl transition-colors duration-150"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[17px] font-bold text-ink truncate">
-                        {r.jobs?.customers?.name ?? "Customer"}
-                      </div>
-                      <div className="mt-1 text-sm text-muted truncate">
-                        {r.jobs?.what_done} · {formatDate(r.created_at)}
-                      </div>
+                  <Avatar name={name} accent="indigo" size={38} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-semibold text-ink truncate">
+                      {r.jobs?.what_done}
                     </div>
-                    <div className="shrink-0">
-                      {claimed ? (
-                        <Pill accent="coral">Claimed</Pill>
-                      ) : seen ? (
-                        <Pill accent="indigo">Seen</Pill>
-                      ) : (
-                        <span className="text-xs font-semibold text-muted">Sent</span>
-                      )}
+                    <div className="mt-0.5 text-xs text-muted truncate">
+                      {name} · {formatDate(r.created_at)}
                     </div>
-                    <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden="true" />
                   </div>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+                  <span
+                    className={`shrink-0 text-xs font-bold ${
+                      claimed ? "text-coral" : seen ? "text-indigo" : "text-muted"
+                    }`}
+                  >
+                    {claimed ? "Claimed" : seen ? "Seen" : "Sent"}
+                  </span>
+                  <ChevronRight size={16} className="shrink-0 text-muted" aria-hidden="true" />
+                </Link>
+              );
+            })}
+          </div>
+        </Card>
       )}
     </ProShell>
   );

@@ -238,21 +238,21 @@ function RecordRow({
           onClick={onToggle}
           aria-pressed={included}
           aria-label={`${included ? "Exclude" : "Include"} ${label}`}
-          className="pressable flex min-h-11 w-32 shrink-0 items-center gap-2.5 text-left"
+          className="pressable flex min-h-11 w-36 shrink-0 items-center gap-2.5 text-left"
         >
           <CheckSquare on={included} />
-          <span className={`min-w-0 truncate text-base text-muted ${dim ? "opacity-50" : ""}`}>
+          <span className={`min-w-0 text-base leading-snug text-muted ${dim ? "opacity-50" : ""}`}>
             {label}
           </span>
         </button>
       ) : (
         <span
-          className={`flex min-h-11 w-32 shrink-0 items-center gap-2.5 text-base text-muted ${
+          className={`flex min-h-11 w-36 shrink-0 items-center gap-2.5 text-base leading-snug text-muted ${
             dim ? "opacity-50" : ""
           }`}
         >
           <span className="w-5 shrink-0" aria-hidden="true" />
-          <span className="min-w-0 truncate">{label}</span>
+          <span className="min-w-0">{label}</span>
         </span>
       )}
       {onEdit ? (
@@ -2624,7 +2624,7 @@ function NewJob() {
             <span className="text-lg font-semibold">Record a walkthrough video (optional)</span>
           </div>
           <div className="mt-1 text-base text-muted">
-            30 to 60 seconds showing what you did. It goes on their record.
+            30 to 60 seconds. It goes on their record.
           </div>
         </button>
       ) : (
