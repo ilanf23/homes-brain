@@ -283,8 +283,8 @@ function Landing() {
             </p>
           </div>
 
-          {/* Booking workflow phone */}
-          <div className="order-first lg:order-last">
+          {/* Booking workflow phone: desktop only, mobile leads with the words. */}
+          <div className="hidden lg:block">
             <PipelinePhone />
           </div>
         </div>
