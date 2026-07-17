@@ -114,76 +114,22 @@ export type ProNavKey =
   | "profile"
   | "settings";
 
-type NavItem = { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDashboard };
+type NavItem = {
+  key: "home" | "customers" | "records" | "profile";
+  labelKey: TKey;
+  to: string;
+  icon: typeof Home;
+};
 
-/* The daily loop stays visible; everything else folds into "More" so a new
-   pro sees four choices, not ten. */
-const CORE_NAV: NavItem[] = [
-  { key: "home", labelKey: "pro.nav.logJob", to: "/pro", icon: LayoutDashboard },
-  { key: "dashboard", labelKey: "pro.nav.dashboard", to: "/pro/dashboard", icon: LayoutDashboard },
+/* Desktop sidebar mirrors the mobile bottom bar exactly: same four
+   destinations, same order, one mental model everywhere. Everything else
+   lives under Profile, on desktop too. */
+const SIDEBAR_NAV: NavItem[] = [
+  { key: "home", labelKey: "pro.nav.home", to: "/pro/jobs/new", icon: Home },
   { key: "customers", labelKey: "pro.nav.customers", to: "/pro/customers", icon: Users },
-  { key: "invoices", labelKey: "pro.nav.invoices", to: "/pro/invoices", icon: ReceiptText },
-];
-
-const MORE_NAV: NavItem[] = [
   { key: "records", labelKey: "pro.nav.records", to: "/pro/records", icon: FileText },
-  { key: "due", labelKey: "pro.nav.due", to: "/pro/due", icon: CalendarClock },
-  { key: "reviews", labelKey: "pro.nav.reviews", to: "/pro/reviews", icon: Star },
-  { key: "referral", labelKey: "pro.nav.referral", to: "/pro/referral", icon: Gift },
-  { key: "office", labelKey: "pro.nav.office", to: "/pro/office", icon: LayoutDashboard },
-  { key: "settings", labelKey: "pro.nav.settings", to: "/pro/settings", icon: Settings },
+  { key: "profile", labelKey: "pro.nav.profile", to: "/pro/profile", icon: UserRound },
 ];
-
-/* Core links, then a "More" disclosure holding the rest. Opens itself when
-   the active page lives inside it, so the current page is never hidden.
-   Desktop sidebar only; mobile navigation is the bottom tab bar. */
-function GroupedNav({
-  active,
-  proId,
-}: {
-  active: ProNavKey;
-  /* Drives the setup progress entry at the top of the nav; null hides it. */
-  proId: string | null;
-}) {
-  const t = useT();
-  const [moreOpen, setMoreOpen] = useState(() => MORE_NAV.some((item) => item.key === active));
-  const itemClass = (isActive: boolean) =>
-    `pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
-      isActive
-        ? "bg-indigobg text-indigo font-bold"
-        : "text-muted font-semibold hover:text-ink hover:bg-soft"
-    }`;
-  const renderItem = ({ key, labelKey, to, icon: Icon }: NavItem) => (
-    <Link
-      key={key}
-      to={to}
-      aria-current={active === key ? "page" : undefined}
-      className={itemClass(active === key)}
-    >
-      <Icon size={17} />
-      {t(labelKey)}
-    </Link>
-  );
-  return (
-    <>
-      <ProSetupNavItem proId={proId} />
-      {CORE_NAV.map(renderItem)}
-      <button
-        type="button"
-        onClick={() => setMoreOpen((v) => !v)}
-        aria-expanded={moreOpen}
-        className={`${itemClass(false)} w-full`}
-      >
-        <ChevronDown
-          size={17}
-          className={`transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`}
-        />
-        {t("pro.nav.more")}
-      </button>
-      {moreOpen && <div className="pl-2.5">{MORE_NAV.map(renderItem)}</div>}
-    </>
-  );
-}
 
 function timeAgo(iso: string, locale: string) {
   const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
@@ -441,7 +387,25 @@ export function ProShell({
           </Link>
         </div>
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto" aria-label={t("pro.navigation")}>
-          <GroupedNav active={active} proId={pro?.id ?? null} />
+          <ProSetupNavItem proId={pro?.id ?? null} />
+          {SIDEBAR_NAV.map(({ key, labelKey, to, icon: Icon }) => {
+            const isActive = TAB_FOR_KEY[active] === key;
+            return (
+              <Link
+                key={key}
+                to={to}
+                aria-current={isActive ? "page" : undefined}
+                className={`pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
+                  isActive
+                    ? "bg-indigobg text-indigo font-bold"
+                    : "text-muted font-semibold hover:text-ink hover:bg-soft"
+                }`}
+              >
+                <Icon size={17} />
+                {t(labelKey)}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 

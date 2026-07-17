@@ -222,12 +222,18 @@ const TAB_FOR_KEY: Record<HomeNavKey, "overview" | "appliances" | "pros" | "prof
   settings: "profile",
 };
 
-const NAV: { key: HomeNavKey; labelKey: TKey; to: string; icon: typeof Home }[] = [
+/* Desktop sidebar mirrors the mobile bottom bar: same four destinations,
+   one mental model everywhere. Reminders and settings live under Profile. */
+const NAV: {
+  key: "overview" | "appliances" | "pros" | "profile";
+  labelKey: TKey;
+  to: string;
+  icon: typeof Home;
+}[] = [
   { key: "overview", labelKey: "nav.myHome", to: "/home", icon: Home },
   { key: "appliances", labelKey: "nav.appliances", to: "/home/appliances", icon: Wrench },
   { key: "pros", labelKey: "nav.myPros", to: "/home/pros", icon: Users },
-  { key: "reminders", labelKey: "nav.reminders", to: "/home/reminders", icon: Bell },
-  { key: "settings", labelKey: "nav.settings", to: "/home/settings", icon: Settings },
+  { key: "profile", labelKey: "nav.profile", to: "/home/profile", icon: UserRound },
 ];
 
 export function HomeShell({
@@ -283,9 +289,9 @@ export function HomeShell({
             <Link
               key={key}
               to={to}
-              aria-current={active === key ? "page" : undefined}
+              aria-current={TAB_FOR_KEY[active] === key ? "page" : undefined}
               className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors duration-150 ${
-                active === key
+                TAB_FOR_KEY[active] === key
                   ? "bg-indigobg text-indigo font-bold"
                   : "text-muted font-semibold hover:text-ink hover:bg-soft"
               }`}
