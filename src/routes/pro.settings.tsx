@@ -622,7 +622,7 @@ function ProSettings() {
   return (
     <ProShell pro={pro} active="settings">
       {section ? (
-        screens[section]
+        screens[section as SectionId]
       ) : (
         <div className="anim-fade-up max-w-xl mx-auto space-y-5">
           <h1 className="text-2xl tracking-tight">Settings</h1>
