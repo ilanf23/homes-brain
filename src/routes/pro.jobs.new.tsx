@@ -2617,7 +2617,7 @@ function NewJob() {
         <button
           type="button"
           onClick={() => videoRef.current?.click()}
-          className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
+          className="pressable flex min-h-[104px] w-full flex-col justify-center rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
         >
           <div className="flex items-center justify-center gap-2 text-indigo">
             <VideoIcon size={22} />
@@ -2699,7 +2699,7 @@ function NewJob() {
         <button
           type="button"
           onClick={() => photosRef.current?.click()}
-          className="pressable w-full rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
+          className="pressable flex min-h-[104px] w-full flex-col justify-center rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
         >
           <div className="flex items-center justify-center gap-2 text-indigo">
             <ImageIcon size={22} />
@@ -3461,7 +3461,7 @@ function NewJob() {
                         onClick={() => setReviewEdit("address")}
                         aria-label="Edit service address"
                         title="Edit service address"
-                        className="pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-soft hover:text-ink"
+                        className="pressable flex h-11 w-11 shrink-0 items-center justify-end rounded-xl text-muted hover:text-ink"
                       >
                         <Pencil size={17} aria-hidden="true" />
                       </button>
