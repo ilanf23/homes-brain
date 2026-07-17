@@ -51,6 +51,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        /* TanStack Start emits the client bundle to dist/client; force the
+           SW and its precache manifest to live alongside it so /sw.js is
+           actually served in production. */
+        globDirectory: "dist/client",
+        swDest: "dist/client/sw.js",
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         /* SSR app: no SPA HTML fallback. Navigation goes to the network. */
         navigateFallback: null,
