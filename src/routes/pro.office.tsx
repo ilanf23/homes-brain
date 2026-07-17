@@ -10,8 +10,6 @@ import { MoneyRow } from "@/components/money-row";
 import { ActionQueue, type QueueJob, type QueueStaleHome } from "@/components/action-queue";
 import { CustomerMap, type MapPin } from "@/components/customer-map";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { PlanLockCompact } from "@/components/plan-lock";
-import { isProEntitled } from "@/lib/plan";
 import { ProSetupChecklist } from "@/components/pro-setup-checklist";
 
 export const Route = createFileRoute("/pro/office")({
@@ -348,32 +346,13 @@ function ProDashboard() {
         onToast={setToast}
       />
 
-      {isProEntitled(pro) ? (
-        <>
-          <MoneyRow
-            invoices={invoices}
-            rebooksThisMonth={rebooksThisMonth}
-            rebooksAllTime={rebooks.length}
-          />
+      <MoneyRow
+        invoices={invoices}
+        rebooksThisMonth={rebooksThisMonth}
+        rebooksAllTime={rebooks.length}
+      />
 
-          <CustomerMap pins={pins} geocodingCount={geocodingCount} />
-        </>
-      ) : (
-        <div className="space-y-4">
-          <PlanLockCompact
-            title="Money dashboard"
-            description="Revenue, paid invoices, and rebook value at a glance."
-          />
-          <PlanLockCompact
-            title="Automated rebooking & win-backs"
-            description="We work your whole book: seasonal, overdue, and win-back outreach, automatically."
-          />
-          <PlanLockCompact
-            title="Customer map"
-            description="See every home you serve, color-coded by who owes, who's due, and who's unclaimed."
-          />
-        </div>
-      )}
+      <CustomerMap pins={pins} geocodingCount={geocodingCount} />
 
       <div className="mt-4 grid grid-cols-3 gap-4">
         <Card className="anim-fade-up d-4">

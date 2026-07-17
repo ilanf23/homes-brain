@@ -17,7 +17,6 @@ type PublicProProfile = {
   logo: string | null;
   google_rating: number | null;
   job_count: number;
-  recalls_caught: number;
   last_job_at: string;
   activity: { what_done: string; done_on: string; equipment_type: string | null }[];
 };
@@ -192,7 +191,7 @@ function ProProfile() {
         </div>
 
         {/* Stats */}
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             {
               label: "Verified jobs",
@@ -201,10 +200,6 @@ function ProProfile() {
             {
               label: "Google rating",
               value: profile.google_rating ? `${profile.google_rating}★` : "-",
-            },
-            {
-              label: "Recalls caught",
-              value: String(profile.recalls_caught),
             },
             {
               label: "Last verified job",
@@ -237,14 +232,6 @@ function ProProfile() {
             <div className="mt-5">
               <KV k="Trade" v={trade} />
               <KV k="Service area" v={profile.city ?? "-"} />
-              <KV
-                k="Recall checks"
-                v={
-                  <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
-                    <ShieldCheck size={16} animate={false} /> On every visit
-                  </span>
-                }
-              />
             </div>
           </div>
           <Card>
@@ -258,22 +245,27 @@ function ProProfile() {
               <p className="mt-4 text-sm text-muted">Recent activity will appear here.</p>
             ) : (
               <ul className="mt-3">
-                {profile.activity.map((a: { what_done: string; done_on: string; equipment_type: string | null }, i: number) => (
-                  <li
-                    key={i}
-                    className="flex items-start justify-between gap-4 border-b border-line py-3 last:border-b-0"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-ink truncate">{a.what_done}</div>
-                      {a.equipment_type && (
-                        <div className="text-xs text-muted mt-0.5">{a.equipment_type}</div>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted shrink-0 font-mono tnum">
-                      {formatDate(a.done_on)}
-                    </div>
-                  </li>
-                ))}
+                {profile.activity.map(
+                  (
+                    a: { what_done: string; done_on: string; equipment_type: string | null },
+                    i: number,
+                  ) => (
+                    <li
+                      key={i}
+                      className="flex items-start justify-between gap-4 border-b border-line py-3 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-ink truncate">{a.what_done}</div>
+                        {a.equipment_type && (
+                          <div className="text-xs text-muted mt-0.5">{a.equipment_type}</div>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted shrink-0 font-mono tnum">
+                        {formatDate(a.done_on)}
+                      </div>
+                    </li>
+                  ),
+                )}
               </ul>
             )}
           </Card>

@@ -11,6 +11,12 @@ import { RecordMedia } from "@/components/job-media";
 export const Route = createFileRoute("/claim/$token")({
   validateSearch: (search: Record<string, unknown>) => ({
     lang: isLocale(search.lang) ? search.lang : undefined,
+    // Referral attribution carried from the pro magic-link (/pro/signup?ref=…).
+    ref:
+      typeof search.ref === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(search.ref)
+        ? search.ref
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -122,7 +128,7 @@ function RecordPreview({ preview }: { preview: Preview }) {
 
 function ClaimByToken() {
   const { token } = Route.useParams();
-  const { lang } = Route.useSearch();
+  const { lang, ref } = Route.useSearch();
   const navigate = useNavigate();
   const { locale, setLocale } = useI18n();
   const copy = claimCopy(locale);
@@ -229,6 +235,17 @@ function ClaimByToken() {
         p_first_name: resp.first_name ?? undefined,
       });
       if (ensureErr) console.error("pro_ensure failed", ensureErr);
+      // Attribute the referral once the pros row exists. set_referrer is a
+      // no-op if this pro already has a referrer or the ref is self/unknown.
+      if (ref) {
+        const { error: refErr } = await supabase.rpc(
+          "set_referrer" as never,
+          {
+            p_ref: ref,
+          } as never,
+        );
+        if (refErr) console.error("set_referrer failed", refErr);
+      }
       // Idempotent one-time welcome. Guarded server-side by pros.welcomed_at.
       supabase.functions
         .invoke("pro-welcome", { body: { origin: window.location.origin } })

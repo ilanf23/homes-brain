@@ -55,7 +55,9 @@ function base64url(bytes: Uint8Array) {
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function loginEmail(ctaUrl: string, firstName: string | null, mode: "signup" | "signin") {
@@ -112,6 +114,13 @@ Deno.serve(async (req) => {
     const rawFirst = typeof body?.first_name === "string" ? body.first_name.trim() : "";
     const firstName = rawFirst ? rawFirst.slice(0, 40) : null;
     const origin = loginOrigin(body?.origin);
+    // Referral attribution: a uuid of the referring pro, carried from
+    // /pro/signup?ref=<proId>. Rides in the magic-link URL below so it
+    // survives the email round-trip across devices/browsers.
+    const rawRef = typeof body?.ref === "string" ? body.ref : "";
+    const ref = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawRef)
+      ? rawRef
+      : null;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json({ ok: false, code: "bad_request" }, 400);
     }
@@ -161,7 +170,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, code: "error" }, 500);
     }
 
-    const ctaUrl = `${origin}/claim/${raw}`;
+    const ctaUrl = ref ? `${origin}/claim/${raw}?ref=${ref}` : `${origin}/claim/${raw}`;
     const mail = loginEmail(ctaUrl, firstName, mode);
 
     const resp = await fetch("https://api.resend.com/emails", {

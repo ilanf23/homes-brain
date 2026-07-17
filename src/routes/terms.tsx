@@ -80,11 +80,10 @@ function Terms() {
         />
       </LegalSection>
 
-      <LegalSection title="7. Recall and warranty information">
+      <LegalSection title="7. Warranty information">
         <p>
-          Recall checks and warranty tracking are informational conveniences based on data provided
-          by Pros and public sources. They are not a guarantee, inspection, or substitute for
-          manufacturer or government notices.
+          Warranty tracking is an informational convenience based on data provided by Pros. It is
+          not a guarantee, inspection, or substitute for manufacturer notices.
         </p>
       </LegalSection>
 

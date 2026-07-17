@@ -40,37 +40,35 @@ function Referral() {
 
   useEffect(() => {
     if (!proId) return;
+    let cancelled = false;
     (async () => {
-      // Signups attributed to this pro via /pro/signup?ref=<proId>.
-      const { data: ev } = await supabase
-        .from("events")
-        .select("actor,created_at,props")
-        .eq("type", "pro_signed_up")
-        .eq("props->>ref", proId)
-        .order("created_at", { ascending: false });
-      const rows = (ev ?? []) as { actor: string | null; created_at: string; props: unknown }[];
-      const ids = rows.map((r) => r.actor?.replace(/^pro:/, "")).filter((id): id is string => !!id);
-      let withJobs = new Set<string>();
-      if (ids.length) {
-        const { data: j } = await supabase.from("jobs").select("pro_id").in("pro_id", ids);
-        withJobs = new Set((j ?? []).map((row) => row.pro_id));
+      // Pros attributed to this one via referred_by, with first-job status.
+      // referrals_for_me() is SECURITY DEFINER so it can read the referred
+      // rows that RLS would otherwise hide. (Not yet in the generated types.)
+      const { data, error } = await supabase.rpc("referrals_for_me" as never);
+      if (cancelled) return;
+      if (error) {
+        console.error("referrals_for_me failed", error);
+        return;
       }
+      const rows = (data ?? []) as unknown as {
+        pro_id: string;
+        business: string | null;
+        signed_up_at: string;
+        has_first_job: boolean;
+      }[];
       setReferred(
-        rows.flatMap((r) => {
-          const id = r.actor?.replace(/^pro:/, "");
-          if (!id) return [];
-          const props = r.props as { business?: string };
-          return [
-            {
-              proId: id,
-              business: props?.business ?? "New pro",
-              signedUpAt: r.created_at,
-              hasFirstJob: withJobs.has(id),
-            },
-          ];
-        }),
+        rows.map((r) => ({
+          proId: r.pro_id,
+          business: r.business ?? "New pro",
+          signedUpAt: r.signed_up_at,
+          hasFirstJob: r.has_first_job,
+        })),
       );
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [proId]);
 
   useEffect(() => {

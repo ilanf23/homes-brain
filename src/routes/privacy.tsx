@@ -57,7 +57,6 @@ function Privacy() {
           items={[
             "To create, deliver, and maintain home service records.",
             "To send service records, reminders, and review requests on a Pro's behalf, where consent has been captured.",
-            "To check logged equipment against public recall information.",
             "To operate, secure, and improve the service, including fraud prevention and support.",
             "To comply with legal obligations.",
           ]}

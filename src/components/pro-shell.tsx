@@ -322,12 +322,13 @@ function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => 
   );
 }
 
-/* Which bottom tab lights up for each page. Home IS the log-a-job page (the
-   whole product starts there); everything folded off the bar lives under
-   Profile, including the dashboard. */
-const TAB_FOR_KEY: Record<ProNavKey, "home" | "customers" | "records" | "profile"> = {
+/* Which bottom tab lights up for each page. The center + is the log-a-job
+   page (active "home"): it maps to "home", which matches no tab, and lights
+   the + via createActive instead. Dashboard is now its own tab; the rest of
+   the folded-off surfaces live under Profile. */
+const TAB_FOR_KEY: Record<ProNavKey, "dashboard" | "customers" | "records" | "profile" | "home"> = {
   home: "home",
-  dashboard: "profile",
+  dashboard: "dashboard",
   customers: "customers",
   records: "records",
   invoices: "profile",
@@ -468,22 +469,26 @@ export function ProShell({
           {children}
         </main>
 
-        {/* Mobile: Instagram-style bottom tab bar; log-a-job is the center +
-            and the profile slot shows the avatar. */}
+        {/* Mobile: Instagram-style bottom tab bar. Clients + Records sit left
+            of the center + (log a job); Dashboard + Profile sit right. */}
         <PullToRefresh />
         <BottomTabBar
           items={[
-            { key: "home", label: t("pro.nav.home"), to: "/pro/jobs/new", icon: Home },
             { key: "customers", label: t("pro.nav.customers"), to: "/pro/customers", icon: Users },
             { key: "records", label: t("pro.nav.records"), to: "/pro/records", icon: FileText },
+            {
+              key: "dashboard",
+              label: t("pro.nav.dashboard"),
+              to: "/pro/dashboard",
+              icon: LayoutDashboard,
+            },
             { key: "profile", label: t("pro.nav.profile"), to: "/pro/profile", icon: UserRound },
           ]}
           activeKey={TAB_FOR_KEY[active]}
           create={{ to: "/pro/jobs/new", label: t("pro.logJob") }}
+          createActive={active === "home"}
           swipeEnabled={active !== "home"}
         />
-
-
       </div>
     </div>
   );

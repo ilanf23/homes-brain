@@ -24,16 +24,15 @@ import {
   SettingsSection,
 } from "@/components/settings";
 
-
 export const Route = createFileRoute("/home/settings")({
   head: () => ({ meta: [{ title: "Settings - HomesBrain" }] }),
   component: HomeownerSettings,
 });
 
 /* What you hear about - stays client-side until per-type columns exist. */
-type LocalPrefs = { reminders: boolean; recalls: boolean; new_records: boolean };
+type LocalPrefs = { reminders: boolean; new_records: boolean };
 const PREFS_KEY = "hb_homeowner_prefs";
-const DEFAULT_PREFS: LocalPrefs = { reminders: true, recalls: true, new_records: true };
+const DEFAULT_PREFS: LocalPrefs = { reminders: true, new_records: true };
 
 function loadLocalPrefs(): LocalPrefs {
   try {
@@ -50,7 +49,6 @@ const LOCAL_PREF_ITEMS: { key: keyof LocalPrefs; label: string; sub: string }[] 
     label: "Service reminders",
     sub: "When something on your home is due for service.",
   },
-  { key: "recalls", label: "Recall alerts", sub: "If an item on file is recalled." },
   { key: "new_records", label: "New records", sub: "When a pro logs a job on your home." },
 ];
 
@@ -120,7 +118,10 @@ function HomeownerSettings() {
   useEffect(() => {
     if (!homeowner) return;
     // Prefs live on the homeowner row; get_home_view returns the full row.
-    const ho = homeowner as unknown as DbPrefs & { notify_email: boolean; sms_consent_at?: string | null };
+    const ho = homeowner as unknown as DbPrefs & {
+      notify_email: boolean;
+      sms_consent_at?: string | null;
+    };
     setPrefs({
       notify_email: ho.notify_email ?? true,
       notify_sms: !!ho.sms_consent_at,
@@ -234,7 +235,6 @@ function HomeownerSettings() {
     setSmsSaving(false);
   }
 
-
   async function exportData() {
     if (!homeownerId) return;
     setExporting(true);
@@ -335,11 +335,10 @@ function HomeownerSettings() {
                     />
                   </SettingRow>
                   <p className="px-1 pb-3 -mt-1 text-xs text-muted leading-relaxed">
-                    By turning this on, I agree to receive recurring automated service and
-                    reminder text messages from HomesBrain at the mobile number on my profile.
-                    Consent is not a condition of any purchase or service. Msg &amp; data rates
-                    may apply. Message frequency varies. Reply STOP to opt out, HELP for help.
-                    See our{" "}
+                    By turning this on, I agree to receive recurring automated service and reminder
+                    text messages from HomesBrain at the mobile number on my profile. Consent is not
+                    a condition of any purchase or service. Msg &amp; data rates may apply. Message
+                    frequency varies. Reply STOP to opt out, HELP for help. See our{" "}
                     <Link to="/privacy" className="font-semibold text-indigo hover:underline">
                       Privacy Policy
                     </Link>{" "}
@@ -419,8 +418,8 @@ function HomeownerSettings() {
                         className="mt-0.5"
                       />
                       <span>
-                        Text me my service records and reminders. By checking this box, I agree
-                        to receive recurring automated service and reminder text messages from
+                        Text me my service records and reminders. By checking this box, I agree to
+                        receive recurring automated service and reminder text messages from
                         HomesBrain at the number I provide. Consent is not a condition of any
                         purchase or service. Msg &amp; data rates may apply. Message frequency
                         varies. Reply STOP to opt out, HELP for help. See our{" "}
@@ -438,10 +437,7 @@ function HomeownerSettings() {
                       </span>
                     </label>
                     {smsErr && (
-                      <div
-                        role="alert"
-                        className="text-sm text-red bg-redbg rounded-xl px-3 py-2"
-                      >
+                      <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
                         {smsErr}
                       </div>
                     )}

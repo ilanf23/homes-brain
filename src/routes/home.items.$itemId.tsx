@@ -26,8 +26,6 @@ type EquipmentRow = {
   model: string | null;
   serial: string | null;
   warranty_until: string | null;
-  recall_status: string;
-  recall_checked_at: string | null;
   source: string;
   created_at: string;
   attributes: Record<string, string | boolean> | null;
@@ -50,7 +48,9 @@ function ItemDetail() {
     () => (equipment.find((e) => e.id === itemId) as unknown as EquipmentRow | undefined) ?? null,
     [equipment, itemId],
   );
-  const jobs = (allJobs as unknown as JobRow[]).filter((j) => (j as JobRow & { equipment_id?: string }).equipment_id === itemId);
+  const jobs = (allJobs as unknown as JobRow[]).filter(
+    (j) => (j as JobRow & { equipment_id?: string }).equipment_id === itemId,
+  );
   const pros = allPros as unknown as ProRow[];
 
   useEffect(() => {
@@ -75,7 +75,8 @@ function ItemDetail() {
 
   const attributeEntries = useMemo(() => {
     const attrs = item?.attributes;
-    if (!attrs || typeof attrs !== "object") return [] as Array<{ key: string; label: string; value: string }>;
+    if (!attrs || typeof attrs !== "object")
+      return [] as Array<{ key: string; label: string; value: string }>;
     const out: Array<{ key: string; label: string; value: string; sort: number }> = [];
     for (const [key, value] of Object.entries(attrs)) {
       if (value === null || value === undefined || value === "") continue;
@@ -97,7 +98,6 @@ function ItemDetail() {
     return out.sort((a, b) => a.sort - b.sort);
   }, [item, fieldDefs]);
 
-
   if (guardLoading) return <PageLoader label="Loading item" />;
   if (!home) return <PageLoader label="Setting up your home" />;
 
@@ -116,8 +116,6 @@ function ItemDetail() {
       </HomeShell>
     );
   }
-
-  const recallClean = item.recall_status === "none";
 
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
@@ -172,32 +170,6 @@ function ItemDetail() {
             </div>
           </Card>
         )}
-
-
-
-        {/* Recall status */}
-        <Card className="anim-fade-up d-2">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <Eyebrow accent={recallClean ? "indigo" : "red"}>Recall check</Eyebrow>
-              <div className="mt-2 flex items-center gap-2 text-sm font-semibold">
-                {recallClean ? (
-                  <>
-                    <ShieldCheck size={16} animate={false} className="text-indigo" />
-                    <span className="text-ink">No known recalls</span>
-                  </>
-                ) : (
-                  <Pill accent="red">{item.recall_status}</Pill>
-                )}
-              </div>
-              {item.recall_checked_at && (
-                <div className="text-xs text-muted mt-1 font-mono tnum">
-                  Checked {formatDate(item.recall_checked_at)} against the CPSC database
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
 
         {/* History */}
         <Card className="anim-fade-up d-3">

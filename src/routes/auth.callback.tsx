@@ -50,6 +50,7 @@ function AuthCallback() {
         owner_first_name?: string;
         trade?: string;
         service_area?: string;
+        ref?: string | null;
       } | null = null;
       try {
         const raw = localStorage.getItem("hb_pending_pro_signup");
@@ -94,6 +95,18 @@ function AuthCallback() {
             business: pending!.business ?? null,
             via: "google",
           });
+          // Attribute the referral now the pros row exists. Guarded server-side
+          // against self/unknown refs; a uuid check keeps junk out of the RPC.
+          const ref = pending!.ref ?? null;
+          if (ref && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+            const { error: refErr } = await supabase.rpc(
+              "set_referrer" as never,
+              {
+                p_ref: ref,
+              } as never,
+            );
+            if (refErr) console.error("set_referrer failed", refErr);
+          }
           navigate({ to: (resumePath("/pro") ?? "/pro") as "/pro" });
           return;
         }

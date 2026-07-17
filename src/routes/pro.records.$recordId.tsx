@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPhone, logEvent } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
-import { isProEntitled } from "@/lib/plan";
 import { listJobMedia, signJobMedia, type JobMediaRow } from "@/lib/media";
 import { RecordMedia } from "@/components/job-media";
 
@@ -20,7 +19,6 @@ type EquipmentRow = {
   type: string | null;
   make: string | null;
   model: string | null;
-  recall_status: string;
 };
 
 type RecordRow = {
@@ -98,7 +96,7 @@ function RecordDetail() {
       const { data } = await supabase
         .from("records")
         .select(
-          "id,created_at,sent_sms_at,sent_email_at,viewed_at,jobs!inner(id,home_id,what_done,created_at,next_service_date,pro_id,customers(id,name,phone,email),homes(address,claimed_at),equipment(id,type,make,model,recall_status))",
+          "id,created_at,sent_sms_at,sent_email_at,viewed_at,jobs!inner(id,home_id,what_done,created_at,next_service_date,pro_id,customers(id,name,phone,email),homes(address,claimed_at),equipment(id,type,make,model))",
         )
         .eq("id", recordId)
         .eq("jobs.pro_id", proId)
@@ -143,7 +141,7 @@ function RecordDetail() {
     }
     const { data, error } = await supabase
       .from("equipment")
-      .insert({ home_id: job.home_id, ...fields, source: "pro", recall_status: "none" } as never)
+      .insert({ home_id: job.home_id, ...fields, source: "pro" } as never)
       .select("id")
       .single();
     if (error || !data) return false;
@@ -152,7 +150,7 @@ function RecordDetail() {
       .update({ equipment_id: data.id })
       .eq("id", job.id);
     if (linkErr) return false;
-    patchJob({ equipment: { id: data.id, ...fields, recall_status: "none" } });
+    patchJob({ equipment: { id: data.id, ...fields } });
     return true;
   }
 
@@ -313,7 +311,6 @@ function RecordDetail() {
   const claimed = Boolean(job.homes?.claimed_at);
   const seen = Boolean(record.viewed_at);
   const sentTo = customer?.phone ? formatPhone(customer.phone) : (customer?.email ?? null);
-  const hasRecall = job.equipment && job.equipment.recall_status !== "none";
   const equipment = eqLabel(job.equipment);
 
   return (
@@ -437,16 +434,7 @@ function RecordDetail() {
           </Card>
         )}
 
-        {hasRecall && (
-          <Card className="anim-fade-up d-3 !p-5 !bg-redbg !border-red/30">
-            <div className="text-sm font-semibold text-red">
-              Heads up: the {job.equipment?.type ?? "equipment"} on this job has a recall. Let{" "}
-              {name} know.
-            </div>
-          </Card>
-        )}
-
-        {customer && isProEntitled(pro) && (
+        {customer && (
           <Link
             to="/pro/invoices/new"
             search={{ customer: customer.id, job: job.id }}

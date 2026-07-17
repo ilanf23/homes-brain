@@ -5,8 +5,6 @@ import { Btn, Card, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { PlanLock } from "@/components/plan-lock";
-import { isProEntitled } from "@/lib/plan";
 import { findDuplicateGroups, mergeCustomers, type DuplicateGroup } from "@/lib/customer-merge";
 
 export const Route = createFileRoute("/pro/customers/")({
@@ -103,17 +101,6 @@ function CustomersList() {
     return (
       <ProShell pro={pro} active="customers">
         <ProPageSkeleton />
-      </ProShell>
-    );
-  }
-
-  if (!isProEntitled(pro)) {
-    return (
-      <ProShell pro={pro} active="customers">
-        <PlanLock
-          title="Customer CRM"
-          description="Your full customer + property history in one place: visits, equipment, invoices, notes. Included with Pro."
-        />
       </ProShell>
     );
   }

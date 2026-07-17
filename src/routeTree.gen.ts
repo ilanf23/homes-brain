@@ -36,7 +36,6 @@ import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
 import { Route as ProProfileRouteImport } from './routes/pro.profile'
-import { Route as ProPlanRouteImport } from './routes/pro.plan'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
 import { Route as ProDashboardRouteImport } from './routes/pro.dashboard'
@@ -197,11 +196,6 @@ const ProReferralRoute = ProReferralRouteImport.update({
 const ProProfileRoute = ProProfileRouteImport.update({
   id: '/pro/profile',
   path: '/pro/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProPlanRoute = ProPlanRouteImport.update({
-  id: '/pro/plan',
-  path: '/pro/plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProOfficeRoute = ProOfficeRouteImport.update({
@@ -368,7 +362,6 @@ export interface FileRoutesByFullPath {
   '/pro/dashboard': typeof ProDashboardRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
-  '/pro/plan': typeof ProPlanRoute
   '/pro/profile': typeof ProProfileRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
@@ -424,7 +417,6 @@ export interface FileRoutesByTo {
   '/pro/dashboard': typeof ProDashboardRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
-  '/pro/plan': typeof ProPlanRoute
   '/pro/profile': typeof ProProfileRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
@@ -481,7 +473,6 @@ export interface FileRoutesById {
   '/pro/dashboard': typeof ProDashboardRoute
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
-  '/pro/plan': typeof ProPlanRoute
   '/pro/profile': typeof ProProfileRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
@@ -539,7 +530,6 @@ export interface FileRouteTypes {
     | '/pro/dashboard'
     | '/pro/due'
     | '/pro/office'
-    | '/pro/plan'
     | '/pro/profile'
     | '/pro/referral'
     | '/pro/reviews'
@@ -595,7 +585,6 @@ export interface FileRouteTypes {
     | '/pro/dashboard'
     | '/pro/due'
     | '/pro/office'
-    | '/pro/plan'
     | '/pro/profile'
     | '/pro/referral'
     | '/pro/reviews'
@@ -651,7 +640,6 @@ export interface FileRouteTypes {
     | '/pro/dashboard'
     | '/pro/due'
     | '/pro/office'
-    | '/pro/plan'
     | '/pro/profile'
     | '/pro/referral'
     | '/pro/reviews'
@@ -708,7 +696,6 @@ export interface RootRouteChildren {
   ProDashboardRoute: typeof ProDashboardRoute
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
-  ProPlanRoute: typeof ProPlanRoute
   ProProfileRoute: typeof ProProfileRoute
   ProReferralRoute: typeof ProReferralRoute
   ProReviewsRoute: typeof ProReviewsRoute
@@ -921,13 +908,6 @@ declare module '@tanstack/react-router' {
       path: '/pro/profile'
       fullPath: '/pro/profile'
       preLoaderRoute: typeof ProProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pro/plan': {
-      id: '/pro/plan'
-      path: '/pro/plan'
-      fullPath: '/pro/plan'
-      preLoaderRoute: typeof ProPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro/office': {
@@ -1148,7 +1128,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProDashboardRoute: ProDashboardRoute,
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
-  ProPlanRoute: ProPlanRoute,
   ProProfileRoute: ProProfileRoute,
   ProReferralRoute: ProReferralRoute,
   ProReviewsRoute: ProReviewsRoute,

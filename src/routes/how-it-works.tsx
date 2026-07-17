@@ -537,7 +537,6 @@ const LOG_FIELDS = [
 const DELIVERY_DETAILS = [
   { k: "Delivered by", v: "Text + email, instantly" },
   { k: "Branded to", v: "The pro who did the work" },
-  { k: "Recall check", v: "Run against the equipment" },
   { k: "Review ask", v: "Same link for every customer" },
 ];
 
@@ -716,7 +715,7 @@ function HowItWorks() {
                         <PhoneBtn>Send record →</PhoneBtn>
                       </div>
                       <p className="mt-1.5 text-center text-[10px] text-muted">
-                        Recall check + review ask included
+                        Review ask included
                       </p>
                     </div>
                   </Phone>
@@ -998,14 +997,6 @@ function HowItWorks() {
                 <div className="mt-4">
                   <KV k="Effort" v="One tap, no login" />
                   <KV k="On file" v="Make, model, serial, warranty" />
-                  <KV
-                    k="Recall status"
-                    v={
-                      <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
-                        <ShieldCheck size={16} animate={false} /> No known recalls
-                      </span>
-                    }
-                  />
                   <KV k="Cost" v="Free, forever" />
                 </div>
                 <p className="mt-4 text-sm text-muted">

@@ -1,19 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  CalendarClock,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  ReceiptText,
-  Star,
-  Users,
-} from "lucide-react";
-import { Btn, Card, Toast } from "@/lib/ui";
+import { ArrowRight, Check, ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Btn, Card } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, isGoogleUrl } from "@/lib/hb";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
+import { useProSetup } from "@/components/pro-setup-checklist";
 
 import { useT } from "@/lib/i18n";
 
@@ -21,8 +13,6 @@ export const Route = createFileRoute("/pro/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard - HomesBrain" }] }),
   component: ProDashboard,
 });
-
-const DAY = 24 * 3600 * 1000;
 
 type FollowUpRow = {
   id: string;
@@ -48,9 +38,12 @@ function timeOfDayGreetingKey():
   return "pi.greeting.evening";
 }
 
-type CustomerBucketRow = {
+/* One customer's follow-up state, flattened into a single ordered list so the
+   dashboard can lift the single most urgent one into the top action. */
+type ActionRow = {
   customerId: string;
   name: string;
+  kind: "toSet" | "upcoming";
   date: string | null;
 };
 
@@ -58,33 +51,24 @@ function ProDashboard() {
   const t = useT();
   const { proId, pro } = useProGuard();
   const navigate = useNavigate();
+  const setup = useProSetup(proId);
   const [rows, setRows] = useState<FollowUpRow[]>([]);
-  const [reviewAsks7d, setReviewAsks7d] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!proId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: j }, { data: rv }] = await Promise.all([
-        supabase
-          .from("jobs")
-          .select(
-            "id,what_done,next_service_date,no_follow_up,follow_up_handled_at,customers(id,name,phone,email),homes(address),equipment(type)",
-          )
-          .eq("pro_id", proId)
-          .eq("no_follow_up", false)
-          .is("follow_up_handled_at", null)
-          .order("next_service_date", { ascending: true, nullsFirst: true }),
-        supabase
-          .from("events")
-          .select("id", { count: "exact", head: false })
-          .eq("actor", `pro:${proId}`)
-          .eq("type", "review_requested")
-          .gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
-      ]);
+      const { data: j } = await supabase
+        .from("jobs")
+        .select(
+          "id,what_done,next_service_date,no_follow_up,follow_up_handled_at,customers(id,name,phone,email),homes(address),equipment(type)",
+        )
+        .eq("pro_id", proId)
+        .eq("no_follow_up", false)
+        .is("follow_up_handled_at", null)
+        .order("next_service_date", { ascending: true, nullsFirst: true });
       if (cancelled) return;
       const mapped: FollowUpRow[] = (
         (j ?? []) as unknown as Array<{
@@ -104,7 +88,6 @@ function ProDashboard() {
         address: row.homes?.address ?? null,
       }));
       setRows(mapped);
-      setReviewAsks7d(rv?.length ?? 0);
       setLoading(false);
     })();
     return () => {
@@ -112,13 +95,10 @@ function ProDashboard() {
     };
   }, [proId]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const customerBuckets = useMemo(() => {
+  /* Collapse the raw jobs into one row per customer, then order them: the ones
+     that still need a next-service date (amber, most urgent) come first, then
+     the soonest upcoming. The head of this list is the top action. */
+  const actions = useMemo<ActionRow[]>(() => {
     const byCustomer = new Map<
       string,
       { name: string; needsDate: boolean; soonest: string | null }
@@ -138,18 +118,18 @@ function ProDashboard() {
       }
       byCustomer.set(key, prev);
     }
-    const toSet: CustomerBucketRow[] = [];
-    const upcoming: CustomerBucketRow[] = [];
+    const toSet: ActionRow[] = [];
+    const upcoming: ActionRow[] = [];
     for (const [customerId, v] of byCustomer) {
       if (v.needsDate) {
-        toSet.push({ customerId, name: v.name, date: null });
+        toSet.push({ customerId, name: v.name, kind: "toSet", date: null });
       } else if (v.soonest) {
-        upcoming.push({ customerId, name: v.name, date: v.soonest });
+        upcoming.push({ customerId, name: v.name, kind: "upcoming", date: v.soonest });
       }
     }
     toSet.sort((a, b) => a.name.localeCompare(b.name));
     upcoming.sort((a, b) => (a.date! < b.date! ? -1 : 1));
-    return { toSet, upcoming, total: toSet.length + upcoming.length };
+    return [...toSet, ...upcoming];
   }, [rows]);
 
   if (loading || !pro) {
@@ -166,158 +146,204 @@ function ProDashboard() {
 
   const googleConnected = isGoogleUrl(pro.google_place_id) && pro.google_rating != null;
 
+  const topAction = actions[0] ?? null;
+  const rest = actions.slice(1);
+  const restToSet = rest.filter((a) => a.kind === "toSet").length;
+  const restUpcoming = rest.filter((a) => a.kind === "upcoming").length;
+  const setupPct = setup.total ? Math.round((setup.completed / setup.total) * 100) : 0;
+
+  function goToCustomer(customerId: string) {
+    navigate({ to: "/pro/customers/$customerId", params: { customerId } });
+  }
+
   return (
     <ProShell pro={pro} active="dashboard">
       <div className="anim-fade-up mb-2">
         <h1 className="text-3xl sm:text-4xl tracking-tight text-ink">{greeting}</h1>
       </div>
 
+      {/* Set up: the biggest thing on the page until every step is done. */}
+      {!setup.loading && !setup.allDone && (
+        <section className="anim-fade-up d-1 mt-6">
+          <Card className="!p-5 border-indigo/20 bg-indigobg">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo text-(--on-accent)">
+                  <Sparkles size={18} />
+                </span>
+                <div>
+                  <div className="text-base font-bold text-ink">{t("setup.finish")}</div>
+                  <div className="text-xs font-semibold text-indigo tnum">
+                    {setup.completed} {t("setup.of")} {setup.total}
+                  </div>
+                </div>
+              </div>
+              <Link to="/pro/setup" aria-label={t("setup.finish")} className="shrink-0">
+                <Btn variant="indigo" size="sm">
+                  {t("setup.finish")} <ArrowRight size={14} />
+                </Btn>
+              </Link>
+            </div>
+            <span className="mt-4 block h-1.5 overflow-hidden rounded-full bg-indigo/15">
+              <span
+                className="block h-full rounded-full bg-indigo transition-all duration-300"
+                style={{ width: `${setupPct}%` }}
+              />
+            </span>
+            <ul className="mt-3">
+              {setup.items.map((item) => (
+                <li key={item.key}>
+                  <Link
+                    to="/pro/setup"
+                    search={{ step: item.key }}
+                    className="pressable flex items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-paper/60 transition-colors"
+                  >
+                    <span
+                      className={`flex h-5 w-5 items-center justify-center rounded-full shrink-0 ${
+                        item.done ? "bg-indigo text-(--on-accent)" : "border border-line bg-paper"
+                      }`}
+                    >
+                      {item.done && <Check size={12} strokeWidth={3} />}
+                    </span>
+                    <span
+                      className={`flex-1 text-sm font-semibold ${
+                        item.done ? "text-muted line-through" : "text-ink"
+                      }`}
+                    >
+                      {t(item.labelKey)}
+                    </span>
+                    {!item.done && <ChevronRight size={16} className="shrink-0 text-muted" />}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      )}
+
+      {/* Top action: the single most urgent thing to do right now. */}
       <section className="anim-fade-up d-2 mt-8">
         <h2 className="text-lg font-semibold text-ink mb-3">{t("pi.whatsNext")}</h2>
 
-        {customerBuckets.total === 0 ? (
-          <div className="inline-flex items-center gap-2 text-sm text-emerald-700">
-            <Check size={16} strokeWidth={2.5} />
-            <span>{t("pi.allCaughtUp")}</span>
-          </div>
+        {!topAction ? (
+          <Card className="!p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
+              <Check size={16} strokeWidth={2.5} />
+              <span>{t("pi.allCaughtUp")}</span>
+            </div>
+            <Link to="/pro/jobs/new" className="shrink-0">
+              <Btn variant="indigo" size="sm">
+                <Plus size={14} /> {t("pi.logJob")}
+              </Btn>
+            </Link>
+          </Card>
         ) : (
           <>
             <button
               type="button"
-              onClick={() => setExpanded((v) => !v)}
-              className="pressable w-full flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left hover:bg-soft transition-colors"
-              aria-expanded={expanded}
+              onClick={() => goToCustomer(topAction.customerId)}
+              className="pressable liftable w-full flex items-center gap-4 rounded-2xl border border-line bg-paper px-5 py-5 text-left"
             >
-              <div className="flex flex-wrap items-center gap-2">
-                {customerBuckets.toSet.length > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg text-amberdark px-3 py-1 text-sm font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-amber" />
-                    {customerBuckets.toSet.length} {t("pi.toSet")}
-                  </span>
-                )}
-                {customerBuckets.upcoming.length > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-soft text-ink px-3 py-1 text-sm font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-muted" />
-                    {customerBuckets.upcoming.length} {t("pi.upcoming")}
-                  </span>
-                )}
-              </div>
-              <ChevronDown
-                size={20}
-                className={`shrink-0 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                  topAction.kind === "toSet" ? "bg-amber" : "bg-indigo"
+                }`}
+                aria-hidden="true"
               />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-lg font-bold text-ink">{topAction.name}</span>
+                {topAction.kind === "toSet" ? (
+                  <span className="mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold text-amberdark">
+                    {t("pi.toSet")}
+                  </span>
+                ) : (
+                  <span className="mt-0.5 block text-sm text-muted tnum">
+                    {t("pi.upcoming")} · {formatDate(topAction.date!)}
+                  </span>
+                )}
+              </span>
+              <ChevronRight size={20} className="shrink-0 text-muted" />
             </button>
 
-            {expanded && (
-              <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
-                {customerBuckets.toSet.map((c) => (
-                  <li key={c.customerId}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate({
-                          to: "/pro/customers/$customerId",
-                          params: { customerId: c.customerId },
-                        })
-                      }
-                      className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber shrink-0" />
-                      <span className="min-w-0 flex-1 block text-base font-semibold text-ink truncate">
-                        {c.name}
+            {rest.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  aria-expanded={expanded}
+                  className="pressable mt-2 flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left text-muted hover:bg-soft transition-colors"
+                >
+                  <span className="flex flex-wrap items-center gap-2">
+                    {restToSet > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amberbg px-3 py-1 text-sm font-semibold text-amberdark">
+                        <span className="h-2 w-2 rounded-full bg-amber" />
+                        {restToSet} {t("pi.toSet")}
                       </span>
-                      <ChevronRight size={18} className="shrink-0 text-muted" />
-                    </button>
-                  </li>
-                ))}
-                {customerBuckets.upcoming.map((c) => (
-                  <li key={c.customerId}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate({
-                          to: "/pro/customers/$customerId",
-                          params: { customerId: c.customerId },
-                        })
-                      }
-                      className="pressable w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full bg-muted shrink-0" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-base font-semibold text-ink truncate">
-                          {c.name}
-                        </span>
-                        {c.date && (
-                          <span className="block text-xs text-muted tnum">
-                            {formatDate(c.date)}
+                    )}
+                    {restUpcoming > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-soft px-3 py-1 text-sm font-semibold text-ink">
+                        <span className="h-2 w-2 rounded-full bg-muted" />
+                        {restUpcoming} {t("pi.upcoming")}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronDown
+                    size={20}
+                    className={`shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {expanded && (
+                  <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-paper overflow-hidden">
+                    {rest.map((c) => (
+                      <li key={c.customerId}>
+                        <button
+                          type="button"
+                          onClick={() => goToCustomer(c.customerId)}
+                          className="pressable flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-soft transition-colors"
+                        >
+                          <span
+                            className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                              c.kind === "toSet" ? "bg-amber" : "bg-muted"
+                            }`}
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-base font-semibold text-ink">
+                              {c.name}
+                            </span>
+                            {c.date && (
+                              <span className="block text-xs text-muted tnum">
+                                {formatDate(c.date)}
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
-                      <ChevronRight size={18} className="shrink-0 text-muted" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                          <ChevronRight size={18} className="shrink-0 text-muted" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
           </>
         )}
       </section>
 
-      {/* One tap to every working surface, so the slim sidebar never hides
-          anything: the dashboard is the map. */}
-      <section className="anim-fade-up d-3 mt-8">
-        <h2 className="text-lg font-semibold text-ink mb-3">{t("pi.quickLinks")}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {(
-            [
-              { to: "/pro/customers", labelKey: "pro.nav.customers", icon: Users },
-              { to: "/pro/invoices", labelKey: "pro.nav.invoices", icon: ReceiptText },
-              { to: "/pro/records", labelKey: "pro.nav.records", icon: FileText },
-              { to: "/pro/due", labelKey: "pro.nav.due", icon: CalendarClock },
-              { to: "/pro/reviews", labelKey: "pro.nav.reviews", icon: Star },
-            ] as const
-          ).map(({ to, labelKey, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className="pressable liftable flex flex-col gap-2.5 rounded-2xl border border-line bg-paper px-4 py-4"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigobg text-indigo">
-                <Icon size={17} />
-              </span>
-              <span className="text-sm font-semibold text-ink">{t(labelKey)}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {googleConnected && (
-        <section className="anim-fade-up d-4 mt-8">
-          <Card className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-sm text-muted">
-                {reviewAsks7d > 0 ? t("pi.niceWeek") : t("pi.thisWeek")}
-              </div>
-              <div className="mt-0.5 text-xl font-semibold text-ink">
-                {pro.google_rating} ★ {t("pi.onGoogle")}
-              </div>
-              {reviewAsks7d > 0 && (
-                <div className="mt-0.5 text-sm text-muted">
-                  {reviewAsks7d}{" "}
-                  {reviewAsks7d === 1 ? t("pi.reviewAsk.one") : t("pi.reviewAsk.other")}
-                </div>
-              )}
-            </div>
-            <Link to="/pro/reviews" className="shrink-0">
-              <Btn variant="ghost" size="sm">
-                {t("pi.reviewsCta")}
-              </Btn>
-            </Link>
-          </Card>
-        </section>
-      )}
-
-      <div className="anim-fade-up d-4 mt-10 mb-4">
+      {/* Secondary: quiet links out. Deliberately understated so the page reads
+          as setup + top action, not a grid of shortcuts. */}
+      <div className="anim-fade-up d-3 mt-10 mb-4 space-y-2">
+        {googleConnected && (
+          <Link
+            to="/pro/reviews"
+            className="pressable flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper/60 px-4 py-3 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
+          >
+            <span>
+              <span className="font-semibold text-ink tnum">{pro.google_rating} ★</span>{" "}
+              {t("pi.onGoogle")}
+            </span>
+            <ChevronRight size={16} />
+          </Link>
+        )}
         <Link
           to="/pro/office"
           className="pressable flex items-center justify-between gap-3 rounded-2xl border border-line bg-paper/60 px-4 py-3 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
@@ -326,8 +352,6 @@ function ProDashboard() {
           <ChevronRight size={16} />
         </Link>
       </div>
-
-      {toast && <Toast onDismiss={() => setToast(null)}>{toast}</Toast>}
     </ProShell>
   );
 }

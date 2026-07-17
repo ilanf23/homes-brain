@@ -98,7 +98,7 @@ function About() {
             <p>
               We're deliberately unglamorous about sequencing. Step one is to own the record: make
               it effortless for pros to write and impossible for homeowners to lose. That alone
-              saves people real money: warranties honored, recalls caught, rebooks kept.
+              saves people real money: warranties honored, rebooks kept.
             </p>
             <p>
               Once a home has a memory, it can start being smart about itself: what needs service,

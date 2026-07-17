@@ -1,17 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  Avatar,
-  Btn,
-  Card,
-  Field,
-  Input,
-  PhoneInput,
-  Pill,
-  StepBar,
-  Textarea,
-  Toast,
-} from "@/lib/ui";
+import { Avatar, Btn, Card, Field, Input, PhoneInput, Pill, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
@@ -34,7 +23,6 @@ import {
 } from "@/lib/customer-match";
 import {
   buildRecordUrl,
-  checkRecall,
   fetchHomeUnits,
   fetchHomeUnitsByHomeId,
   formatDate,
@@ -150,9 +138,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   });
 }
 
-const STAGES: Stage[] = ["customer", "location", "work", "review"];
-const STAGE_LABELS = ["Customer", "Location", "The work", "Send"];
-
 /* Rows of the "Building the record" modal, in reveal order. Also used to seed
    the modal in its loading state the moment the voice overlay closes, so the
    pro never lands back on the customer list wondering if the AI heard them.
@@ -175,7 +160,6 @@ const FIELD_EQUIPMENT = "equipment";
 const FIELD_MAKE_MODEL = "make_model";
 const FIELD_WORK_DONE = "work_done";
 const FIELD_NEXT_SERVICE = "next_service";
-const FIELD_RECALL = "recall";
 const FIELD_VIDEO = "video";
 const FIELD_PHOTOS = "photos";
 
@@ -1204,7 +1188,6 @@ function NewJob() {
     };
   }, [customerLocale, eqType, stage, uiLocale, whatDone]);
 
-  const recall = checkRecall(eqMake, eqModel);
   const selectedCustomer = existing.find((x) => x.id === selectedCustomerId);
   const previewName = reviewName ?? selectedCustomer?.name ?? newCustomer.name;
   const previewAddress = selectedCustomerId ? locAddress : newCustomer.address;
@@ -2114,8 +2097,6 @@ function NewJob() {
             make: eqMake || null,
             model: eqModel || null,
             warranty_until: warrantyUntil || null,
-            recall_status: recall.status,
-            recall_checked_at: recall.checked_at,
             attributes: cleanedAttrs,
           } as never)
           .eq("id", selectedEquipmentId);
@@ -2136,8 +2117,6 @@ function NewJob() {
           make: eqMake || null,
           model: eqModel || null,
           warranty_until: warrantyUntil || null,
-          recall_status: recall.status,
-          recall_checked_at: recall.checked_at,
           source: "pro",
           attributes: cleanedAttrs,
         } as never)
@@ -2212,7 +2191,7 @@ function NewJob() {
 
     // Record. Persist which record rows the pro excluded, scoped to rows that
     // actually have a value, so the public record can hide exactly those.
-    const presentKeys = new Set<string>([FIELD_CUSTOMER, FIELD_WORK_DONE, FIELD_RECALL]);
+    const presentKeys = new Set<string>([FIELD_CUSTOMER, FIELD_WORK_DONE]);
     if (eqType) presentKeys.add(FIELD_EQUIPMENT);
     if (eqMake || eqModel) presentKeys.add(FIELD_MAKE_MODEL);
     if (nextService) presentKeys.add(FIELD_NEXT_SERVICE);
@@ -2764,50 +2743,12 @@ function NewJob() {
   return (
     <ProShell pro={pro} active="home">
       <div className={`mx-auto ${stage === "customer" ? "max-w-4xl" : "max-w-xl"}`}>
-        {stage !== "done" && (
-          <div className="anim-fade-up max-w-xl mx-auto mb-4">
-            {(() => {
-              // Existing-customer flow skips the standalone location step, so
-              // the step bar honestly reflects a 3-tap path (Customer → Work →
-              // Send). New customers still see 4 steps because address entry
-              // is essential up front. This is the site's home page now, so
-              // the chrome stays minimal: thin bars, no caption row (the
-              // heading below names the step), one compact heading line.
-              const flowStages: Stage[] = selectedCustomerId
-                ? ["customer", "work", "review"]
-                : ["customer", "location", "work", "review"];
-              const flowLabels = selectedCustomerId
-                ? ["Customer", "The work", "Send"]
-                : STAGE_LABELS;
-              const idx = flowStages.indexOf(stage);
-              return (
-                <StepBar
-                  steps={flowLabels}
-                  current={idx < 0 ? 0 : idx}
-                  accent="indigo"
-                  labels={false}
-                />
-              );
-            })()}
-            <div className="mt-3 flex items-baseline justify-between gap-3">
-              <h1 className="text-2xl font-bold tracking-tight">
-                {stage === "customer"
-                  ? "Who is this for?"
-                  : stage === "location"
-                    ? "Where's the job?"
-                    : stage === "work"
-                      ? "What did you do?"
-                      : t("pro.reviewAndSend")}
-              </h1>
-              {loc.status === "ready" && (
-                <span className="flex min-w-0 max-w-[55%] items-center gap-1 text-sm text-muted">
-                  <MapPin size={12} className="shrink-0" aria-hidden="true" />
-                  <span className="truncate" title={loc.address}>
-                    {loc.address}
-                  </span>
-                </span>
-              )}
-            </div>
+        {stage !== "done" && loc.status === "ready" && (
+          <div className="anim-fade-up max-w-xl mx-auto mb-3 flex items-center gap-1.5 text-sm text-muted">
+            <MapPin size={13} className="shrink-0" aria-hidden="true" />
+            <span className="truncate" title={loc.address}>
+              {loc.address}
+            </span>
           </div>
         )}
 
@@ -3147,17 +3088,6 @@ function NewJob() {
                 {videoCapture}
 
                 {photoCapture}
-
-                {/* Recall alert - only when there's an actual recall. No recall
-                    is the norm, so we don't surface it as noise. */}
-                {recall.status !== "none" && (
-                  <div className="rounded-xl bg-redbg px-3 py-2 flex items-center justify-between">
-                    <span className="text-base text-red font-semibold flex items-center gap-2">
-                      <ShieldCheck size={16} animate={false} /> Recall found
-                    </span>
-                    <Pill accent="red">{recall.label}</Pill>
-                  </div>
-                )}
 
                 {homeAppliances.length > 0 ? (
                   /* REPEAT HOME - the pro has serviced this address before, so we

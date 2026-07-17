@@ -77,15 +77,6 @@ export function formatPhone(value: string): string {
   return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
 }
 
-// Stub recall check - always "no known recalls" for v0 per spec.
-export function checkRecall(_make?: string, _model?: string) {
-  return {
-    status: "none" as const,
-    label: "No known recalls, checked today",
-    checked_at: new Date().toISOString(),
-  };
-}
-
 export async function logEvent(
   actor: string | null,
   type: string,

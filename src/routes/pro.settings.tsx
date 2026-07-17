@@ -3,7 +3,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   BadgeCheck,
   Bell,
-  Blocks,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -50,7 +49,6 @@ const SECTION_IDS = [
   "language",
   "notifications",
   "reviews",
-  "integrations",
   "referral",
   "account",
   "data",
@@ -75,16 +73,7 @@ type ProPrefs = {
   stripe_charges_enabled: boolean;
   stripe_payouts_enabled: boolean;
   stripe_details_submitted: boolean;
-  quickbooks_connected: boolean;
-  jobber_connected: boolean;
-  square_connected: boolean;
 };
-
-const INTEGRATIONS = [
-  { key: "quickbooks_connected", label: "QuickBooks", sub: "Sync jobs to invoices" },
-  { key: "jobber_connected", label: "Jobber", sub: "Pull jobs in automatically" },
-  { key: "square_connected", label: "Square", sub: "Payments and customers" },
-] as const;
 
 /* One tappable hub row: icon tile, plain-words label, current value, chevron. */
 function HubRow({
@@ -179,7 +168,7 @@ function ProSettings() {
       const { data } = await supabase
         .from("pros")
         .select(
-          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted,quickbooks_connected,jobber_connected,square_connected",
+          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted",
         )
         .eq("id", proId)
         .maybeSingle();
@@ -462,11 +451,6 @@ function ProSettings() {
               </span>{" "}
               all yours, no upgrade needed.
             </div>
-            <div className="mt-2">
-              <Link to="/pro/plan" className="text-sm font-semibold text-indigo hover:underline">
-                View plan details →
-              </Link>
-            </div>
           </div>
         </Card>
       </SectionScreen>
@@ -540,18 +524,6 @@ function ProSettings() {
             <Skeleton className="h-10 w-full" />
           )}
           {prefErrBox}
-        </Card>
-      </SectionScreen>
-    ),
-
-    integrations: (
-      <SectionScreen title="Integrations" sub="Tools you already use, connected to HomesBrain.">
-        <Card>
-          {INTEGRATIONS.map(({ key, label, sub }) => (
-            <SettingRow key={key} label={label} sub={prefs?.[key] ? "Connected" : sub}>
-              <Pill accent="ink">Coming soon</Pill>
-            </SettingRow>
-          ))}
         </Card>
       </SectionScreen>
     ),
@@ -666,7 +638,6 @@ function ProSettings() {
           </HubGroup>
 
           <HubGroup title="More">
-            <HubRow icon={Blocks} label="Integrations" value="Coming soon" section="integrations" />
             <HubRow
               icon={Copy}
               label="Referral link"

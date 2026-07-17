@@ -341,8 +341,6 @@ export type HomeRecordCopy = {
   serial: string;
   warranty: string;
   until: (date: string) => string;
-  recall: string;
-  noKnownRecalls: string;
   openItemHistory: string;
   videoFromPro: string;
   photosFromPro: string;
@@ -382,8 +380,6 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     serial: "Serial",
     warranty: "Warranty",
     until: (date) => `Until ${date}`,
-    recall: "Recall",
-    noKnownRecalls: "No known recalls",
     openItemHistory: "Open item history",
     videoFromPro: "A video from your pro",
     photosFromPro: "Photos from your pro",
@@ -421,8 +417,6 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     serial: "Número de serie",
     warranty: "Garantía",
     until: (date) => `Hasta ${date}`,
-    recall: "Retirada",
-    noKnownRecalls: "No hay retiradas conocidas",
     openItemHistory: "Abrir historial del equipo",
     videoFromPro: "Un video de tu profesional",
     photosFromPro: "Fotos de tu profesional",
@@ -460,8 +454,6 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     serial: "Серийный номер",
     warranty: "Гарантия",
     until: (date) => `До ${date}`,
-    recall: "Отзыв",
-    noKnownRecalls: "Известных отзывов нет",
     openItemHistory: "Открыть историю устройства",
     videoFromPro: "Видео от вашего мастера",
     photosFromPro: "Фото от вашего мастера",
@@ -499,8 +491,6 @@ const HOME_RECORD_COPY: Record<Locale, HomeRecordCopy> = {
     serial: "Серійний номер",
     warranty: "Гарантія",
     until: (date) => `До ${date}`,
-    recall: "Відкликання",
-    noKnownRecalls: "Відомих відкликань немає",
     openItemHistory: "Відкрити історію пристрою",
     videoFromPro: "Відео від вашого майстра",
     photosFromPro: "Фото від вашого майстра",

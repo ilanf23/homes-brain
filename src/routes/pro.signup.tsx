@@ -14,15 +14,22 @@ import { LanguageToggle } from "@/lib/i18n";
    No password, no business, no trade on this screen: everything is
    deferred into /pro/setup to keep the first ask trivial for the pro. */
 
-type ProSignupSearch = { email?: string };
+type ProSignupSearch = { email?: string; ref?: string };
 
 export const Route = createFileRoute("/pro/signup")({
   head: () => ({ meta: [{ title: "Create account - HomesBrain for pros" }] }),
   validateSearch: (s: Record<string, unknown>): ProSignupSearch => ({
     email: typeof s.email === "string" ? s.email : undefined,
+    // ?ref=<referring pro id> from a shared referral link. Kept only if it
+    // looks like a uuid; the DB re-validates before attributing.
+    ref: typeof s.ref === "string" && isUuid(s.ref) ? s.ref : undefined,
   }),
   component: ProSignup,
 });
+
+function isUuid(s: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -47,6 +54,9 @@ function ProSignup() {
         email: email.trim(),
         first_name: firstName.trim(),
         origin: window.location.origin,
+        // Referral attribution rides in the magic-link URL so it survives the
+        // email round-trip (localStorage would not on a different device).
+        ref: search.ref ?? null,
       },
     });
     if (error) {
@@ -81,6 +91,9 @@ function ProSignup() {
         JSON.stringify({
           intent: "pro",
           owner_first_name: firstName.trim() || null,
+          // OAuth returns to the same browser, so localStorage is a reliable
+          // carrier for the referral id on the Google path.
+          ref: search.ref ?? null,
         }),
       );
     } catch {
@@ -155,7 +168,9 @@ function ProSignup() {
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="text-center mb-8">
           <h1 className="text-3xl tracking-tight">Create account</h1>
-          <p className="mt-2 text-sm text-muted">Claim the record with your name on it. Two fields to start, no password.</p>
+          <p className="mt-2 text-sm text-muted">
+            Claim the record with your name on it. Two fields to start, no password.
+          </p>
         </div>
 
         <Card>

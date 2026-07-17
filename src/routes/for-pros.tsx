@@ -18,7 +18,17 @@ export const Route = createFileRoute("/for-pros")({
 const CONTAINER = "mx-auto w-full max-w-[770px] px-5";
 const H_SANS = "font-sans font-extrabold tracking-[-0.02em] text-ink";
 
-function CallbackRow({ initial, name, need, area }: { initial: string; name: string; need: string; area: string }) {
+function CallbackRow({
+  initial,
+  name,
+  need,
+  area,
+}: {
+  initial: string;
+  name: string;
+  need: string;
+  area: string;
+}) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-indigo/10 border border-indigo/20 px-4 py-3">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo text-white font-extrabold">
@@ -63,8 +73,8 @@ function ForPros() {
           <span className="text-indigo">Google barely knows it.</span>
         </h1>
         <p className="mt-5 mx-auto max-w-xl text-lg text-muted">
-          HomesBrain turns every job into a Google review and a reason for the customer to bring
-          you back. Free to start, nothing to learn.
+          HomesBrain turns every job into a Google review and a reason for the customer to bring you
+          back. Free to start, nothing to learn.
         </p>
         <div className="mt-8 flex justify-center">
           <Link to="/pro/signup" className="w-full sm:w-auto">
@@ -84,8 +94,8 @@ function ForPros() {
             Just talk. It fills itself in.
           </h2>
           <p className="mt-4 mx-auto max-w-xl text-[15px] sm:text-base text-muted">
-            You never type. Talk through the job, HomesBrain AI writes the record. Faster than
-            your notebook.
+            You never type. Talk through the job, HomesBrain AI writes the record. Faster than your
+            notebook.
           </p>
         </div>
         <div className="mt-10">
@@ -159,7 +169,9 @@ function ForPros() {
           <div className="rounded-[24px] border border-indigo/20 bg-soft p-7 sm:p-8 flex flex-col">
             <div className="flex items-baseline gap-3">
               <h3 className={`${H_SANS} text-2xl text-ink`}>Free</h3>
-              <div className="font-sans text-3xl font-extrabold tracking-tight text-coral tnum">$0</div>
+              <div className="font-sans text-3xl font-extrabold tracking-tight text-coral tnum">
+                $0
+              </div>
             </div>
             <p className="mt-1 text-sm text-muted">Start here. The wedge never expires.</p>
             <ul className="mt-6 space-y-3 text-[15px] text-ink flex-1">
@@ -167,12 +179,20 @@ function ForPros() {
                 "Automatic Google reviews",
                 "Your branded job record",
                 "Verified pro profile",
-                "Recall check",
                 "See who is due, your callback list",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo text-white">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M2 6l3 3 5-6" />
                     </svg>
                   </span>
@@ -198,7 +218,16 @@ function ForPros() {
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M2 6l3 3 5-6" />
                     </svg>
                   </span>
@@ -206,9 +235,7 @@ function ForPros() {
                 </li>
               ))}
             </ul>
-            <p className="mt-6 text-sm text-white/70">
-              Locked for life. $59 standard after.
-            </p>
+            <p className="mt-6 text-sm text-white/70">Locked for life. $59 standard after.</p>
           </div>
         </div>
 
@@ -225,7 +252,6 @@ function ForPros() {
           </div>
         </div>
       </section>
-
     </MarketingShell>
   );
 }

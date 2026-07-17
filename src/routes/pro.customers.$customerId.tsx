@@ -33,8 +33,6 @@ import {
   type TimelineEntry,
 } from "@/components/crm";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { PlanLock } from "@/components/plan-lock";
-import { isProEntitled } from "@/lib/plan";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 
 // Flip to true to restore the full CRM (notes, invoices, timeline, nudge/invite,
@@ -91,7 +89,6 @@ type EquipmentRow = {
   make: string | null;
   model: string | null;
   warranty_until: string | null;
-  recall_status: string;
 };
 type NudgeEvent = { id: string; created_at: string };
 type TabKey = "activity" | "notes" | "jobs" | "invoices";
@@ -163,7 +160,7 @@ function CustomerDetail() {
         ];
         const { data: eq } = await supabase
           .from("equipment")
-          .select("id,type,make,model,warranty_until,recall_status")
+          .select("id,type,make,model,warranty_until")
           .in("home_id", homeIds)
           .order("created_at", { ascending: false });
         setEquipment((eq ?? []) as EquipmentRow[]);
@@ -499,17 +496,6 @@ function CustomerDetail() {
     return (
       <ProShell pro={pro} active="customers" wide>
         <ProPageSkeleton />
-      </ProShell>
-    );
-  }
-
-  if (SHOW_ADVANCED && !isProEntitled(pro)) {
-    return (
-      <ProShell pro={pro} active="customers">
-        <PlanLock
-          title="Customer CRM"
-          description="Deep customer profiles with visits, equipment, invoices, and notes. Included with Pro."
-        />
       </ProShell>
     );
   }
@@ -980,9 +966,6 @@ function CustomerDetail() {
                           {e.warranty_until && (
                             <Pill accent="indigo">Warranty to {formatDate(e.warranty_until)}</Pill>
                           )}
-                          <Pill accent={e.recall_status === "none" ? "indigo" : "red"}>
-                            {e.recall_status === "none" ? "No recalls" : "Recall"}
-                          </Pill>
                         </div>
                       </div>
                     ))}

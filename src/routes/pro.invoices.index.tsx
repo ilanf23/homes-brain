@@ -12,8 +12,6 @@ import {
   type ProInvoice,
 } from "@/lib/invoices";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
-import { PlanLock } from "@/components/plan-lock";
-import { isProEntitled } from "@/lib/plan";
 
 export const Route = createFileRoute("/pro/invoices/")({
   head: () => ({ meta: [{ title: "Invoices - HomesBrain" }] }),
@@ -97,18 +95,6 @@ function InvoicesList() {
       </ProShell>
     );
   }
-
-  if (!isProEntitled(pro)) {
-    return (
-      <ProShell pro={pro} active="invoices">
-        <PlanLock
-          title="Invoicing + get paid"
-          description="Send invoices to homeowners and collect payment through HomesBrain. Included with Pro."
-        />
-      </ProShell>
-    );
-  }
-
 
   return (
     <ProShell pro={pro} active="invoices">

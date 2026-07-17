@@ -42,7 +42,6 @@ export type HomeEquipment = {
   model: string | null;
   serial: string | null;
   warranty_until: string | null;
-  recall_status: string;
   source: string;
   created_at: string;
 };

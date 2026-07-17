@@ -252,7 +252,7 @@ function FullScene({ step, className }: { step: LoopKey | null; className: strin
                 </span>
               </div>
               <div className="mt-1 text-[7.5px] leading-tight text-muted">
-                128 Maple St · Recall check ✓
+                128 Maple St · Verified ✓
               </div>
             </div>
           </div>

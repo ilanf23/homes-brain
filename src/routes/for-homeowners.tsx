@@ -57,7 +57,6 @@ const EVERYTHING = [
   { title: "Auto filled appliance inventory", sub: "Make, model, serial, captured by the pros." },
   { title: "Verified service history", sub: "What was done, when, and by whom." },
   { title: "Warranty tracking and alerts", sub: "Know what is covered before you pay." },
-  { title: "Recall alerts", sub: "Get told if your equipment is recalled." },
   { title: "Maintenance reminders", sub: "Stay ahead of the next breakdown." },
   { title: "Your trusted pros, saved", sub: "Rebook the people who know your home." },
   { title: "One secure link to share", sub: "For a sale, an insurer, or family." },
@@ -590,8 +589,8 @@ function ForHomeowners() {
               </span>
             </h1>
             <p className="anim-fade-up d-2 mt-6 text-lg text-muted max-w-2xl mx-auto lg:mx-0">
-              It remembers every appliance and every service, then warns you before the water
-              heater floods the garage or the AC line soaks the ceiling. Free for life.
+              It remembers every appliance and every service, then warns you before the water heater
+              floods the garage or the AC line soaks the ceiling. Free for life.
             </p>
             <div className="anim-fade-up d-3 mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
               <Link to="/home/signup">
@@ -611,7 +610,6 @@ function ForHomeowners() {
               <span>No typing</span>
             </div>
           </div>
-
 
           {/* The home, with its record writing itself on top */}
           <div className="anim-scale-in d-2 persp">
@@ -642,7 +640,7 @@ function ForHomeowners() {
                 </PhotoChip>
                 <PhotoChip className="right-4 top-[38%]" float floatDelay="-2.4s">
                   <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo">
-                    <ShieldCheck size={15} animate={false} /> No known recalls
+                    <ShieldCheck size={15} animate={false} /> Warranty on file
                   </div>
                 </PhotoChip>
                 <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2">
@@ -755,7 +753,6 @@ function ForHomeowners() {
                     </div>
                     <div className="seq" style={seq(1.5)}>
                       <Btn variant="coral" className="w-full">
-
                         Get my record
                       </Btn>
                     </div>
