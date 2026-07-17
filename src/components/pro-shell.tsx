@@ -35,6 +35,7 @@ import { useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
 import { BottomTabBar, TAB_BAR_CONTENT_PAD } from "@/components/bottom-tab-bar";
 import { BottomSheet } from "@/components/bottom-sheet";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { phIdentify, phReset } from "@/lib/posthog";
 
@@ -482,6 +483,10 @@ export function ProShell({
           create={{ to: "/pro/jobs/new", label: t("pro.logJob") }}
           swipeEnabled={active !== "home"}
         />
+
+        {/* PWA install hint - pro-only, mobile-only, dismissible. */}
+        {pro ? <InstallAppPrompt /> : null}
+
       </div>
     </div>
   );

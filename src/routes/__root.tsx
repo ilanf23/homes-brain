@@ -105,6 +105,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/278656fc-01ae-495d-a5ae-0fbc73cf53ef/id-preview-0fb51eec--1c763d3d-217f-4cd0-82d6-c92c352b39c9.lovable.app-1782857254260.png",
       },
       { name: "twitter:card", content: "summary_large_image" },
+      /* iOS Add-to-Home-Screen chrome. */
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "HomesBrain" },
+      { name: "theme-color", content: "#473fb0" },
     ],
     links: [
       /* Plus Jakarta Sans site-wide, self-hosted via fontsource and bundled
@@ -114,7 +120,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
       { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
-      { rel: "manifest", href: "/site.webmanifest" },
+      /* Web app manifest is emitted by vite-plugin-pwa. */
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   loader: async () => ({ locale: await getLocaleServerFn() }),
@@ -152,6 +159,7 @@ function RootComponent() {
   const { locale } = Route.useLoaderData();
   useEffect(() => {
     initPosthog();
+    void import("../lib/pwa-register").then((m) => m.registerPWA());
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
