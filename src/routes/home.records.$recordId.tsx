@@ -98,7 +98,7 @@ function RecordDetail() {
       job_id: job?.id,
       pro_id: pro?.id,
     });
-    setToast(copy.reminderOn ?? "You'll get a heads-up before it's due.");
+    setToast("You\u2019ll get a heads-up before it\u2019s due.");
   }
 
   async function onReviewClick() {
@@ -296,7 +296,7 @@ function RecordDetail() {
               </div>
               {remindSubbed ? (
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo">
-                  <Check size={16} /> {copy.reminderOn ?? "Reminder on"}
+                  <Check size={16} /> {"Reminder on"}
                 </span>
               ) : (
                 <Btn variant="secondary" onClick={subscribeReminder}>
