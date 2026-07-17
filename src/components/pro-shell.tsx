@@ -6,15 +6,15 @@ import {
   ChevronDown,
   FileText,
   Gift,
+  Home,
   LayoutDashboard,
   LogOut,
-  Menu,
   Plus,
   ReceiptText,
   Settings,
   Star,
+  UserRound,
   Users,
-  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -23,14 +23,18 @@ import {
   tradeLabel,
   type ProNotification,
 } from "@/lib/hb";
-import { Avatar, Btn, Card, Skeleton } from "@/lib/ui";
+import { Btn, Card, FaceAvatar, Skeleton } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
+import { useHideOnScroll } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/pro-search";
 import { ProSetupNavItem } from "@/components/pro-setup-checklist";
 
-import { LanguageToggle, LanguageInlinePicker, useI18n, useT, type TKey } from "@/lib/i18n";
+import { useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
+import { BottomTabBar, TAB_BAR_CONTENT_PAD } from "@/components/bottom-tab-bar";
+import { BottomSheet } from "@/components/bottom-sheet";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { phIdentify, phReset } from "@/lib/posthog";
 
 export type ProRow = {
@@ -106,6 +110,7 @@ export type ProNavKey =
   | "reviews"
   | "referral"
   | "office"
+  | "profile"
   | "settings";
 
 type NavItem = { key: ProNavKey; labelKey: TKey; to: string; icon: typeof LayoutDashboard };
@@ -129,46 +134,38 @@ const MORE_NAV: NavItem[] = [
 ];
 
 /* Core links, then a "More" disclosure holding the rest. Opens itself when
-   the active page lives inside it, so the current page is never hidden. */
+   the active page lives inside it, so the current page is never hidden.
+   Desktop sidebar only; mobile navigation is the bottom tab bar. */
 function GroupedNav({
   active,
   proId,
-  mobile = false,
-  onNavigate,
 }: {
   active: ProNavKey;
   /* Drives the setup progress entry at the top of the nav; null hides it. */
   proId: string | null;
-  mobile?: boolean;
-  onNavigate?: () => void;
 }) {
   const t = useT();
   const [moreOpen, setMoreOpen] = useState(() => MORE_NAV.some((item) => item.key === active));
   const itemClass = (isActive: boolean) =>
-    mobile
-      ? `pressable flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] ${
-          isActive ? "bg-indigobg text-indigo font-bold" : "text-ink font-semibold hover:bg-soft"
-        }`
-      : `pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
-          isActive
-            ? "bg-indigobg text-indigo font-bold"
-            : "text-muted font-semibold hover:text-ink hover:bg-soft"
-        }`;
+    `pressable flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm ${
+      isActive
+        ? "bg-indigobg text-indigo font-bold"
+        : "text-muted font-semibold hover:text-ink hover:bg-soft"
+    }`;
   const renderItem = ({ key, labelKey, to, icon: Icon }: NavItem) => (
     <Link
       key={key}
       to={to}
-      onClick={onNavigate}
       aria-current={active === key ? "page" : undefined}
       className={itemClass(active === key)}
     >
-      <Icon size={mobile ? 18 : 17} />
+      <Icon size={17} />
       {t(labelKey)}
     </Link>
   );
   return (
     <>
-      <ProSetupNavItem proId={proId} mobile={mobile} onNavigate={onNavigate} />
+      <ProSetupNavItem proId={proId} />
       {CORE_NAV.map(renderItem)}
       <button
         type="button"
@@ -177,12 +174,12 @@ function GroupedNav({
         className={`${itemClass(false)} w-full`}
       >
         <ChevronDown
-          size={mobile ? 18 : 17}
+          size={17}
           className={`transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`}
         />
         {t("pro.nav.more")}
       </button>
-      {moreOpen && <div className={mobile ? "pl-3" : "pl-2.5"}>{MORE_NAV.map(renderItem)}</div>}
+      {moreOpen && <div className="pl-2.5">{MORE_NAV.map(renderItem)}</div>}
     </>
   );
 }
@@ -254,45 +251,66 @@ function NotificationsBell({ proId, align }: { proId: string; align: "left" | "r
         )}
       </button>
 
+      {/* Shared list body: dropdown on desktop, bottom sheet on mobile. */}
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={toggle} aria-hidden="true" />
-          <div
-            className={`absolute top-full mt-2 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-paper shadow-[0_24px_60px_-24px_rgba(22,22,15,0.3)] ${
-              align === "left" ? "left-0" : "right-0"
-            }`}
-            role="dialog"
-            aria-label={t("pro.notifications")}
-          >
-            <div className="px-4 py-3 border-b border-line text-sm font-bold text-ink">
-              {t("pro.notifications")}
-            </div>
-            {items.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-muted">{t("pro.notificationsEmpty")}</p>
-            ) : (
-              <div className="max-h-96 overflow-y-auto divide-y divide-line">
-                {items.map((n) => (
-                  <div key={n.id} className="px-4 py-3 flex items-start gap-2.5">
-                    <span
-                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
-                        unreadIds.has(n.id) ? "bg-indigo" : "bg-transparent"
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-ink">{n.title}</div>
-                      {n.detail && <div className="text-xs text-muted mt-0.5">{n.detail}</div>}
-                    </div>
-                    <span className="text-xs text-muted font-mono tnum shrink-0">
-                      {timeAgo(n.created_at, locale)}
-                    </span>
-                  </div>
-                ))}
+          <div className="hidden md:block">
+            <div className="fixed inset-0 z-40" onClick={toggle} aria-hidden="true" />
+            <div
+              className={`absolute top-full mt-2 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-paper shadow-[0_24px_60px_-24px_rgba(22,22,15,0.3)] ${
+                align === "left" ? "left-0" : "right-0"
+              }`}
+              role="dialog"
+              aria-label={t("pro.notifications")}
+            >
+              <div className="px-4 py-3 border-b border-line text-sm font-bold text-ink">
+                {t("pro.notifications")}
               </div>
-            )}
+              <NotificationsList items={items} unreadIds={unreadIds} locale={locale} />
+            </div>
+          </div>
+          <div className="md:hidden">
+            <BottomSheet open onClose={toggle} title={t("pro.notifications")}>
+              <NotificationsList items={items} unreadIds={unreadIds} locale={locale} />
+            </BottomSheet>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function NotificationsList({
+  items,
+  unreadIds,
+  locale,
+}: {
+  items: ProNotification[];
+  unreadIds: Set<string>;
+  locale: string;
+}) {
+  const t = useT();
+  if (items.length === 0)
+    return <p className="px-4 py-6 text-sm text-muted">{t("pro.notificationsEmpty")}</p>;
+  return (
+    <div className="max-h-96 overflow-y-auto divide-y divide-line">
+      {items.map((n) => (
+        <div key={n.id} className="px-4 py-3 flex items-start gap-2.5">
+          <span
+            className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
+              unreadIds.has(n.id) ? "bg-indigo" : "bg-transparent"
+            }`}
+            aria-hidden="true"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-ink">{n.title}</div>
+            {n.detail && <div className="text-xs text-muted mt-0.5">{n.detail}</div>}
+          </div>
+          <span className="text-xs text-muted font-mono tnum shrink-0">
+            {timeAgo(n.created_at, locale)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -312,7 +330,7 @@ function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => 
         aria-haspopup="menu"
         className="pressable block rounded-xl"
       >
-        <Avatar name={pro.business} accent="indigo" size={32} />
+        <FaceAvatar accent="indigo" size={32} />
       </button>
       {open && (
         <>
@@ -323,7 +341,7 @@ function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => 
             className="absolute top-full right-0 mt-2 z-50 w-64 rounded-2xl border border-line bg-paper shadow-[0_24px_60px_-24px_rgba(22,22,15,0.3)] overflow-hidden"
           >
             <div className="px-4 py-3 border-b border-line flex items-center gap-2.5">
-              <Avatar name={pro.business} accent="indigo" size={36} />
+              <FaceAvatar accent="indigo" size={36} />
               <div className="min-w-0">
                 <div className="text-sm font-bold text-ink truncate">{pro.business}</div>
                 <div className="text-xs text-muted truncate">
@@ -357,39 +375,41 @@ function AccountMenu({ pro, onSignOut }: { pro: ProRow | null; onSignOut: () => 
   );
 }
 
+/* Which bottom tab lights up for each page. Home IS the log-a-job page (the
+   whole product starts there); everything folded off the bar lives under
+   Profile, including the dashboard. */
+const TAB_FOR_KEY: Record<ProNavKey, "home" | "customers" | "records" | "profile"> = {
+  home: "home",
+  dashboard: "profile",
+  customers: "customers",
+  records: "records",
+  invoices: "profile",
+  due: "profile",
+  reviews: "profile",
+  referral: "profile",
+  office: "profile",
+  profile: "profile",
+  settings: "profile",
+};
+
 export function ProShell({
   pro,
   active,
   wide = false,
-  hideMobileCta = false,
   children,
 }: {
   pro: ProRow | null;
   active: ProNavKey;
   /* Wider content column for three-column record pages (customer detail). */
   wide?: boolean;
-  /* Hide the fixed mobile "Log a job" button (e.g. the dashboard already shows the big card). */
-  hideMobileCta?: boolean;
   children: ReactNode;
 }) {
   const navigate = useNavigate();
   const [theme] = useTheme();
+  const headerHidden = useHideOnScroll();
   const t = useT();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // Lock body scroll while the mobile menu is open so the underlying page
-  // doesn't scroll under the pro's finger.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [menuOpen]);
 
   async function signOut() {
-    setMenuOpen(false);
     await supabase.auth.signOut();
     phReset();
     navigate({ to: "/" });
@@ -441,129 +461,41 @@ export function ProShell({
           </div>
         </header>
 
-        <header className="md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
+        <header
+          className={`md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md transition-transform duration-200 ${headerHidden ? "-translate-y-full" : ""}`}
+        >
           <div className="px-4 h-14 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2" aria-label="HomesBrain">
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              aria-label={t("pro.navigation")}
-              aria-expanded={menuOpen}
-              aria-controls="pro-mobile-menu"
-              className="pressable -mr-1 flex h-11 w-11 items-center justify-center rounded-xl text-ink hover:bg-soft"
-            >
-              <Menu size={22} />
-            </button>
+            {pro ? (
+              <NotificationsBell proId={pro.id} align="right" />
+            ) : (
+              <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+            )}
           </div>
         </header>
 
-        {/* Mobile slide-over menu: full nav + language + log out. */}
-        {menuOpen && (
-          <div className="md:hidden fixed inset-0 z-[70]" role="dialog" aria-modal="true">
-            <button
-              type="button"
-              aria-label="Close menu"
-              onClick={() => setMenuOpen(false)}
-              className="absolute inset-0 bg-ink/40 backdrop-blur-sm anim-fade-in"
-            />
-            <div
-              id="pro-mobile-menu"
-              className="absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col bg-paper shadow-[-24px_0_60px_-24px_rgba(22,22,15,0.35)] anim-fade-up"
-            >
-              <div className="flex h-14 items-center justify-between border-b border-line px-4">
-                <Link
-                  to="/"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2"
-                  aria-label="HomesBrain"
-                >
-                  <Logo size={24} wordmarkClassName="text-sm" />
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  aria-label="Close menu"
-                  className="pressable -mr-1 flex h-11 w-11 items-center justify-center rounded-xl text-ink hover:bg-soft"
-                >
-                  <X size={22} />
-                </button>
-              </div>
-
-              {pro && (
-                <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-                  <Avatar name={pro.business} accent="indigo" size={40} />
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-ink">{pro.business}</div>
-                    <div className="truncate text-xs text-muted">
-                      {(pro.trades?.length ? pro.trades : pro.trade ? [pro.trade] : [])
-                        .map((tr) => tradeLabel(tr))
-                        .join(" · ")}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <nav className="flex-1 overflow-y-auto p-2" aria-label={t("pro.navigation")}>
-                <GroupedNav
-                  active={active}
-                  proId={pro?.id ?? null}
-                  mobile
-                  onNavigate={() => setMenuOpen(false)}
-                />
-              </nav>
-
-              <div className="border-t border-line px-3 py-3 space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted">
-                    {t("lang.label")}
-                  </span>
-                  <LanguageInlinePicker />
-                </div>
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted">
-                    Theme
-                  </span>
-                  <ThemeToggle />
-                </div>
-                <button
-                  type="button"
-                  onClick={signOut}
-                  className="pressable mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-semibold text-ink hover:bg-soft"
-                >
-                  <LogOut size={18} /> {t("chrome.signOut")}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         <main
-          className={`mx-auto ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 sm:px-6 py-6 md:py-10 ${hideMobileCta ? "pb-10" : "pb-28 md:pb-10"}`}
+          className={`tab-swipe-main mx-auto ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 sm:px-6 pt-6 md:pt-10 ${TAB_BAR_CONTENT_PAD} md:pb-10`}
         >
           {children}
         </main>
 
-        {/* Mobile: the one primary action lives in the bottom thumb zone, always reachable.
-            Suppressed on surfaces that already show a large "Log a job" action (e.g. the dashboard). */}
-        {!hideMobileCta && (
-          <div
-            className="md:hidden fixed bottom-0 inset-x-0 z-40 px-4 pt-3 bg-gradient-to-t from-[var(--soft)] via-[var(--soft)]/90 to-transparent pointer-events-none"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
-          >
-            <Link to="/pro/jobs/new" className="block pointer-events-auto">
-              <Btn
-                variant="indigo"
-                size="lg"
-                className="w-full shadow-[0_12px_28px_-10px_rgba(71,63,176,0.55)]"
-                tabIndex={-1}
-              >
-                <Plus size={18} /> {t("pro.logJob")}
-              </Btn>
-            </Link>
-          </div>
-        )}
+        {/* Mobile: Instagram-style bottom tab bar; log-a-job is the center +
+            and the profile slot shows the avatar. */}
+        <PullToRefresh />
+        <BottomTabBar
+          items={[
+            { key: "home", label: t("pro.nav.home"), to: "/pro/jobs/new", icon: Home },
+            { key: "customers", label: t("pro.nav.customers"), to: "/pro/customers", icon: Users },
+            { key: "records", label: t("pro.nav.records"), to: "/pro/records", icon: FileText },
+            { key: "profile", label: t("pro.nav.profile"), to: "/pro/profile", icon: UserRound },
+          ]}
+          activeKey={TAB_FOR_KEY[active]}
+          create={{ to: "/pro/jobs/new", label: t("pro.logJob") }}
+          swipeEnabled={active !== "home"}
+        />
       </div>
     </div>
   );

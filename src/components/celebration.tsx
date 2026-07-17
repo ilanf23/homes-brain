@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { haptic } from "@/lib/mobile";
 
 /* One-shot celebration overlay for the loop's payoff moments.
    - "burst": quick confetti pop with a few balloons. For the pro's
@@ -184,6 +185,7 @@ export function Celebration({ variant = "burst" }: { variant?: Variant }) {
 
   const total = grand ? 4400 : 2300;
   useEffect(() => {
+    haptic([10, 60, 14]);
     const t = setTimeout(() => setGone(true), total);
     return () => clearTimeout(t);
   }, [total]);

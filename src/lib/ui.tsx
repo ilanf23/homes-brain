@@ -4,6 +4,8 @@ import type {
   InputHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
+import { UserRound } from "lucide-react";
+import { haptic } from "@/lib/mobile";
 import { initials, formatPhone } from "./hb";
 
 /* indigo (purple) = the brand, main color everywhere including pro surfaces,
@@ -125,7 +127,8 @@ const btnStyles: Record<BtnVariant, string> = {
     "bg-coral text-(--on-accent) hover:bg-coral/90 hover:shadow-[0_10px_24px_-12px_rgba(194,70,31,0.55)] active:translate-y-px",
   indigo:
     "bg-indigo text-(--on-accent) hover:bg-indigo/90 hover:shadow-[0_10px_24px_-12px_rgba(71,63,176,0.55)] active:translate-y-px",
-  amber: "bg-amber text-(--on-accent) hover:bg-amber/90 hover:shadow-[0_10px_24px_-12px_rgba(138,82,8,0.55)] active:translate-y-px",
+  amber:
+    "bg-amber text-(--on-accent) hover:bg-amber/90 hover:shadow-[0_10px_24px_-12px_rgba(138,82,8,0.55)] active:translate-y-px",
   ghost: "bg-transparent text-ink hover:bg-soft active:translate-y-px",
 };
 
@@ -209,6 +212,19 @@ export function Avatar({
   );
 }
 
+/* The signed-in account's avatar: a face icon, not initials. Contacts and
+   customers keep the initials Avatar; this is only for self-representation. */
+export function FaceAvatar({ accent = "indigo", size = 44 }: { accent?: Accent; size?: number }) {
+  return (
+    <div
+      className={`flex items-center justify-center shrink-0 ${accentBg[accent]} ${accentText[accent]}`}
+      style={{ width: size, height: size, borderRadius: size * 0.32 }}
+    >
+      <UserRound size={Math.round(size * 0.52)} strokeWidth={2.2} />
+    </div>
+  );
+}
+
 /* Switch with a 44px hit area around a 24px visual track. Writes should be
    optimistic: flip state before the request, revert on failure. */
 export function Toggle({
@@ -231,7 +247,10 @@ export function Toggle({
       aria-checked={checked}
       aria-label={label}
       disabled={disabled}
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        haptic();
+        onChange(!checked);
+      }}
       className="pressable shrink-0 rounded-full p-2.5 -m-2.5 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ink/40"
     >
       <span
@@ -374,10 +393,14 @@ export function StepBar({
   steps,
   current,
   accent = "indigo",
+  labels = true,
 }: {
   steps: string[];
   current: number; // 0-indexed
   accent?: Accent;
+  /* Hide the per-step caption row for compact surfaces where a heading
+     already names the current step. The bars and aria state remain. */
+  labels?: boolean;
 }) {
   return (
     <div
@@ -401,16 +424,18 @@ export function StepBar({
           </div>
         ))}
       </div>
-      <div className="mt-2 flex justify-between text-[11px] font-semibold tracking-wide text-muted">
-        {steps.map((s, i) => (
-          <span
-            key={s}
-            className={`transition-colors duration-300 ${i === current ? accentText[accent] : ""}`}
-          >
-            {s}
-          </span>
-        ))}
-      </div>
+      {labels && (
+        <div className="mt-2 flex justify-between text-[11px] font-semibold tracking-wide text-muted">
+          {steps.map((s, i) => (
+            <span
+              key={s}
+              className={`transition-colors duration-300 ${i === current ? accentText[accent] : ""}`}
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

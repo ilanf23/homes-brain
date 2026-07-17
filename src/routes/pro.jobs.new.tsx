@@ -21,6 +21,7 @@ import {
   Check,
   ChevronRight,
   Image as ImageIcon,
+  MapPin,
   Pencil,
   QrCode,
   Video as VideoIcon,
@@ -519,6 +520,24 @@ function NewJob() {
      renders as a broken-image slot. */
   const [micImgOk, setMicImgOk] = useState(true);
 
+  /* What the spoken flows actually need: a mic we can RECORD from. settleSpoken()
+     sends the clip to the server for transcription and treats that as the source
+     of truth, so Web Speech is only the live preview text while the pro talks.
+     Gating on Web Speech (as this used to) hid the flagship CTA outright on
+     Firefox, and left it dead on browsers that ship the object with no working
+     backend (Brave), even though recording would have worked fine. */
+  const voiceSupported = micLevel.supported && micLevel.recordingSupported;
+  /* A mic that opened but produced nothing: the pro blocked the prompt, the
+     device is held by another app, or the page isn't on a secure origin. */
+  const micError = micLevel.error;
+
+  /* The recognizer behind the live words in the mode that is currently open.
+     Its failure is cosmetic (the recording and the server transcript carry the
+     job), but silence looks like a dead app, so the overlay needs to know. */
+  const activeDictation =
+    voiceMode === "full" ? fullDictation : voiceMode === "amend" ? amendDictation : dictation;
+  const previewDead = !activeDictation.supported || !!activeDictation.error;
+
   /* Monotonic id for the busy voice flows (full capture, review amend).
      Cancelling or starting a new run bumps it, so a stale in-flight request
      that later resolves can no longer touch state. */
@@ -538,6 +557,28 @@ function NewJob() {
     if (aiFlashTimer.current) window.clearTimeout(aiFlashTimer.current);
     aiFlashTimer.current = window.setTimeout(() => setAiFlash(new Set()), 2600);
   }
+
+  /* The mic can fail after the overlay is already up (the permission prompt is
+     async), which is exactly what the pro sees as "I pressed it and nothing
+     happened": a listening orb that never hears anything. Close the overlay and
+     say why, in words that name the next action. */
+  useEffect(() => {
+    if (!micError) return;
+    setVoiceOpen(false);
+    cancelVoiceBusy();
+    setToast(
+      micError === "NotAllowedError"
+        ? "Microphone blocked. Allow mic access for this site in your browser, then tap again."
+        : micError === "NotFoundError"
+          ? "No microphone found on this device."
+          : micError === "NotReadableError"
+            ? "Another app is using the microphone. Close it, then tap again."
+            : micError === "unsupported"
+              ? "Voice needs a secure (https) connection. Open the site over https and try again."
+              : "Couldn't reach the microphone. Check its permission for this site, then tap again.",
+    );
+    setTimeout(() => setToast(null), 6000);
+  }, [micError]);
 
   function openVoice() {
     // start() must run inside this tap so the AudioContext can resume.
@@ -2712,15 +2753,17 @@ function NewJob() {
   }
 
   return (
-    <ProShell pro={pro} active="home" hideMobileCta>
+    <ProShell pro={pro} active="home">
       <div className={`mx-auto ${stage === "customer" ? "max-w-4xl" : "max-w-xl"}`}>
         {stage !== "done" && (
-          <div className="anim-fade-up max-w-xl mx-auto mb-8">
+          <div className="anim-fade-up max-w-xl mx-auto mb-4">
             {(() => {
               // Existing-customer flow skips the standalone location step, so
               // the step bar honestly reflects a 3-tap path (Customer → Work →
               // Send). New customers still see 4 steps because address entry
-              // is essential up front.
+              // is essential up front. This is the site's home page now, so
+              // the chrome stays minimal: thin bars, no caption row (the
+              // heading below names the step), one compact heading line.
               const flowStages: Stage[] = selectedCustomerId
                 ? ["customer", "work", "review"]
                 : ["customer", "location", "work", "review"];
@@ -2728,17 +2771,34 @@ function NewJob() {
                 ? ["Customer", "The work", "Send"]
                 : STAGE_LABELS;
               const idx = flowStages.indexOf(stage);
-              return <StepBar steps={flowLabels} current={idx < 0 ? 0 : idx} accent="indigo" />;
+              return (
+                <StepBar
+                  steps={flowLabels}
+                  current={idx < 0 ? 0 : idx}
+                  accent="indigo"
+                  labels={false}
+                />
+              );
             })()}
-            <h1 className="mt-6 text-2xl tracking-tight text-center">
-              {stage === "customer"
-                ? "Who is this for?"
-                : stage === "location"
-                  ? "Where's the job?"
-                  : stage === "work"
-                    ? "What did you do?"
-                    : t("pro.reviewAndSend")}
-            </h1>
+            <div className="mt-3 flex items-baseline justify-between gap-3">
+              <h1 className="text-xl font-bold tracking-tight">
+                {stage === "customer"
+                  ? "Who is this for?"
+                  : stage === "location"
+                    ? "Where's the job?"
+                    : stage === "work"
+                      ? "What did you do?"
+                      : t("pro.reviewAndSend")}
+              </h1>
+              {loc.status === "ready" && (
+                <span className="flex min-w-0 max-w-[55%] items-center gap-1 text-xs text-muted">
+                  <MapPin size={12} className="shrink-0" aria-hidden="true" />
+                  <span className="truncate" title={loc.address}>
+                    {loc.address}
+                  </span>
+                </span>
+              )}
+            </div>
           </div>
         )}
 
@@ -2746,12 +2806,12 @@ function NewJob() {
           <div key={stage} className="anim-fade-up">
             {stage === "customer" && (
               <div className="space-y-4">
-                {fullDictation.supported && (
+                {voiceSupported && (
                   <button
                     type="button"
                     onClick={openVoiceFull}
                     aria-label="Talk to HomesBrain AI and it fills in the job"
-                    className="pressable group w-full rounded-3xl bg-indigo px-5 py-5 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
+                    className="pressable group w-full rounded-3xl bg-indigo px-5 py-6 text-left text-white shadow-[0_18px_40px_-18px_rgba(71,63,176,0.7)] transition-all duration-200 hover:bg-indigodark"
                   >
                     <div className="flex items-center gap-4">
                       {micImgOk ? (
@@ -2768,20 +2828,17 @@ function NewJob() {
                         </span>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-75">
+                        <div className="text-xs font-bold uppercase tracking-[0.14em] opacity-75">
                           HomesBrain AI
                         </div>
-                        <div className="mt-0.5 text-xl font-extrabold tracking-tight">
+                        <div className="mt-0.5 text-2xl font-extrabold tracking-tight">
                           {t("voice.justTalk")}
                         </div>
                       </div>
-                      <span className="shrink-0 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide">
-                        {t("voice.tapToTalk")}
-                      </span>
                     </div>
                   </button>
                 )}
-                {fullDictation.supported && (
+                {voiceSupported && (
                   <div className="flex items-center gap-3" aria-hidden="true">
                     <span className="h-px flex-1 bg-line" />
                     <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
@@ -2792,15 +2849,18 @@ function NewJob() {
                 )}
                 <Card className="space-y-3">
                   <div>
-                    <div className="text-base font-semibold text-ink tracking-tight">
-                      Search or add a customer
+                    <div className="text-lg font-semibold text-ink tracking-tight">
+                      New or existing customer
                     </div>
-                    <div className="mt-0.5 text-sm text-muted">Type a name to add someone new.</div>
+                    <div className="mt-0.5 text-[15px] text-muted">
+                      Pick someone from your list, or type a new name to add them.
+                    </div>
                   </div>
                   <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Name or address…"
+                    className="min-h-13 px-4 text-[17px]"
                     autoFocus
                     aria-label="Search customers or type a new name to add one"
                   />
@@ -2811,16 +2871,16 @@ function NewJob() {
                         <button
                           type="button"
                           onClick={() => startNewCustomer(query.trim())}
-                          className="pressable flex w-full min-w-0 items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-3.5 text-left transition-all duration-200 min-h-16 hover:bg-indigobg/60 sm:col-span-2"
+                          className="pressable flex w-full min-w-0 items-center gap-3 rounded-2xl border border-dashed border-indigo/40 bg-indigobg/30 px-4 py-4 text-left transition-all duration-200 min-h-[68px] hover:bg-indigobg/60 sm:col-span-2"
                         >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
-                            <UserPlusIcon size={18} />
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
+                            <UserPlusIcon size={20} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-base font-semibold text-indigo">
+                            <div className="truncate text-lg font-semibold text-indigo">
                               Add "{query.trim()}"
                             </div>
-                            <div className="mt-0.5 text-sm text-muted">New customer</div>
+                            <div className="mt-0.5 text-[15px] text-muted">New customer</div>
                           </div>
                         </button>
                       )}
@@ -2832,16 +2892,16 @@ function NewJob() {
                             key={c.id}
                             type="button"
                             onClick={() => pickExisting(c)}
-                            className={`group pressable flex w-full min-w-0 items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 min-h-16 ${
+                            className={`group pressable flex w-full min-w-0 items-center gap-3 rounded-2xl border px-4 py-4 text-left transition-all duration-200 min-h-[68px] ${
                               isMatch
                                 ? "border-indigo/40 bg-indigobg hover:bg-indigobg/80"
                                 : "border-line bg-paper hover:border-indigo/30 hover:bg-indigobg/40"
                             }`}
                           >
-                            <Avatar name={c.name || "?"} accent="indigo" size={40} />
+                            <Avatar name={c.name || "?"} accent="indigo" size={44} />
                             <div className="min-w-0 flex-1">
                               <div
-                                className={`truncate text-base font-semibold ${
+                                className={`truncate text-lg font-semibold ${
                                   isMatch ? "text-indigo" : "text-ink"
                                 }`}
                               >
@@ -2852,14 +2912,14 @@ function NewJob() {
                                   Matches your address
                                 </div>
                               ) : (
-                                <div className="mt-0.5 truncate text-sm text-muted">
+                                <div className="mt-0.5 truncate text-[15px] text-muted">
                                   {c.homes?.address}
                                 </div>
                               )}
                             </div>
                             <svg
-                              width="18"
-                              height="18"
+                              width="20"
+                              height="20"
                               viewBox="0 0 24 24"
                               fill="none"
                               aria-hidden="true"
@@ -2881,13 +2941,13 @@ function NewJob() {
                     </div>
 
                     {!q && existing.length === 0 && (
-                      <div className="px-1 py-3 text-sm text-muted">
+                      <div className="px-1 py-3 text-[15px] text-muted">
                         No customers yet. Type a name to add your first.
                       </div>
                     )}
 
                     {q && filteredCustomers.length === 0 && hasExactMatch && (
-                      <div className="px-1 py-3 text-sm text-muted">No other matches.</div>
+                      <div className="px-1 py-3 text-[15px] text-muted">No other matches.</div>
                     )}
                   </div>
                 </Card>
@@ -3012,7 +3072,7 @@ function NewJob() {
                 {/* Giant mic - the single, unmistakable primary action. The
                     manual textarea below is a de-emphasized fallback. */}
                 <div>
-                  {dictation.supported ? (
+                  {voiceSupported ? (
                     <>
                       <button
                         type="button"
@@ -3283,8 +3343,6 @@ function NewJob() {
 
             {stage === "review" && (
               <div className="space-y-4">
-                <p className="px-2 text-center text-sm text-muted">{t("pro.reviewAndSend")}.</p>
-
                 {/* One box: the live record IS the control surface. Every row is a
                     checkmark, and the Google review ask lives inside the same box. */}
                 <Card className="shadow-[0_24px_60px_-30px_rgba(22,22,15,0.18)]">
@@ -3885,7 +3943,7 @@ function NewJob() {
       {/* Floating HomesBrain AI button: on Review only, hovering over the
           record. Tap it and speak a correction or addition; edit-record
           applies it and the changed rows flash indigo. */}
-      {stage === "review" && amendDictation.supported && !voiceOpen && (
+      {stage === "review" && voiceSupported && !voiceOpen && (
         <button
           type="button"
           onClick={openVoiceAmend}
@@ -3920,6 +3978,7 @@ function NewJob() {
       {voiceOpen && (
         <VoiceCaptureOverlay
           levelRef={micLevel.levelRef}
+          bandsRef={micLevel.bandsRef}
           text={
             voiceMode === "full"
               ? liveFullNote
@@ -3927,7 +3986,18 @@ function NewJob() {
                 ? liveAmendNote
                 : liveWhatDone
           }
-          prompt={voiceMode === "amend" ? "Listening. What should I change or add?" : undefined}
+          prompt={
+            /* Web Speech alone drives the live words. When it is missing or has
+               failed (its language is unsupported, or it lost the mic race), no
+               words ever appear and "Listening" reads as broken, so pros give up
+               before tapping Done. The clip is still recording and the server
+               still transcribes it, so promise the outcome, not the words. */
+            previewDead
+              ? "Recording. Tap done when you're finished and I'll write it up."
+              : voiceMode === "amend"
+                ? "Listening. What should I change or add?"
+                : undefined
+          }
           onDone={
             voiceMode === "full"
               ? finishFullVoice

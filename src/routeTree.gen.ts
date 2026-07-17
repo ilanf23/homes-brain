@@ -35,6 +35,7 @@ import { Route as ProSetupRouteImport } from './routes/pro.setup'
 import { Route as ProSettingsRouteImport } from './routes/pro.settings'
 import { Route as ProReviewsRouteImport } from './routes/pro.reviews'
 import { Route as ProReferralRouteImport } from './routes/pro.referral'
+import { Route as ProProfileRouteImport } from './routes/pro.profile'
 import { Route as ProPlanRouteImport } from './routes/pro.plan'
 import { Route as ProOfficeRouteImport } from './routes/pro.office'
 import { Route as ProDueRouteImport } from './routes/pro.due'
@@ -46,6 +47,7 @@ import { Route as HomeSetupRouteImport } from './routes/home.setup'
 import { Route as HomeSettingsRouteImport } from './routes/home.settings'
 import { Route as HomeRemindersRouteImport } from './routes/home.reminders'
 import { Route as HomeProsRouteImport } from './routes/home.pros'
+import { Route as HomeProfileRouteImport } from './routes/home.profile'
 import { Route as HomeAppliancesRouteImport } from './routes/home.appliances'
 import { Route as HomeAddRouteImport } from './routes/home.add'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
@@ -192,6 +194,11 @@ const ProReferralRoute = ProReferralRouteImport.update({
   path: '/pro/referral',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProProfileRoute = ProProfileRouteImport.update({
+  id: '/pro/profile',
+  path: '/pro/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProPlanRoute = ProPlanRouteImport.update({
   id: '/pro/plan',
   path: '/pro/plan',
@@ -245,6 +252,11 @@ const HomeRemindersRoute = HomeRemindersRouteImport.update({
 const HomeProsRoute = HomeProsRouteImport.update({
   id: '/home/pros',
   path: '/home/pros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeProfileRoute = HomeProfileRouteImport.update({
+  id: '/home/profile',
+  path: '/home/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeAppliancesRoute = HomeAppliancesRouteImport.update({
@@ -345,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/claim/$token': typeof ClaimTokenRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
+  '/home/profile': typeof HomeProfileRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
@@ -356,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/plan': typeof ProPlanRoute
+  '/pro/profile': typeof ProProfileRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -399,6 +413,7 @@ export interface FileRoutesByTo {
   '/claim/$token': typeof ClaimTokenRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
+  '/home/profile': typeof HomeProfileRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
@@ -410,6 +425,7 @@ export interface FileRoutesByTo {
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/plan': typeof ProPlanRoute
+  '/pro/profile': typeof ProProfileRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -454,6 +470,7 @@ export interface FileRoutesById {
   '/claim/$token': typeof ClaimTokenRoute
   '/home/add': typeof HomeAddRoute
   '/home/appliances': typeof HomeAppliancesRoute
+  '/home/profile': typeof HomeProfileRoute
   '/home/pros': typeof HomeProsRoute
   '/home/reminders': typeof HomeRemindersRoute
   '/home/settings': typeof HomeSettingsRoute
@@ -465,6 +482,7 @@ export interface FileRoutesById {
   '/pro/due': typeof ProDueRoute
   '/pro/office': typeof ProOfficeRoute
   '/pro/plan': typeof ProPlanRoute
+  '/pro/profile': typeof ProProfileRoute
   '/pro/referral': typeof ProReferralRoute
   '/pro/reviews': typeof ProReviewsRoute
   '/pro/settings': typeof ProSettingsRoute
@@ -510,6 +528,7 @@ export interface FileRouteTypes {
     | '/claim/$token'
     | '/home/add'
     | '/home/appliances'
+    | '/home/profile'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
@@ -521,6 +540,7 @@ export interface FileRouteTypes {
     | '/pro/due'
     | '/pro/office'
     | '/pro/plan'
+    | '/pro/profile'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -564,6 +584,7 @@ export interface FileRouteTypes {
     | '/claim/$token'
     | '/home/add'
     | '/home/appliances'
+    | '/home/profile'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
@@ -575,6 +596,7 @@ export interface FileRouteTypes {
     | '/pro/due'
     | '/pro/office'
     | '/pro/plan'
+    | '/pro/profile'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -618,6 +640,7 @@ export interface FileRouteTypes {
     | '/claim/$token'
     | '/home/add'
     | '/home/appliances'
+    | '/home/profile'
     | '/home/pros'
     | '/home/reminders'
     | '/home/settings'
@@ -629,6 +652,7 @@ export interface FileRouteTypes {
     | '/pro/due'
     | '/pro/office'
     | '/pro/plan'
+    | '/pro/profile'
     | '/pro/referral'
     | '/pro/reviews'
     | '/pro/settings'
@@ -673,6 +697,7 @@ export interface RootRouteChildren {
   ClaimTokenRoute: typeof ClaimTokenRoute
   HomeAddRoute: typeof HomeAddRoute
   HomeAppliancesRoute: typeof HomeAppliancesRoute
+  HomeProfileRoute: typeof HomeProfileRoute
   HomeProsRoute: typeof HomeProsRoute
   HomeRemindersRoute: typeof HomeRemindersRoute
   HomeSettingsRoute: typeof HomeSettingsRoute
@@ -684,6 +709,7 @@ export interface RootRouteChildren {
   ProDueRoute: typeof ProDueRoute
   ProOfficeRoute: typeof ProOfficeRoute
   ProPlanRoute: typeof ProPlanRoute
+  ProProfileRoute: typeof ProProfileRoute
   ProReferralRoute: typeof ProReferralRoute
   ProReviewsRoute: typeof ProReviewsRoute
   ProSettingsRoute: typeof ProSettingsRoute
@@ -890,6 +916,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProReferralRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro/profile': {
+      id: '/pro/profile'
+      path: '/pro/profile'
+      fullPath: '/pro/profile'
+      preLoaderRoute: typeof ProProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro/plan': {
       id: '/pro/plan'
       path: '/pro/plan'
@@ -965,6 +998,13 @@ declare module '@tanstack/react-router' {
       path: '/home/pros'
       fullPath: '/home/pros'
       preLoaderRoute: typeof HomeProsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/profile': {
+      id: '/home/profile'
+      path: '/home/profile'
+      fullPath: '/home/profile'
+      preLoaderRoute: typeof HomeProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home/appliances': {
@@ -1097,6 +1137,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimTokenRoute: ClaimTokenRoute,
   HomeAddRoute: HomeAddRoute,
   HomeAppliancesRoute: HomeAppliancesRoute,
+  HomeProfileRoute: HomeProfileRoute,
   HomeProsRoute: HomeProsRoute,
   HomeRemindersRoute: HomeRemindersRoute,
   HomeSettingsRoute: HomeSettingsRoute,
@@ -1108,6 +1149,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProDueRoute: ProDueRoute,
   ProOfficeRoute: ProOfficeRoute,
   ProPlanRoute: ProPlanRoute,
+  ProProfileRoute: ProProfileRoute,
   ProReferralRoute: ProReferralRoute,
   ProReviewsRoute: ProReviewsRoute,
   ProSettingsRoute: ProSettingsRoute,
@@ -1132,3 +1174,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

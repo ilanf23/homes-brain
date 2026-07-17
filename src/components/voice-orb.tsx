@@ -64,6 +64,73 @@ function AiGlyph({ levelRef }: { levelRef: MutableRefObject<number> }) {
   );
 }
 
+/* The listening bars: an equalizer reading live mic spectrum. Bars are the one
+   voice-UI idiom nobody has to learn, and unlike the pulse dots this replaces
+   (a fixed CSS timer) they look different when audio is arriving than when it
+   is not, which is the whole point. `bandsRef` already arrives shaped for this
+   from useMicLevel: log-spaced speech bands with fast-attack / slow-decay, so
+   bars leap on a syllable and settle gently. Silence keeps a low time-driven
+   shimmer so the row reads as waiting rather than dead.
+
+   Each bar is a fixed-height span scaled with transform (never height), so a
+   loud syllable never triggers layout. Reads the ref every frame and writes
+   DOM directly, no per-frame React renders. */
+const BAR_COUNT = 14;
+const BAR_H = 26;
+const BAR_MIN = 0.13;
+
+function ListeningBars({ bandsRef }: { bandsRef: MutableRefObject<Float32Array> }) {
+  const barsRef = useRef<Array<HTMLSpanElement | null>>([]);
+  const [reduced] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+
+  useEffect(() => {
+    if (reduced) return;
+    let raf = 0;
+    const loop = () => {
+      const t = performance.now() / 1000;
+      const bands = bandsRef.current;
+      // Sample BAR_COUNT bands evenly across the speech range. The source
+      // bands are already log-spaced, so an even pick here stays perceptual.
+      const step = bands.length / BAR_COUNT;
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const el = barsRef.current[i];
+        if (!el) continue;
+        const v = bands[Math.min(bands.length - 1, Math.floor(i * step + step / 2))] ?? 0;
+        // Idle shimmer is time-driven, not level-driven, so the row is alive
+        // before the first sound and while the mic is still being granted.
+        const idle = 0.04 + 0.03 * Math.sin(t * 2.1 + i * 0.5);
+        el.style.transform = `scaleY(${BAR_MIN + idle + v * (1 - BAR_MIN)})`;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [bandsRef, reduced]);
+
+  return (
+    <div className="flex items-center gap-[3px]" style={{ height: BAR_H }} aria-hidden="true">
+      {Array.from({ length: BAR_COUNT }, (_, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            barsRef.current[i] = el;
+          }}
+          className="w-[3px] rounded-full bg-indigo/70"
+          style={{
+            height: BAR_H,
+            transform: `scaleY(${BAR_MIN})`,
+            willChange: "transform",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* Live transcript where each word materializes as it is spoken: blur-lift in,
    then settles. Spans are keyed by word index, so words already on screen
    keep their DOM node and only newly appended words animate. When the
@@ -114,11 +181,13 @@ function TranscriptViewport({ text }: { text: string }) {
    step stays mounted underneath and is revealed again on close. */
 export function VoiceCaptureOverlay({
   levelRef,
+  bandsRef,
   text,
   onDone,
   prompt = "Listening. Talk through the job.",
 }: {
   levelRef: MutableRefObject<number>;
+  bandsRef: MutableRefObject<Float32Array>;
   text: string;
   onDone: () => void;
   /* Shown until the first words land; each voice mode brings its own ask. */
@@ -142,20 +211,18 @@ export function VoiceCaptureOverlay({
           HomesBrain AI
         </div>
 
+        {/* Stays up for the whole session, transcript or not: the bars are how
+            the pro knows the mic is still open, so they must never disappear
+            the moment words land. */}
+        <ListeningBars bandsRef={bandsRef} />
+
         <div className="min-h-28 w-full max-w-lg">
           {text ? (
             <TranscriptViewport text={text} />
           ) : (
-            <div>
-              <p className="text-[22px] font-semibold leading-snug tracking-tight text-muted">
-                {prompt}
-              </p>
-              <span className="mt-4 inline-flex items-center gap-1.5" aria-hidden="true">
-                <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-indigo/70" />
-                <span className="pulse-dot d-3 h-1.5 w-1.5 rounded-full bg-indigo/70" />
-                <span className="pulse-dot d-6 h-1.5 w-1.5 rounded-full bg-indigo/70" />
-              </span>
-            </div>
+            <p className="text-[22px] font-semibold leading-snug tracking-tight text-muted">
+              {prompt}
+            </p>
           )}
         </div>
       </div>

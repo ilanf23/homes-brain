@@ -73,7 +73,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      /* viewport-fit=cover exposes env(safe-area-inset-*) for the bottom tab bar. */
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "HomesBrain: A Carfax for homes that writes itself" },
       {
         name: "description",

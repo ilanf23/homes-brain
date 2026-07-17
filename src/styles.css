@@ -486,6 +486,12 @@
 @utility anim-fade-in {
   animation: hb-fade-in 0.2s ease-out both;
 }
+@utility anim-fade-out {
+  animation: hb-fade-out 0.18s ease-in both;
+}
+@utility anim-sheet-up {
+  animation: hb-sheet-up 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 @utility anim-scale-in {
   animation: hb-scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -937,4 +943,67 @@
 }
 .hb-map-canvas .maplibregl-canvas {
   filter: saturate(0.82);
+}
+
+/* Swipe between bottom tabs: only the page content slides, chrome stays put.
+   The direction attribute is set by BottomTabBar right before it navigates. */
+.tab-swipe-main {
+  view-transition-name: tab-content;
+}
+html[data-swipe-dir] ::view-transition-old(root),
+html[data-swipe-dir] ::view-transition-new(root) {
+  animation: none;
+}
+html[data-swipe-dir="left"] ::view-transition-old(tab-content) {
+  animation: tab-out-left 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+html[data-swipe-dir="left"] ::view-transition-new(tab-content) {
+  animation: tab-in-left 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+html[data-swipe-dir="right"] ::view-transition-old(tab-content) {
+  animation: tab-out-right 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+html[data-swipe-dir="right"] ::view-transition-new(tab-content) {
+  animation: tab-in-right 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes tab-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
+@keyframes tab-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+}
+@keyframes tab-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+}
+@keyframes tab-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-swipe-dir] ::view-transition-old(tab-content),
+  html[data-swipe-dir] ::view-transition-new(tab-content) {
+    animation: none;
+  }
+}
+
+@keyframes hb-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes hb-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
 }

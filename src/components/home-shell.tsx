@@ -1,9 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Bell, Home, LogOut, Plus, Settings, Users, Wrench } from "lucide-react";
+import { Bell, Home, LogOut, Plus, Settings, UserRound, Users, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Avatar, Btn, Card, PageLoader, Pill } from "@/lib/ui";
+import { Btn, Card, FaceAvatar, PageLoader } from "@/lib/ui";
+import { BottomTabBar, TAB_BAR_CONTENT_PAD } from "@/components/bottom-tab-bar";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { useTheme } from "@/lib/theme";
+import { useHideOnScroll } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 import { useT, type TKey } from "@/lib/i18n";
@@ -198,7 +201,26 @@ export function useHomeownerGuard() {
   };
 }
 
-export type HomeNavKey = "overview" | "appliances" | "pros" | "reminders" | "add" | "settings";
+export type HomeNavKey =
+  | "overview"
+  | "appliances"
+  | "pros"
+  | "reminders"
+  | "add"
+  | "profile"
+  | "settings";
+
+/* Which bottom tab lights up for each page; the add flow lights the center +,
+   and reminders/settings live under Profile on mobile. */
+const TAB_FOR_KEY: Record<HomeNavKey, "overview" | "appliances" | "pros" | "profile" | "create"> = {
+  overview: "overview",
+  appliances: "appliances",
+  pros: "pros",
+  reminders: "profile",
+  add: "create",
+  profile: "profile",
+  settings: "profile",
+};
 
 const NAV: { key: HomeNavKey; labelKey: TKey; to: string; icon: typeof Home }[] = [
   { key: "overview", labelKey: "nav.myHome", to: "/home", icon: Home },
@@ -221,6 +243,7 @@ export function HomeShell({
 }) {
   const navigate = useNavigate();
   const [theme] = useTheme();
+  const headerHidden = useHideOnScroll();
   const t = useT();
 
   async function signOut() {
@@ -270,7 +293,7 @@ export function HomeShell({
         </nav>
         <div className="p-3 border-t border-line space-y-2">
           <div className="flex items-center gap-2.5 px-2">
-            <Avatar name={homeowner?.name || t("chrome.homeowner")} accent="indigo" size={36} />
+            <FaceAvatar accent="indigo" size={36} />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-ink truncate">
                 {homeowner?.name || t("chrome.homeowner")}
@@ -293,55 +316,44 @@ export function HomeShell({
       {/* Content column (with mobile header + nav) */}
       <div className="flex-1 min-w-0">
         <header
-          className="md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md"
+          className={`md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md transition-transform duration-200 ${headerHidden ? "-translate-y-full" : ""}`}
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <div className="px-3 h-14 flex items-center justify-between gap-2 min-w-0">
-            <Link to="/" className="flex items-center shrink-0">
+          <div className="px-4 h-14 flex items-center justify-between gap-2 min-w-0">
+            <Link to="/" className="flex items-center shrink-0" aria-label="HomesBrain">
               <Logo size={24} />
             </Link>
-            <div className="flex items-center gap-1 shrink-0">
-              <Link to="/home/add">
-                <Btn variant="indigo" size="sm">
-                  <Plus size={14} />
-                  <span className="hidden xs:inline">{t("nav.add")}</span>
-                </Btn>
-              </Link>
-              <span className="hidden sm:inline-flex">
-                <Pill accent="indigo">{t("chrome.homeowner")}</Pill>
-              </span>
-              <ThemeToggle />
-              <button
-                onClick={signOut}
-                aria-label={t("chrome.signOut")}
-                className="pressable text-muted hover:text-ink p-1.5 rounded-lg"
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
+            <Link
+              to="/home/reminders"
+              aria-label={t("nav.reminders")}
+              className="pressable text-muted hover:text-ink p-2 rounded-lg hover:bg-soft"
+            >
+              <Bell size={17} />
+            </Link>
           </div>
-          <nav
-            className="flex gap-1 px-3 pb-2 overflow-x-auto no-scrollbar"
-            aria-label={t("nav.homeownerNavigation")}
-          >
-            {NAV.map(({ key, labelKey, to }) => (
-              <Link
-                key={key}
-                to={to}
-                aria-current={active === key ? "page" : undefined}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
-                  active === key
-                    ? "bg-indigobg text-indigo font-bold"
-                    : "text-muted font-semibold hover:text-ink"
-                }`}
-              >
-                {t(labelKey)}
-              </Link>
-            ))}
-          </nav>
         </header>
 
-        <main className="mx-auto max-w-3xl px-5 py-8 md:py-10">{children}</main>
+        <main
+          className={`tab-swipe-main mx-auto max-w-3xl px-5 pt-8 md:pt-10 ${TAB_BAR_CONTENT_PAD} md:pb-10`}
+        >
+          {children}
+        </main>
+
+        {/* Mobile: Instagram-style bottom tab bar; add-to-home is the center +
+            and the profile slot shows the avatar. */}
+        <PullToRefresh />
+        <BottomTabBar
+          items={[
+            { key: "overview", label: t("nav.myHome"), to: "/home", icon: Home },
+            { key: "appliances", label: t("tab.appliances"), to: "/home/appliances", icon: Wrench },
+            { key: "pros", label: t("tab.pros"), to: "/home/pros", icon: Users },
+            { key: "profile", label: t("nav.profile"), to: "/home/profile", icon: UserRound },
+          ]}
+          activeKey={TAB_FOR_KEY[active]}
+          create={{ to: "/home/add", label: t("nav.addToHome") }}
+          createActive={TAB_FOR_KEY[active] === "create"}
+          swipeEnabled={active !== "add"}
+        />
       </div>
     </div>
   );

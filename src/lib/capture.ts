@@ -226,6 +226,11 @@ type SpeechResultEvent = {
   results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
 };
 
+/* `error` is the SpeechRecognition error code: "not-allowed" (mic blocked),
+   "service-not-allowed" (recognizer backend unavailable, e.g. Brave), "network",
+   "no-speech", "audio-capture". */
+type SpeechErrorEvent = { error: string; message?: string };
+
 interface Recognition {
   continuous: boolean;
   interimResults: boolean;
@@ -234,7 +239,7 @@ interface Recognition {
   stop(): void;
   onresult: ((e: SpeechResultEvent) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((e: SpeechErrorEvent) => void) | null;
 }
 
 function recognitionCtor(): (new () => Recognition) | undefined {
@@ -246,6 +251,9 @@ function recognitionCtor(): (new () => Recognition) | undefined {
 export function useDictation(onText: (finalText: string) => void, locale?: Locale) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
+  /* Last recognizer error code, or null. Callers surface this so a dead mic
+     explains itself instead of failing silently. */
+  const [error, setError] = useState<string | null>(null);
   const recRef = useRef<Recognition | null>(null);
   const onTextRef = useRef(onText);
   onTextRef.current = onText;
@@ -254,6 +262,7 @@ export function useDictation(onText: (finalText: string) => void, locale?: Local
   function start() {
     const Ctor = recognitionCtor();
     if (!Ctor || recRef.current) return;
+    setError(null);
     const rec = new Ctor();
     rec.continuous = true;
     rec.interimResults = true;
@@ -261,8 +270,7 @@ export function useDictation(onText: (finalText: string) => void, locale?: Local
     // than a choice the pro necessarily made, so it defers to the device
     // language: a Spanish-language phone dictates in Spanish even when the pro
     // never opened the language setting.
-    rec.lang =
-      (locale && locale !== "en" && SPEECH_LANG[locale]) || navigator.language || "en-US";
+    rec.lang = (locale && locale !== "en" && SPEECH_LANG[locale]) || navigator.language || "en-US";
     rec.onresult = (e) => {
       let pending = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -272,7 +280,15 @@ export function useDictation(onText: (finalText: string) => void, locale?: Local
       }
       setInterim(pending);
     };
-    rec.onerror = null;
+    // Never swallow this: it is the only place the recognizer names why it
+    // failed ("not-allowed", "service-not-allowed", "network"). "no-speech" and
+    // "aborted" are routine (the pro paused, or we stopped it), so they don't
+    // count as errors the UI should explain.
+    rec.onerror = (e) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      console.warn("[dictation] recognizer error:", e.error, e.message ?? "");
+      setError(e.error);
+    };
     rec.onend = () => {
       recRef.current = null;
       setListening(false);
@@ -280,7 +296,17 @@ export function useDictation(onText: (finalText: string) => void, locale?: Local
     };
     recRef.current = rec;
     setListening(true);
-    rec.start();
+    // start() throws synchronously in some browsers (already-started, insecure
+    // origin). It must not take the caller down with it: the tap still has to
+    // open the voice UI, which owns the recorder that actually captures audio.
+    try {
+      rec.start();
+    } catch (e) {
+      console.warn("[dictation] start() threw:", e);
+      recRef.current = null;
+      setListening(false);
+      setError("start-failed");
+    }
   }
 
   function stop() {
@@ -289,7 +315,7 @@ export function useDictation(onText: (finalText: string) => void, locale?: Local
 
   useEffect(() => () => recRef.current?.stop(), []);
 
-  return { supported, listening, interim, start, stop };
+  return { supported, listening, interim, error, start, stop };
 }
 
 /* ---------- Mic amplitude + spectrum (Web Audio) ----------
@@ -320,6 +346,10 @@ export function useMicLevel() {
   const levelRef = useRef(0);
   const bandsRef = useRef(new Float32Array(MIC_BAND_COUNT));
   const [active, setActive] = useState(false);
+  /* getUserMedia's DOMException name when mic acquisition failed, or null.
+     "NotAllowedError" = blocked/dismissed, "NotFoundError" = no input device,
+     "NotReadableError" = the device is held by another app or tab. */
+  const [error, setError] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -336,8 +366,19 @@ export function useMicLevel() {
     !!window.AudioContext;
 
   async function start() {
-    if (ctxRef.current || !supported) return;
+    if (ctxRef.current) return;
+    if (!supported) {
+      // No mediaDevices at all. On a phone this almost always means the page is
+      // not on a secure origin (getUserMedia is HTTPS-only), not that the
+      // device lacks a mic.
+      console.warn("[mic] unsupported: mediaDevices/AudioContext unavailable", {
+        secureContext: typeof window !== "undefined" ? window.isSecureContext : null,
+      });
+      setError("unsupported");
+      return;
+    }
     try {
+      setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       // Start recording off the same stream for server-side transcription.
@@ -411,8 +452,14 @@ export function useMicLevel() {
         rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
-    } catch {
+    } catch (e) {
       // Mic denied or unavailable: leave level at 0, the UI still works via text.
+      // Name it: this is the boundary where the recording silently never starts,
+      // so a NotAllowedError here is the difference between "the pro blocked the
+      // mic" and "we have a bug".
+      const name = e instanceof Error ? e.name : "unknown";
+      console.warn("[mic] getUserMedia failed:", name, e);
+      setError(name);
       stop();
     }
   }
@@ -466,5 +513,15 @@ export function useMicLevel() {
 
   useEffect(() => () => stop(), []);
 
-  return { levelRef, bandsRef, active, supported, recordingSupported, start, stop, stopRecording };
+  return {
+    levelRef,
+    bandsRef,
+    active,
+    supported,
+    recordingSupported,
+    error,
+    start,
+    stop,
+    stopRecording,
+  };
 }
