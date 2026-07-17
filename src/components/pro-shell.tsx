@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
@@ -11,6 +11,7 @@ import {
   LogOut,
   Plus,
   ReceiptText,
+  Search,
   Settings,
   Star,
   UserRound,
@@ -25,9 +26,9 @@ import {
 } from "@/lib/hb";
 import { Btn, Card, FaceAvatar, Skeleton } from "@/lib/ui";
 import { useTheme } from "@/lib/theme";
-import { useHideOnScroll } from "@/lib/mobile";
+import { rememberLastPath, useHideOnScroll } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { GlobalSearch } from "@/components/pro-search";
+import { GlobalSearch, MobileProSearch } from "@/components/pro-search";
 import { ProSetupNavItem } from "@/components/pro-setup-checklist";
 
 import { useI18n, useT, type TKey } from "@/lib/i18n";
@@ -407,6 +408,11 @@ export function ProShell({
   const navigate = useNavigate();
   const [theme] = useTheme();
   const headerHidden = useHideOnScroll();
+  const routerLocation = useLocation();
+  useEffect(() => {
+    rememberLastPath(routerLocation.pathname + (routerLocation.searchStr || ""));
+  }, [routerLocation.pathname, routerLocation.searchStr]);
+  const [searchOpen, setSearchOpen] = useState(false);
   const t = useT();
 
   async function signOut() {
@@ -468,13 +474,29 @@ export function ProShell({
             <Link to="/" className="flex items-center gap-2" aria-label="HomesBrain">
               <Logo size={24} wordmarkClassName="text-sm" />
             </Link>
-            {pro ? (
-              <NotificationsBell proId={pro.id} align="right" />
-            ) : (
-              <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
-            )}
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                aria-label={t("pro.search.label")}
+                className="pressable text-muted hover:text-ink p-2 rounded-lg hover:bg-soft transition-colors"
+              >
+                <Search size={17} />
+              </button>
+              {pro ? (
+                <NotificationsBell proId={pro.id} align="right" />
+              ) : (
+                <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+              )}
+            </div>
           </div>
         </header>
+
+        <MobileProSearch
+          proId={pro?.id ?? null}
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+        />
 
         <main
           className={`tab-swipe-main mx-auto ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 sm:px-6 pt-6 md:pt-10 ${TAB_BAR_CONTENT_PAD} md:pb-10`}

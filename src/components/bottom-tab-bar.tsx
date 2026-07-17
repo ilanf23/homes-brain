@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { haptic } from "@/lib/mobile";
+
+const CREATE_TAPPED_KEY = "hb_create_tapped";
 
 /* Instagram-style mobile tab bar, floated: five equal icon-only slots in a
    pill lifted off the bottom and sides so content peeks behind it
@@ -67,6 +69,16 @@ export function BottomTabBar({
   swipeEnabled?: boolean;
 }) {
   const navigate = useNavigate();
+  /* One-time "start here" pulse for a brand-new user; dies forever on the
+     first tap of the + on this device. */
+  const [pulse, setPulse] = useState(false);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(CREATE_TAPPED_KEY)) setPulse(true);
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
   /* Refs so the document listeners bind once, not on every render. */
   const state = useRef({ items, activeKey, swipeEnabled });
   state.current = { items, activeKey, swipeEnabled };
@@ -75,14 +87,17 @@ export function BottomTabBar({
     let startX = 0;
     let startY = 0;
     let tracking = false;
+    let fromEdge = false;
 
     const onTouchStart = (e: TouchEvent) => {
       tracking = false;
       /* Bar (and swipe) are mobile-only; the md breakpoint hides them. */
       if (e.touches.length !== 1 || window.matchMedia("(min-width: 768px)").matches) return;
-      if (!state.current.swipeEnabled || swipeBlocked(e.target)) return;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
+      /* A touch born on the left edge is a back gesture, not a tab swipe. */
+      fromEdge = startX <= 24;
+      if (!fromEdge && (!state.current.swipeEnabled || swipeBlocked(e.target))) return;
       tracking = true;
     };
 
@@ -93,6 +108,13 @@ export function BottomTabBar({
       const dy = e.changedTouches[0].clientY - startY;
       /* Deliberate horizontal swipe only: long enough, and clearly not a scroll. */
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (fromEdge) {
+        if (dx > 0 && window.history.length > 1) {
+          haptic();
+          window.history.back();
+        }
+        return;
+      }
       const { items: tabs, activeKey: current } = state.current;
       const index = tabs.findIndex((tab) => tab.key === current);
       if (index < 0) return;
@@ -153,13 +175,29 @@ export function BottomTabBar({
         <Link
           to={create.to}
           preload="intent"
-          onClick={() => haptic()}
+          onClick={() => {
+            haptic();
+            if (pulse) {
+              setPulse(false);
+              try {
+                localStorage.setItem(CREATE_TAPPED_KEY, "1");
+              } catch {
+                /* storage unavailable */
+              }
+            }
+          }}
           aria-label={create.label}
           aria-current={createActive ? "page" : undefined}
-          className="group flex h-full items-center justify-center"
+          className="group relative flex h-full items-center justify-center"
         >
+          {pulse && (
+            <span
+              className="absolute h-10 w-10 rounded-full bg-indigo/35 animate-ping motion-reduce:hidden"
+              aria-hidden="true"
+            />
+          )}
           <span
-            className={`${ICON_PRESS} flex h-10 w-10 items-center justify-center rounded-full bg-indigo text-(--on-accent) shadow-[0_8px_18px_-8px_rgba(71,63,176,0.7)] ${
+            className={`${ICON_PRESS} relative flex h-10 w-10 items-center justify-center rounded-full bg-indigo text-(--on-accent) shadow-[0_8px_18px_-8px_rgba(71,63,176,0.7)] ${
               createActive ? "ring-2 ring-indigo/30" : ""
             }`}
           >

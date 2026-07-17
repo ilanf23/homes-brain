@@ -37,3 +37,27 @@ export function haptic(pattern: number | number[] = 8) {
     /* not supported */
   }
 }
+
+/* Resume-where-you-left-off: shells record the current app path; the login
+   flows land returning users there instead of the generic dashboard. */
+const LAST_PATH_KEY = "hb_last_path";
+
+export function rememberLastPath(path: string) {
+  try {
+    localStorage.setItem(LAST_PATH_KEY, path);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/* Only paths on the caller's side of the app count; a pro never resumes into
+   /home/* and vice versa. Bare prefixes fall through to the default landing. */
+export function resumePath(prefix: "/pro" | "/home"): string | null {
+  try {
+    const path = localStorage.getItem(LAST_PATH_KEY);
+    if (path && path.startsWith(prefix + "/") && !path.includes("signup")) return path;
+  } catch {
+    /* storage unavailable */
+  }
+  return null;
+}

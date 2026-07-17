@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { resumePath } from "@/lib/mobile";
 import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { Btn, Field, Input } from "@/lib/ui";
@@ -155,7 +156,6 @@ function Login() {
     }
   }
 
-
   async function sendProMagicLink() {
     setBusy(true);
     setErr(null);
@@ -243,7 +243,7 @@ function Login() {
         return;
       }
     }
-    navigate({ to: "/home" });
+    navigate({ to: (resumePath("/home") ?? "/home") as "/home" });
   }
 
   async function proLogin() {
@@ -270,7 +270,7 @@ function Login() {
       return;
     }
     await logEvent(`pro:${pro.id}`, "logged_in", { role: "pro" });
-    navigate({ to: "/pro" });
+    navigate({ to: (resumePath("/pro") ?? "/pro") as "/pro" });
   }
 
   async function sendReset() {
@@ -491,7 +491,6 @@ function Login() {
         )}
 
         {step === "ho-password" && (
-
           <>
             <EmailSummary email={email} onChange={resetToEmail} />
             <Field label="Password">

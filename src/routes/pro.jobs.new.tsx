@@ -238,11 +238,11 @@ function RecordRow({
           className="pressable flex min-h-11 shrink-0 items-center gap-2.5 text-left"
         >
           <CheckSquare on={included} />
-          <span className={`text-sm text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
+          <span className={`text-base text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
         </button>
       ) : (
         <span
-          className={`flex min-h-11 shrink-0 items-center text-sm text-muted ${
+          className={`flex min-h-11 shrink-0 items-center text-base text-muted ${
             dim ? "opacity-50" : ""
           }`}
         >
@@ -258,7 +258,7 @@ function RecordRow({
           className="pressable flex min-h-11 min-w-0 items-center justify-end gap-2 text-right"
         >
           <span
-            className={`min-w-0 text-[13px] font-semibold text-ink font-mono tnum ${
+            className={`min-w-0 text-[15px] font-semibold text-ink font-mono tnum ${
               dim ? "opacity-50 line-through" : ""
             }`}
           >
@@ -268,7 +268,7 @@ function RecordRow({
         </button>
       ) : (
         <span
-          className={`min-w-0 py-3 text-right text-[13px] font-semibold text-ink font-mono tnum ${
+          className={`min-w-0 py-3 text-right text-[15px] font-semibold text-ink font-mono tnum ${
             dim ? "opacity-50 line-through" : ""
           }`}
         >
@@ -319,8 +319,8 @@ function SameNameChooser({
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-ink/40 backdrop-blur-sm anim-fade-up sm:items-center">
       <div className="w-full rounded-t-3xl border border-line bg-paper p-5 shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6">
-        <div className="mb-1 text-lg font-semibold text-ink">Which {spokenName}?</div>
-        <div className="mb-4 text-sm text-muted">More than one customer matches that name.</div>
+        <div className="mb-1 text-xl font-semibold text-ink">Which {spokenName}?</div>
+        <div className="mb-4 text-base text-muted">More than one customer matches that name.</div>
 
         <div className="space-y-2">
           {candidates.map((c) => (
@@ -331,8 +331,8 @@ function SameNameChooser({
               className="pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 text-left transition-colors hover:bg-soft"
             >
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-base font-semibold text-ink">{c.name}</span>
-                <span className="block truncate text-sm text-muted">
+                <span className="block truncate text-lg font-semibold text-ink">{c.name}</span>
+                <span className="block truncate text-base text-muted">
                   {c.homes?.address || c.phone || c.email || "No address on file"}
                 </span>
               </span>
@@ -2568,7 +2568,7 @@ function NewJob() {
             key={m}
             type="button"
             onClick={() => setNextServiceInMonths(m)}
-            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink hover:border-indigo hover:text-indigo transition-colors"
+            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-sm font-semibold text-ink hover:border-indigo hover:text-indigo transition-colors"
           >
             {m} months
           </button>
@@ -2577,7 +2577,7 @@ function NewJob() {
           <button
             type="button"
             onClick={() => setNextService("")}
-            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-xs text-muted hover:text-ink transition-colors"
+            className="pressable rounded-full border border-line bg-paper px-3 py-1 text-sm text-muted hover:text-ink transition-colors"
           >
             Clear
           </button>
@@ -2612,9 +2612,9 @@ function NewJob() {
         >
           <div className="flex items-center justify-center gap-2 text-indigo">
             <VideoIcon size={22} />
-            <span className="text-sm font-semibold">Record a walkthrough video (optional)</span>
+            <span className="text-lg font-semibold">Record a walkthrough video (optional)</span>
           </div>
-          <div className="mt-1 text-xs text-muted">
+          <div className="mt-1 text-base text-muted">
             30 to 60 seconds showing what you did. It goes on their record.
           </div>
         </button>
@@ -2624,7 +2624,7 @@ function NewJob() {
             <div className="flex-1 min-w-0">
               {videoUpload.status === "uploading" && (
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-indigo">
+                  <div className="flex items-center gap-2 text-lg font-semibold text-indigo">
                     <span className="h-4 w-4 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
                     Uploading video... {Math.round(videoUpload.progress * 100)}%
                   </div>
@@ -2637,12 +2637,12 @@ function NewJob() {
                 </div>
               )}
               {videoUpload.status === "done" && (
-                <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo">
+                <div className="flex items-center gap-1.5 text-lg font-semibold text-indigo">
                   <ShieldCheck size={16} animate={false} /> Video added
                 </div>
               )}
               {videoUpload.status === "error" && (
-                <div className="text-sm text-red">{videoUpload.error}</div>
+                <div className="text-lg text-red">{videoUpload.error}</div>
               )}
             </div>
             {videoUpload.status !== "uploading" && (
@@ -2650,14 +2650,14 @@ function NewJob() {
                 <button
                   type="button"
                   onClick={() => videoRef.current?.click()}
-                  className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
+                  className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-base font-semibold text-muted hover:text-ink hover:border-ink/20 transition-colors"
                 >
                   Retake
                 </button>
                 <button
                   type="button"
                   onClick={removeVideo}
-                  className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-muted hover:text-red hover:border-red/30 transition-colors"
+                  className="pressable shrink-0 rounded-full border border-line bg-paper px-3 py-1.5 text-base font-semibold text-muted hover:text-red hover:border-red/30 transition-colors"
                 >
                   Remove
                 </button>
@@ -2694,9 +2694,9 @@ function NewJob() {
         >
           <div className="flex items-center justify-center gap-2 text-indigo">
             <ImageIcon size={22} />
-            <span className="text-sm font-semibold">Add photos (optional)</span>
+            <span className="text-lg font-semibold">Add photos (optional)</span>
           </div>
-          <div className="mt-1 text-xs text-muted">
+          <div className="mt-1 text-base text-muted">
             Before and after shots. They go on their record.
           </div>
         </button>
@@ -2746,7 +2746,7 @@ function NewJob() {
 
   if (!proId) {
     return (
-      <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-sm">
+      <div className="font-app min-h-dvh bg-soft grid place-items-center text-muted text-lg">
         {t("pro.loading")}…
       </div>
     );
@@ -2781,7 +2781,7 @@ function NewJob() {
               );
             })()}
             <div className="mt-3 flex items-baseline justify-between gap-3">
-              <h1 className="text-xl font-bold tracking-tight">
+              <h1 className="text-2xl font-bold tracking-tight">
                 {stage === "customer"
                   ? "Who is this for?"
                   : stage === "location"
@@ -2791,7 +2791,7 @@ function NewJob() {
                       : t("pro.reviewAndSend")}
               </h1>
               {loc.status === "ready" && (
-                <span className="flex min-w-0 max-w-[55%] items-center gap-1 text-xs text-muted">
+                <span className="flex min-w-0 max-w-[55%] items-center gap-1 text-sm text-muted">
                   <MapPin size={12} className="shrink-0" aria-hidden="true" />
                   <span className="truncate" title={loc.address}>
                     {loc.address}
@@ -2828,10 +2828,10 @@ function NewJob() {
                         </span>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold uppercase tracking-[0.14em] opacity-75">
+                        <div className="text-sm font-bold uppercase tracking-[0.14em] opacity-75">
                           HomesBrain AI
                         </div>
-                        <div className="mt-0.5 text-2xl font-extrabold tracking-tight">
+                        <div className="mt-0.5 text-[26px] font-extrabold tracking-tight">
                           {t("voice.justTalk")}
                         </div>
                       </div>
@@ -2841,7 +2841,7 @@ function NewJob() {
                 {voiceSupported && (
                   <div className="flex items-center gap-3" aria-hidden="true">
                     <span className="h-px flex-1 bg-line" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
+                    <span className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted">
                       or
                     </span>
                     <span className="h-px flex-1 bg-line" />
@@ -2849,10 +2849,10 @@ function NewJob() {
                 )}
                 <Card className="space-y-3">
                   <div>
-                    <div className="text-lg font-semibold text-ink tracking-tight">
+                    <div className="text-xl font-semibold text-ink tracking-tight">
                       New or existing customer
                     </div>
-                    <div className="mt-0.5 text-[15px] text-muted">
+                    <div className="mt-0.5 text-[17px] text-muted">
                       Pick someone from your list, or type a new name to add them.
                     </div>
                   </div>
@@ -2860,7 +2860,7 @@ function NewJob() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Name or address…"
-                    className="min-h-13 px-4 text-[17px]"
+                    className="min-h-13 px-4 text-[19px]"
                     autoFocus
                     aria-label="Search customers or type a new name to add one"
                   />
@@ -2877,10 +2877,10 @@ function NewJob() {
                             <UserPlusIcon size={20} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-lg font-semibold text-indigo">
+                            <div className="truncate text-xl font-semibold text-indigo">
                               Add "{query.trim()}"
                             </div>
-                            <div className="mt-0.5 text-[15px] text-muted">New customer</div>
+                            <div className="mt-0.5 text-[17px] text-muted">New customer</div>
                           </div>
                         </button>
                       )}
@@ -2901,18 +2901,18 @@ function NewJob() {
                             <Avatar name={c.name || "?"} accent="indigo" size={44} />
                             <div className="min-w-0 flex-1">
                               <div
-                                className={`truncate text-lg font-semibold ${
+                                className={`truncate text-xl font-semibold ${
                                   isMatch ? "text-indigo" : "text-ink"
                                 }`}
                               >
                                 {c.name}
                               </div>
                               {isMatch ? (
-                                <div className="mt-0.5 truncate text-xs uppercase tracking-wider font-semibold text-indigo/70">
+                                <div className="mt-0.5 truncate text-sm uppercase tracking-wider font-semibold text-indigo/70">
                                   Matches your address
                                 </div>
                               ) : (
-                                <div className="mt-0.5 truncate text-[15px] text-muted">
+                                <div className="mt-0.5 truncate text-[17px] text-muted">
                                   {c.homes?.address}
                                 </div>
                               )}
@@ -2941,13 +2941,13 @@ function NewJob() {
                     </div>
 
                     {!q && existing.length === 0 && (
-                      <div className="px-1 py-3 text-[15px] text-muted">
+                      <div className="px-1 py-3 text-[17px] text-muted">
                         No customers yet. Type a name to add your first.
                       </div>
                     )}
 
                     {q && filteredCustomers.length === 0 && hasExactMatch && (
-                      <div className="px-1 py-3 text-[15px] text-muted">No other matches.</div>
+                      <div className="px-1 py-3 text-[17px] text-muted">No other matches.</div>
                     )}
                   </div>
                 </Card>
@@ -2961,10 +2961,10 @@ function NewJob() {
                   <div className="flex items-center gap-3">
                     <Avatar name={selectedCustomer?.name || "?"} accent="indigo" size={44} />
                     <div className="min-w-0">
-                      <div className="truncate text-lg font-semibold text-ink tracking-tight">
+                      <div className="truncate text-xl font-semibold text-ink tracking-tight">
                         {selectedCustomer?.name}
                       </div>
-                      <div className="text-sm text-muted">Confirm the service address</div>
+                      <div className="text-base text-muted">Confirm the service address</div>
                     </div>
                   </div>
 
@@ -3007,10 +3007,10 @@ function NewJob() {
                   <div className="flex items-center gap-3">
                     <Avatar name={newCustomer.name || "?"} accent="indigo" size={44} />
                     <div className="min-w-0">
-                      <div className="truncate text-lg font-semibold text-ink tracking-tight">
+                      <div className="truncate text-xl font-semibold text-ink tracking-tight">
                         {newCustomer.name || "New customer"}
                       </div>
-                      <div className="text-sm text-muted">
+                      <div className="text-base text-muted">
                         {loc.status === "locating"
                           ? "Finding your location…"
                           : "Confirm the service address"}
@@ -3081,14 +3081,14 @@ function NewJob() {
                         className="pressable group mx-auto flex h-56 w-56 sm:h-64 sm:w-64 flex-col items-center justify-center rounded-full bg-indigo text-white shadow-[0_24px_60px_-20px_rgba(71,63,176,0.55)] transition-transform duration-200 active:scale-95 hover:brightness-110"
                       >
                         <MicIcon size={72} />
-                        <div className="mt-3 text-lg font-bold tracking-tight">Tap and talk</div>
+                        <div className="mt-3 text-xl font-bold tracking-tight">Tap and talk</div>
                       </button>
-                      <div className="mt-3 text-center text-xs text-muted">
+                      <div className="mt-3 text-center text-sm text-muted">
                         Just tell HomesBrain AI about the job.
                       </div>
                     </>
                   ) : (
-                    <div className="rounded-2xl bg-soft px-4 py-4 text-center text-sm text-muted">
+                    <div className="rounded-2xl bg-soft px-4 py-4 text-center text-base text-muted">
                       Voice input isn't supported in this browser. Type below instead.
                     </div>
                   )}
@@ -3096,7 +3096,7 @@ function NewJob() {
 
                 {/* Fallback textarea - present but visually secondary. */}
                 <details className="rounded-xl border border-line bg-paper">
-                  <summary className="cursor-pointer list-none px-4 py-2.5 text-xs font-semibold text-muted hover:text-ink">
+                  <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-semibold text-muted hover:text-ink">
                     Or type it instead
                   </summary>
                   <div className="border-t border-line px-4 py-3">
@@ -3108,19 +3108,19 @@ function NewJob() {
                       rows={2}
                     />
                     {transcribing && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                      <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted">
                         <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
                         HomesBrain AI improving the transcription…
                       </div>
                     )}
                     {extractState === "working" && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+                      <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted">
                         <span className="h-3 w-3 rounded-full border-2 border-indigo border-t-transparent animate-spin" />
                         HomesBrain AI reading your note…
                       </div>
                     )}
                     {extractState === "done" && extractFilled.length > 0 && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                      <div className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-indigo">
                         <ShieldCheck size={13} animate={false} />
                         HomesBrain AI filled {extractFilled.join(", ")} below
                       </div>
@@ -3130,7 +3130,7 @@ function NewJob() {
                 {/* When the pro has already dictated/typed, keep the transcript
                     visible outside the fallback so they can see the note. */}
                 {!!liveWhatDone && !dictation.listening && !transcribing && (
-                  <div className="rounded-xl bg-soft px-4 py-3 text-sm text-ink whitespace-pre-wrap">
+                  <div className="rounded-xl bg-soft px-4 py-3 text-base text-ink whitespace-pre-wrap">
                     {liveWhatDone}
                   </div>
                 )}
@@ -3143,7 +3143,7 @@ function NewJob() {
                     is the norm, so we don't surface it as noise. */}
                 {recall.status !== "none" && (
                   <div className="rounded-xl bg-redbg px-3 py-2 flex items-center justify-between">
-                    <span className="text-sm text-red font-semibold flex items-center gap-2">
+                    <span className="text-base text-red font-semibold flex items-center gap-2">
                       <ShieldCheck size={16} animate={false} /> Recall found
                     </span>
                     <Pill accent="red">{recall.label}</Pill>
@@ -3157,10 +3157,10 @@ function NewJob() {
                      retyping. This job attaches to that unit's equipment_id. */
                   <div className="rounded-2xl border border-line bg-paper px-4 py-4 space-y-3">
                     <div>
-                      <div className="text-base font-semibold text-ink">
+                      <div className="text-lg font-semibold text-ink">
                         Which unit did you service?
                       </div>
-                      <div className="text-sm text-muted">
+                      <div className="text-base text-muted">
                         Tap a unit to pull up its details and history.
                       </div>
                     </div>
@@ -3191,8 +3191,8 @@ function NewJob() {
                             }`}
                           >
                             <div className="min-w-0 flex-1">
-                              <div className="font-semibold text-sm text-ink">{label}</div>
-                              <div className="text-xs text-muted mt-0.5 tnum">{meta}</div>
+                              <div className="font-semibold text-base text-ink">{label}</div>
+                              <div className="text-sm text-muted mt-0.5 tnum">{meta}</div>
                             </div>
                             {picked && (
                               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo text-white">
@@ -3223,7 +3223,7 @@ function NewJob() {
                         and is always the tiebreaker. */}
                     {aiMatch && selectedEquipmentId === aiMatch.id && (
                       <div className="flex items-center justify-between gap-3 rounded-xl bg-indigobg px-3 py-2">
-                        <span className="text-sm text-indigo-dark">
+                        <span className="text-base text-indigo-dark">
                           Matched to <span className="font-semibold">{aiMatch.label}</span> from
                           your note.
                         </span>
@@ -3233,7 +3233,7 @@ function NewJob() {
                             setSelectedEquipmentId("");
                             setAiMatch(null);
                           }}
-                          className="shrink-0 text-xs font-semibold text-indigo hover:underline"
+                          className="shrink-0 text-sm font-semibold text-indigo hover:underline"
                         >
                           Not this one
                         </button>
@@ -3243,7 +3243,7 @@ function NewJob() {
                     {!selectedEquipmentId && (
                       <div className="flex items-center gap-3 pt-1">
                         <div className="h-px flex-1 bg-line" />
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigobg px-2.5 py-0.5 text-[13px] font-bold uppercase tracking-wider text-indigo">
                           New
                         </span>
                         <div className="h-px flex-1 bg-line" />
@@ -3252,12 +3252,12 @@ function NewJob() {
 
                     {selectedEquipmentId && applianceHistory.length > 0 && (
                       <div className="rounded-xl bg-soft px-3 py-2.5">
-                        <div className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                        <div className="text-sm font-bold uppercase tracking-wider text-muted mb-1.5">
                           Recent history
                         </div>
                         <ul className="space-y-1">
                           {applianceHistory.map((j) => (
-                            <li key={j.id} className="text-xs text-ink flex gap-2">
+                            <li key={j.id} className="text-sm text-ink flex gap-2">
                               <span className="text-muted tnum shrink-0 w-20">
                                 {formatDate(j.created_at)}
                               </span>
@@ -3272,7 +3272,7 @@ function NewJob() {
                       <button
                         type="button"
                         onClick={() => setEditDetails((v) => !v)}
-                        className="text-xs font-semibold text-indigo hover:underline"
+                        className="text-sm font-semibold text-indigo hover:underline"
                       >
                         {editDetails ? "Hide details" : "Correct unit details"}
                       </button>
@@ -3296,18 +3296,18 @@ function NewJob() {
                       className="pressable w-full flex items-center gap-3 px-5 py-4 text-left min-h-16 hover:bg-indigobg/40 rounded-2xl transition-colors"
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigobg text-indigo">
-                        <span className="text-xl leading-none font-bold">+</span>
+                        <span className="text-[22px] leading-none font-bold">+</span>
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-base font-semibold text-ink">
+                        <span className="block text-lg font-semibold text-ink">
                           Add unit details
                         </span>
-                        <span className="block text-sm text-muted">
+                        <span className="block text-base text-muted">
                           Make, model, warranty, next service (optional)
                         </span>
                       </span>
                       <span
-                        className={`shrink-0 text-lg text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}
+                        className={`shrink-0 text-xl text-muted transition-transform ${detailsOpen ? "rotate-180" : ""}`}
                       >
                         ▾
                       </span>
@@ -3352,7 +3352,7 @@ function NewJob() {
                       <div className="truncate font-extrabold text-ink">
                         {proName || t("pro.yourBusiness")}
                       </div>
-                      <div className="text-xs text-muted">{tradeLabel(proTrade)}</div>
+                      <div className="text-base text-muted">{tradeLabel(proTrade)}</div>
                     </div>
                   </div>
 
@@ -3361,7 +3361,7 @@ function NewJob() {
                       <>
                         <label
                           htmlFor="customer-language"
-                          className="block text-sm font-semibold text-ink"
+                          className="block text-lg font-semibold text-ink"
                         >
                           {uiCopy.language}
                         </label>
@@ -3379,11 +3379,11 @@ function NewJob() {
                             </option>
                           ))}
                         </Select>
-                        <p className="mt-1.5 text-xs text-muted">{uiCopy.languageHelp}</p>
+                        <p className="mt-1.5 text-base text-muted">{uiCopy.languageHelp}</p>
                       </>
                     ) : (
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm text-muted">
+                        <p className="text-lg text-muted">
                           {uiCopy.language}:{" "}
                           <span className="font-semibold text-ink">
                             {LOCALES.find((l) => l.code === customerLocale)?.label ??
@@ -3393,7 +3393,7 @@ function NewJob() {
                         <button
                           type="button"
                           onClick={() => setLangOpen(true)}
-                          className="shrink-0 text-xs font-semibold text-indigo hover:underline"
+                          className="shrink-0 text-base font-semibold text-indigo hover:underline"
                         >
                           Change
                         </button>
@@ -3401,7 +3401,7 @@ function NewJob() {
                     )}
                     {translationState === "loading" && (
                       <div
-                        className="mt-3 flex items-center gap-2 text-sm text-muted"
+                        className="mt-3 flex items-center gap-2 text-lg text-muted"
                         role="status"
                       >
                         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-indigo" />
@@ -3410,7 +3410,7 @@ function NewJob() {
                     )}
                     {translationState === "failed" && (
                       <div
-                        className="mt-3 flex items-start gap-2 rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-sm text-ink"
+                        className="mt-3 flex items-start gap-2 rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-lg text-ink"
                         role="status"
                       >
                         <AlertTriangle
@@ -3436,11 +3436,11 @@ function NewJob() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold tracking-tight">
+                        <h3 className="text-[22px] font-semibold tracking-tight">
                           {customerCopy.serviceRecord}
                         </h3>
                         <div
-                          className={`mt-0.5 text-xs ${
+                          className={`mt-0.5 text-base ${
                             missingReviewAddress ? "font-semibold text-red" : "text-muted"
                           }`}
                         >
@@ -3514,7 +3514,7 @@ function NewJob() {
                         </Field>
                         {reviewCustomerOptions.length > 0 && (
                           <div className="mt-2">
-                            <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted">
+                            <div className="mb-1.5 text-base font-bold uppercase tracking-wider text-muted">
                               Your customers
                             </div>
                             <div className="max-h-56 space-y-1.5 overflow-auto">
@@ -3527,10 +3527,10 @@ function NewJob() {
                                 >
                                   <Avatar name={c.name || "?"} accent="indigo" size={32} />
                                   <span className="min-w-0 flex-1">
-                                    <span className="block truncate text-sm font-semibold text-ink">
+                                    <span className="block truncate text-lg font-semibold text-ink">
                                       {c.name}
                                     </span>
-                                    <span className="block truncate text-xs text-muted">
+                                    <span className="block truncate text-base text-muted">
                                       {c.homes?.address ||
                                         c.phone ||
                                         c.email ||
@@ -3551,7 +3551,7 @@ function NewJob() {
                     )}
                     {closeMatch && reviewEdit !== "customer" && (
                       <div className="my-2 rounded-2xl border border-indigo/30 bg-indigobg/50 p-3 anim-fade-up">
-                        <div className="text-sm text-ink">
+                        <div className="text-lg text-ink">
                           This sounded like <span className="font-semibold">{closeMatch.name}</span>
                           {closeMatch.homes?.address ? (
                             <span className="text-muted"> · {closeMatch.homes.address}</span>
@@ -3688,10 +3688,10 @@ function NewJob() {
                     }`}
                   >
                     <label className="block">
-                      <div className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
+                      <div className="mb-1.5 flex items-center gap-2 text-lg font-semibold text-ink">
                         <span>{uiCopy.email}</span>
                         {missingReviewEmail && (
-                          <span className="rounded-full bg-redbg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red">
+                          <span className="rounded-full bg-redbg px-2 py-0.5 text-[14px] font-bold uppercase tracking-wider text-red">
                             Needed to send
                           </span>
                         )}
@@ -3712,7 +3712,7 @@ function NewJob() {
                               : ""
                         }
                       />
-                      <div className="mt-1 text-xs text-muted">
+                      <div className="mt-1 text-base text-muted">
                         {reviewEmailInvalid
                           ? uiCopy.emailInvalid
                           : missingReviewEmail
@@ -3720,7 +3720,7 @@ function NewJob() {
                             : uiCopy.emailHelp}
                       </div>
                       {reviewEmailValid && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-indigo">
+                        <div className="mt-2 flex items-center gap-1.5 text-base font-semibold text-indigo">
                           <Check size={14} aria-hidden="true" />
                           Ready to send. Tap {uiCopy.sendRecord} below.
                         </div>
@@ -3740,13 +3740,13 @@ function NewJob() {
                       <>
                         <label
                           htmlFor="charge-amount"
-                          className="block text-sm font-semibold text-ink"
+                          className="block text-lg font-semibold text-ink"
                         >
                           {t("pro.chargeJob")}
                         </label>
                         <div className="mt-2 relative">
                           <span
-                            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted"
+                            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[28px] font-bold text-muted"
                             aria-hidden
                           >
                             $
@@ -3760,18 +3760,18 @@ function NewJob() {
                             placeholder="0.00"
                             value={chargeAmount}
                             onChange={(e) => setChargeAmount(e.target.value)}
-                            className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-2xl font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                            className="w-full rounded-2xl border border-line bg-paper py-4 pl-10 pr-4 text-[28px] font-bold tnum text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
                           />
                         </div>
-                        <p className="mt-1.5 text-xs text-muted">{t("pro.chargeHelp")}</p>
+                        <p className="mt-1.5 text-base text-muted">{t("pro.chargeHelp")}</p>
                       </>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setChargeOpen(true)}
-                        className="pressable flex w-full items-center gap-2 text-left text-sm font-semibold text-indigo hover:underline"
+                        className="pressable flex w-full items-center gap-2 text-left text-lg font-semibold text-indigo hover:underline"
                       >
-                        <span className="text-lg leading-none">+</span> {t("pro.chargeJob")}
+                        <span className="text-[22px] leading-none">+</span> {t("pro.chargeJob")}
                       </button>
                     )}
                   </div>
@@ -3812,16 +3812,16 @@ function NewJob() {
                 {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
                 {deliveryState === "sent" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.recordSent")}</h2>
-                    <p className="mt-2 text-sm text-muted">Sent to {sentTo.email}.</p>
+                    <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.recordSent")}</h2>
+                    <p className="mt-2 text-base text-muted">Sent to {sentTo.email}.</p>
                     {translationFallback && (
-                      <div className="mx-auto mt-4 max-w-md rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-sm text-ink">
+                      <div className="mx-auto mt-4 max-w-md rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-base text-ink">
                         Translation was unavailable, so this message and its linked pages were sent
                         in English.
                       </div>
                     )}
                     {!translationFallback && deliveryLocale !== "en" && (
-                      <p className="mt-2 text-xs font-semibold text-indigo">
+                      <p className="mt-2 text-sm font-semibold text-indigo">
                         Sent in {LOCALES.find(({ code }) => code === deliveryLocale)?.label}.
                       </p>
                     )}
@@ -3829,8 +3829,8 @@ function NewJob() {
                 )}
                 {deliveryState === "phone_only" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.saved")}</h2>
-                    <p className="mt-2 text-sm text-muted">
+                    <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.saved")}</h2>
+                    <p className="mt-2 text-base text-muted">
                       We can't reach {sentTo.name || "your customer"} yet. SMS delivery is coming.
                       Add an email to send the record now, or show the QR.
                     </p>
@@ -3840,7 +3840,7 @@ function NewJob() {
                         value={addEmail}
                         onChange={(e) => setAddEmail(e.target.value)}
                         placeholder="customer@email.com"
-                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-base text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
                       />
                       <Btn
                         variant="indigo"
@@ -3856,8 +3856,8 @@ function NewJob() {
                 )}
                 {deliveryState === "no_contact" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.saved")}</h2>
-                    <p className="mt-2 text-sm text-muted">
+                    <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.saved")}</h2>
+                    <p className="mt-2 text-base text-muted">
                       No way to reach {sentTo.name || "your customer"} yet. Add an email to send
                       their record.
                     </p>
@@ -3867,7 +3867,7 @@ function NewJob() {
                         value={addEmail}
                         onChange={(e) => setAddEmail(e.target.value)}
                         placeholder="customer@email.com"
-                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
+                        className="w-full rounded-full border border-line bg-paper px-4 py-2 text-base text-ink placeholder:text-muted/50 focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/20"
                       />
                       <Btn
                         variant="indigo"
@@ -3883,8 +3883,8 @@ function NewJob() {
                 )}
                 {deliveryState === "send_failed" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">{t("pro.saved")}</h2>
-                    <p className="mt-2 text-sm text-muted">
+                    <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.saved")}</h2>
+                    <p className="mt-2 text-base text-muted">
                       We couldn't deliver the record to {sentTo.email || "the customer"}.{" "}
                       {deliveryErrorMessage(sendErrorCode)}
                     </p>
@@ -3899,27 +3899,27 @@ function NewJob() {
                 )}
                 {deliveryState === "record_failed" && (
                   <>
-                    <h2 className="mt-4 text-2xl tracking-tight">Job saved.</h2>
-                    <p className="mt-2 text-sm text-muted">
+                    <h2 className="mt-4 text-[26px] tracking-tight">Job saved.</h2>
+                    <p className="mt-2 text-base text-muted">
                       The work is safe, but we couldn't create or send the customer record. Do not
                       log the job again.
                     </p>
                   </>
                 )}
                 {billedAmount != null && (
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-sm font-semibold text-indigo">
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigobg px-4 py-2 text-base font-semibold text-indigo">
                     Billed {formatMoney(billedAmount)} · they can pay it from their home page
                   </div>
                 )}
                 {billingError && (
-                  <div className="mx-auto mt-4 max-w-sm rounded-xl bg-redbg px-4 py-3 text-sm font-semibold text-red">
+                  <div className="mx-auto mt-4 max-w-sm rounded-xl bg-redbg px-4 py-3 text-base font-semibold text-red">
                     {billingError}
                   </div>
                 )}
                 {claimUrl && (
                   <button
                     onClick={copyUrl}
-                    className="pressable mt-4 inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-sm font-mono text-ink hover:bg-line transition-colors break-all"
+                    className="pressable mt-4 inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-base font-mono text-ink hover:bg-line transition-colors break-all"
                   >
                     {copied ? "Copied ✓" : claimUrl}
                   </button>
@@ -4011,16 +4011,16 @@ function NewJob() {
       {fullReveal && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-5 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-line bg-paper p-6 shadow-2xl">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-indigo">
+            <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-indigo">
               <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-indigo" />
               HomesBrain AI
             </div>
-            <div className="mt-1 text-lg font-extrabold tracking-tight text-ink">
+            <div className="mt-1 text-xl font-extrabold tracking-tight text-ink">
               {t("voice.building")}
             </div>
             {fullBusy && (
               <div
-                className="mt-1 flex items-center gap-2 text-sm font-semibold text-indigo"
+                className="mt-1 flex items-center gap-2 text-base font-semibold text-indigo"
                 role="status"
               >
                 <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-indigo/25 border-t-indigo" />
@@ -4078,7 +4078,7 @@ function NewJob() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div
-                        className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
+                        className={`text-[13px] font-bold uppercase tracking-[0.12em] ${
                           done ? "text-indigo-dark" : active ? "text-indigo" : "text-muted"
                         }`}
                       >
@@ -4094,7 +4094,7 @@ function NewJob() {
                         />
                       ) : (
                         <div
-                          className={`mt-0.5 truncate text-sm font-semibold ${
+                          className={`mt-0.5 truncate text-base font-semibold ${
                             s.value ? "text-ink" : "text-muted"
                           }`}
                         >
@@ -4113,7 +4113,7 @@ function NewJob() {
                 <button
                   type="button"
                   onClick={cancelVoiceBusy}
-                  className="pressable rounded-full px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-soft hover:text-ink"
+                  className="pressable rounded-full px-4 py-2 text-base font-semibold text-muted transition-colors hover:bg-soft hover:text-ink"
                 >
                   {t("voice.cancel")}
                 </button>

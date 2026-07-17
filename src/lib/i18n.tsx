@@ -169,6 +169,8 @@ const en = {
   "pro.search.placeholder": "Search customers, records…",
   "pro.search.results": "Search results",
   "pro.search.noMatches": "No matches",
+  "pro.search.close": "Close search",
+  "pro.search.hint": "Search customers by name or phone, records by address.",
   "pro.notifications": "Notifications",
   "pro.notificationsUnread": "unread",
   "pro.notificationsEmpty":
@@ -403,6 +405,8 @@ const es: Partial<Record<TKey, string>> = {
   "pro.search.placeholder": "Buscar clientes, registros…",
   "pro.search.results": "Resultados de búsqueda",
   "pro.search.noMatches": "Sin resultados",
+  "pro.search.close": "Cerrar búsqueda",
+  "pro.search.hint": "Busca clientes por nombre o teléfono, registros por dirección.",
   "pro.notifications": "Notificaciones",
   "pro.notificationsUnread": "sin leer",
   "pro.notificationsEmpty":
@@ -633,6 +637,8 @@ const ru: Partial<Record<TKey, string>> = {
   "pro.search.placeholder": "Найти клиента или запись…",
   "pro.search.results": "Результаты поиска",
   "pro.search.noMatches": "Ничего не найдено",
+  "pro.search.close": "Закрыть поиск",
+  "pro.search.hint": "Ищите клиентов по имени или телефону, записи по адресу.",
   "pro.notifications": "Уведомления",
   "pro.notificationsUnread": "непрочитанных",
   "pro.notificationsEmpty":
@@ -861,6 +867,8 @@ const uk: Partial<Record<TKey, string>> = {
   "pro.search.placeholder": "Знайти клієнта або запис…",
   "pro.search.results": "Результати пошуку",
   "pro.search.noMatches": "Нічого не знайдено",
+  "pro.search.close": "Закрити пошук",
+  "pro.search.hint": "Шукайте клієнтів за іменем або телефоном, записи за адресою.",
   "pro.notifications": "Сповіщення",
   "pro.notificationsUnread": "непрочитаних",
   "pro.notificationsEmpty":

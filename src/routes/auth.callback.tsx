@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { resumePath } from "@/lib/mobile";
 import { useEffect } from "react";
 import { PageLoader } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,7 +94,7 @@ function AuthCallback() {
             business: pending!.business ?? null,
             via: "google",
           });
-          navigate({ to: "/pro" });
+          navigate({ to: (resumePath("/pro") ?? "/pro") as "/pro" });
           return;
         }
       }
@@ -126,17 +127,16 @@ function AuthCallback() {
           .invoke("pro-welcome", { body: { origin: window.location.origin } })
           .catch((err) => console.error("pro-welcome failed", err));
         await logEvent(`user:${user.id}`, "pro_signed_in", { via: "google" });
-        navigate({ to: "/pro" });
+        navigate({ to: (resumePath("/pro") ?? "/pro") as "/pro" });
         return;
       }
-
 
       // Default and explicit-homeowner path. If a pros row exists but no
       // homeowner role was chosen, keep the legacy behavior of routing
       // pros to their dashboard.
       if (existingPro && loginRole !== "homeowner") {
         await logEvent(`pro:${existingPro.id}`, "pro_email_verified", {});
-        navigate({ to: "/pro" });
+        navigate({ to: (resumePath("/pro") ?? "/pro") as "/pro" });
         return;
       }
 
@@ -160,7 +160,7 @@ function AuthCallback() {
         }
       }
       await logEvent(`user:${user.id}`, "homeowner_signed_in", {});
-      navigate({ to: "/home" });
+      navigate({ to: (resumePath("/home") ?? "/home") as "/home" });
     })();
   }, [navigate]);
   return <PageLoader label="Signing you in" />;

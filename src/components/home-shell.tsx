@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Bell, Home, LogOut, Plus, Settings, UserRound, Users, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import { Btn, Card, FaceAvatar, PageLoader } from "@/lib/ui";
 import { BottomTabBar, TAB_BAR_CONTENT_PAD } from "@/components/bottom-tab-bar";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { useTheme } from "@/lib/theme";
-import { useHideOnScroll } from "@/lib/mobile";
+import { rememberLastPath, useHideOnScroll } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 import { useT, type TKey } from "@/lib/i18n";
@@ -244,6 +244,10 @@ export function HomeShell({
   const navigate = useNavigate();
   const [theme] = useTheme();
   const headerHidden = useHideOnScroll();
+  const routerLocation = useLocation();
+  useEffect(() => {
+    rememberLastPath(routerLocation.pathname + (routerLocation.searchStr || ""));
+  }, [routerLocation.pathname, routerLocation.searchStr]);
   const t = useT();
 
   async function signOut() {

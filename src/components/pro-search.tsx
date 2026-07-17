@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { FileText, Search, User } from "lucide-react";
+import { ArrowLeft, FileText, Search, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/hb";
 import { useT } from "@/lib/i18n";
@@ -191,6 +191,163 @@ export function GlobalSearch({ proId }: { proId: string | null }) {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/* Full-screen mobile search (Instagram pattern): opens from the header icon,
+   autofocuses, same data as the desktop combobox. */
+export function MobileProSearch({
+  proId,
+  open,
+  onClose,
+}: {
+  proId: string | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const navigate = useNavigate();
+  const t = useT();
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<Hit[]>([]);
+  const [searched, setSearched] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setQ("");
+    setHits([]);
+    setSearched(false);
+    /* Focus after the overlay paints so the keyboard opens reliably. */
+    const timer = setTimeout(() => inputRef.current?.focus(), 60);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const term = q.trim();
+    if (!proId || term.length < 2) {
+      setHits([]);
+      setSearched(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const safe = term.replace(/[,()]/g, " ").trim();
+      const like = `%${safe}%`;
+      const [cust, jobs] = await Promise.all([
+        supabase
+          .from("customers")
+          .select("id,name,phone")
+          .eq("pro_id", proId)
+          .or(`name.ilike.${like},phone.ilike.${like}`)
+          .limit(6),
+        supabase
+          .from("jobs")
+          .select("id,what_done,homes!inner(address),records(id)")
+          .eq("pro_id", proId)
+          .ilike("homes.address", like)
+          .order("created_at", { ascending: false })
+          .limit(4),
+      ]);
+      const next: Hit[] = [];
+      for (const c of cust.data ?? []) {
+        next.push({ kind: "customer", id: c.id, primary: c.name, secondary: c.phone });
+      }
+      for (const j of (jobs.data ?? []) as unknown as JobHit[]) {
+        const recordId = j.records?.[0]?.id;
+        if (!recordId) continue;
+        next.push({
+          kind: "record",
+          id: recordId,
+          primary: j.homes?.address ?? t("pro.nav.records"),
+          secondary: j.what_done,
+        });
+      }
+      setHits(next.slice(0, 8));
+      setSearched(true);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [q, proId, open, t]);
+
+  if (!open) return null;
+
+  function go(hit: Hit) {
+    logEvent(proId, "search_used", { kind: hit.kind, q: q.trim(), surface: "mobile" });
+    onClose();
+    if (hit.kind === "customer") {
+      navigate({ to: "/pro/customers/$customerId", params: { customerId: hit.id } });
+    } else {
+      navigate({ to: "/pro/records/$recordId", params: { recordId: hit.id } });
+    }
+  }
+
+  return (
+    <div
+      className="md:hidden fixed inset-0 z-[80] bg-paper anim-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("pro.search.label")}
+    >
+      <div className="flex items-center gap-2 border-b border-line px-3 h-14">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("pro.search.close")}
+          className="pressable flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-ink hover:bg-soft"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div className="relative flex-1">
+          <Search
+            size={15}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+            aria-hidden="true"
+          />
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label={t("pro.search.label")}
+            placeholder={t("pro.search.placeholder")}
+            className="w-full h-10 rounded-full border border-line bg-soft pl-9 pr-4 text-base text-ink placeholder:text-muted outline-none focus:border-ink"
+          />
+        </div>
+      </div>
+      <div
+        className="overflow-y-auto overscroll-contain"
+        style={{ maxHeight: "calc(100dvh - 56px)" }}
+      >
+        {q.trim().length < 2 ? (
+          <p className="px-5 py-8 text-sm text-muted text-center">{t("pro.search.hint")}</p>
+        ) : !searched ? null : hits.length === 0 ? (
+          <p className="px-5 py-8 text-sm text-muted text-center">{t("pro.search.noMatches")}</p>
+        ) : (
+          hits.map((h) => (
+            <button
+              key={`${h.kind}-${h.id}`}
+              onClick={() => go(h)}
+              className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left border-b border-line last:border-b-0 hover:bg-soft"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-soft text-muted">
+                {h.kind === "customer" ? <User size={16} /> : <FileText size={16} />}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[15px] font-semibold text-ink truncate">
+                  {h.primary}
+                </span>
+                {h.secondary && (
+                  <span className="block text-xs text-muted truncate">{h.secondary}</span>
+                )}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
     </div>
   );
 }
