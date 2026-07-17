@@ -5,7 +5,8 @@ import { Btn, Card, Eyebrow, KV, PageLoader, Pill } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, tradeLabel } from "@/lib/hb";
 import { ShieldCheck, TradeIcon } from "@/components/svg";
-import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import { HomeShell, useHomeownerGuard } from "@/components/home-shell";
+import { ApplianceIcon } from "@/components/appliance-icon";
 import {
   fetchAllTradeFields,
   formatAttrValue,
@@ -103,13 +104,13 @@ function ItemDetail() {
 
   if (!item) {
     return (
-      <HomeShell active="overview" homeowner={homeowner} home={home}>
+      <HomeShell active="appliances" homeowner={homeowner} home={home}>
         <Card className="anim-fade-up text-center py-14">
           <h1 className="text-2xl tracking-tight">Item not found</h1>
           <p className="mt-2 text-sm text-muted">This item isn't on your home's record.</p>
           <div className="mt-6">
-            <Link to="/home">
-              <Btn variant="secondary">Back to my home</Btn>
+            <Link to="/home/appliances">
+              <Btn variant="secondary">Back to appliances</Btn>
             </Link>
           </div>
         </Card>
@@ -118,32 +119,41 @@ function ItemDetail() {
   }
 
   return (
-    <HomeShell active="overview" homeowner={homeowner} home={home}>
+    <HomeShell active="appliances" homeowner={homeowner} home={home}>
       <Link
-        to="/home"
+        to="/home/appliances"
         className="anim-fade-up inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors mb-4"
       >
-        <ArrowLeft size={15} /> My home
+        <ArrowLeft size={15} /> Appliances
       </Link>
 
-      <HomePageHead
-        eyebrow="On file"
-        title={item.type ?? "Equipment"}
-        sub={[item.make, item.model].filter(Boolean).join(" · ") || undefined}
-        action={
-          item.source === "pro" ? (
-            <span className="inline-flex items-center gap-1.5 text-indigo font-semibold text-sm">
-              <ShieldCheck size={17} animate={false} /> Verified
-            </span>
-          ) : (
-            <Pill accent="amber">Self-added</Pill>
-          )
-        }
-      />
+      <section className="anim-fade-up mb-5 rounded-[28px] border border-line bg-paper p-5 shadow-[0_18px_42px_-36px_rgba(22,22,15,0.7)]">
+        <div className="flex items-start gap-4">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-indigobg text-indigo">
+            <ApplianceIcon type={item.type} size={30} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="eyebrow text-indigo">On file</div>
+              {item.source === "pro" ? (
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo">
+                  <ShieldCheck size={15} animate={false} /> Verified
+                </span>
+              ) : (
+                <Pill accent="amber">Added by you</Pill>
+              )}
+            </div>
+            <h1 className="mt-1 text-2xl tracking-tight text-ink">{item.type ?? "Equipment"}</h1>
+            <p className="mt-1 text-sm text-muted">
+              {[item.make, item.model].filter(Boolean).join(" · ") || "Details not added yet"}
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Nameplate */}
-        <Card className="anim-fade-up d-1">
+        <Card className="anim-fade-up d-1 !p-4 sm:!p-5">
           <Eyebrow accent="indigo">Nameplate</Eyebrow>
           <div className="mt-2">
             <KV k="Make" v={item.make ?? "-"} />
@@ -161,7 +171,7 @@ function ItemDetail() {
             from the trade_fields config; unknown keys fall back to a humanized
             version so nothing goes missing. */}
         {attributeEntries.length > 0 && (
-          <Card className="anim-fade-up d-2">
+          <Card className="anim-fade-up d-2 !p-4 sm:!p-5">
             <Eyebrow accent="indigo">Details</Eyebrow>
             <div className="mt-2">
               {attributeEntries.map((e) => (
@@ -172,7 +182,7 @@ function ItemDetail() {
         )}
 
         {/* History */}
-        <Card className="anim-fade-up d-3">
+        <Card className="anim-fade-up d-3 !p-4 sm:!p-5">
           <Eyebrow accent="indigo">History</Eyebrow>
           {jobs.length === 0 ? (
             <p className="mt-3 text-sm text-muted">No visits recorded for this item yet.</p>

@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Btn, Card, Eyebrow, PageLoader, Pill, Toast } from "@/lib/ui";
-import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
+import { useEffect, useMemo } from "react";
+import { CalendarCheck } from "lucide-react";
+import { Btn, Card, Eyebrow, PageLoader, Pill } from "@/lib/ui";
+import { formatDate, tradeLabel } from "@/lib/hb";
 import { TradeIcon } from "@/components/svg";
 import { HomePageHead, HomeShell, useHomeownerGuard } from "@/components/home-shell";
 
@@ -37,7 +37,6 @@ const BUCKETS = [
 function Reminders() {
   const navigate = useNavigate();
   const {
-    homeownerId,
     homeowner,
     home,
     jobs: allJobs,
@@ -46,38 +45,15 @@ function Reminders() {
   } = useHomeownerGuard();
   const jobs = (allJobs as unknown as DueJob[]).filter((j) => j.next_service_date);
   const pros = allPros as unknown as ProRow[];
-  const [booked, setBooked] = useState<Set<string>>(new Set());
-  const [busy, setBusy] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!guardLoading && !home) navigate({ to: "/home" });
   }, [guardLoading, home, navigate]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
-
-  async function rebook(j: DueJob) {
-    const p = proById.get(j.pro_id);
-    setBusy(j.id);
-    await logEvent(`homeowner:${homeownerId}`, "rebooked", {
-      job_id: j.id,
-      pro_id: j.pro_id,
-      home_id: home?.id,
-    });
-    setBooked((prev) => new Set(prev).add(j.id));
-    setBusy(null);
-    setToast(`Rebook request sent to ${p?.business ?? "your pro"} (mock)`);
-  }
 
   if (guardLoading) return <PageLoader label="Loading reminders" />;
   if (!home) return <PageLoader label="Setting up your home" />;
-  
 
   const byBucket = {
     overdue: jobs.filter((j) => bucketOf(j.next_service_date) === "overdue"),
@@ -94,8 +70,11 @@ function Reminders() {
       />
 
       {jobs.length === 0 ? (
-        <Card className="anim-fade-up text-center py-14">
-          <h2 className="text-2xl tracking-tight">Nothing due</h2>
+        <Card className="anim-fade-up text-center !py-12">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-indigobg text-indigo">
+            <CalendarCheck size={28} />
+          </span>
+          <h2 className="mt-4 text-2xl tracking-tight">Nothing due</h2>
           <p className="mt-2 text-sm text-muted max-w-md mx-auto">
             When a pro sets a next-service date on a job, it shows up here. No calendar to keep.
           </p>
@@ -106,51 +85,44 @@ function Reminders() {
           </div>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {BUCKETS.map(({ key, title, sub }, bi) => {
             const list = byBucket[key];
             if (list.length === 0) return null;
             return (
-              <Card key={key} className={`anim-fade-up d-${bi + 1}`}>
-                <div className="flex items-center gap-2">
+              <Card key={key} className={`anim-fade-up d-${bi + 1} !p-4 sm:!p-5`}>
+                <div className="flex items-center justify-between gap-2">
                   <Eyebrow accent={key === "overdue" ? "red" : "indigo"}>{title}</Eyebrow>
-                  <span className="text-xs text-muted tnum">
-                    {list.length} · {sub}
+                  <span className="rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-muted tnum">
+                    {list.length}
                   </span>
                 </div>
-                <div className="mt-2 divide-y divide-line">
+                <p className="mt-1 text-sm text-muted">{sub}</p>
+                <div className="mt-3 divide-y divide-line border-t border-line">
                   {list.map((j) => {
                     const p = proById.get(j.pro_id);
                     return (
-                      <div
-                        key={j.id}
-                        className="py-3.5 flex items-center justify-between gap-3 flex-wrap"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-semibold text-ink">{j.what_done}</div>
-                          {p && (
-                            <div className="text-xs text-muted flex items-center gap-1.5 mt-0.5">
-                              <TradeIcon trade={p.trade} size={12} className="text-indigo" />
-                              {p.business} · {tradeLabel(p.trade)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
+                      <div key={j.id} className="py-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="font-bold text-ink">{j.what_done}</div>
+                            {p && (
+                              <div className="text-xs text-muted flex items-center gap-1.5 mt-0.5">
+                                <TradeIcon trade={p.trade} size={12} className="text-indigo" />
+                                {p.business} · {tradeLabel(p.trade)}
+                              </div>
+                            )}
+                          </div>
                           <Pill accent={key === "overdue" ? "red" : "indigo"}>
                             {formatDate(j.next_service_date)}
                           </Pill>
-                          {booked.has(j.id) ? (
-                            <Pill accent="coral">Request sent</Pill>
-                          ) : (
-                            <Btn
-                              variant="coral"
-                              size="sm"
-                              disabled={busy === j.id}
-                              onClick={() => rebook(j)}
-                            >
-                              {busy === j.id ? "Sending…" : "Rebook"}
+                        </div>
+                        <div className="mt-3">
+                          <Link to="/home/pros" className="block">
+                            <Btn variant="coral" className="w-full">
+                              Rebook{p ? ` ${p.business}` : " your pro"}
                             </Btn>
-                          )}
+                          </Link>
                         </div>
                       </div>
                     );
@@ -161,8 +133,6 @@ function Reminders() {
           })}
         </div>
       )}
-
-      {toast && <Toast>{toast}</Toast>}
     </HomeShell>
   );
 }

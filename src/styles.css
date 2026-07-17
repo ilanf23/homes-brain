@@ -1008,8 +1008,8 @@ html[data-swipe-dir="right"] ::view-transition-new(tab-content) {
   }
 }
 
-/* Pro portal type bump: everything reads 4px larger (requested for pros in
-   the field). Scoped to the shell via .type-up; named sizes keep their
+/* Field-friendly portal type bump: everything reads 4px larger on both the
+   pro and homeowner apps. Scoped to the shell via .type-up; named sizes keep their
    proportional line-height ratios, arbitrary px sizes are mapped by hand.
    Unlayered on purpose so it wins over the utilities layer. */
 .type-up {

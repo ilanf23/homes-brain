@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPhone, logEvent, mockSend, suggestTradeGaps, TRADES, tradeLabel } from "@/lib/hb";
+import { formatPhone, logEvent, suggestTradeGaps, TRADES, tradeLabel } from "@/lib/hb";
 import { Btn, Card, Eyebrow, Field, Input, PhoneInput, Pill, Select } from "@/lib/ui";
 import { TradeIcon } from "@/components/svg";
 
@@ -12,7 +12,6 @@ type InviteRow = {
   trade: string | null;
   status: string;
 };
-
 
 /* The one-tap "invite your other pros" card (Flow C hook), shared by the
    homeowner overview, My Pros, and Add pages. Fetches its own invites. */
@@ -78,33 +77,19 @@ export function InviteProsCard({
 
     let emailed = false;
     if (toEmail) {
-      const { data: emailResp, error: emailErr } = await supabase.functions.invoke(
-        "invite-pro",
-        {
-          body: {
-            to_name: toName,
-            to_email: toEmail,
-            trade: trade ?? "",
-            origin: window.location.origin,
-          },
+      const { data: emailResp, error: emailErr } = await supabase.functions.invoke("invite-pro", {
+        body: {
+          to_name: toName,
+          to_email: toEmail,
+          trade: trade ?? "",
+          origin: window.location.origin,
         },
-      );
+      });
       const ok = !emailErr && (emailResp as { ok?: boolean } | null)?.ok === true;
       emailed = ok;
       if (!ok) {
         onToast(`Invite saved, but email couldn't be sent to ${toName}`);
       }
-    }
-
-    // Phone stays as an optional capture until real SMS is live. Keep the
-    // mock log so existing "message preview" surfaces don't regress.
-    if (toPhone) {
-      await mockSend({
-        channel: "sms",
-        to: toPhone,
-        body: `A homeowner invited you to add their home to HomesBrain. Tap to claim: ${window.location.origin}/pro/signup (Reply STOP to opt out.)`,
-        kind: "invite",
-      });
     }
 
     await logEvent(`homeowner:${homeownerId}`, "pro_invited", {
@@ -115,9 +100,8 @@ export function InviteProsCard({
       await logEvent(`homeowner:${homeownerId}`, "second_pro_added", {});
     }
     if (emailed) onToast(`Invite emailed to ${toName}`);
-    else if (!toEmail) onToast(`Invite sent to ${toName}`);
+    else if (toPhone) onToast(`${toName} saved. Text delivery isn't live yet.`);
   }
-
 
   return (
     <Card className={className}>
@@ -135,12 +119,12 @@ export function InviteProsCard({
             {gaps.map((g, i) => (
               <button
                 key={g}
-                onClick={() => sendInvite(`Your ${tradeLabel(g).toLowerCase()} pro`, null, null, g)}
+                onClick={() => setInviteTrade(g)}
                 className="pressable anim-fade-up inline-flex items-center gap-2 rounded-full bg-indigobg text-indigo text-sm font-semibold px-3.5 py-2 hover:shadow-[0_8px_20px_-10px_rgba(71,63,176,0.5)] hover:-translate-y-px transition-all duration-200"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <TradeIcon trade={g} size={15} />
-                Invite {tradeLabel(g)}
+                {tradeLabel(g)}
               </button>
             ))}
           </div>
@@ -173,10 +157,7 @@ export function InviteProsCard({
           />
         </Field>
         <Field label="Phone (optional)">
-          <PhoneInput
-            value={invitePhone}
-            onChange={(v) => setInvitePhone(v)}
-          />
+          <PhoneInput value={invitePhone} onChange={(v) => setInvitePhone(v)} />
         </Field>
       </div>
       <p className="mt-2 text-xs text-muted">
@@ -185,11 +166,7 @@ export function InviteProsCard({
       <div className="mt-3">
         <Btn
           variant="indigo"
-          disabled={
-            sending ||
-            !inviteName.trim() ||
-            (!inviteEmail.trim() && !invitePhone.trim())
-          }
+          disabled={sending || !inviteName.trim() || (!inviteEmail.trim() && !invitePhone.trim())}
           onClick={async () => {
             setSending(true);
             try {
@@ -207,10 +184,15 @@ export function InviteProsCard({
             }
           }}
         >
-          {sending ? "Sending…" : "Send invite"}
+          {sending
+            ? inviteEmail.trim()
+              ? "Sending…"
+              : "Saving…"
+            : inviteEmail.trim()
+              ? "Send email invite"
+              : "Save pro details"}
         </Btn>
       </div>
-
 
       {invites.length > 0 && (
         <div className="mt-5">
@@ -227,14 +209,16 @@ export function InviteProsCard({
                     <span className="font-semibold">{i.to_pro_name}</span>
                     {i.trade && <span className="text-muted"> · {tradeLabel(i.trade)}</span>}
                     {(i.to_pro_email || i.to_pro_phone) && (
-                      <span className="text-muted"> · {i.to_pro_email ?? formatPhone(i.to_pro_phone ?? "")}</span>
+                      <span className="text-muted">
+                        {" "}
+                        · {i.to_pro_email ?? formatPhone(i.to_pro_phone ?? "")}
+                      </span>
                     )}
                   </span>
                 </span>
                 <Pill accent="amber">{i.status}</Pill>
               </div>
             ))}
-
           </div>
         </div>
       )}

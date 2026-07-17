@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Btn, Card, Eyebrow, Input, SettingRow } from "@/lib/ui";
 import { logEvent } from "@/lib/hb";
@@ -25,19 +25,51 @@ export function SettingsSection({
   eyebrow,
   accent = "indigo" as const,
   delay,
+  collapsible = false,
+  defaultOpen = false,
   children,
 }: {
   id: string;
   eyebrow: string;
   accent?: "indigo" | "red";
   delay?: 1 | 2 | 3 | 4;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
   children: ReactNode;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
     <section id={id} aria-label={eyebrow} className="scroll-mt-28 md:scroll-mt-8">
-      <Card className={delay ? `anim-fade-up d-${delay}` : ""}>
-        <Eyebrow accent={accent}>{eyebrow}</Eyebrow>
-        {children}
+      <Card className={`${delay ? `anim-fade-up d-${delay}` : ""} !p-4 sm:!p-5`}>
+        {collapsible ? (
+          <>
+            <button
+              type="button"
+              aria-expanded={open}
+              onClick={() => setOpen((value) => !value)}
+              className="pressable flex min-h-12 w-full items-center justify-between gap-4 text-left"
+            >
+              <span
+                className={
+                  accent === "red" ? "text-lg font-bold text-red" : "text-lg font-bold text-ink"
+                }
+              >
+                {eyebrow}
+              </span>
+              <ChevronDown
+                size={20}
+                className={`shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`}
+              />
+            </button>
+            {open && <div className="anim-fade-in border-t border-line pt-1">{children}</div>}
+          </>
+        ) : (
+          <>
+            <Eyebrow accent={accent}>{eyebrow}</Eyebrow>
+            {children}
+          </>
+        )}
       </Card>
     </section>
   );
@@ -45,9 +77,15 @@ export function SettingsSection({
 
 /* The Language section is identical on the pro and homeowner settings pages;
    one component keeps the copy and layout from drifting apart. */
-export function LanguageSettingsSection({ delay }: { delay?: 1 | 2 | 3 | 4 }) {
+export function LanguageSettingsSection({
+  delay,
+  collapsible = false,
+}: {
+  delay?: 1 | 2 | 3 | 4;
+  collapsible?: boolean;
+}) {
   return (
-    <SettingsSection id="language" eyebrow="Language" delay={delay}>
+    <SettingsSection id="language" eyebrow="Language" delay={delay} collapsible={collapsible}>
       <div className="mt-3">
         <SettingRow label="Display language" sub="The language HomesBrain shows you.">
           <LanguageToggle />

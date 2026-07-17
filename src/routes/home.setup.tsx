@@ -217,9 +217,9 @@ function HomeSetupWizard() {
   }
 
   return (
-    <div className="font-app min-h-dvh bg-soft flex flex-col">
+    <div className="font-app type-up min-h-dvh bg-soft text-ink flex flex-col">
       <header className="border-b border-line bg-background/85 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto max-w-3xl px-5 h-16 flex items-center justify-between">
+        <div className="mx-auto max-w-3xl px-4 sm:px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <Logo />
           </Link>
@@ -237,7 +237,7 @@ function HomeSetupWizard() {
             </button>
           </div>
         </div>
-        <div className="mx-auto max-w-3xl px-5 pb-3 flex items-center gap-1.5">
+        <div className="mx-auto max-w-3xl px-4 sm:px-5 pb-3 flex items-center gap-1.5">
           {steps.map((k, i) => (
             <div
               key={k}
@@ -247,7 +247,7 @@ function HomeSetupWizard() {
         </div>
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-md px-5 py-10 sm:py-16">
+      <main className="flex-1 mx-auto w-full max-w-md px-4 sm:px-5 py-8 sm:py-14">
         {step === "name" && (
           <StepFrame
             title="What should we call you?"
@@ -303,7 +303,7 @@ function HomeSetupWizard() {
                   autoComplete="email"
                 />
               </Field>
-              <div className="rounded-2xl border border-line bg-white px-4 py-1">
+              <div className="rounded-[22px] border border-line bg-paper px-4 py-1">
                 <SettingRow
                   label="Text me my service records & reminders"
                   sub="Service due dates and new records by SMS."
@@ -323,10 +323,7 @@ function HomeSetupWizard() {
                     Privacy Policy
                   </Link>{" "}
                   and{" "}
-                  <Link
-                    to="/messaging-terms"
-                    className="font-semibold text-indigo hover:underline"
-                  >
+                  <Link to="/messaging-terms" className="font-semibold text-indigo hover:underline">
                     Messaging Terms
                   </Link>
                   .
@@ -362,7 +359,7 @@ function HomeSetupWizard() {
         {step === "home" && (
           <StepFrame title="Is this your home?" sub="Your record lives at this address.">
             {home ? (
-              <div className="rounded-2xl border border-line bg-white p-5">
+              <div className="rounded-[22px] border border-line bg-paper p-5 shadow-[0_18px_42px_-36px_rgba(22,22,15,0.7)]">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
                   Address
                 </div>
@@ -404,12 +401,12 @@ function HomeSetupWizard() {
       </main>
 
       <footer className="sticky bottom-0 border-t border-line bg-background/95 backdrop-blur-md">
-        <div className="mx-auto max-w-md px-5 py-4 flex items-center gap-3">
+        <div className="mx-auto max-w-md px-4 sm:px-5 py-4 flex items-center gap-3">
           <button
             type="button"
             onClick={goBack}
             disabled={stepIdx === 0}
-            className="pressable inline-flex items-center justify-center w-14 h-14 rounded-full border border-line bg-white text-ink disabled:opacity-40 disabled:cursor-not-allowed"
+            className="pressable inline-flex items-center justify-center w-14 h-14 rounded-full border border-line bg-paper text-ink disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Back"
           >
             <ArrowLeft size={22} />
@@ -450,8 +447,10 @@ function StepFrame({
   return (
     <div className="anim-fade-up">
       <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">{title}</h1>
-      {sub && <p className="mt-2 text-base text-muted">{sub}</p>}
-      <div className="mt-8">{children}</div>
+      {sub && <p className="mt-2 text-base leading-relaxed text-muted">{sub}</p>}
+      <div className="mt-7 rounded-[26px] border border-line bg-paper p-4 sm:p-5 shadow-[0_18px_42px_-36px_rgba(22,22,15,0.7)]">
+        {children}
+      </div>
     </div>
   );
 }

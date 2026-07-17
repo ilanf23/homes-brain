@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Bell, Home, LogOut, Plus, Settings, UserRound, Users, Wrench } from "lucide-react";
+import { Bell, Home, LogOut, MapPin, Plus, UserRound, Users, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Btn, Card, FaceAvatar, PageLoader } from "@/lib/ui";
 import { BottomTabBar, TAB_BAR_CONTENT_PAD } from "@/components/bottom-tab-bar";
@@ -264,7 +264,7 @@ export function HomeShell({
   return (
     /* text-ink re-resolves the inherited body color inside the .dark scope. */
     <div
-      className={`font-app min-h-dvh bg-soft text-ink md:flex ${theme === "dark" ? "dark" : ""}`}
+      className={`font-app type-up min-h-dvh bg-soft text-ink md:flex ${theme === "dark" ? "dark" : ""}`}
     >
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-60 shrink-0 border-r border-line bg-paper sticky top-0 h-dvh">
@@ -328,10 +328,20 @@ export function HomeShell({
           className={`md:hidden sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md transition-transform duration-200 ${headerHidden ? "-translate-y-full" : ""}`}
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <div className="px-4 h-14 flex items-center justify-between gap-2 min-w-0">
+          <div className="relative px-4 h-14 flex items-center justify-between gap-2 min-w-0">
             <Link to="/" className="flex items-center shrink-0" aria-label="HomesBrain">
-              <Logo size={24} />
+              <Logo size={24} showWordmark={false} />
             </Link>
+            {home && (
+              <Link
+                to="/home"
+                aria-label={`${t("nav.myHome")}: ${home.address}`}
+                className="pressable absolute left-1/2 -translate-x-1/2 flex max-w-[64vw] items-center gap-1.5 rounded-full bg-soft px-3 py-1.5 text-xs font-bold text-ink"
+              >
+                <MapPin size={13} className="shrink-0 text-indigo" aria-hidden="true" />
+                <span className="truncate">{home.address}</span>
+              </Link>
+            )}
             <Link
               to="/home/reminders"
               aria-label={t("nav.reminders")}
@@ -343,7 +353,7 @@ export function HomeShell({
         </header>
 
         <main
-          className={`tab-swipe-main mx-auto max-w-3xl px-5 pt-8 md:pt-10 ${TAB_BAR_CONTENT_PAD} md:pb-10`}
+          className={`tab-swipe-main mx-auto max-w-3xl px-4 sm:px-6 pt-6 md:pt-10 ${TAB_BAR_CONTENT_PAD} md:pb-10`}
         >
           {children}
         </main>
@@ -387,11 +397,11 @@ export function HomePageHead({
   action?: ReactNode;
 }) {
   return (
-    <div className="anim-fade-up flex items-end justify-between flex-wrap gap-4 mb-6">
+    <div className="anim-fade-up flex items-end justify-between flex-wrap gap-4 mb-5">
       <div>
         <div className="eyebrow text-indigo">{eyebrow}</div>
-        <h1 className="mt-1 text-3xl tracking-tight">{title}</h1>
-        {sub && <p className="mt-1 text-sm text-muted max-w-xl">{sub}</p>}
+        <h1 className="mt-1 text-2xl sm:text-3xl tracking-tight">{title}</h1>
+        {sub && <p className="mt-1.5 text-sm text-muted max-w-xl leading-relaxed">{sub}</p>}
       </div>
       {action}
     </div>

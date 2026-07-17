@@ -1,12 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronRight } from "lucide-react";
+import { Bell, Check, ChevronRight, Home, Users, Wrench } from "lucide-react";
 import { Avatar, Btn, Card, Eyebrow, Field, Input, PageLoader, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, logEvent, tradeLabel } from "@/lib/hb";
+import { formatDate, logEvent } from "@/lib/hb";
 import { formatMoney, isOverdue, listInvoicesForHome, type HomeInvoice } from "@/lib/invoices";
 import { startInvoiceCheckout } from "@/lib/stripe-connect";
-import { ShieldCheck, TradeIcon } from "@/components/svg";
 import { Celebration, consumeCelebration } from "@/components/celebration";
 import {
   HomePageHead,
@@ -14,7 +13,6 @@ import {
   useHomeownerGuard,
   type HomeownerRow,
 } from "@/components/home-shell";
-import { InviteProsCard } from "@/components/invite-pros";
 import { HomeSetupChecklist } from "@/components/home-setup-checklist";
 import { useT } from "@/lib/i18n";
 import { listJobMedia } from "@/lib/media";
@@ -30,7 +28,6 @@ function HomeOverview() {
     homeownerId,
     homeowner,
     home,
-    homes,
     equipment,
     jobs,
     pros,
@@ -67,7 +64,7 @@ function HomeOverview() {
     const url = new URL(window.location.href);
     url.searchParams.delete("paid");
     window.history.replaceState({}, "", url.toString());
-  }, [home?.id]);
+  }, [home, t]);
 
   useEffect(() => {
     if (!toast) return;
@@ -86,8 +83,7 @@ function HomeOverview() {
   );
 
   const proById = useMemo(() => new Map(pros.map((p) => [p.id, p])), [pros]);
-  const verifiedCount = equipment.filter((e) => e.source === "pro").length;
-  const addedAppliance = equipment.some((e) => e.source === "homeowner");
+  const addedAppliance = equipment.some((e) => e.source !== "pro");
   const invitedPro = invites.length > 0;
 
   if (guardLoading) return <PageLoader label={t("hi.loadingHome")} />;
@@ -105,45 +101,35 @@ function HomeOverview() {
   return (
     <HomeShell active="overview" homeowner={homeowner} home={home}>
       {celebrate && <Celebration variant="grand" />}
-      <HomePageHead
-        eyebrow={t("hi.myHome")}
-        title={homes.length > 1 ? `My ${homes.length} homes` : home.address}
-        sub={homes.length > 1 ? homes.map((h) => h.address).join(" · ") : t("hi.myHomeSub")}
-      />
-
-      {homes.length > 1 && (
-        <Card className="anim-fade-up mb-6">
-          <Eyebrow accent="indigo">My homes</Eyebrow>
-          <div className="mt-3 space-y-2">
-            {homes.map((h) => {
-              const homeRecords = records.filter((r) => r.home_id === h.id);
-              const homeJobs = jobs.filter((j) => j.home_id === h.id);
-              return (
-                <div
-                  key={h.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="font-semibold text-ink truncate">{h.address}</div>
-                    <div className="text-xs text-muted">
-                      {homeRecords.length} record{homeRecords.length === 1 ? "" : "s"} · {homeJobs.length} visit{homeJobs.length === 1 ? "" : "s"}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+      <section className="anim-fade-up mb-5 overflow-hidden rounded-[28px] border border-indigo/15 bg-gradient-to-br from-indigobg via-paper to-paper shadow-[0_20px_50px_-36px_rgba(71,63,176,0.65)]">
+        <div className="flex items-start gap-4 p-5 sm:p-6">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-indigo text-(--on-accent) shadow-[0_12px_26px_-14px_rgba(71,63,176,0.8)]">
+            <Home size={26} strokeWidth={2.2} aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="eyebrow text-indigo">{t("hi.myHome")}</div>
+            <h1 className="mt-1 text-2xl sm:text-3xl leading-tight tracking-tight text-ink">
+              {home.address}
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{t("hi.myHomeSub")}</p>
           </div>
-        </Card>
-      )}
-
-      <HomeSetupChecklist homeowner={homeowner} />
-
-      {homeowner?.setup_completed_at && (!addedAppliance || !invitedPro) && (
-        <NextStepsCard addedAppliance={addedAppliance} invitedPro={invitedPro} />
-      )}
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-line border-t border-line bg-paper/70">
+          {[
+            [equipment.length, equipment.length === 1 ? t("hi.item.one") : t("hi.item.other")],
+            [pros.length, pros.length === 1 ? t("hi.pro.one") : t("hi.pro.other")],
+            [jobs.length, jobs.length === 1 ? t("hi.visit.one") : t("hi.visit.other")],
+          ].map(([value, label]) => (
+            <div key={String(label)} className="px-2 py-4 text-center">
+              <div className="text-2xl font-extrabold tracking-tight text-ink tnum">{value}</div>
+              <div className="mt-0.5 text-xs font-semibold text-muted">{label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {openInvoices.length > 0 && (
-        <Card className="anim-fade-up mb-6 border-indigo/30">
+        <Card className="anim-fade-up mb-5 border-indigo/30 shadow-[0_16px_36px_-30px_rgba(71,63,176,0.8)]">
           <Eyebrow accent="indigo">{t("hi.amountDue")}</Eyebrow>
           <div className="mt-3 space-y-3">
             {openInvoices.map((inv) => (
@@ -161,21 +147,29 @@ function HomeOverview() {
         </Card>
       )}
 
-      <div className="anim-fade-up mb-6 text-sm text-muted">
-        {equipment.length} {equipment.length === 1 ? t("hi.item.one") : t("hi.item.other")} ·{" "}
-        {pros.length} {pros.length === 1 ? t("hi.pro.one") : t("hi.pro.other")} ·{" "}
-        {jobs.length} {jobs.length === 1 ? t("hi.visit.one") : t("hi.visit.other")}
-        {verifiedCount > 0 && (
-          <>
-            {" · "}
-            <span className="inline-flex items-center gap-1 text-indigo font-semibold">
-              <ShieldCheck size={13} animate={false} /> {t("hi.allVerified")}
-            </span>
-          </>
-        )}
-      </div>
+      <HomeSetupChecklist homeowner={homeowner} />
 
-      <div className="space-y-6">
+      {homeowner?.setup_completed_at && (!addedAppliance || !invitedPro) && (
+        <NextStepsCard addedAppliance={addedAppliance} invitedPro={invitedPro} />
+      )}
+
+      <div className="space-y-5">
+        {nextDue && (
+          <Card className="anim-fade-up !p-5">
+            <Eyebrow accent="indigo">{t("hi.comingUp")}</Eyebrow>
+            <div className="mt-3 text-xl font-bold leading-snug text-ink">{nextDue.what_done}</div>
+            <div className="mt-1 text-sm text-muted">
+              {proById.get(nextDue.pro_id)?.business ?? ""} · {t("hi.due")}{" "}
+              {formatDate(nextDue.next_service_date)}
+            </div>
+            <Link to="/home/reminders" className="mt-4 block">
+              <Btn variant="indigo" size="lg" className="w-full">
+                <Bell size={18} /> {t("hi.allReminders")}
+              </Btn>
+            </Link>
+          </Card>
+        )}
+
         <ActivityCard
           records={records}
           jobs={jobs}
@@ -199,130 +193,60 @@ function HomeOverview() {
           }}
         />
 
-        <Card className="anim-fade-up d-2">
-          <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">{t("hi.onFile")}</Eyebrow>
-            <Link
-              to="/home/add"
-              className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
-            >
-              {t("hi.addSomething")}
-            </Link>
-          </div>
-          {equipment.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">{t("hi.onFileEmpty")}</p>
-          ) : (
-            <div className="mt-3 space-y-2">
-              {equipment.map((e) => (
-                <Link
-                  key={e.id}
-                  to="/home/items/$itemId"
-                  params={{ itemId: e.id }}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
-                >
-                  <div className="min-w-0">
-                    <div className="font-semibold text-ink truncate">{e.type ?? t("hi.equipment")}</div>
-                    <div className="text-xs text-muted truncate">
-                      {[e.make, e.model].filter(Boolean).join(" · ") || t("hi.noDetails")}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {e.source === "pro" ? (
-                      <span className="inline-flex items-center gap-1 text-indigo font-semibold text-xs">
-                        <ShieldCheck size={13} animate={false} /> {t("hi.verified")}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted">{t("hi.selfAdded")}</span>
-                    )}
-                    <ChevronRight size={16} className="text-muted" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {nextDue && (
-          <Card className="anim-fade-up d-3">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="min-w-0">
-                <Eyebrow accent="indigo">{t("hi.comingUp")}</Eyebrow>
-                <div className="mt-2 font-semibold text-ink truncate">{nextDue.what_done}</div>
-                <div className="text-xs text-muted mt-0.5 truncate">
-                  {proById.get(nextDue.pro_id)?.business ?? ""} · {t("hi.due")}{" "}
-                  {formatDate(nextDue.next_service_date)}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Link to="/home/reminders">
-                  <Btn variant="secondary" size="sm">
-                    {t("hi.remindMe")}
-                  </Btn>
-                </Link>
-                <Link
-                  to="/home/reminders"
-                  className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
-                >
-                  {t("hi.allReminders")}
-                </Link>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <Card className="anim-fade-up d-3">
-          <div className="flex items-center justify-between">
-            <Eyebrow accent="indigo">{t("hi.myPros")}</Eyebrow>
-            <Link
-              to="/home/pros"
-              className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
-            >
-              {t("hi.seeAll")}
-            </Link>
-          </div>
-          {pros.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">{t("hi.noProsYet")}</p>
-          ) : (
-            <div className="mt-3 space-y-3">
-              {pros.slice(0, 3).map((p) => {
-                const visits = jobs.filter((j) => j.pro_id === p.id).length;
-                return (
-                  <div key={p.id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar name={p.business} accent="indigo" />
-                      <div className="min-w-0">
-                        <div className="font-semibold text-ink truncate">{p.business}</div>
-                        <div className="text-xs text-muted flex items-center gap-1.5">
-                          <TradeIcon trade={p.trade} size={13} className="text-indigo" />
-                          {tradeLabel(p.trade)} · {visits}{" "}
-                          {visits === 1 ? t("hi.visit.one") : t("hi.visit.other")}
-                        </div>
-                      </div>
-                    </div>
-                    <Link to="/home/pros">
-                      <Btn variant="secondary" size="sm">
-                        {t("hi.rebook")}
-                      </Btn>
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-
-        <InviteProsCard
-          className="anim-fade-up d-4"
-          homeId={home.id}
-          homeownerId={homeownerId}
-          knownTrades={pros.map((p) => p.trade)}
-          prosCount={pros.length}
-          onToast={setToast}
-        />
+        <HomeDestinations />
       </div>
 
       {toast && <Toast>{toast}</Toast>}
     </HomeShell>
+  );
+}
+
+function HomeDestinations() {
+  const items = [
+    {
+      to: "/home/appliances" as const,
+      label: "Appliances",
+      detail: "View equipment and warranties",
+      icon: Wrench,
+    },
+    {
+      to: "/home/pros" as const,
+      label: "My pros",
+      detail: "Rebook or add someone",
+      icon: Users,
+    },
+    {
+      to: "/home/reminders" as const,
+      label: "Reminders",
+      detail: "See upcoming service",
+      icon: Bell,
+    },
+  ];
+
+  return (
+    <Card className="anim-fade-up !p-3">
+      <div className="px-2 pb-2 pt-1">
+        <Eyebrow accent="indigo">Your home</Eyebrow>
+      </div>
+      <div className="space-y-1">
+        {items.map(({ to, label, detail, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className="pressable flex min-h-[76px] items-center gap-4 rounded-[20px] px-3 py-3 hover:bg-soft"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigobg text-indigo">
+              <Icon size={22} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-lg font-bold text-ink">{label}</span>
+              <span className="block text-sm text-muted">{detail}</span>
+            </span>
+            <ChevronRight size={19} className="shrink-0 text-muted" />
+          </Link>
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -393,41 +317,36 @@ function ActivityCard({
           isNew: false,
         };
       });
-    return [...fromRecords, ...fromJobs].slice(0, 8);
+    return [...fromRecords, ...fromJobs].slice(0, 3);
   }, [records, jobs, jobById, proById, onView, t]);
 
   return (
-    <Card className="anim-fade-up d-1">
-      <div className="flex items-center justify-between">
-        <Eyebrow accent="indigo">{t("hi.recentActivity")}</Eyebrow>
-        <Link
-          to="/home/pros"
-          className="text-xs font-semibold text-indigo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded"
-        >
-          {t("hi.seeAll")}
-        </Link>
-      </div>
+    <Card className="anim-fade-up d-1 !p-4 sm:!p-5">
+      <Eyebrow accent="indigo">{t("hi.recentActivity")}</Eyebrow>
       {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">{t("hi.recentEmpty")}</p>
+        <div className="mt-4 rounded-2xl bg-soft px-4 py-8 text-center">
+          <p className="text-sm font-semibold text-ink">{t("hi.recentEmpty")}</p>
+          <p className="mt-1 text-xs text-muted">New service records will appear here.</p>
+        </div>
       ) : (
-        <div className="mt-3 space-y-2">
+        <div className="mt-2 divide-y divide-line">
           {rows.map((row) => {
             const inner = (
               <>
+                <Avatar name={row.proName} accent="indigo" size={44} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <div className="font-semibold text-ink truncate">{row.proName}</div>
+                    <div className="font-bold text-ink truncate">{row.proName}</div>
                     {row.isNew && <Pill accent="coral">{t("hi.new")}</Pill>}
                   </div>
-                  <div className="text-xs text-muted truncate">
-                    {row.what} · {row.when}
-                  </div>
+                  <div className="mt-0.5 text-sm text-muted line-clamp-2">{row.what}</div>
+                  <div className="mt-1 text-xs font-semibold text-muted tnum">{row.when}</div>
                 </div>
                 <ChevronRight size={16} className="text-muted shrink-0" />
               </>
             );
             const cls =
-              "flex items-center justify-between gap-3 rounded-xl bg-paper border border-line px-3 py-3 hover:border-ink/20 hover:shadow-sm transition-all duration-150 text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper";
+              "pressable flex min-h-[76px] items-center gap-3 px-1 py-3.5 text-left w-full hover:bg-soft/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded-xl";
             if (row.href?.to === "/home/records/$recordId") {
               return (
                 <Link
@@ -539,18 +458,22 @@ function NextStepsCard({
     <Card className="anim-fade-up mb-6">
       <Eyebrow accent="indigo">{t("hi.makeComplete")}</Eyebrow>
       <div className="mt-3 space-y-2">
-        <ChecklistRow
-          done={addedAppliance}
-          label={t("hi.addAppliancesTitle")}
-          sub={t("hi.addAppliancesSub")}
-          to="/home/add"
-        />
-        <ChecklistRow
-          done={invitedPro}
-          label={t("hi.inviteProsTitle")}
-          sub={t("hi.inviteProsSub")}
-          to="/home/pros"
-        />
+        {!addedAppliance && (
+          <ChecklistRow
+            done={false}
+            label={t("hi.addAppliancesTitle")}
+            sub={t("hi.addAppliancesSub")}
+            to="/home/add"
+          />
+        )}
+        {!invitedPro && (
+          <ChecklistRow
+            done={false}
+            label={t("hi.inviteProsTitle")}
+            sub={t("hi.inviteProsSub")}
+            to="/home/pros"
+          />
+        )}
       </div>
     </Card>
   );
@@ -571,7 +494,7 @@ function ChecklistRow({
     <Link
       to={to}
       className={`flex items-center gap-3 rounded-2xl border border-line px-4 py-3 transition ${
-        done ? "bg-soft opacity-60" : "bg-white hover:bg-soft"
+        done ? "bg-soft opacity-60" : "bg-paper hover:bg-soft"
       }`}
     >
       <span
@@ -633,11 +556,7 @@ function OnboardingNoHome({
 
   return (
     <>
-      <HomePageHead
-        eyebrow={t("hi.welcome")}
-        title={t("hi.setUp")}
-        sub={t("hi.setUpSub")}
-      />
+      <HomePageHead eyebrow={t("hi.welcome")} title={t("hi.setUp")} sub={t("hi.setUpSub")} />
       <Card className="anim-fade-up">
         <Eyebrow accent="indigo">{t("hi.addYourHome")}</Eyebrow>
         <div className="mt-3 space-y-3">
