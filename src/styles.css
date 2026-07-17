@@ -1007,3 +1007,68 @@ html[data-swipe-dir="right"] ::view-transition-new(tab-content) {
     transform: translateY(100%);
   }
 }
+
+/* Pro portal type bump: everything reads 2px larger (requested for pros in
+   the field). Scoped to the shell via .type-up; named sizes keep their
+   proportional line-height ratios, arbitrary px sizes are mapped by hand.
+   Unlayered on purpose so it wins over the utilities layer. */
+.type-up {
+  font-size: calc(1rem + 2px);
+}
+.type-up :where(.text-xs) {
+  font-size: calc(var(--text-xs) + 2px);
+}
+.type-up :where(.text-sm) {
+  font-size: calc(var(--text-sm) + 2px);
+}
+.type-up :where(.text-base) {
+  font-size: calc(var(--text-base) + 2px);
+}
+.type-up :where(.text-lg) {
+  font-size: calc(var(--text-lg) + 2px);
+}
+.type-up :where(.text-xl) {
+  font-size: calc(var(--text-xl) + 2px);
+}
+.type-up :where(.text-2xl) {
+  font-size: calc(var(--text-2xl) + 2px);
+}
+.type-up :where(.text-3xl) {
+  font-size: calc(var(--text-3xl) + 2px);
+}
+.type-up :where(.text-4xl) {
+  font-size: calc(var(--text-4xl) + 2px);
+}
+.type-up :where(.text-\[10px\]) {
+  font-size: 12px;
+}
+.type-up :where(.text-\[11px\]) {
+  font-size: 13px;
+}
+.type-up :where(.text-\[13px\]) {
+  font-size: 15px;
+}
+.type-up :where(.text-\[14px\]) {
+  font-size: 16px;
+}
+.type-up :where(.text-\[15px\]) {
+  font-size: 17px;
+}
+.type-up :where(.text-\[16px\]) {
+  font-size: 18px;
+}
+.type-up :where(.text-\[17px\]) {
+  font-size: 19px;
+}
+.type-up :where(.text-\[19px\]) {
+  font-size: 21px;
+}
+.type-up :where(.text-\[22px\]) {
+  font-size: 24px;
+}
+.type-up :where(.text-\[26px\]) {
+  font-size: 28px;
+}
+.type-up :where(.text-\[28px\]) {
+  font-size: 30px;
+}

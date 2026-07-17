@@ -223,9 +223,12 @@ function RecordRow({
   flash?: boolean;
 }) {
   const dim = !included;
+  /* One rhythm for every row: fixed label column, left-aligned value that wraps
+     cleanly, and a reserved action slot so the right edge never shifts between
+     rows that can be edited and rows that cannot. */
   return (
     <div
-      className={`flex w-full items-start justify-between gap-3 border-b border-line py-3 transition-colors duration-700 last:border-b-0 ${
+      className={`flex w-full items-start gap-3 border-b border-line py-2.5 transition-colors duration-700 last:border-b-0 ${
         flash ? "rounded-xl bg-indigobg" : ""
       }`}
     >
@@ -235,18 +238,21 @@ function RecordRow({
           onClick={onToggle}
           aria-pressed={included}
           aria-label={`${included ? "Exclude" : "Include"} ${label}`}
-          className="pressable flex min-h-11 shrink-0 items-center gap-2.5 text-left"
+          className="pressable flex min-h-11 w-32 shrink-0 items-center gap-2.5 text-left"
         >
           <CheckSquare on={included} />
-          <span className={`text-base text-muted ${dim ? "opacity-50" : ""}`}>{label}</span>
+          <span className={`min-w-0 truncate text-base text-muted ${dim ? "opacity-50" : ""}`}>
+            {label}
+          </span>
         </button>
       ) : (
         <span
-          className={`flex min-h-11 shrink-0 items-center text-base text-muted ${
+          className={`flex min-h-11 w-32 shrink-0 items-center gap-2.5 text-base text-muted ${
             dim ? "opacity-50" : ""
           }`}
         >
-          {label}
+          <span className="w-5 shrink-0" aria-hidden="true" />
+          <span className="min-w-0 truncate">{label}</span>
         </span>
       )}
       {onEdit ? (
@@ -255,10 +261,10 @@ function RecordRow({
           onClick={onEdit}
           aria-label={`Edit ${label}`}
           title={`Edit ${label}`}
-          className="pressable flex min-h-11 min-w-0 items-center justify-end gap-2 text-right"
+          className="pressable flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left"
         >
           <span
-            className={`min-w-0 text-[15px] font-semibold text-ink font-mono tnum ${
+            className={`min-w-0 flex-1 text-base font-semibold text-ink tnum ${
               dim ? "opacity-50 line-through" : ""
             }`}
           >
@@ -267,12 +273,15 @@ function RecordRow({
           <Pencil size={16} className="shrink-0 text-muted" aria-hidden="true" />
         </button>
       ) : (
-        <span
-          className={`min-w-0 py-3 text-right text-[15px] font-semibold text-ink font-mono tnum ${
-            dim ? "opacity-50 line-through" : ""
-          }`}
-        >
-          {value}
+        <span className="flex min-h-11 min-w-0 flex-1 items-center gap-2">
+          <span
+            className={`min-w-0 flex-1 text-base font-semibold text-ink tnum ${
+              dim ? "opacity-50 line-through" : ""
+            }`}
+          >
+            {value}
+          </span>
+          <span className="w-4 shrink-0" aria-hidden="true" />
         </span>
       )}
     </div>
@@ -3382,8 +3391,8 @@ function NewJob() {
                         <p className="mt-1.5 text-base text-muted">{uiCopy.languageHelp}</p>
                       </>
                     ) : (
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-lg text-muted">
+                      <div className="flex min-h-11 items-center justify-between gap-3">
+                        <p className="min-w-0 text-base text-muted">
                           {uiCopy.language}:{" "}
                           <span className="font-semibold text-ink">
                             {LOCALES.find((l) => l.code === customerLocale)?.label ??
@@ -3426,7 +3435,7 @@ function NewJob() {
                   </div>
 
                   <div
-                    className={`mt-4 border-y px-1 py-3 transition-colors duration-700 ${
+                    className={`mt-4 border-y py-3 transition-colors duration-700 ${
                       missingReviewAddress
                         ? "border-red/30 bg-redbg/50"
                         : aiFlash.has("address")
