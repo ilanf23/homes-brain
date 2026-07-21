@@ -442,12 +442,22 @@ function Login() {
         {step === "pro-password" && (
           <>
             <EmailSummary email={email} onChange={resetToEmail} />
-            <Field label="Password">
+            <Field
+              label={
+                email.trim().toLowerCase() === "appreview@homesbrain.com"
+                  ? "Verification code"
+                  : "Password"
+              }
+            >
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("auth.passwordPlaceholder")}
+                placeholder={
+                  email.trim().toLowerCase() === "appreview@homesbrain.com"
+                    ? "6-digit code"
+                    : t("auth.passwordPlaceholder")
+                }
                 autoComplete="current-password"
                 autoFocus
                 onKeyDown={(e) => {
@@ -455,6 +465,7 @@ function Login() {
                 }}
               />
             </Field>
+
             <ErrorRow err={err} />
             <Btn
               variant="indigo"
