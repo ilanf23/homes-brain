@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 import { useT, type TKey } from "@/lib/i18n";
 import { phIdentify, phReset } from "@/lib/posthog";
+import { registerPushNotifications } from "@/lib/push";
 
 export type HomeownerRow = {
   id: string;
@@ -253,6 +254,11 @@ export function HomeShell({
   useEffect(() => {
     rememberLastPath(routerLocation.pathname + (routerLocation.searchStr || ""));
   }, [routerLocation.pathname, routerLocation.searchStr]);
+  /* Register native push once we have an authenticated homeowner. No-op on web. */
+  useEffect(() => {
+    if (!homeowner?.id) return;
+    registerPushNotifications().catch(() => {});
+  }, [homeowner?.id]);
   const t = useT();
 
   async function signOut() {
