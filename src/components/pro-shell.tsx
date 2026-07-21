@@ -37,6 +37,7 @@ import { BottomSheet } from "@/components/bottom-sheet";
 
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { phIdentify, phReset } from "@/lib/posthog";
+import { registerPushNotifications } from "@/lib/push";
 
 export type ProRow = {
   id: string;
@@ -359,6 +360,11 @@ export function ProShell({
   useEffect(() => {
     rememberLastPath(routerLocation.pathname + (routerLocation.searchStr || ""));
   }, [routerLocation.pathname, routerLocation.searchStr]);
+  /* Register native push once we have an authenticated pro. No-op on web. */
+  useEffect(() => {
+    if (!pro?.id) return;
+    registerPushNotifications().catch(() => {});
+  }, [pro?.id]);
   const [searchOpen, setSearchOpen] = useState(false);
   const t = useT();
 

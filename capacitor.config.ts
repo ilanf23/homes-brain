@@ -3,23 +3,23 @@ import type { CapacitorConfig } from "@capacitor/cli";
 /*
  * Capacitor config for the native iOS/Android wrappers.
  *
- * IMPORTANT: This file does NOT affect the production web build at
- * homesbrain.com. It is only consumed by `npx cap sync` / Xcode / Android
- * Studio during the native build flow (run on a Mac).
+ * Option A: Hosted webview. The native shell loads the live production site
+ * (https://homesbrain.com) directly. `webDir` still has to exist for
+ * `cap sync`, so we ship a minimal branded "Loading…" fallback under
+ * `public/native-shell/`. It is only displayed if the remote URL cannot be
+ * reached; normally the app renders the live site.
  *
- * webDir points at the static SPA bundle that Capacitor packages inside the
- * native app. The current TanStack Start build emits an SSR client bundle
- * to `dist/client` (JS/CSS assets only, no standalone index.html), which is
- * NOT directly wrappable. A dedicated `build:mobile` script that produces a
- * static SPA index.html is still TODO — see the note in the ticket. Until
- * that script exists, running `npx cap sync` will fail with a missing
- * webDir, which is the intended safe default.
+ * This config does NOT affect the production web build at homesbrain.com.
+ * It is only consumed by `npx cap sync` / Xcode / Android Studio during the
+ * native build flow (run on a Mac).
  */
 const config: CapacitorConfig = {
   appId: "com.homesbrain.app",
   appName: "HomesBrain",
-  webDir: "dist/mobile",
+  webDir: "public/native-shell",
   server: {
+    url: "https://homesbrain.com",
+    cleartext: false,
     androidScheme: "https",
     iosScheme: "https",
   },

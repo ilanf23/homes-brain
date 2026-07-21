@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
 import { useT, type TKey } from "@/lib/i18n";
 import { phIdentify, phReset } from "@/lib/posthog";
+import { registerPushNotifications } from "@/lib/push";
 
 export type HomeownerRow = {
   id: string;
