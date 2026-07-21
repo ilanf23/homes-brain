@@ -227,7 +227,7 @@ function Appliances() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigobg text-indigo">
-                    <ApplianceIcon type={a.type} size={24} />
+                    <ApplianceIcon type={a.type ?? undefined} size={24} />
                   </span>
                   {a.source === "pro" ? (
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo">

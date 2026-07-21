@@ -130,7 +130,7 @@ function ItemDetail() {
       <section className="anim-fade-up mb-5 rounded-[28px] border border-line bg-paper p-5 shadow-[0_18px_42px_-36px_rgba(22,22,15,0.7)]">
         <div className="flex items-start gap-4">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-indigobg text-indigo">
-            <ApplianceIcon type={item.type} size={30} />
+            <ApplianceIcon type={item.type ?? undefined} size={30} />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
