@@ -827,6 +827,7 @@ export type Database = {
           plan_status: string
           quickbooks_connected: boolean
           referral_code: string | null
+          referred_by: string | null
           review_requests_on: boolean
           service_area: string | null
           square_connected: boolean
@@ -859,6 +860,7 @@ export type Database = {
           plan_status?: string
           quickbooks_connected?: boolean
           referral_code?: string | null
+          referred_by?: string | null
           review_requests_on?: boolean
           service_area?: string | null
           square_connected?: boolean
@@ -891,6 +893,7 @@ export type Database = {
           plan_status?: string
           quickbooks_connected?: boolean
           referral_code?: string | null
+          referred_by?: string | null
           review_requests_on?: boolean
           service_area?: string | null
           square_connected?: boolean
@@ -902,7 +905,15 @@ export type Database = {
           trades?: string[]
           welcomed_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pros_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       records: {
         Row: {
@@ -1188,6 +1199,16 @@ export type Database = {
         }
         Returns: string
       }
+      referrals_for_me: {
+        Args: never
+        Returns: {
+          business: string
+          has_first_job: boolean
+          pro_id: string
+          signed_up_at: string
+        }[]
+      }
+      set_referrer: { Args: { p_ref: string }; Returns: undefined }
       upsert_home_by_address: {
         Args: {
           p_address: string
