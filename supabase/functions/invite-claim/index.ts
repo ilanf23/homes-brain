@@ -22,7 +22,7 @@ import {
   renderCta,
   renderDetails,
   renderEmailShell,
-  renderFinePrint,
+  renderReassurance,
   renderH1,
   emphasize,
 } from "../_shared/email-shell.ts";
