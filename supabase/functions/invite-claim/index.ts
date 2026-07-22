@@ -724,9 +724,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: `${fromDisplay} <invites@homesbrain.com>`,
         to: [customer.email],
-        subject: (typeof subject_override === "string" && subject_override.trim().length > 0 && subject_override.length <= 200)
-          ? subject_override.trim()
-          : email.subject,
+        subject: email.subject,
         html: email.html,
         text: email.text,
         headers: listUnsubscribeHeaders(unsubToken),
