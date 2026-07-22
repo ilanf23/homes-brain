@@ -2333,6 +2333,7 @@ function NewJob() {
         email: emailAddr,
         phone: phoneAddr,
         consented,
+        hasInvoice: invoiceCreated,
       });
       delivered = delivery.ok;
       deliveredByEmail = delivery.emailOk;
