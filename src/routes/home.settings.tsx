@@ -58,7 +58,9 @@ type DbPrefs = {
   sms_opt_out: boolean;
   respect_quiet_hrs: boolean;
   marketing_consent: boolean;
+  promo_sms_consent: boolean;
 };
+
 
 function HomeownerSettings() {
   const navigate = useNavigate();
