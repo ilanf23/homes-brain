@@ -1,68 +1,79 @@
+# SMS re-enable audit
 
-## Current state (verified)
+## 1. Callers of `send-sms` and email-only paths that should also SMS
 
-The record email is already 90% aligned with the requested design. `supabase/functions/invite-claim/index.ts` renders the notification via `renderEmailShell` and today produces: indigo house-mark header + business + "VIA HOMESBRAIN" eyebrow, H1 "Your home remembers today's service.", intro naming pro + equipment + address, italic "A note from [Pro]" panel (with coral dot accent), Service / Equipment / Next service rows, indigo pill CTA "See what [Business] saved", "One tap opens the record…" fine print, localized subject "[Business] saved today's service record for your home", compliance footer with unsubscribe. All four locales (en/es/ru/uk) are wired.
+**Nobody in the app currently invokes `send-sms`.** The function is live and correct (E.164 normalize → opt-out check → quiet hours 8a–9p ET → Twilio REST) but no code path calls it. Every "delivery" today goes through email edge functions or a `mockSend()` console log.
 
-So this is a **visual polish + hierarchy tightening pass**, not a from-scratch rebuild.
+| Surface | File | Today | SMS path exists? | What flips SMS on |
+|---|---|---|---|---|
+| **Record delivery on job submit** | `src/routes/pro.jobs.new.tsx` → `deliverRecord()` (L1776) invokes `invite-claim` | Email only, if `emailAddr`. If phone-only → `deliveryState="phone_only"` with no send. `sent_sms_at` column is written `null` (L2205). | No — comment L650 says "SMS delivery is not live yet." | Add branch: if no email OR in addition to email, call `send-sms` with the branded claim URL. Requires `sms_consent_at` on the customer or a fresh consent capture on step 1. |
+| **Manual "Send claim invite" from customer detail** | `src/routes/pro.customers.$customerId.tsx` `sendClaimInvite()` L314 | Invokes `invite-claim` (email) | No | Same as above; wire an SMS fallback when customer has phone but no email. |
+| **Rebook nudge** | `src/routes/pro.customers.$customerId.tsx` `sendNudge()` L291 | `mockSend()` only — never leaves the browser | No real send at all | Replace `mockSend` with `send-sms` (phone) OR `send-follow-up` (email). |
+| **"What's next" pro-triggered follow-up** | `supabase/functions/send-follow-up/` — fully built email function, **no frontend caller** | Orphaned | Email only inside the function | Wire a UI trigger (pro.office / pro.dashboard) and add an SMS twin, or extend `send-follow-up` to also fire `send-sms`. |
+| **Homeowner claim / magic link** | `src/routes/login.tsx` → `homeowner-login`, `pro-login`, `password-reset` | Email magic link only | No | Out of scope for A2P LVM per Twilio guidance (OTP is a separate use case). Keep email; do **not** add SMS OTP without a dedicated campaign. |
+| **Invoice created on submit** | `src/routes/pro.jobs.new.tsx` L2246 `createInvoice()` | No notification at all | No | New send: SMS "You have an invoice from {biz}: {link}" (transactional). |
+| **Homeowner reminders (`next_service_date`)** | `src/routes/home.reminders.tsx` renders list; **no scheduler / no send job exists** | Nothing sent | No | Requires a cron edge fn + `send-sms` + `send-follow-up`. New build, not just a flip. |
+| **Invite another pro (homeowner)** | `src/components/invite-pros.tsx` L80 → `invite-pro` | Email only; captures `to_pro_phone` but ignores it (L60, 97 log channel:'sms' but never sends) | Phone field wired to schema only | Extend `invite-pro` (or add sibling send) to also `send-sms` when `to_pro_phone` present. |
+| **`sent_sms_at` bookkeeping** | `records.sent_sms_at` column exists (migrations 20260630, 20260711) and is displayed in pro.office / pro.customers / pro.records | Never written | — | Update to `now()` on successful `send-sms` return. |
 
-## Gaps between current output and the brief
+## 2. Dormant / archived SMS code
 
-1. **Typography**: shell/body use `-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`. Brief asks for Plus Jakarta Sans as the visual system. Email clients cannot load web fonts reliably (Gmail strips `@font-face`, Outlook ignores it). Approach: add Plus Jakarta Sans as the first family in the stack so Apple Mail / iOS / macOS users who have it installed see it, and fall back to the current system stack everywhere else. No `<link>` or `@font-face` (would hurt deliverability and be silently dropped).
-2. **Sender identity "[Business] via HomesBrain"**: the shell header already shows this, but the actual RFC `From:` name is set outside this file (in the send call). Need to confirm the From line reads "[Business] via HomesBrain" and, if not, adjust the `from` string passed to the mail transport. Will verify in the send call site inside `invite-claim/index.ts` (lines 468–689 not yet read).
-3. **Card chrome**: current card is `border-radius:20px` with a 2px solid indigo border. Brief says "rounded 20–22px cards" and "soft rare shadows" — the 2px indigo outline reads as heavier than the fintech-calm aesthetic. Soften to a 1px `#e7e5de` line plus the existing subtle shadow, keeping indigo as ink/CTA only. Bump radius to 22px for parity with in-app cards.
-4. **Intro sentence**: currently one long line. Split so the equipment/service phrase reads more scannably and the address stays emphasized. Keep the same localized template — only change formatting (line-height, small margin), not the string.
-5. **Note panel**: today the eyebrow uses indigo with a coral bullet. Brief wants coral as a *restrained* homeowner accent. Keep the coral dot; keep the eyebrow indigo. No change needed beyond confirming the dot survives Outlook (it's a `&bull;` inside a table cell — safe).
-6. **Details rows**: `renderDetails` uses a `#f7f6f1` panel with rounded 14px. Bump to 16–18px radius and use `#f2f0ea` warm canvas inside the white card for the tonal contrast the brief describes. Tighten label color to `#73706a` (already correct) and value to `#16160f` (already correct).
-7. **CTA**: already indigo `#473fb0`, pill 999px, white text. Increase vertical padding slightly (16px 34px) so it reads as the single hero action. No color change.
-8. **Reassurance line**: already present as `renderFinePrint(copy.oneTap)`. Keep.
-9. **Compliance footer**: already correct (reason, unsubscribe, contact, postal). Do not touch.
+- `supabase/functions/send-sms/index.ts` — production-ready, unused by any caller.
+- `supabase/functions/sms-inbound/index.ts` — Twilio inbound webhook, live, writes `sms_optouts` on STOP/START/HELP. Depends on inbound URL being set on the Messaging Service.
+- `src/routes/sms-opt-in.tsx` — public opt-in proof page for A2P.
+- `src/lib/hb.ts` `mockSend({channel:"sms"})` L344 — used in `pro.customers.$customerId.tsx` sendNudge and elsewhere; only logs to console. Every mockSend SMS call is a real-send candidate.
+- Comment L288 in `pro.jobs.new.tsx`: "No mock SMS - texting is not live yet." — remove after wiring.
+- `home.settings.tsx` (L318, L370) has an SMS notify toggle + hard opt-out toggle already wired to `sms_consent_at` / `sms_opt_out`.
+- `home.setup.tsx` (L79–166) captures SMS consent on setup; already writes `sms_consent_at`.
+- `home.signup.tsx` (L79–85) captures SMS consent at signup.
 
-## Files to change
+## 3. Consent model
 
-- `supabase/functions/_shared/email-shell.ts`
-  - Prepend `"Plus Jakarta Sans"` to every font stack in the file.
-  - Change card border from `2px solid #473fb0` to `1px solid #e7e5de`; bump `border-radius` 20→22.
-  - Bump CTA padding from `14px 32px` to `16px 34px`.
-  - Bump `renderDetails` panel radius 14→18 and background `#f7f6f1`→`#f2f0ea` with border `#e7e5de`.
-- `supabase/functions/invite-claim/index.ts`
-  - Confirm/adjust the `from` header (lines 468–689) to "[Business] via HomesBrain <sender@…>".
-  - Bump `renderNotePanel` radius 16→18, background `#f7f6f1`→`#f2f0ea`, border to `#e7e5de`, and add Plus Jakarta to its inline font stacks.
-  - No copy changes; all four locales stay as-is.
+**Homeowner (portal users):**
+- `homeowners.sms_consent_at timestamptz` (migration 20260713225037) — timestamped opt-in captured at signup / setup / settings.
+- `homeowners.sms_opt_out boolean` — hard block set from settings.
+- `homeowners.notify_sms boolean` + `respect_quiet_hrs boolean` (migration 20260706200124) — per-notification preferences updated via `homeowner_update_profile`.
+- `homeowners.marketing_consent boolean` + `consent_at` — separate marketing gate.
 
-## Missing data fields
+**Customer (pro-entered contacts, no portal yet):**
+- `customers.consent_at`, `customers.consent_ref` — the pro checks a consent box on job step 1 (`pro.jobs.new.tsx` L2033). This is the **transactional** consent for the record they just performed.
+- No `sms_consent_at` on customers today. A pro-captured phone with `consent_at` covers the transactional record notification under the "service update to the customer you just served" pattern; anything recurring/marketing needs an explicit SMS opt-in captured through the branded record on first claim.
 
-- **Pro first name**: not stored. Brief allows "[Pro or business]"; current code uses `business` everywhere, which is correct and consistent.
-- **Business logo**: fetched but intentionally not rendered in header (design uses the indigo house mark). No change.
-- **Address, equipment, next_service_date, what_done**: all already available in the query.
+**Opt-out plumbing:**
+- `sms_optouts` table (migration 20260713171450) written by `sms-inbound` on STOP.
+- `is_sms_opted_out(p_phone)` RPC used by `send-sms` before every send.
+- `email_optouts` + `email_unsub_tokens` mirror this on the email side.
 
-No new DB fields or migrations required.
+**Quiet hours:** hardcoded 8a–9p America/New_York in `send-sms` regardless of `respect_quiet_hrs` prefs. Currently a floor, not a preference.
 
-## Email-client compatibility risks
+**Transactional vs promotional under the approved LVM-Mixed campaign:**
+- **Transactional (safe under existing customer/homeowner consent):** record delivery on job send, claim invite from customer detail, invoice notification, reminder for a `next_service_date` the pro entered, pro-triggered follow-up.
+- **Promotional / marketing (needs explicit SMS opt-in via `sms_consent_at`):** rebook nudge without a scheduled date, review requests, seasonal blasts, "invite your other pros" prompts.
 
-- **Plus Jakarta Sans not installed on recipient device** → silent fallback to `-apple-system`/Segoe UI/Arial. Acceptable and expected.
-- **Outlook (Windows, MSO)**: rounded corners on the card and CTA render as square. Already true today; no regression. Colors and layout stay correct because everything is table-based + inline CSS.
-- **Gmail app on Android**: strips `class` attributes but keeps inline styles. `notranslate` class on brand still works because Gmail also honors `translate="no"`.
-- **Dark-mode inversion (Apple Mail, Outlook.com)**: warm cream `#f2f0ea` may be inverted. Not fixing in this pass (out of scope, and today's email has the same behavior).
-- **Web-font `@font-face`**: not being added — avoids the Gmail-strips-styles risk and keeps the message body under Gmail's 102KB clipping threshold.
+## 4. Prioritized re-enable list
 
-## Locale, security, deliverability, compliance
+**P0 — highest ROI, lowest risk, transactional, consent already exists (`customers.consent_at`):**
+1. **Record delivery SMS** in `pro.jobs.new.tsx deliverRecord()`. When phone present + no email OR pro chose SMS: `send-sms` with `${biz} sent your service record: ${claimUrl} Reply STOP to opt out.` Update `records.sent_sms_at`. Kills the "phone_only" dead-end.
+2. **Manual claim-invite fallback** in `pro.customers.$customerId.tsx sendClaimInvite()`. Same wire as #1 for phone-only customers.
+3. **Invoice-created notification.** Uses phone if present. Transactional.
 
-- All four `EMAIL_COPY` entries stay byte-identical; no string touched.
-- `renderEmailShell` continues to escape via `esc` + `protectBrand`; no new user-controlled HTML paths introduced.
-- `unsubUrl`, `listUnsubscribeHeaders`, `isEmailOptedOut`, daily-limit, token minting, and CAN-SPAM footer are untouched.
-- SPF/DKIM/DMARC unaffected — only inline HTML/CSS changes.
-- Plain-text mirror unchanged.
+**P1 — transactional, tiny new surface:**
+4. **Rebook nudge** in `pro.customers.$customerId.tsx sendNudge()`. Only when a `next_service_date` exists — that qualifies as transactional service reminder. Replace `mockSend` with real `send-sms`. Nudges without a scheduled date should stay email until SMS marketing opt-in is captured.
+5. **Wire `send-follow-up` into pro.office/pro.dashboard** and add SMS twin. Function exists, no UI trigger — cheap win.
+6. **Reminder scheduler (cron edge fn)** for `jobs.next_service_date` → `send-sms` + email 7d before. New build; not a flip. Guard by homeowner `notify_sms && !sms_opt_out`.
 
-## Implementation plan (build-mode steps)
+**P2 — needs explicit SMS opt-in first:**
+7. **Homeowner "invite your other pros" SMS** (`invite-pro`) — capture SMS consent on the invite form before sending.
+8. **Review-ask SMS** to customer — needs `customers.sms_consent_at` captured on the branded record before first claim.
+9. **Marketing/seasonal blasts** — separate campaign classification; do not send under LVM-Mixed without legal review.
 
-1. Read lines 468–689 of `invite-claim/index.ts` to confirm the `from` header format; adjust only if it isn't already "[Business] via HomesBrain".
-2. Edit `_shared/email-shell.ts`:
-   - Extract font stack into a single constant `FONT_STACK = "'Plus Jakarta Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"` and reference it in every inline `font-family`.
-   - Card: `border:1px solid #e7e5de; border-radius:22px;`.
-   - CTA: `padding:16px 34px;`.
-   - `renderDetails` panel: `background:#f2f0ea; border:1px solid #e7e5de; border-radius:18px;`.
-3. Edit `invite-claim/index.ts` `renderNotePanel` only: same font-stack constant (local copy), `background:#f2f0ea; border-radius:18px; border:1px solid #e7e5de;` on the outer table; keep the coral bullet and indigo eyebrow.
-4. Deploy `invite-claim` edge function.
-5. Send a test record to `appreview@homesbrain.com` (or the reviewer's inbox) and open in Gmail web, Gmail iOS, Apple Mail, Outlook.com to confirm rendering; check one non-English locale (es) as well.
+**Do NOT re-enable without a separate campaign / plan:**
+- SMS magic-link / OTP for `pro-login` / `homeowner-login` / `password-reset`. Requires a dedicated OTP use case with Twilio and separate consent copy.
 
-No other files, no schema changes, no shared-shell contract changes for other emails (they'll pick up the softer chrome automatically, which is desirable and consistent with the brief).
+## Cross-cutting items before flipping anything
+
+- Every real SMS body must include `Reply STOP to opt out` and the business identity (Twilio LVM-Mixed requirement).
+- Wire `sent_sms_at` updates so the pro-side UI reflects actual delivery.
+- Honor `homeowners.respect_quiet_hrs` — either use it to widen/narrow the hardcoded 8a–9p window or drop the pref if we standardize on the function-level window.
+- Add explicit consent capture on the branded record page ("Text me updates about my home") before enabling anything marked P2.
+- Verify Twilio Messaging Service inbound webhook is pointed at `sms-inbound` in production so STOP replies actually land in `sms_optouts`.
