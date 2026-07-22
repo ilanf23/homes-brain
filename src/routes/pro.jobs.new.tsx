@@ -1777,7 +1777,7 @@ function NewJob() {
   async function deliverRecord(
     customerId: string,
     recordId: string,
-    opts: { email: string; phone: string; consented: boolean },
+    opts: { email: string; phone: string; consented: boolean; hasInvoice?: boolean },
   ) {
     let emailOk = false;
     let smsOk = false;
@@ -1866,7 +1866,9 @@ function NewJob() {
     //    A2P 10DLC requirements.
     if (opts.phone && opts.consented && claimUrl) {
       const businessName = pro?.business?.trim() || "Your service pro";
-      const body = `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
+      const body = opts.hasInvoice
+        ? `${businessName} sent you a service record + invoice: ${claimUrl}\nReply STOP to opt out.`
+        : `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
       const res = await sendSms(opts.phone, body, "claim_invite");
       if (res.ok) {
         smsOk = true;
@@ -2292,6 +2294,7 @@ function NewJob() {
     // invoice tied to this job so the homeowner can pay through /home.
     const chargeNum = parseFloat(chargeAmount);
     setBilledAmount(null);
+    let invoiceCreated = false;
     if (Number.isFinite(chargeNum) && chargeNum > 0) {
       const inv = await createInvoice({
         proId,
@@ -2300,8 +2303,10 @@ function NewJob() {
         jobId: job.id,
         items: [{ description: work, amount: chargeNum }],
       });
-      if (inv) setBilledAmount(chargeNum);
-      else setBillingError("The job was saved, but the invoice could not be created.");
+      if (inv) {
+        setBilledAmount(chargeNum);
+        invoiceCreated = true;
+      } else setBillingError("The job was saved, but the invoice could not be created.");
     }
 
     // Consent is captured on job step 1 for every new customer; for a dedupe
@@ -2328,6 +2333,7 @@ function NewJob() {
         email: emailAddr,
         phone: phoneAddr,
         consented,
+        hasInvoice: invoiceCreated,
       });
       delivered = delivery.ok;
       deliveredByEmail = delivery.emailOk;
@@ -2364,14 +2370,10 @@ function NewJob() {
         });
       }
 
-      // Optional invoice SMS: transactional "your invoice is ready" text sent
-      // only when we actually charged AND we have phone + consent + a claim
-      // URL to point them at. Homeowner pays through /home from that link.
-      if (billedAmount != null && phoneAddr && consented && deliveryClaimUrl) {
-        const businessName = pro?.business?.trim() || "Your service pro";
-        const invoiceBody = `${businessName}: your invoice is ready — ${deliveryClaimUrl}\nReply STOP to opt out.`;
-        void sendSms(phoneAddr, invoiceBody, "other");
-      }
+      // Invoice notification is merged into the record SMS above (single text
+      // with combined "service record + invoice" wording) so the homeowner
+      // never receives two back-to-back messages pointing at the same URL.
+
     } else if (emailAddr) {
       setDeliveryState("send_failed");
     } else if (phoneAddr && !consented) {
