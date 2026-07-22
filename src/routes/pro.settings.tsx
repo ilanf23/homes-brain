@@ -69,11 +69,13 @@ type ProPrefs = {
   notify_email: boolean;
   notify_sms: boolean;
   review_requests_on: boolean;
+  promo_sms_consent: boolean;
   stripe_account_id: string | null;
   stripe_charges_enabled: boolean;
   stripe_payouts_enabled: boolean;
   stripe_details_submitted: boolean;
 };
+
 
 /* One tappable hub row: icon tile, plain-words label, current value, chevron. */
 function HubRow({
@@ -168,7 +170,7 @@ function ProSettings() {
       const { data } = await supabase
         .from("pros")
         .select(
-          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted",
+          "email,phone,notify_email,notify_sms,review_requests_on,promo_sms_consent,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted",
         )
         .eq("id", proId)
         .maybeSingle();
@@ -248,23 +250,29 @@ function ProSettings() {
   /* Optimistic toggle: flip first, revert on failure. Silent on success -
      the switch itself is the feedback. */
   async function setPref(
-    key: "notify_email" | "notify_sms" | "review_requests_on",
+    key: "notify_email" | "notify_sms" | "review_requests_on" | "promo_sms_consent",
     value: boolean,
   ) {
     if (!prefs) return;
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
     setPrefErr(null);
+    const patch: Record<string, unknown> = { [key]: value };
+    if (key === "promo_sms_consent") {
+      patch.promo_sms_consent_at = value ? new Date().toISOString() : null;
+    }
     const { data, error } = await supabase
       .from("pros")
-      .update({ [key]: value } as Partial<Record<typeof key, boolean>>)
+      .update(patch as never)
       .eq("id", proId!)
       .select("id");
+
     if (error || !data?.length) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
     }
   }
+
 
   const referralLink =
     typeof window === "undefined"
@@ -481,11 +489,21 @@ function ProSettings() {
                   label="Email notifications"
                 />
               </SettingRow>
-              <SettingRow label="Text messages" sub="Alerts by SMS">
+              <SettingRow label="Text messages" sub="Service alerts by SMS">
                 <Toggle
                   checked={prefs.notify_sms}
                   onChange={(v) => setPref("notify_sms", v)}
                   label="SMS notifications"
+                />
+              </SettingRow>
+              <SettingRow
+                label="Promotional texts"
+                sub="Tips, product updates, and occasional offers by SMS. Message and data rates may apply. Reply STOP to opt out."
+              >
+                <Toggle
+                  checked={prefs.promo_sms_consent}
+                  onChange={(v) => setPref("promo_sms_consent", v)}
+                  label="Promotional SMS"
                 />
               </SettingRow>
             </>
@@ -497,11 +515,13 @@ function ProSettings() {
           )}
           {prefErrBox}
           <p className="mt-3 text-xs text-muted">
-            Delivery is mocked until SMS compliance clears. Your preferences persist now.
+            Service texts require a phone number on your profile. Promotional texts are off by
+            default and only sent if you opt in.
           </p>
         </Card>
       </SectionScreen>
     ),
+
 
     reviews: (
       <SectionScreen
