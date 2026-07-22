@@ -58,7 +58,9 @@ type DbPrefs = {
   sms_opt_out: boolean;
   respect_quiet_hrs: boolean;
   marketing_consent: boolean;
+  promo_sms_consent: boolean;
 };
+
 
 function HomeownerSettings() {
   const navigate = useNavigate();
@@ -111,6 +113,7 @@ function HomeownerSettings() {
     const ho = homeowner as unknown as DbPrefs & {
       notify_email: boolean;
       sms_consent_at?: string | null;
+      promo_sms_consent?: boolean;
     };
     setPrefs({
       notify_email: ho.notify_email ?? true,
@@ -118,8 +121,10 @@ function HomeownerSettings() {
       sms_opt_out: ho.sms_opt_out ?? false,
       respect_quiet_hrs: ho.respect_quiet_hrs ?? true,
       marketing_consent: ho.marketing_consent ?? false,
+      promo_sms_consent: ho.promo_sms_consent ?? false,
     });
   }, [homeowner]);
+
 
   useEffect(() => {
     // Distinct-pro count from hook jobs.
@@ -173,8 +178,10 @@ function HomeownerSettings() {
       p_sms_opt_out?: boolean;
       p_respect_quiet_hrs?: boolean;
       p_marketing_consent?: boolean;
+      p_promo_sms_consent?: boolean;
     };
     const { error } = await supabase.rpc("homeowner_update_profile", params);
+
     if (error) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
@@ -506,16 +513,51 @@ function HomeownerSettings() {
               sub="Anyone with a record link can view that job. Sharing controls come later."
             />
             {prefs ? (
-              <SettingRow label="Product news" sub="Occasional updates and offers. Off by default.">
-                <Toggle
-                  checked={prefs.marketing_consent}
-                  onChange={(v) => setPref("marketing_consent", v)}
-                  label="Marketing consent"
-                />
-              </SettingRow>
+              <>
+                <SettingRow
+                  label="Product news (email)"
+                  sub="Occasional updates and offers by email. Off by default."
+                >
+                  <Toggle
+                    checked={prefs.marketing_consent}
+                    onChange={(v) => setPref("marketing_consent", v)}
+                    label="Marketing consent"
+                  />
+                </SettingRow>
+                <SettingRow
+                  label="Promotional texts"
+                  sub={
+                    prefs.promo_sms_consent
+                      ? "You'll get occasional offers by text. Reply STOP any time."
+                      : "Off by default. Opt in to get occasional offers by text."
+                  }
+                >
+                  <Toggle
+                    checked={prefs.promo_sms_consent}
+                    onChange={(v) => setPref("promo_sms_consent", v)}
+                    label="Promotional SMS consent"
+                    accent="coral"
+                  />
+                </SettingRow>
+                <p className="px-1 pb-3 -mt-1 text-xs text-muted leading-relaxed">
+                  By turning this on, I agree to receive recurring automated promotional text
+                  messages from HomesBrain at the mobile number on my profile. Consent is not a
+                  condition of any purchase or service. Msg &amp; data rates may apply. Message
+                  frequency varies. Reply STOP to opt out, HELP for help. See our{" "}
+                  <Link to="/privacy" className="font-semibold text-indigo hover:underline">
+                    Privacy Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/messaging-terms" className="font-semibold text-indigo hover:underline">
+                    Messaging Terms
+                  </Link>
+                  .
+                </p>
+              </>
             ) : (
               <Skeleton className="h-10 w-full my-2" />
             )}
+
             <DeleteAccountRow actor={`homeowner:${homeownerId}`} onDeleted={signOut} />
           </div>
         </SettingsSection>
