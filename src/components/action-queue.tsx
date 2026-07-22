@@ -130,20 +130,34 @@ export function ActionQueue({
     const c = row.home.customer;
     if (!c || (!c.phone && !c.email)) return;
     setBusy(row.key);
-    const body = `Hi ${c.name.split(" ")[0]}, it's ${proBusiness}. Your service record for ${row.home.address} is waiting for you on HomesBrain. Claim your home to keep its history forever.`;
-    await mockSend({
-      channel: c.phone ? "sms" : "email",
-      to: c.phone ?? c.email ?? "",
-      body,
-      kind: "record",
-    });
+    const firstName = c.name.split(" ")[0] || "there";
+    let deliveredVia: "sms" | "email" | null = null;
+    let failMsg: string | null = null;
+    if (c.phone) {
+      const body = `Hi ${firstName}, it's ${proBusiness}. Your service record for ${row.home.address} is waiting on HomesBrain. Claim your home to keep its history forever. Reply STOP to opt out.`;
+      const res = await sendSms(c.phone, body, "record");
+      if (res.ok) deliveredVia = "sms";
+      else failMsg = smsErrorMessage(res.code);
+    }
+    if (!deliveredVia && c.email) {
+      // No phone available (or SMS failed) - fall back to email invite.
+      const { data } = await supabase.functions.invoke("invite-claim", {
+        body: { home_id: row.home.homeId, origin: window.location.origin },
+      });
+      if ((data as { ok?: boolean } | null)?.ok) deliveredVia = "email";
+    }
     await logEvent(`pro:${proId}`, "claim_nudge_sent", {
       home_id: row.home.homeId,
       customer_id: c.id,
+      via: deliveredVia,
     });
-    setDone((prev) => new Set(prev).add(row.key));
     setBusy(null);
-    onToast(`Claim reminder sent to ${c.name} (mock)`);
+    if (!deliveredVia) {
+      onToast(failMsg ?? "Reminder didn't go through. Try again.");
+      return;
+    }
+    setDone((prev) => new Set(prev).add(row.key));
+    onToast(`Claim reminder sent to ${c.name} by ${deliveredVia === "sms" ? "text" : "email"}.`);
   }
 
   return (
