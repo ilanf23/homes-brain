@@ -1777,7 +1777,7 @@ function NewJob() {
   async function deliverRecord(
     customerId: string,
     recordId: string,
-    opts: { email: string; phone: string; consented: boolean },
+    opts: { email: string; phone: string; consented: boolean; hasInvoice?: boolean },
   ) {
     let emailOk = false;
     let smsOk = false;
