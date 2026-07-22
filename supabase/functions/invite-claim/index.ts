@@ -116,15 +116,18 @@ type EmailCopy = {
   subject: (business: string) => string;
   title: string;
   intro: (business: string, address: string, eqPhrase: string | null) => string;
+  valueSentence: (hasEquipment: boolean, hasNext: boolean) => string;
   yourHome: string;
-  noteFrom: (business: string) => string;
+  noteFrom: (name: string) => string;
   service: string;
   equipment: string;
   nextService: string;
-  cta: (business: string) => string;
+  homeService: string;
+  equipmentServiceSuffix: string; // e.g. "service" -> "Refrigerator service"
+  cta: string;
   tagline: string;
   via: string;
-  oneTap: string;
+  reassurance: string;
   reason: (business: string, address: string) => string;
   footer: ComplianceFooterCopy;
 };
@@ -138,17 +141,29 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     title: "Your home remembers today's service.",
     intro: (business, address, eqPhrase) =>
       `${business || "Your pro"} created a permanent record after servicing ${eqPhrase || "your home"} at ${address}.`,
+    valueSentence: (hasEquipment, hasNext) => {
+      if (hasEquipment && hasNext) {
+        return "Your service history, equipment details, and next recommended visit are now saved in one place.";
+      }
+      if (hasEquipment) {
+        return "Your service history and equipment details are now saved in one place.";
+      }
+      if (hasNext) {
+        return "Your service history and next recommended visit are now saved in one place.";
+      }
+      return "Your service history is now saved in one place.";
+    },
     yourHome: "your home",
-    noteFrom: (business) => `A note from ${business || "your pro"}`,
+    noteFrom: (name) => `A note from ${name || "your pro"}`,
     service: "Service",
     equipment: "Equipment",
     nextService: "Next service",
-    cta: (business) =>
-      business ? `See what ${business} saved` : `See your record`,
+    homeService: "Home service",
+    equipmentServiceSuffix: "service",
+    cta: "View today's home record",
     tagline: "Every visit builds your home's living record. Free for life.",
     via: "via HomesBrain",
-    oneTap:
-      "One tap opens the record. It's free, private, and yours for life.",
+    reassurance: "Free, private, and yours for life.",
     reason: (business, address) =>
       `You're receiving this because ${business || "your pro"} services your home at ${address}. HomesBrain hosts the record on their behalf.`,
     footer: {
@@ -166,18 +181,30 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     title: "Tu hogar recuerda el servicio de hoy.",
     intro: (business, address, eqPhrase) =>
       `${business || "Tu profesional"} creó un registro permanente después de dar servicio a ${eqPhrase || "tu hogar"} en ${address}.`,
+    valueSentence: (hasEquipment, hasNext) => {
+      if (hasEquipment && hasNext) {
+        return "Tu historial de servicio, los detalles del equipo y la próxima visita recomendada quedan guardados en un solo lugar.";
+      }
+      if (hasEquipment) {
+        return "Tu historial de servicio y los detalles del equipo quedan guardados en un solo lugar.";
+      }
+      if (hasNext) {
+        return "Tu historial de servicio y la próxima visita recomendada quedan guardados en un solo lugar.";
+      }
+      return "Tu historial de servicio queda guardado en un solo lugar.";
+    },
     yourHome: "tu hogar",
-    noteFrom: (business) => `Una nota de ${business || "tu profesional"}`,
+    noteFrom: (name) => `Una nota de ${name || "tu profesional"}`,
     service: "Servicio",
     equipment: "Equipo",
     nextService: "Próximo servicio",
-    cta: (business) =>
-      business ? `Ver lo que ${business} guardó` : `Ver tu registro`,
+    homeService: "Servicio en el hogar",
+    equipmentServiceSuffix: "servicio",
+    cta: "Ver el registro de hoy",
     tagline:
       "Cada visita construye el historial vivo de tu hogar. Gratis de por vida.",
     via: "a través de HomesBrain",
-    oneTap:
-      "Un toque abre el registro. Es gratis, privado y tuyo de por vida.",
+    reassurance: "Gratis, privado y tuyo de por vida.",
     reason: (business, address) =>
       `Recibes este correo porque ${business || "tu profesional"} presta servicio a tu hogar en ${address}. HomesBrain aloja el registro en su nombre.`,
     footer: {
@@ -195,18 +222,30 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     title: "Ваш дом помнит сегодняшнее обслуживание.",
     intro: (business, address, eqPhrase) =>
       `${business || "Ваш специалист"} создал постоянную запись после обслуживания ${eqPhrase || "вашего дома"} по адресу ${address}.`,
+    valueSentence: (hasEquipment, hasNext) => {
+      if (hasEquipment && hasNext) {
+        return "История обслуживания, характеристики оборудования и следующий рекомендуемый визит теперь собраны в одном месте.";
+      }
+      if (hasEquipment) {
+        return "История обслуживания и характеристики оборудования теперь собраны в одном месте.";
+      }
+      if (hasNext) {
+        return "История обслуживания и следующий рекомендуемый визит теперь собраны в одном месте.";
+      }
+      return "История обслуживания теперь собрана в одном месте.";
+    },
     yourHome: "вашего дома",
-    noteFrom: (business) => `Заметка от ${business || "вашего специалиста"}`,
+    noteFrom: (name) => `Заметка от ${name || "вашего специалиста"}`,
     service: "Услуга",
     equipment: "Оборудование",
     nextService: "Следующее обслуживание",
-    cta: (business) =>
-      business ? `Посмотреть, что сохранил ${business}` : `Открыть запись`,
+    homeService: "Обслуживание дома",
+    equipmentServiceSuffix: "обслуживание",
+    cta: "Открыть сегодняшнюю запись",
     tagline:
       "Каждый визит дополняет живую историю вашего дома. Бесплатно навсегда.",
     via: "через HomesBrain",
-    oneTap:
-      "Одно нажатие открывает запись. Бесплатно, приватно и навсегда ваше.",
+    reassurance: "Бесплатно, приватно и навсегда ваше.",
     reason: (business, address) =>
       `Вы получили это письмо, потому что ${business || "ваш специалист"} обслуживает ваш дом по адресу ${address}. HomesBrain хранит запись от имени компании.`,
     footer: {
@@ -224,18 +263,30 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     title: "Ваш дім пам'ятає сьогоднішнє обслуговування.",
     intro: (business, address, eqPhrase) =>
       `${business || "Ваш фахівець"} створив постійний запис після обслуговування ${eqPhrase || "вашого дому"} за адресою ${address}.`,
+    valueSentence: (hasEquipment, hasNext) => {
+      if (hasEquipment && hasNext) {
+        return "Історія обслуговування, характеристики обладнання та наступний рекомендований візит тепер зібрані в одному місці.";
+      }
+      if (hasEquipment) {
+        return "Історія обслуговування та характеристики обладнання тепер зібрані в одному місці.";
+      }
+      if (hasNext) {
+        return "Історія обслуговування та наступний рекомендований візит тепер зібрані в одному місці.";
+      }
+      return "Історія обслуговування тепер зібрана в одному місці.";
+    },
     yourHome: "вашого дому",
-    noteFrom: (business) => `Нотатка від ${business || "вашого фахівця"}`,
+    noteFrom: (name) => `Нотатка від ${name || "вашого фахівця"}`,
     service: "Послуга",
     equipment: "Обладнання",
     nextService: "Наступне обслуговування",
-    cta: (business) =>
-      business ? `Подивитись, що зберіг ${business}` : `Відкрити запис`,
+    homeService: "Обслуговування дому",
+    equipmentServiceSuffix: "обслуговування",
+    cta: "Відкрити сьогоднішній запис",
     tagline:
       "Кожен візит доповнює живу історію вашого дому. Безкоштовно назавжди.",
     via: "через HomesBrain",
-    oneTap:
-      "Одне натискання відкриває запис. Безкоштовно, приватно й назавжди ваше.",
+    reassurance: "Безкоштовно, приватно й назавжди ваше.",
     reason: (business, address) =>
       `Ви отримали цей лист, тому що ${business || "ваш фахівець"} обслуговує ваш дім за адресою ${address}. HomesBrain зберігає запис від імені компанії.`,
     footer: {
