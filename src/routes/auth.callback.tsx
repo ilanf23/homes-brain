@@ -78,6 +78,8 @@ function AuthCallback() {
           pending!.owner_first_name?.trim() ||
           (user.user_metadata?.full_name?.toString().split(" ")[0] ?? null) ||
           null;
+        const promoOn = !!pending!.promo_sms_consent;
+        const phoneVal = pending!.phone?.trim() || null;
         const { data: inserted, error: insertErr } = await supabase
           .from("pros")
           .insert({
@@ -86,11 +88,15 @@ function AuthCallback() {
             trade: pending!.trade || null,
             service_area: pending!.service_area?.trim() || null,
             email: user.email ?? null,
+            phone: phoneVal,
             plan: "free",
             owner_first_name: firstName,
-          })
+            promo_sms_consent: promoOn,
+            promo_sms_consent_at: promoOn ? new Date().toISOString() : null,
+          } as never)
           .select("id,business,trade,service_area")
           .single();
+
         localStorage.removeItem("hb_pending_pro_signup");
         if (!insertErr && inserted) {
           await logEvent(`pro:${inserted.id}`, "pro_signed_up", {
