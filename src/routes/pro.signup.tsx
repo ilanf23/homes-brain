@@ -76,6 +76,9 @@ function ProSignup() {
   async function sendMagicLink() {
     setSubmitting(true);
     setErr(null);
+    // Persist phone + promo-SMS consent so /claim/:token can apply them
+    // to the pros row once the magic link creates a session.
+    stashPending({ intent: "pro", owner_first_name: firstName.trim() || null });
     const { data, error } = await supabase.functions.invoke("pro-login", {
       body: {
         email: email.trim(),
@@ -106,6 +109,7 @@ function ProSignup() {
     setSentTo(email.trim());
     setSubmitting(false);
   }
+
 
   async function continueWithGoogle() {
     setGoogleBusy(true);
