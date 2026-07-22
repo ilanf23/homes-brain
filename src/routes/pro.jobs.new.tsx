@@ -2294,6 +2294,7 @@ function NewJob() {
     // invoice tied to this job so the homeowner can pay through /home.
     const chargeNum = parseFloat(chargeAmount);
     setBilledAmount(null);
+    let invoiceCreated = false;
     if (Number.isFinite(chargeNum) && chargeNum > 0) {
       const inv = await createInvoice({
         proId,
@@ -2302,8 +2303,10 @@ function NewJob() {
         jobId: job.id,
         items: [{ description: work, amount: chargeNum }],
       });
-      if (inv) setBilledAmount(chargeNum);
-      else setBillingError("The job was saved, but the invoice could not be created.");
+      if (inv) {
+        setBilledAmount(chargeNum);
+        invoiceCreated = true;
+      } else setBillingError("The job was saved, but the invoice could not be created.");
     }
 
     // Consent is captured on job step 1 for every new customer; for a dedupe
