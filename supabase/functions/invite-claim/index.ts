@@ -114,19 +114,16 @@ function equipmentLine(
 
 type EmailCopy = {
   subject: (business: string) => string;
-  addedAt: (business: string, address: string) => string;
-  record: string;
-  address: string;
-  work: string;
+  title: string;
+  intro: (business: string, address: string, eqPhrase: string | null) => string;
+  yourHome: string;
+  noteFrom: (business: string) => string;
+  service: string;
   equipment: string;
-  warranty: string;
-  warrantyThrough: (date: string) => string;
-  openHome: string;
-  claimRecord: string;
+  nextService: string;
+  cta: (business: string) => string;
   tagline: string;
   via: string;
-  title: (business: string) => string;
-  description: (business: string) => string;
   oneTap: string;
   reason: (business: string, address: string) => string;
   footer: ComplianceFooterCopy;
@@ -136,28 +133,22 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   en: {
     subject: (business) =>
       business
-        ? `${business} added a service record for your home`
-        : `You have a new service record`,
-    addedAt: (business, address) =>
-      `${business} added a new service record to your home at ${address}.`,
-    record: "Record",
-    address: "Address",
-    work: "Work done",
+        ? `${business} saved today's service record for your home`
+        : `Your service record is ready`,
+    title: "Your home remembers today's service.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Your pro"} created a permanent record after servicing ${eqPhrase || "your home"} at ${address}.`,
+    yourHome: "your home",
+    noteFrom: (business) => `A note from ${business || "your pro"}`,
+    service: "Service",
     equipment: "Equipment",
-    warranty: "Warranty",
-    warrantyThrough: (date) => `Warranty through ${date}`,
-    openHome: "Add record",
-    claimRecord: "Add record",
+    nextService: "Next service",
+    cta: (business) =>
+      business ? `See what ${business} saved` : `See your record`,
     tagline: "Every visit builds your home's living record. Free for life.",
     via: "via HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} added a service record for your home`
-        : `You have a new service record`,
-    description: (business) =>
-      `${business || "Your pro"} added a new record to your home. It's saved to your address for life. Free.`,
     oneTap:
-      "One tap opens your record and signs you in. This link only works from your inbox.",
+      "One tap opens the record. It's free, private, and yours for life.",
     reason: (business, address) =>
       `You're receiving this because ${business || "your pro"} services your home at ${address}. HomesBrain hosts the record on their behalf.`,
     footer: {
@@ -170,29 +161,23 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   es: {
     subject: (business) =>
       business
-        ? `${business} agregó un registro de servicio para tu hogar`
-        : `Tienes un nuevo registro de servicio`,
-    addedAt: (business, address) =>
-      `${business} agregó un nuevo registro de servicio para tu hogar en ${address}.`,
-    record: "Registro",
-    address: "Dirección",
-    work: "Trabajo realizado",
+        ? `${business} guardó el registro de servicio de hoy para tu hogar`
+        : `Tu registro de servicio está listo`,
+    title: "Tu hogar recuerda el servicio de hoy.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Tu profesional"} creó un registro permanente después de dar servicio a ${eqPhrase || "tu hogar"} en ${address}.`,
+    yourHome: "tu hogar",
+    noteFrom: (business) => `Una nota de ${business || "tu profesional"}`,
+    service: "Servicio",
     equipment: "Equipo",
-    warranty: "Garantía",
-    warrantyThrough: (date) => `Garantía hasta ${date}`,
-    openHome: "Agregar registro",
-    claimRecord: "Agregar registro",
+    nextService: "Próximo servicio",
+    cta: (business) =>
+      business ? `Ver lo que ${business} guardó` : `Ver tu registro`,
     tagline:
       "Cada visita construye el historial vivo de tu hogar. Gratis de por vida.",
     via: "a través de HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} agregó un registro de servicio para tu hogar`
-        : `Tienes un nuevo registro de servicio`,
-    description: (business) =>
-      `${business || "Tu profesional"} agregó un nuevo registro a tu hogar. Queda guardado en tu dirección de por vida. Gratis.`,
     oneTap:
-      "Un toque abre tu registro e inicia tu sesión. Este enlace solo funciona desde tu correo.",
+      "Un toque abre el registro. Es gratis, privado y tuyo de por vida.",
     reason: (business, address) =>
       `Recibes este correo porque ${business || "tu profesional"} presta servicio a tu hogar en ${address}. HomesBrain aloja el registro en su nombre.`,
     footer: {
@@ -205,29 +190,23 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   ru: {
     subject: (business) =>
       business
-        ? `${business} добавил запись об обслуживании вашего дома`
-        : `У вас новая запись об обслуживании`,
-    addedAt: (business, address) =>
-      `${business} добавил новую запись об обслуживании вашего дома по адресу ${address}.`,
-    record: "Запись",
-    address: "Адрес",
-    work: "Выполненные работы",
+        ? `${business} сохранил сегодняшнюю запись обслуживания вашего дома`
+        : `Ваша запись об обслуживании готова`,
+    title: "Ваш дом помнит сегодняшнее обслуживание.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Ваш специалист"} создал постоянную запись после обслуживания ${eqPhrase || "вашего дома"} по адресу ${address}.`,
+    yourHome: "вашего дома",
+    noteFrom: (business) => `Заметка от ${business || "вашего специалиста"}`,
+    service: "Услуга",
     equipment: "Оборудование",
-    warranty: "Гарантия",
-    warrantyThrough: (date) => `Гарантия до ${date}`,
-    openHome: "Добавить запись",
-    claimRecord: "Добавить запись",
+    nextService: "Следующее обслуживание",
+    cta: (business) =>
+      business ? `Посмотреть, что сохранил ${business}` : `Открыть запись`,
     tagline:
       "Каждый визит дополняет живую историю вашего дома. Бесплатно навсегда.",
     via: "через HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} добавил запись об обслуживании вашего дома`
-        : `У вас новая запись об обслуживании`,
-    description: (business) =>
-      `${business || "Ваш специалист"} добавил новую запись о вашем доме. Она навсегда сохранена за вашим адресом. Бесплатно.`,
     oneTap:
-      "Одно нажатие откроет запись и выполнит вход. Ссылка работает только из вашего почтового ящика.",
+      "Одно нажатие открывает запись. Бесплатно, приватно и навсегда ваше.",
     reason: (business, address) =>
       `Вы получили это письмо, потому что ${business || "ваш специалист"} обслуживает ваш дом по адресу ${address}. HomesBrain хранит запись от имени компании.`,
     footer: {
@@ -240,29 +219,23 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   uk: {
     subject: (business) =>
       business
-        ? `${business} додав запис про обслуговування вашого дому`
-        : `У вас новий запис про обслуговування`,
-    addedAt: (business, address) =>
-      `${business} додав новий запис про обслуговування вашого дому за адресою ${address}.`,
-    record: "Запис",
-    address: "Адреса",
-    work: "Виконані роботи",
+        ? `${business} зберіг сьогоднішній запис обслуговування для вашого дому`
+        : `Ваш запис обслуговування готовий`,
+    title: "Ваш дім пам'ятає сьогоднішнє обслуговування.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Ваш фахівець"} створив постійний запис після обслуговування ${eqPhrase || "вашого дому"} за адресою ${address}.`,
+    yourHome: "вашого дому",
+    noteFrom: (business) => `Нотатка від ${business || "вашого фахівця"}`,
+    service: "Послуга",
     equipment: "Обладнання",
-    warranty: "Гарантія",
-    warrantyThrough: (date) => `Гарантія до ${date}`,
-    openHome: "Додати запис",
-    claimRecord: "Додати запис",
+    nextService: "Наступне обслуговування",
+    cta: (business) =>
+      business ? `Подивитись, що зберіг ${business}` : `Відкрити запис`,
     tagline:
       "Кожен візит доповнює живу історію вашого дому. Безкоштовно назавжди.",
     via: "через HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} додав запис про обслуговування вашого дому`
-        : `У вас новий запис про обслуговування`,
-    description: (business) =>
-      `${business || "Ваш фахівець"} додав новий запис про ваш дім. Він назавжди зберігається за вашою адресою. Безкоштовно.`,
     oneTap:
-      "Одне натискання відкриє запис і виконає вхід. Посилання працює лише з вашої поштової скриньки.",
+      "Одне натискання відкриває запис. Безкоштовно, приватно й назавжди ваше.",
     reason: (business, address) =>
       `Ви отримали цей лист, тому що ${business || "ваш фахівець"} обслуговує ваш дім за адресою ${address}. HomesBrain зберігає запис від імені компанії.`,
     footer: {
@@ -294,6 +267,32 @@ function cleanTranslation(value: unknown, max: number): string | null {
   return cleaned && cleaned.length <= max ? cleaned : null;
 }
 
+function truncate(value: string, max: number): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return trimmed.slice(0, max - 1).trimEnd() + "…";
+}
+
+// Local, table-based note panel to sidestep border-left quirks in Outlook.
+// A small coral dot before the eyebrow is the single restrained homeowner
+// accent in an otherwise indigo email.
+function renderNotePanel(label: string, body: string): string {
+  const safeLabel = esc(label);
+  const safeBody = esc(body);
+  return `
+  <table role="presentation" style="width:100%;border-collapse:separate;margin-top:20px;background:#f7f6f1;border:1px solid #ecebe4;border-radius:16px;">
+    <tr>
+      <td style="width:4px;background:#473fb0;border-top-left-radius:16px;border-bottom-left-radius:16px;">&nbsp;</td>
+      <td style="padding:14px 18px;">
+        <div style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">
+          <span style="color:#c2461f;">&bull;</span>&nbsp;${safeLabel}
+        </div>
+        <p style="margin:8px 0 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#16160f;font-style:italic;">${safeBody}</p>
+      </td>
+    </tr>
+  </table>`;
+}
+
 function recordEmail(opts: {
   locale: SupportedLocale;
   business: string;
@@ -301,8 +300,8 @@ function recordEmail(opts: {
   address: string;
   whatDone: string | null;
   equipment: EquipmentPreview | null;
+  nextServiceDate: string | null;
   ctaUrl: string;
-  claimed: boolean;
   unsubUrl: string;
   translatedWhatDone?: string | null;
   translatedEquipmentType?: string | null;
@@ -314,55 +313,75 @@ function recordEmail(opts: {
     address,
     whatDone,
     equipment,
+    nextServiceDate,
     ctaUrl,
-    claimed,
     unsubUrl,
     translatedWhatDone,
     translatedEquipmentType,
   } = opts;
   const copy = EMAIL_COPY[locale];
-  const cta = claimed ? copy.openHome : copy.claimRecord;
-  const localizedWork = translatedWhatDone ?? whatDone;
+  const displayBusiness = business || "";
+  const cta = copy.cta(displayBusiness);
+  const localizedWork = (translatedWhatDone ?? whatDone ?? "").trim();
   const eqLine = equipmentLine(equipment, translatedEquipmentType);
-  const warranty = equipment?.warranty_until
-    ? copy.warrantyThrough(formatEmailDate(equipment.warranty_until, locale))
+  const eqPhrase = eqLine ? eqLine : null;
+  const nextServiceFormatted = nextServiceDate
+    ? formatEmailDate(nextServiceDate, locale)
     : null;
-  const textLines = [
-    copy.addedAt(business, address),
-    "",
-    copy.record,
-    `${copy.address}: ${address}`,
-  ];
-  if (localizedWork?.trim()) {
-    textLines.push(`${copy.work}: ${localizedWork.trim()}`);
-  }
-  if (eqLine) textLines.push(`${copy.equipment}: ${eqLine}`);
-  if (warranty) textLines.push(warranty);
-  textLines.push("", `${cta}: ${ctaUrl}`, "", copy.tagline, "", copy.via);
-  const reason = copy.reason(business, address);
-  textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
-  const detailRows: Array<{ label: string; value: string }> = [
-    { label: copy.address, value: address },
-  ];
-  if (localizedWork?.trim()) {
-    detailRows.push({ label: copy.work, value: localizedWork.trim() });
+  // Details rows: Service (truncated), Equipment, Next service. Address moved
+  // into the intro sentence. Warranty intentionally omitted (visible on the
+  // record page).
+  const detailRows: Array<{ label: string; value: string }> = [];
+  if (localizedWork) {
+    detailRows.push({ label: copy.service, value: truncate(localizedWork, 90) });
   }
   if (eqLine) detailRows.push({ label: copy.equipment, value: eqLine });
-  if (warranty) detailRows.push({ label: copy.warranty, value: warranty });
+  if (nextServiceFormatted) {
+    detailRows.push({ label: copy.nextService, value: nextServiceFormatted });
+  }
 
-  const descEscaped = esc(copy.description(business));
-  const descHtml = business
-    ? descEscaped.replace(esc(business), emphasize(business))
-    : descEscaped;
+  const introEscaped = esc(copy.intro(displayBusiness, address, eqPhrase));
+  let introHtml = introEscaped;
+  if (displayBusiness) {
+    introHtml = introHtml.replace(esc(displayBusiness), emphasize(displayBusiness));
+  }
+  introHtml = introHtml.replace(esc(address), emphasize(address));
+
+  const noteHtml = localizedWork
+    ? renderNotePanel(copy.noteFrom(displayBusiness), localizedWork)
+    : "";
 
   const bodyHtml = [
-    renderH1(copy.title(business)),
-    renderBodyHtml(descHtml),
+    renderH1(copy.title),
+    renderBodyHtml(introHtml),
+    noteHtml,
     renderDetails(detailRows),
     renderCta(ctaUrl, cta),
     renderFinePrint(copy.oneTap),
-  ].join("\n");
+  ].filter(Boolean).join("\n");
+
+  // Plain-text mirror follows the same hierarchy.
+  const textLines = [
+    copy.title,
+    "",
+    copy.intro(displayBusiness, address, eqPhrase),
+  ];
+  if (localizedWork) {
+    textLines.push("", `${copy.noteFrom(displayBusiness)}:`, `"${localizedWork}"`);
+  }
+  const summaryLines: string[] = [];
+  if (localizedWork) {
+    summaryLines.push(`${copy.service}: ${truncate(localizedWork, 90)}`);
+  }
+  if (eqLine) summaryLines.push(`${copy.equipment}: ${eqLine}`);
+  if (nextServiceFormatted) {
+    summaryLines.push(`${copy.nextService}: ${nextServiceFormatted}`);
+  }
+  if (summaryLines.length) textLines.push("", ...summaryLines);
+  textLines.push("", `${cta}: ${ctaUrl}`, "", copy.oneTap, "", copy.via);
+  const reason = copy.reason(displayBusiness, address);
+  textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
   // logo image is intentionally not shown in the branded shell header; the
   // approved design uses the HomesBrain house mark + business name title.
@@ -471,7 +490,7 @@ Deno.serve(async (req) => {
     const { data: jobRows } = await admin
       .from("jobs")
       .select(
-        "id,created_at,what_done,equipment_id,localized_content,records(id,created_at)",
+        "id,created_at,what_done,equipment_id,next_service_date,localized_content,records(id,created_at)",
       )
       .eq("home_id", customer.home_id)
       .eq("pro_id", pro.id)
@@ -602,12 +621,13 @@ Deno.serve(async (req) => {
       address,
       whatDone: latestJob?.what_done ?? null,
       equipment,
+      nextServiceDate: latestJob?.next_service_date ?? null,
       ctaUrl,
-      claimed,
       unsubUrl,
       translatedWhatDone: translationUsed ? translatedWhatDone : null,
       translatedEquipmentType: translationUsed ? translatedEquipmentType : null,
     });
+    void claimed;
 
     // Display name is the pro; sending address stays on the verified
     // homesbrain.com domain so deliverability doesn't crater. Fall back to
