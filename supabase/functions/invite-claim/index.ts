@@ -267,6 +267,32 @@ function cleanTranslation(value: unknown, max: number): string | null {
   return cleaned && cleaned.length <= max ? cleaned : null;
 }
 
+function truncate(value: string, max: number): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return trimmed.slice(0, max - 1).trimEnd() + "…";
+}
+
+// Local, table-based note panel to sidestep border-left quirks in Outlook.
+// A small coral dot before the eyebrow is the single restrained homeowner
+// accent in an otherwise indigo email.
+function renderNotePanel(label: string, body: string): string {
+  const safeLabel = esc(label);
+  const safeBody = esc(body);
+  return `
+  <table role="presentation" style="width:100%;border-collapse:separate;margin-top:20px;background:#f7f6f1;border:1px solid #ecebe4;border-radius:16px;">
+    <tr>
+      <td style="width:4px;background:#473fb0;border-top-left-radius:16px;border-bottom-left-radius:16px;">&nbsp;</td>
+      <td style="padding:14px 18px;">
+        <div style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">
+          <span style="color:#c2461f;">&bull;</span>&nbsp;${safeLabel}
+        </div>
+        <p style="margin:8px 0 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#16160f;font-style:italic;">${safeBody}</p>
+      </td>
+    </tr>
+  </table>`;
+}
+
 function recordEmail(opts: {
   locale: SupportedLocale;
   business: string;
@@ -274,8 +300,8 @@ function recordEmail(opts: {
   address: string;
   whatDone: string | null;
   equipment: EquipmentPreview | null;
+  nextServiceDate: string | null;
   ctaUrl: string;
-  claimed: boolean;
   unsubUrl: string;
   translatedWhatDone?: string | null;
   translatedEquipmentType?: string | null;
@@ -287,47 +313,75 @@ function recordEmail(opts: {
     address,
     whatDone,
     equipment,
+    nextServiceDate,
     ctaUrl,
-    claimed,
     unsubUrl,
     translatedWhatDone,
     translatedEquipmentType,
   } = opts;
   const copy = EMAIL_COPY[locale];
-  const cta = claimed ? copy.openHome : copy.claimRecord;
-  const localizedWork = translatedWhatDone ?? whatDone;
+  const displayBusiness = business || "";
+  const cta = copy.cta(displayBusiness);
+  const localizedWork = (translatedWhatDone ?? whatDone ?? "").trim();
   const eqLine = equipmentLine(equipment, translatedEquipmentType);
-  const warranty = equipment?.warranty_until
-    ? copy.warrantyThrough(formatEmailDate(equipment.warranty_until, locale))
+  const eqPhrase = eqLine ? eqLine : null;
+  const nextServiceFormatted = nextServiceDate
+    ? formatEmailDate(nextServiceDate, locale)
     : null;
-  const textLines = [
-    copy.addedAt(business, address),
-    "",
-    copy.record,
-    `${copy.address}: ${address}`,
-  ];
-  if (localizedWork?.trim()) {
-    textLines.push(`${copy.work}: ${localizedWork.trim()}`);
-  }
-  if (eqLine) textLines.push(`${copy.equipment}: ${eqLine}`);
-  if (warranty) textLines.push(warranty);
-  textLines.push("", `${cta}: ${ctaUrl}`, "", copy.tagline, "", copy.via);
-  const reason = copy.reason(business, address);
-  textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
-  const detailRows: Array<{ label: string; value: string }> = [
-    { label: copy.address, value: address },
-  ];
-  if (localizedWork?.trim()) {
-    detailRows.push({ label: copy.work, value: localizedWork.trim() });
+  // Details rows: Service (truncated), Equipment, Next service. Address moved
+  // into the intro sentence. Warranty intentionally omitted (visible on the
+  // record page).
+  const detailRows: Array<{ label: string; value: string }> = [];
+  if (localizedWork) {
+    detailRows.push({ label: copy.service, value: truncate(localizedWork, 90) });
   }
   if (eqLine) detailRows.push({ label: copy.equipment, value: eqLine });
-  if (warranty) detailRows.push({ label: copy.warranty, value: warranty });
+  if (nextServiceFormatted) {
+    detailRows.push({ label: copy.nextService, value: nextServiceFormatted });
+  }
 
-  const descEscaped = esc(copy.description(business));
-  const descHtml = business
-    ? descEscaped.replace(esc(business), emphasize(business))
-    : descEscaped;
+  const introEscaped = esc(copy.intro(displayBusiness, address, eqPhrase));
+  let introHtml = introEscaped;
+  if (displayBusiness) {
+    introHtml = introHtml.replace(esc(displayBusiness), emphasize(displayBusiness));
+  }
+  introHtml = introHtml.replace(esc(address), emphasize(address));
+
+  const noteHtml = localizedWork
+    ? renderNotePanel(copy.noteFrom(displayBusiness), localizedWork)
+    : "";
+
+  const bodyHtml = [
+    renderH1(copy.title),
+    renderBodyHtml(introHtml),
+    noteHtml,
+    renderDetails(detailRows),
+    renderCta(ctaUrl, cta),
+    renderFinePrint(copy.oneTap),
+  ].filter(Boolean).join("\n");
+
+  // Plain-text mirror follows the same hierarchy.
+  const textLines = [
+    copy.title,
+    "",
+    copy.intro(displayBusiness, address, eqPhrase),
+  ];
+  if (localizedWork) {
+    textLines.push("", `${copy.noteFrom(displayBusiness)}:`, `"${localizedWork}"`);
+  }
+  const summaryLines: string[] = [];
+  if (localizedWork) {
+    summaryLines.push(`${copy.service}: ${truncate(localizedWork, 90)}`);
+  }
+  if (eqLine) summaryLines.push(`${copy.equipment}: ${eqLine}`);
+  if (nextServiceFormatted) {
+    summaryLines.push(`${copy.nextService}: ${nextServiceFormatted}`);
+  }
+  if (summaryLines.length) textLines.push("", ...summaryLines);
+  textLines.push("", `${cta}: ${ctaUrl}`, "", copy.oneTap, "", copy.via);
+  const reason = copy.reason(displayBusiness, address);
+  textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
   const bodyHtml = [
     renderH1(copy.title(business)),
