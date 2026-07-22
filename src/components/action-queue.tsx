@@ -111,7 +111,7 @@ export function ActionQueue({
     const label = deliveredVia === "both" ? "text + email" : deliveredVia === "sms" ? "text" : "email";
     onToast(`Rebook nudge sent to ${c.name} by ${label}.`);
   }
-  }
+
 
   async function markPaid(row: Row & { kind: "invoice" }) {
     setBusy(row.key);
