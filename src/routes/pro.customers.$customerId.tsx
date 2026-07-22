@@ -16,6 +16,7 @@ import { Avatar, Btn, Card, KV, Pill, Toast } from "@/lib/ui";
 
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPhone, logEvent, mockSend } from "@/lib/hb";
+import { sendSms } from "@/lib/sms";
 import {
   formatMoney,
   isOverdue,
