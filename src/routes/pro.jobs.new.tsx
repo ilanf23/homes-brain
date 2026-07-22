@@ -2370,14 +2370,10 @@ function NewJob() {
         });
       }
 
-      // Optional invoice SMS: transactional "your invoice is ready" text sent
-      // only when we actually charged AND we have phone + consent + a claim
-      // URL to point them at. Homeowner pays through /home from that link.
-      if (billedAmount != null && phoneAddr && consented && deliveryClaimUrl) {
-        const businessName = pro?.business?.trim() || "Your service pro";
-        const invoiceBody = `${businessName}: your invoice is ready — ${deliveryClaimUrl}\nReply STOP to opt out.`;
-        void sendSms(phoneAddr, invoiceBody, "other");
-      }
+      // Invoice notification is merged into the record SMS above (single text
+      // with combined "service record + invoice" wording) so the homeowner
+      // never receives two back-to-back messages pointing at the same URL.
+
     } else if (emailAddr) {
       setDeliveryState("send_failed");
     } else if (phoneAddr && !consented) {
