@@ -3030,7 +3030,18 @@ function NewJob() {
                         aria-label="Tap and tell me what you did"
                         className="pressable group mx-auto flex h-56 w-56 sm:h-64 sm:w-64 flex-col items-center justify-center rounded-full bg-indigo text-white shadow-[0_24px_60px_-20px_rgba(71,63,176,0.55)] transition-transform duration-200 active:scale-95 hover:brightness-110"
                       >
-                        <MicIcon size={72} />
+                        {/* Same HomesBrain AI mark as the "Just talk" card on step one. */}
+                        {micImgOk ? (
+                          <img
+                            src="/images/homesbrain-ai-mic.png"
+                            alt=""
+                            aria-hidden="true"
+                            onError={() => setMicImgOk(false)}
+                            className="h-24 w-24 rounded-3xl shadow-[0_8px_20px_-8px_rgba(0,0,0,0.45)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-105"
+                          />
+                        ) : (
+                          <MicIcon size={72} />
+                        )}
                         <div className="mt-3 text-xl font-bold tracking-tight">Tap and talk</div>
                       </button>
                       <div className="mt-3 text-center text-sm text-muted">

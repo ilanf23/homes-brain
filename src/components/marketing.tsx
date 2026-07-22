@@ -400,11 +400,30 @@ export function MarketingShell({
           className="min-[880px]:hidden fixed bottom-0 inset-x-0 z-30 border-t border-line bg-background/92 backdrop-blur-md px-5 py-3"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <Link to={resolvedMobileCta.to} className="block">
-            <Btn variant={resolvedMobileCta.variant} size="lg" className="w-full">
-              {resolvedMobileCta.label}
-            </Btn>
-          </Link>
+          {appTarget ? (
+            /* Signed in: the one action that matters is getting back into the app. */
+            <Link to={resolvedMobileCta.to} className="block">
+              <Btn variant={resolvedMobileCta.variant} size="lg" className="w-full">
+                {resolvedMobileCta.label}
+              </Btn>
+            </Link>
+          ) : (
+            /* Signed out: two paths in one thumb-reachable row - a weighted
+               primary for people joining, and a one-tap Log in for people
+               coming back (which otherwise hides in the hamburger menu). */
+            <div className="flex items-stretch gap-2.5">
+              <Link to={resolvedMobileCta.to} className="block flex-1 min-w-0">
+                <Btn variant="coral" size="lg" className="w-full">
+                  {resolvedMobileCta.label}
+                </Btn>
+              </Link>
+              <Link to="/login" className="block flex-1 min-w-0">
+                <Btn variant="indigo" size="lg" className="w-full">
+                  Log in
+                </Btn>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

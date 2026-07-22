@@ -318,22 +318,32 @@ function Landing() {
               Log a job in 30 seconds. Win more repeat customers, more reviews, and a professional
               record with your name on it.
             </p>
-            <div className="mt-8 flex justify-center lg:justify-start">
-              <Link to={appTarget ?? "/pro/signup"} className="w-full sm:w-auto">
-                <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
-                  {appTarget ? "Open app" : "Create account"}
-                </Btn>
-              </Link>
+            <div className="mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3">
+              {appTarget ? (
+                <Link to={appTarget} className="w-full sm:w-auto">
+                  <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
+                    Open app
+                  </Btn>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/pro/signup" className="w-full sm:w-auto">
+                    <Btn variant="indigo" size="lg" className="w-full sm:w-auto min-h-12">
+                      Create account
+                    </Btn>
+                  </Link>
+                  <Link to="/login" className="w-full sm:w-auto">
+                    <Btn variant="secondary" size="lg" className="w-full sm:w-auto min-h-12">
+                      Login
+                    </Btn>
+                  </Link>
+                </>
+              )}
             </div>
             {appTarget ? (
               <p className="mt-4 text-sm text-muted">Welcome back. Pick up where you left off.</p>
             ) : (
-              <p className="mt-4 text-sm text-muted">
-                No card. No password. Free to start.{" "}
-                <Link to="/login" className="font-semibold text-indigo hover:underline">
-                  Already have an account? Log in
-                </Link>
-              </p>
+              <p className="mt-4 text-sm text-muted">No card. No password. Free to start.</p>
             )}
           </div>
 

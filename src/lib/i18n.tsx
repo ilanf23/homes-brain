@@ -10,7 +10,7 @@
    English is the source language. Add a
    locale by extending Locale, LOCALES, and the DICTS map. Keys missing from
    a non-English dictionary fall back to English, then to the key itself. */
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   DropdownMenu,
@@ -1087,7 +1087,15 @@ export function pluralForm(locale: Locale, n: number): PluralForm {
 
 /* Compact language menu. The trigger stays narrow enough for mobile headers,
    while the menu exposes each language's full native name. */
-export function LanguageToggle({ className = "" }: { className?: string }) {
+export function LanguageToggle({
+  className = "",
+  prominent = false,
+}: {
+  className?: string;
+  /* Solid indigo pill for the portal nav: purple, globe + current language,
+     so the language switch stands out instead of reading as chrome. */
+  prominent?: boolean;
+}) {
   const { locale, setLocale, t } = useI18n();
   const current = LOCALES.find(({ code }) => code === locale) ?? LOCALES[0];
 
@@ -1098,8 +1106,13 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
           type="button"
           aria-label={`${t("lang.label")}: ${current.label}`}
           title={current.label}
-          className={`pressable inline-flex h-8 items-center gap-1 rounded-full border border-line bg-soft px-2.5 text-xs font-bold tracking-wide text-ink transition-colors hover:bg-paper ${className}`}
+          className={
+            prominent
+              ? `pressable inline-flex h-8 items-center gap-1.5 rounded-full bg-indigo px-3 text-xs font-bold tracking-wide text-white shadow-[0_6px_16px_-8px_rgba(71,63,176,0.8)] transition-colors hover:bg-indigodark ${className}`
+              : `pressable inline-flex h-8 items-center gap-1 rounded-full border border-line bg-soft px-2.5 text-xs font-bold tracking-wide text-ink transition-colors hover:bg-paper ${className}`
+          }
         >
+          {prominent && <Globe size={14} aria-hidden="true" />}
           {current.short}
           <ChevronDown size={13} aria-hidden="true" />
         </button>
@@ -1118,7 +1131,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
             <DropdownMenuRadioItem
               key={code}
               value={code}
-              className="cursor-pointer rounded-lg py-2 pl-8 pr-2 font-semibold focus:bg-soft focus:text-ink"
+              className="cursor-pointer rounded-lg py-2 pl-8 pr-2 font-semibold focus:bg-soft focus:text-ink data-[state=checked]:text-indigo"
             >
               <span className="w-6 text-xs font-bold tracking-wide text-muted">{short}</span>
               <span>{label}</span>

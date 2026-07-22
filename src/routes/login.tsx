@@ -127,31 +127,36 @@ function Login() {
     const ctx = (data as { method?: string; has_password?: boolean } | null) ?? {};
     const method = ctx.method ?? "none";
     const hasPassword = ctx.has_password === true;
-    const hasPro = method === "pro" || method === "both";
-    const hasHo = method === "homeowner" || method === "both";
-    if (role === "pro") {
-      if (hasPro) {
-        if (hasPassword) {
-          setBusy(false);
-          setStep("pro-password");
-        } else {
-          await sendProMagicLink();
-        }
-      } else {
+    // Route by the account we actually found, not the toggle. The toggle only
+    // breaks ties when this email has both account types; otherwise the looked-up
+    // method wins, so a returning user can never be sent to the wrong flow
+    // (Vladimir test: make it impossible to mess up). "none" means no account,
+    // so fall back to the toggle as a statement of intent for signup routing.
+    const effectiveRole: Role =
+      method === "pro" ? "pro" : method === "homeowner" ? "homeowner" : role;
+
+    if (method === "none") {
+      setBusy(false);
+      navigate({
+        to: effectiveRole === "pro" ? "/pro/signup" : "/home/signup",
+        search: { email: trimmed },
+      });
+      return;
+    }
+
+    if (effectiveRole === "pro") {
+      if (hasPassword) {
         setBusy(false);
-        navigate({ to: "/pro/signup", search: { email: trimmed } });
+        setStep("pro-password");
+      } else {
+        await sendProMagicLink();
       }
     } else {
-      if (hasHo) {
-        if (hasPassword) {
-          setBusy(false);
-          setStep("ho-password");
-        } else {
-          await sendMagicLink();
-        }
-      } else {
+      if (hasPassword) {
         setBusy(false);
-        navigate({ to: "/home/signup", search: { email: trimmed } });
+        setStep("ho-password");
+      } else {
+        await sendMagicLink();
       }
     }
   }
@@ -353,7 +358,7 @@ function Login() {
             </Field>
             <ErrorRow err={err} />
             <Btn
-              variant="indigo"
+              variant="secondary"
               size="lg"
               className="w-full"
               disabled={!email.trim()}
@@ -749,9 +754,9 @@ function GoogleButton({
       type="button"
       onClick={onClick}
       disabled={busy}
-      className="flex w-full items-center justify-center gap-3 rounded-full border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:bg-soft disabled:opacity-60"
+      className="flex w-full items-center justify-center gap-3 rounded-full border border-line bg-white px-4 py-4 text-base font-bold text-ink shadow-sm transition hover:bg-soft hover:shadow-md active:translate-y-px disabled:opacity-60"
     >
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true">
         <path
           fill="#4285F4"
           d="M17.64 9.2c0-.64-.06-1.25-.17-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"

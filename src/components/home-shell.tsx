@@ -9,7 +9,7 @@ import { useTheme } from "@/lib/theme";
 import { rememberLastPath, useHideOnScroll } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/svg";
-import { useT, type TKey } from "@/lib/i18n";
+import { LanguageToggle, useT, type TKey } from "@/lib/i18n";
 import { phIdentify, phReset } from "@/lib/posthog";
 import { registerPushNotifications } from "@/lib/push";
 
@@ -307,6 +307,7 @@ export function HomeShell({
           ))}
         </nav>
         <div className="p-3 border-t border-line space-y-2">
+          <LanguageToggle prominent className="w-full justify-center" />
           <div className="flex items-center gap-2.5 px-2">
             <FaceAvatar accent="indigo" size={36} />
             <div className="flex-1 min-w-0">
@@ -348,13 +349,16 @@ export function HomeShell({
                 <span className="truncate">{home.address}</span>
               </Link>
             )}
-            <Link
-              to="/home/reminders"
-              aria-label={t("nav.reminders")}
-              className="pressable text-muted hover:text-ink p-2 rounded-lg hover:bg-soft"
-            >
-              <Bell size={17} />
-            </Link>
+            <div className="flex items-center gap-1 shrink-0">
+              <LanguageToggle prominent />
+              <Link
+                to="/home/reminders"
+                aria-label={t("nav.reminders")}
+                className="pressable text-muted hover:text-ink p-2 rounded-lg hover:bg-soft"
+              >
+                <Bell size={17} />
+              </Link>
+            </div>
           </div>
         </header>
 

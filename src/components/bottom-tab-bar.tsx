@@ -1,10 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { haptic } from "@/lib/mobile";
-
-const CREATE_TAPPED_KEY = "hb_create_tapped";
 
 /* Instagram-style mobile tab bar, floated: five equal icon-only slots in a
    pill lifted off the bottom and sides so content peeks behind it
@@ -69,16 +67,6 @@ export function BottomTabBar({
   swipeEnabled?: boolean;
 }) {
   const navigate = useNavigate();
-  /* One-time "start here" pulse for a brand-new user; dies forever on the
-     first tap of the + on this device. */
-  const [pulse, setPulse] = useState(false);
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(CREATE_TAPPED_KEY)) setPulse(true);
-    } catch {
-      /* storage unavailable */
-    }
-  }, []);
   /* Refs so the document listeners bind once, not on every render. */
   const state = useRef({ items, activeKey, swipeEnabled });
   state.current = { items, activeKey, swipeEnabled };
@@ -175,27 +163,11 @@ export function BottomTabBar({
         <Link
           to={create.to}
           preload="intent"
-          onClick={() => {
-            haptic();
-            if (pulse) {
-              setPulse(false);
-              try {
-                localStorage.setItem(CREATE_TAPPED_KEY, "1");
-              } catch {
-                /* storage unavailable */
-              }
-            }
-          }}
+          onClick={() => haptic()}
           aria-label={create.label}
           aria-current={createActive ? "page" : undefined}
           className="group relative flex h-full items-center justify-center"
         >
-          {pulse && (
-            <span
-              className="absolute h-10 w-10 rounded-full bg-indigo/35 animate-ping motion-reduce:hidden"
-              aria-hidden="true"
-            />
-          )}
           <span
             className={`${ICON_PRESS} relative flex h-10 w-10 items-center justify-center rounded-full bg-indigo text-(--on-accent) shadow-[0_8px_18px_-8px_rgba(71,63,176,0.7)] ${
               createActive ? "ring-2 ring-indigo/30" : ""

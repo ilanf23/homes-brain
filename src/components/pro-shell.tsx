@@ -30,7 +30,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch, MobileProSearch } from "@/components/pro-search";
 import { ProSetupNavItem } from "@/components/pro-setup-checklist";
 
-import { useI18n, useT, type TKey } from "@/lib/i18n";
+import { LanguageToggle, useI18n, useT, type TKey } from "@/lib/i18n";
 import { Logo } from "@/components/svg";
 import { BottomTabBar, TAB_BAR_CONTENT_PAD } from "@/components/bottom-tab-bar";
 import { BottomSheet } from "@/components/bottom-sheet";
@@ -428,6 +428,7 @@ export function ProShell({
                 <span className="hidden lg:inline">{t("pro.logJob")}</span>
               </Btn>
             </Link>
+            <LanguageToggle prominent />
             <ThemeToggle />
             {pro ? (
               <NotificationsBell proId={pro.id} align="right" />
@@ -454,6 +455,7 @@ export function ProShell({
               >
                 <Search size={17} />
               </button>
+              <LanguageToggle prominent />
               {pro ? (
                 <NotificationsBell proId={pro.id} align="right" />
               ) : (

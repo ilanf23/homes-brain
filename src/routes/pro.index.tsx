@@ -1,10 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// The pro portal's home is the dashboard (setup + top action). /pro redirects
-// to /pro/dashboard so anything linking to /pro (nav, post-login, post-setup,
-// old bookmarks) lands there. Log-a-job is always one tap away on the center +.
+// Opening the app drops a pro straight onto the add-record action: /pro
+// redirects to /pro/jobs/new so post-login, "Open app", and old bookmarks
+// land on the one thing a pro is here to do. The dashboard is still its own
+// tab (/pro/dashboard) in the nav for setup, due-for-service, and the rest.
 export const Route = createFileRoute("/pro/")({
   beforeLoad: () => {
-    throw redirect({ to: "/pro/dashboard" });
+    throw redirect({ to: "/pro/jobs/new" });
   },
 });
