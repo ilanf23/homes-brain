@@ -17,6 +17,7 @@ import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as MessagingTermsAuthRouteImport } from './routes/messaging-terms-auth'
 import { Route as MessagingTermsRouteImport } from './routes/messaging-terms'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -101,6 +102,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PartnersRoute = PartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagingTermsAuthRoute = MessagingTermsAuthRouteImport.update({
+  id: '/messaging-terms-auth',
+  path: '/messaging-terms-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MessagingTermsRoute = MessagingTermsRouteImport.update({
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/messaging-terms': typeof MessagingTermsRoute
+  '/messaging-terms-auth': typeof MessagingTermsAuthRoute
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -393,6 +400,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/messaging-terms': typeof MessagingTermsRoute
+  '/messaging-terms-auth': typeof MessagingTermsAuthRoute
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -449,6 +457,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/messaging-terms': typeof MessagingTermsRoute
+  '/messaging-terms-auth': typeof MessagingTermsAuthRoute
   '/partners': typeof PartnersRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -506,6 +515,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/login'
     | '/messaging-terms'
+    | '/messaging-terms-auth'
     | '/partners'
     | '/privacy'
     | '/reset-password'
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/login'
     | '/messaging-terms'
+    | '/messaging-terms-auth'
     | '/partners'
     | '/privacy'
     | '/reset-password'
@@ -616,6 +627,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/login'
     | '/messaging-terms'
+    | '/messaging-terms-auth'
     | '/partners'
     | '/privacy'
     | '/reset-password'
@@ -672,6 +684,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
   MessagingTermsRoute: typeof MessagingTermsRoute
+  MessagingTermsAuthRoute: typeof MessagingTermsAuthRoute
   PartnersRoute: typeof PartnersRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -775,6 +788,13 @@ declare module '@tanstack/react-router' {
       path: '/partners'
       fullPath: '/partners'
       preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messaging-terms-auth': {
+      id: '/messaging-terms-auth'
+      path: '/messaging-terms-auth'
+      fullPath: '/messaging-terms-auth'
+      preLoaderRoute: typeof MessagingTermsAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messaging-terms': {
@@ -1104,6 +1124,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
   MessagingTermsRoute: MessagingTermsRoute,
+  MessagingTermsAuthRoute: MessagingTermsAuthRoute,
   PartnersRoute: PartnersRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,

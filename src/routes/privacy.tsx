@@ -122,27 +122,42 @@ function Privacy() {
 
       <LegalSection title="7. Text messaging / SMS">
         <p>
-          HomesBrain sends service records and reminders about your home via SMS to recipients who
-          have consented.
+          HomesBrain operates two separate SMS programs, each with its own opt-in and its own
+          purpose:
         </p>
         <LegalList
           items={[
-            "Message frequency varies.",
+            <>
+              <strong>Service records &amp; reminders.</strong> Sent on a Pro's behalf to
+              homeowners who consented at signup or at the time of service. See our{" "}
+              <Link to="/messaging-terms" className="font-semibold text-indigo hover:underline">
+                Messaging Terms
+              </Link>
+              .
+            </>,
+            <>
+              <strong>Authentication (one-time passcodes).</strong> Sent to homeowners and Pros
+              who request a login code by entering their phone number on the HomesBrain login
+              screen. Codes are 6 digits, single-use, and expire in 10 minutes. See our{" "}
+              <Link to="/messaging-terms-auth" className="font-semibold text-indigo hover:underline">
+                SMS Authentication Terms
+              </Link>
+              .
+            </>,
+          ]}
+        />
+        <p>Across both programs:</p>
+        <LegalList
+          items={[
             "Message and data rates may apply.",
             <>
               Text <strong>STOP</strong> to unsubscribe at any time. Text <strong>HELP</strong> for
               help, or email support@homesbrain.com.
             </>,
+            "Phone numbers collected for authentication are used only to send login codes and verify sign-in; they are not used for marketing.",
             "No mobile information - including your phone number - and no SMS or messaging consent will be shared with, sold to, or disclosed to any third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent are never shared with third parties.",
           ]}
         />
-        <p>
-          See our{" "}
-          <Link to="/messaging-terms" className="font-semibold text-indigo hover:underline">
-            Messaging Terms
-          </Link>{" "}
-          for the full SMS program details.
-        </p>
       </LegalSection>
 
       <LegalSection title="8. Children">
