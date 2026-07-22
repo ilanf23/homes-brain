@@ -383,14 +383,6 @@ function recordEmail(opts: {
   const reason = copy.reason(displayBusiness, address);
   textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
-  const bodyHtml = [
-    renderH1(copy.title(business)),
-    renderBodyHtml(descHtml),
-    renderDetails(detailRows),
-    renderCta(ctaUrl, cta),
-    renderFinePrint(copy.oneTap),
-  ].join("\n");
-
   // logo image is intentionally not shown in the branded shell header; the
   // approved design uses the HomesBrain house mark + business name title.
   void logo;
