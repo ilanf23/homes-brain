@@ -113,6 +113,7 @@ function HomeownerSettings() {
     const ho = homeowner as unknown as DbPrefs & {
       notify_email: boolean;
       sms_consent_at?: string | null;
+      promo_sms_consent?: boolean;
     };
     setPrefs({
       notify_email: ho.notify_email ?? true,
@@ -120,8 +121,10 @@ function HomeownerSettings() {
       sms_opt_out: ho.sms_opt_out ?? false,
       respect_quiet_hrs: ho.respect_quiet_hrs ?? true,
       marketing_consent: ho.marketing_consent ?? false,
+      promo_sms_consent: ho.promo_sms_consent ?? false,
     });
   }, [homeowner]);
+
 
   useEffect(() => {
     // Distinct-pro count from hook jobs.
