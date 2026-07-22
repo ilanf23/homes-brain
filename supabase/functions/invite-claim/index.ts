@@ -383,7 +383,6 @@ function recordEmail(opts: {
   const cta = copy.cta;
   const localizedWork = (translatedWhatDone ?? whatDone ?? "").trim();
   const eqLine = equipmentLine(equipment, translatedEquipmentType);
-  const eqPhrase = eqLine ? eqLine : null;
   const nextServiceFormatted = nextServiceDate
     ? formatEmailDate(nextServiceDate, locale)
     : null;
@@ -395,6 +394,10 @@ function recordEmail(opts: {
   const serviceLabel = eqTypeLocalized
     ? `${eqTypeLocalized} ${copy.equipmentServiceSuffix}`
     : copy.homeService;
+  // Intro reads "today's <equipment> service", so we pass only the
+  // lower-cased equipment type here — not the full make/model line.
+  const eqPhrase = eqTypeLocalized ? eqTypeLocalized.toLowerCase() : null;
+
 
   const detailRows: Array<{ label: string; value: string }> = [
     { label: copy.service, value: serviceLabel },
