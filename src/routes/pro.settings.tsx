@@ -170,7 +170,7 @@ function ProSettings() {
       const { data } = await supabase
         .from("pros")
         .select(
-          "email,phone,notify_email,notify_sms,review_requests_on,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted",
+          "email,phone,notify_email,notify_sms,review_requests_on,promo_sms_consent,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted",
         )
         .eq("id", proId)
         .maybeSingle();
