@@ -1927,18 +1927,23 @@ function NewJob() {
       setTimeout(() => setToast(null), 3500);
       return;
     }
-    if (!finalEmail) {
+    // Allow phone-only submits now that SMS delivery is live: the customer
+    // must have either an email OR a phone we can text. Only validate email
+    // format if one was actually entered.
+    const havePhoneEarly = !!(selected?.phone?.trim() || newCustomer.phone.trim());
+    if (!finalEmail && !havePhoneEarly) {
       setStage("review");
-      setToast("Add the customer's email before sending.");
+      setToast("Add the customer's email or phone before sending.");
       setTimeout(() => setToast(null), 3500);
       return;
     }
-    if (!isEmail(finalEmail)) {
+    if (finalEmail && !isEmail(finalEmail)) {
       setStage("review");
       setToast("Check the customer's email address.");
       setTimeout(() => setToast(null), 3500);
       return;
     }
+
 
     setSubmitting(true);
     setBillingError(null);
