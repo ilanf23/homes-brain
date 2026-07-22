@@ -276,18 +276,19 @@ function truncate(value: string, max: number): string {
 // Local, table-based note panel to sidestep border-left quirks in Outlook.
 // A small coral dot before the eyebrow is the single restrained homeowner
 // accent in an otherwise indigo email.
+const NOTE_FONT_STACK = `'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`;
 function renderNotePanel(label: string, body: string): string {
   const safeLabel = esc(label);
   const safeBody = esc(body);
   return `
-  <table role="presentation" style="width:100%;border-collapse:separate;margin-top:20px;background:#f7f6f1;border:1px solid #ecebe4;border-radius:16px;">
+  <table role="presentation" style="width:100%;border-collapse:separate;margin-top:22px;background:#f2f0ea;border:1px solid #e7e5de;border-radius:18px;">
     <tr>
-      <td style="width:4px;background:#473fb0;border-top-left-radius:16px;border-bottom-left-radius:16px;">&nbsp;</td>
-      <td style="padding:14px 18px;">
-        <div style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">
+      <td style="width:4px;background:#473fb0;border-top-left-radius:18px;border-bottom-left-radius:18px;">&nbsp;</td>
+      <td style="padding:16px 20px;">
+        <div style="font-family:${NOTE_FONT_STACK};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">
           <span style="color:#c2461f;">&bull;</span>&nbsp;${safeLabel}
         </div>
-        <p style="margin:8px 0 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#16160f;font-style:italic;">${safeBody}</p>
+        <p style="margin:8px 0 0;font-family:${NOTE_FONT_STACK};font-size:15px;line-height:1.6;color:#16160f;font-style:italic;">${safeBody}</p>
       </td>
     </tr>
   </table>`;
