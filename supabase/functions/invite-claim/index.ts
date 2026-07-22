@@ -105,12 +105,17 @@ function equipmentLine(
   translatedType?: string | null,
 ): string | null {
   if (!eq) return null;
-  const parts = [translatedType ?? eq.type, eq.make, eq.model].filter(
-    (x): x is string => !!x && !!x.trim(),
-  );
-  if (!parts.length) return null;
-  return parts.join(" ");
+  const type = (translatedType ?? eq.type ?? "").trim();
+  const make = (eq.make ?? "").trim();
+  const model = (eq.model ?? "").trim();
+  const makeModel = [make, model].filter(Boolean).join(" ").trim();
+  const typeLower = type ? type.toLowerCase() : "";
+  if (makeModel && typeLower) return `${makeModel} · ${typeLower}`;
+  if (makeModel) return makeModel;
+  if (type) return type;
+  return null;
 }
+
 
 type EmailCopy = {
   subject: (business: string) => string;
