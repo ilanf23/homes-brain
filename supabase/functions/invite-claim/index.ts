@@ -621,12 +621,13 @@ Deno.serve(async (req) => {
       address,
       whatDone: latestJob?.what_done ?? null,
       equipment,
+      nextServiceDate: latestJob?.next_service_date ?? null,
       ctaUrl,
-      claimed,
       unsubUrl,
       translatedWhatDone: translationUsed ? translatedWhatDone : null,
       translatedEquipmentType: translationUsed ? translatedEquipmentType : null,
     });
+    void claimed;
 
     // Display name is the pro; sending address stays on the verified
     // homesbrain.com domain so deliverability doesn't crater. Fall back to
