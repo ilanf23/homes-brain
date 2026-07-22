@@ -3870,8 +3870,8 @@ function NewJob() {
                   <>
                     <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.saved")}</h2>
                     <p className="mt-2 text-base text-muted">
-                      We can't reach {sentTo.name || "your customer"} yet. SMS delivery is coming.
-                      Add an email to send the record now, or show the QR.
+                      {sentTo.name || "Your customer"} hasn't given SMS consent yet, so we can't
+                      text this record. Add an email to send it now, or show the QR.
                     </p>
                     <div className="mx-auto mt-4 flex max-w-sm flex-col gap-2 sm:flex-row">
                       <input
