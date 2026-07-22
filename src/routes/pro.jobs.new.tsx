@@ -2413,12 +2413,17 @@ function NewJob() {
       }
     }
 
-    const delivery = await deliverRecord(sentCustomerId, sentRecordId);
+    const delivery = await deliverRecord(sentCustomerId, sentRecordId, {
+      email,
+      phone: "",
+      consented: false,
+    });
     if (!delivery.ok) {
-      setSendErrorCode(delivery.code);
+      const failCode = delivery.code ?? "send_failed";
+      setSendErrorCode(failCode);
       setDeliveryState("send_failed");
       setRetrying(false);
-      setToast(deliveryErrorMessage(delivery.code));
+      setToast(deliveryErrorMessage(failCode));
       setTimeout(() => setToast(null), 3500);
       return;
     }
