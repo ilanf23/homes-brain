@@ -69,11 +69,13 @@ type ProPrefs = {
   notify_email: boolean;
   notify_sms: boolean;
   review_requests_on: boolean;
+  promo_sms_consent: boolean;
   stripe_account_id: string | null;
   stripe_charges_enabled: boolean;
   stripe_payouts_enabled: boolean;
   stripe_details_submitted: boolean;
 };
+
 
 /* One tappable hub row: icon tile, plain-words label, current value, chevron. */
 function HubRow({
