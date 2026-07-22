@@ -267,7 +267,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
         : `Ваш запис обслуговування готовий`,
     title: "Ваш дім пам'ятає сьогоднішнє обслуговування.",
     intro: (business, address, eqPhrase) =>
-      `${business || "Ваш фахівець"} створив постійний запис після обслуговування ${eqPhrase || "вашого дому"} за адресою ${address}.`,
+      `${business || "Ваш фахівець"} зберіг постійний запис сьогоднішнього обслуговування ${eqPhrase || "дому"} за адресою ${address}.`,
     valueSentence: (hasEquipment, hasNext) => {
       if (hasEquipment && hasNext) {
         return "Історія обслуговування, характеристики обладнання та наступний рекомендований візит тепер зібрані в одному місці.";
