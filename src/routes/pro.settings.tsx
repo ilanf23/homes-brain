@@ -263,9 +263,10 @@ function ProSettings() {
     }
     const { data, error } = await supabase
       .from("pros")
-      .update(patch)
+      .update(patch as never)
       .eq("id", proId!)
       .select("id");
+
     if (error || !data?.length) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
