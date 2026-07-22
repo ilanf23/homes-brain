@@ -149,7 +149,7 @@ export function renderEmailShell(opts: EmailShellOptions): string {
   <div style="max-width:600px;margin:0 auto;padding:32px 20px;">
     <table role="presentation" style="border-collapse:collapse;"><tr>
       <td style="vertical-align:middle;padding-right:12px;">
-        <div style="width:40px;height:40px;border-radius:11px;background:#473fb0;display:flex;align-items:center;justify-content:center;line-height:0;">${HOUSE_ICON_SVG}</div>
+        <img src="${BRAND_MARK_URL}" width="40" height="40" alt="HomesBrain" style="display:block;width:40px;height:40px;border:0;outline:none;border-radius:11px;" />
       </td>
       <td style="vertical-align:middle;">
         <div style="font-family:${FONT_STACK};font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;line-height:1.2;">${title}</div>
