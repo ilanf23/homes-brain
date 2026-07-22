@@ -164,7 +164,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Equipment",
     nextService: "Next service",
     homeService: "Home service",
-    equipmentServiceSuffix: "service",
+    equipmentServiceSuffix: "maintenance",
     cta: "View today's home record",
     tagline: "Every visit builds your home's living record. Free for life.",
     via: "via HomesBrain",
