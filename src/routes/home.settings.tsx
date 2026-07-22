@@ -178,8 +178,10 @@ function HomeownerSettings() {
       p_sms_opt_out?: boolean;
       p_respect_quiet_hrs?: boolean;
       p_marketing_consent?: boolean;
+      p_promo_sms_consent?: boolean;
     };
     const { error } = await supabase.rpc("homeowner_update_profile", params);
+
     if (error) {
       setPrefs(prev);
       setPrefErr("Couldn't save that change. Try again.");
