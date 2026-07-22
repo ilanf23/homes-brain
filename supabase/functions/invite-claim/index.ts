@@ -105,12 +105,17 @@ function equipmentLine(
   translatedType?: string | null,
 ): string | null {
   if (!eq) return null;
-  const parts = [translatedType ?? eq.type, eq.make, eq.model].filter(
-    (x): x is string => !!x && !!x.trim(),
-  );
-  if (!parts.length) return null;
-  return parts.join(" ");
+  const type = (translatedType ?? eq.type ?? "").trim();
+  const make = (eq.make ?? "").trim();
+  const model = (eq.model ?? "").trim();
+  const makeModel = [make, model].filter(Boolean).join(" ").trim();
+  const typeLower = type ? type.toLowerCase() : "";
+  if (makeModel && typeLower) return `${makeModel} · ${typeLower}`;
+  if (makeModel) return makeModel;
+  if (type) return type;
+  return null;
 }
+
 
 type EmailCopy = {
   subject: (business: string) => string;
@@ -140,7 +145,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
         : `Your service record is ready`,
     title: "Your home remembers today's service.",
     intro: (business, address, eqPhrase) =>
-      `${business || "Your pro"} created a permanent record after servicing ${eqPhrase || "your home"} at ${address}.`,
+      `${business || "Your pro"} saved a permanent record of today's ${eqPhrase || "home"} service at ${address}.`,
     valueSentence: (hasEquipment, hasNext) => {
       if (hasEquipment && hasNext) {
         return "Your service history, equipment details, and next recommended visit are now saved in one place.";
@@ -159,7 +164,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Equipment",
     nextService: "Next service",
     homeService: "Home service",
-    equipmentServiceSuffix: "service",
+    equipmentServiceSuffix: "maintenance",
     cta: "View today's home record",
     tagline: "Every visit builds your home's living record. Free for life.",
     via: "via HomesBrain",
@@ -180,7 +185,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
         : `Tu registro de servicio está listo`,
     title: "Tu hogar recuerda el servicio de hoy.",
     intro: (business, address, eqPhrase) =>
-      `${business || "Tu profesional"} creó un registro permanente después de dar servicio a ${eqPhrase || "tu hogar"} en ${address}.`,
+      `${business || "Tu profesional"} guardó un registro permanente del servicio de ${eqPhrase || "hogar"} de hoy en ${address}.`,
     valueSentence: (hasEquipment, hasNext) => {
       if (hasEquipment && hasNext) {
         return "Tu historial de servicio, los detalles del equipo y la próxima visita recomendada quedan guardados en un solo lugar.";
@@ -199,7 +204,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
     equipment: "Equipo",
     nextService: "Próximo servicio",
     homeService: "Servicio en el hogar",
-    equipmentServiceSuffix: "servicio",
+    equipmentServiceSuffix: "mantenimiento",
     cta: "Ver el registro de hoy",
     tagline:
       "Cada visita construye el historial vivo de tu hogar. Gratis de por vida.",
@@ -221,7 +226,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
         : `Ваша запись об обслуживании готова`,
     title: "Ваш дом помнит сегодняшнее обслуживание.",
     intro: (business, address, eqPhrase) =>
-      `${business || "Ваш специалист"} создал постоянную запись после обслуживания ${eqPhrase || "вашего дома"} по адресу ${address}.`,
+      `${business || "Ваш специалист"} сохранил постоянную запись сегодняшнего обслуживания ${eqPhrase || "дома"} по адресу ${address}.`,
     valueSentence: (hasEquipment, hasNext) => {
       if (hasEquipment && hasNext) {
         return "История обслуживания, характеристики оборудования и следующий рекомендуемый визит теперь собраны в одном месте.";
@@ -262,7 +267,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
         : `Ваш запис обслуговування готовий`,
     title: "Ваш дім пам'ятає сьогоднішнє обслуговування.",
     intro: (business, address, eqPhrase) =>
-      `${business || "Ваш фахівець"} створив постійний запис після обслуговування ${eqPhrase || "вашого дому"} за адресою ${address}.`,
+      `${business || "Ваш фахівець"} зберіг постійний запис сьогоднішнього обслуговування ${eqPhrase || "дому"} за адресою ${address}.`,
     valueSentence: (hasEquipment, hasNext) => {
       if (hasEquipment && hasNext) {
         return "Історія обслуговування, характеристики обладнання та наступний рекомендований візит тепер зібрані в одному місці.";
@@ -339,7 +344,7 @@ function renderNotePanel(label: string, body: string): string {
         <div style="font-family:${NOTE_FONT_STACK};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">
           <span style="color:#c2461f;">&bull;</span>&nbsp;${safeLabel}
         </div>
-        <p style="margin:8px 0 0;font-family:${NOTE_FONT_STACK};font-size:15px;line-height:1.6;color:#16160f;font-style:italic;">${safeBody}</p>
+        <p style="margin:8px 0 0;font-family:${NOTE_FONT_STACK};font-size:15px;line-height:1.6;color:#16160f;font-weight:400;">${safeBody}</p>
       </td>
     </tr>
   </table>`;
@@ -378,7 +383,6 @@ function recordEmail(opts: {
   const cta = copy.cta;
   const localizedWork = (translatedWhatDone ?? whatDone ?? "").trim();
   const eqLine = equipmentLine(equipment, translatedEquipmentType);
-  const eqPhrase = eqLine ? eqLine : null;
   const nextServiceFormatted = nextServiceDate
     ? formatEmailDate(nextServiceDate, locale)
     : null;
@@ -390,6 +394,10 @@ function recordEmail(opts: {
   const serviceLabel = eqTypeLocalized
     ? `${eqTypeLocalized} ${copy.equipmentServiceSuffix}`
     : copy.homeService;
+  // Intro reads "today's <equipment> service", so we pass only the
+  // lower-cased equipment type here — not the full make/model line.
+  const eqPhrase = eqTypeLocalized ? eqTypeLocalized.toLowerCase() : null;
+
 
   const detailRows: Array<{ label: string; value: string }> = [
     { label: copy.service, value: serviceLabel },
@@ -484,7 +492,7 @@ Deno.serve(async (req) => {
     const { admin, pro } = auth;
 
     const body = await req.json();
-    const { customer_id, pro_id, origin, record_id, translations } = body;
+    const { customer_id, pro_id, origin, record_id, translations, subject_override } = body;
     if (typeof customer_id !== "string" || !customer_id) {
       console.error("invite-claim bad_request", {
         hasBody: !!body,
@@ -716,7 +724,9 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: `${fromDisplay} <invites@homesbrain.com>`,
         to: [customer.email],
-        subject: email.subject,
+        subject: (typeof subject_override === "string" && subject_override.trim().length > 0 && subject_override.length <= 200)
+          ? subject_override.trim()
+          : email.subject,
         html: email.html,
         text: email.text,
         headers: listUnsubscribeHeaders(unsubToken),

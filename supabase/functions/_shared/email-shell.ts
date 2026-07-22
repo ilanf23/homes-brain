@@ -48,7 +48,7 @@ export function protectBrand(escaped: string): string {
 // only format that renders consistently across Gmail (web+mobile), Apple
 // Mail, and Outlook. Alt text keeps a graceful fallback when images are
 // blocked.
-const BRAND_MARK_URL = "https://homesbrain.com/__l5e/assets-v1/0b5f93c6-5ff5-4f48-ae8a-99c0dc75cfcd/homesbrain-mark.png";
+const BRAND_MARK_URL = "https://homesbrain.com/__l5e/assets-v1/3b9a6bcb-b552-4cc0-bd4b-53d5f3fd1198/homesbrain-mark.png";
 
 export type EmailShellOptions = {
   lang?: string;
