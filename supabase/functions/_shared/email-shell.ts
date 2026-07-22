@@ -43,7 +43,12 @@ export function protectBrand(escaped: string): string {
   return escaped.replace(/HomesBrain/g, HB);
 }
 
-const HOUSE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14v-9.5"/><path d="M10 20v-5h4v5"/></svg>`;
+// Hosted PNG house mark on the verified production domain. Inline SVG is
+// stripped by Gmail Web, so a plain <img> with explicit width/height is the
+// only format that renders consistently across Gmail (web+mobile), Apple
+// Mail, and Outlook. Alt text keeps a graceful fallback when images are
+// blocked.
+const BRAND_MARK_URL = "https://homesbrain.com/__l5e/assets-v1/0b5f93c6-5ff5-4f48-ae8a-99c0dc75cfcd/homesbrain-mark.png";
 
 export type EmailShellOptions = {
   lang?: string;
@@ -105,6 +110,13 @@ export function renderFinePrint(text: string): string {
   return `<p style="margin:18px 0 0;font-family:${FONT_STACK};font-size:12.5px;line-height:1.55;color:#8a877f;">${protectBrand(esc(text))}</p>`;
 }
 
+// Stronger secondary line under the CTA — darker and heavier than fine
+// print, but still visually behind the button. Used for the "free, private,
+// yours for life" reassurance.
+export function renderReassurance(text: string): string {
+  return `<p style="margin:18px 0 0;font-family:${FONT_STACK};font-size:14px;line-height:1.55;color:#3d3b34;font-weight:600;">${protectBrand(esc(text))}</p>`;
+}
+
 function renderFooter(opts: {
   reason?: string;
   unsubUrl?: string;
@@ -137,7 +149,7 @@ export function renderEmailShell(opts: EmailShellOptions): string {
   <div style="max-width:600px;margin:0 auto;padding:32px 20px;">
     <table role="presentation" style="border-collapse:collapse;"><tr>
       <td style="vertical-align:middle;padding-right:12px;">
-        <div style="width:40px;height:40px;border-radius:11px;background:#473fb0;display:flex;align-items:center;justify-content:center;line-height:0;">${HOUSE_ICON_SVG}</div>
+        <img src="${BRAND_MARK_URL}" width="40" height="40" alt="HomesBrain" style="display:block;width:40px;height:40px;border:0;outline:none;border-radius:11px;" />
       </td>
       <td style="vertical-align:middle;">
         <div style="font-family:${FONT_STACK};font-size:20px;font-weight:800;letter-spacing:-0.01em;color:#16160f;line-height:1.2;">${title}</div>

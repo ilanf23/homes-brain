@@ -9,6 +9,7 @@ type AuthenticatedPro = {
     id: string;
     business: string;
     logo: string | null;
+    owner_first_name: string | null;
   };
 };
 
@@ -32,7 +33,7 @@ export async function authenticatePro(
 
   const { data: pro } = await admin
     .from("pros")
-    .select("id,business,logo")
+    .select("id,business,logo,owner_first_name")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
   if (!pro) return null;
@@ -44,6 +45,7 @@ export async function authenticatePro(
       id: pro.id,
       business: pro.business ?? "Your service pro",
       logo: pro.logo ?? null,
+      owner_first_name: pro.owner_first_name ?? null,
     },
   };
 }
