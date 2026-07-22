@@ -680,10 +680,14 @@ Deno.serve(async (req) => {
     }
 
     const safeBusiness = (pro.business ?? "").replace(/[<>]/g, "").trim();
+    const proFirstName = (pro.owner_first_name ?? "")
+      .replace(/[<>]/g, "")
+      .trim();
     const email = recordEmail({
       locale: localeUsed,
       business: safeBusiness,
       logo: pro.logo ?? null,
+      noteName: proFirstName || safeBusiness,
       address,
       whatDone: latestJob?.what_done ?? null,
       equipment,
