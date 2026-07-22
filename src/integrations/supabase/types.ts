@@ -320,6 +320,8 @@ export type Database = {
           notify_email: boolean
           notify_sms: boolean
           phone: string | null
+          promo_sms_consent: boolean
+          promo_sms_consent_at: string | null
           respect_quiet_hrs: boolean
           setup_completed_at: string | null
           sms_consent_at: string | null
@@ -336,6 +338,8 @@ export type Database = {
           notify_email?: boolean
           notify_sms?: boolean
           phone?: string | null
+          promo_sms_consent?: boolean
+          promo_sms_consent_at?: string | null
           respect_quiet_hrs?: boolean
           setup_completed_at?: string | null
           sms_consent_at?: string | null
@@ -352,6 +356,8 @@ export type Database = {
           notify_email?: boolean
           notify_sms?: boolean
           phone?: string | null
+          promo_sms_consent?: boolean
+          promo_sms_consent_at?: string | null
           respect_quiet_hrs?: boolean
           setup_completed_at?: string | null
           sms_consent_at?: string | null
@@ -1188,19 +1194,34 @@ export type Database = {
         Returns: undefined
       }
       homeowner_update_home: { Args: { p_address: string }; Returns: string }
-      homeowner_update_profile: {
-        Args: {
-          p_email?: string
-          p_marketing_consent?: boolean
-          p_name?: string
-          p_notify_email?: boolean
-          p_notify_sms?: boolean
-          p_phone?: string
-          p_respect_quiet_hrs?: boolean
-          p_sms_opt_out?: boolean
-        }
-        Returns: undefined
-      }
+      homeowner_update_profile:
+        | {
+            Args: {
+              p_email?: string
+              p_marketing_consent?: boolean
+              p_name?: string
+              p_notify_email?: boolean
+              p_notify_sms?: boolean
+              p_phone?: string
+              p_respect_quiet_hrs?: boolean
+              p_sms_opt_out?: boolean
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_email?: string
+              p_marketing_consent?: boolean
+              p_name?: string
+              p_notify_email?: boolean
+              p_notify_sms?: boolean
+              p_phone?: string
+              p_promo_sms_consent?: boolean
+              p_respect_quiet_hrs?: boolean
+              p_sms_opt_out?: boolean
+            }
+            Returns: undefined
+          }
       is_admin: { Args: never; Returns: boolean }
       is_email_opted_out: { Args: { p_email: string }; Returns: boolean }
       is_pro: { Args: never; Returns: boolean }
