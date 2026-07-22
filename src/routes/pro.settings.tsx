@@ -489,11 +489,21 @@ function ProSettings() {
                   label="Email notifications"
                 />
               </SettingRow>
-              <SettingRow label="Text messages" sub="Alerts by SMS">
+              <SettingRow label="Text messages" sub="Service alerts by SMS">
                 <Toggle
                   checked={prefs.notify_sms}
                   onChange={(v) => setPref("notify_sms", v)}
                   label="SMS notifications"
+                />
+              </SettingRow>
+              <SettingRow
+                label="Promotional texts"
+                sub="Tips, product updates, and occasional offers by SMS. Message and data rates may apply. Reply STOP to opt out."
+              >
+                <Toggle
+                  checked={prefs.promo_sms_consent}
+                  onChange={(v) => setPref("promo_sms_consent", v)}
+                  label="Promotional SMS"
                 />
               </SettingRow>
             </>
@@ -505,11 +515,13 @@ function ProSettings() {
           )}
           {prefErrBox}
           <p className="mt-3 text-xs text-muted">
-            Delivery is mocked until SMS compliance clears. Your preferences persist now.
+            Service texts require a phone number on your profile. Promotional texts are off by
+            default and only sent if you opt in.
           </p>
         </Card>
       </SectionScreen>
     ),
+
 
     reviews: (
       <SectionScreen
