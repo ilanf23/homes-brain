@@ -349,6 +349,7 @@ function recordEmail(opts: {
   locale: SupportedLocale;
   business: string;
   logo: string | null;
+  noteName: string; // pro first name if available, otherwise business
   address: string;
   whatDone: string | null;
   equipment: EquipmentPreview | null;
@@ -362,6 +363,7 @@ function recordEmail(opts: {
     locale,
     business,
     logo,
+    noteName,
     address,
     whatDone,
     equipment,
@@ -373,7 +375,7 @@ function recordEmail(opts: {
   } = opts;
   const copy = EMAIL_COPY[locale];
   const displayBusiness = business || "";
-  const cta = copy.cta(displayBusiness);
+  const cta = copy.cta;
   const localizedWork = (translatedWhatDone ?? whatDone ?? "").trim();
   const eqLine = equipmentLine(equipment, translatedEquipmentType);
   const eqPhrase = eqLine ? eqLine : null;
@@ -381,13 +383,17 @@ function recordEmail(opts: {
     ? formatEmailDate(nextServiceDate, locale)
     : null;
 
-  // Details rows: Service (truncated), Equipment, Next service. Address moved
-  // into the intro sentence. Warranty intentionally omitted (visible on the
-  // record page).
-  const detailRows: Array<{ label: string; value: string }> = [];
-  if (localizedWork) {
-    detailRows.push({ label: copy.service, value: truncate(localizedWork, 90) });
-  }
+  // Concise service label derived from structured data — never the raw
+  // what_done sentence (that text already lives in the note panel).
+  const eqTypeLocalized = (translatedEquipmentType ?? equipment?.type ?? "")
+    .trim();
+  const serviceLabel = eqTypeLocalized
+    ? `${eqTypeLocalized} ${copy.equipmentServiceSuffix}`
+    : copy.homeService;
+
+  const detailRows: Array<{ label: string; value: string }> = [
+    { label: copy.service, value: serviceLabel },
+  ];
   if (eqLine) detailRows.push({ label: copy.equipment, value: eqLine });
   if (nextServiceFormatted) {
     detailRows.push({ label: copy.nextService, value: nextServiceFormatted });
@@ -400,17 +406,20 @@ function recordEmail(opts: {
   }
   introHtml = introHtml.replace(esc(address), emphasize(address));
 
+  const valueSentence = copy.valueSentence(!!eqLine, !!nextServiceFormatted);
+
   const noteHtml = localizedWork
-    ? renderNotePanel(copy.noteFrom(displayBusiness), localizedWork)
+    ? renderNotePanel(copy.noteFrom(noteName || displayBusiness), localizedWork)
     : "";
 
   const bodyHtml = [
     renderH1(copy.title),
     renderBodyHtml(introHtml),
+    renderBodyHtml(esc(valueSentence)),
     noteHtml,
     renderDetails(detailRows),
     renderCta(ctaUrl, cta),
-    renderFinePrint(copy.oneTap),
+    renderReassurance(copy.reassurance),
   ].filter(Boolean).join("\n");
 
   // Plain-text mirror follows the same hierarchy.
@@ -418,20 +427,25 @@ function recordEmail(opts: {
     copy.title,
     "",
     copy.intro(displayBusiness, address, eqPhrase),
+    "",
+    valueSentence,
   ];
   if (localizedWork) {
-    textLines.push("", `${copy.noteFrom(displayBusiness)}:`, `"${localizedWork}"`);
+    textLines.push(
+      "",
+      `${copy.noteFrom(noteName || displayBusiness)}:`,
+      `"${localizedWork}"`,
+    );
   }
-  const summaryLines: string[] = [];
-  if (localizedWork) {
-    summaryLines.push(`${copy.service}: ${truncate(localizedWork, 90)}`);
-  }
+  const summaryLines: string[] = [
+    `${copy.service}: ${serviceLabel}`,
+  ];
   if (eqLine) summaryLines.push(`${copy.equipment}: ${eqLine}`);
   if (nextServiceFormatted) {
     summaryLines.push(`${copy.nextService}: ${nextServiceFormatted}`);
   }
-  if (summaryLines.length) textLines.push("", ...summaryLines);
-  textLines.push("", `${cta}: ${ctaUrl}`, "", copy.oneTap, "", copy.via);
+  textLines.push("", ...summaryLines);
+  textLines.push("", `${cta}: ${ctaUrl}`, "", copy.reassurance, "", copy.via);
   const reason = copy.reason(displayBusiness, address);
   textLines.push(complianceFooterText(unsubUrl, reason, copy.footer));
 
