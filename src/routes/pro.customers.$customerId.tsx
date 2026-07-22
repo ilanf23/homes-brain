@@ -315,27 +315,94 @@ function CustomerDetail() {
   async function sendClaimInvite() {
     if (!proId || !customer || inviting) return;
     setInviting(true);
-    const { data, error } = await supabase.functions.invoke("invite-claim", {
-      body: { customer_id: customerId, pro_id: proId, origin: window.location.origin },
-    });
+
+    const hasEmail = !!customer.email?.trim();
+    const phone = customer.phone?.trim() ?? "";
+    const canSms = !!phone && !!customer.consent_at;
+
+    // Email path: existing invite-claim edge function (skip when there's no
+    // email so we don't hit no_email for phone-only customers).
+    let emailOk = false;
+    let emailCode: string | undefined;
+    let invitedAt: string | undefined;
+    if (hasEmail) {
+      const { data, error } = await supabase.functions.invoke("invite-claim", {
+        body: { customer_id: customerId, pro_id: proId, origin: window.location.origin },
+      });
+      const result = data as {
+        ok: boolean;
+        code?:
+          | "no_email"
+          | "already_claimed"
+          | "no_record"
+          | "cooldown"
+          | "not_configured"
+          | "daily_limit"
+          | "bad_request"
+          | "forbidden"
+          | "send_failed"
+          | "error";
+        invited_at?: string;
+      } | null;
+      if (!error && result?.ok) {
+        emailOk = true;
+        invitedAt = result.invited_at;
+      } else {
+        emailCode = result?.code;
+        if (emailCode === "cooldown" && result?.invited_at) {
+          invitedAt = result.invited_at;
+        }
+      }
+    }
+
+    // SMS path: mint a fresh claim URL and text it. Only fires with phone
+    // and transactional consent captured on the customer row.
+    let smsOk = false;
+    let smsCode: string | undefined;
+    if (canSms) {
+      const latestRecordId = jobs
+        .flatMap((j) => (j.records ?? []).map((r) => ({ id: r.id, ts: j.created_at })))
+        .sort((a, b) => (a.ts < b.ts ? 1 : -1))[0]?.id;
+      if (!latestRecordId) {
+        smsCode = "no_record";
+      } else {
+        try {
+          const { data: qr } = await supabase.functions.invoke("claim-qr", {
+            body: {
+              customer_id: customerId,
+              pro_id: proId,
+              record_id: latestRecordId,
+              origin: window.location.origin,
+            },
+          });
+          const claimUrl =
+            !!qr &&
+            (qr as { ok?: boolean; claim_url?: string }).ok === true &&
+            typeof (qr as { claim_url?: string }).claim_url === "string"
+              ? (qr as { claim_url: string }).claim_url
+              : null;
+          if (!claimUrl) {
+            smsCode = "send_failed";
+          } else {
+            const businessName = pro?.business?.trim() || "Your service pro";
+            const body = `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
+            const res = await sendSms(phone, body, "claim_invite");
+            if (res.ok) {
+              smsOk = true;
+            } else {
+              smsCode = res.code;
+            }
+          }
+        } catch {
+          smsCode = "send_failed";
+        }
+      }
+    }
+
     setInviting(false);
-    const result = data as {
-      ok: boolean;
-      code?:
-        | "no_email"
-        | "already_claimed"
-        | "no_record"
-        | "cooldown"
-        | "not_configured"
-        | "daily_limit"
-        | "bad_request"
-        | "forbidden"
-        | "send_failed"
-        | "error";
-      invited_at?: string;
-    } | null;
-    if (error || !result?.ok) {
-      const code = result?.code;
+
+    if (!emailOk && !smsOk) {
+      const code = emailCode ?? smsCode;
       setToast(
         code === "no_email"
           ? "No email on file."
@@ -344,22 +411,38 @@ function CustomerDetail() {
             : code === "no_record"
               ? "Log a job first so there's a record to claim."
               : code === "cooldown"
-                ? `Already invited ${result?.invited_at ? formatDate(result.invited_at) : "recently"}. Invites can go out once every 7 days.`
+                ? `Already invited ${invitedAt ? formatDate(invitedAt) : "recently"}. Invites can go out once every 7 days.`
                 : code === "not_configured"
                   ? "Email is not configured yet."
                   : code === "daily_limit"
                     ? "Daily invite limit reached. Try again tomorrow."
-                    : "Could not send the invite. Try again.",
+                    : code === "opted_out"
+                      ? "This number replied STOP. They won't get texts."
+                      : code === "bad_number"
+                        ? "That phone number isn't valid for SMS."
+                        : "Could not send the invite. Try again.",
       );
-      if (code === "cooldown" && result?.invited_at) {
-        setCustomer((c) => (c ? { ...c, claim_invited_at: result.invited_at! } : c));
+      if (emailCode === "cooldown" && invitedAt) {
+        setCustomer((c) => (c ? { ...c, claim_invited_at: invitedAt! } : c));
       }
       return;
     }
-    setCustomer((c) => (c ? { ...c, claim_invited_at: result.invited_at ?? null } : c));
-    await logEvent(`pro:${proId}`, "claim_invite_sent", { customer_id: customerId });
-    setToast("Claim invite sent");
+
+    const stampedInvitedAt = invitedAt ?? new Date().toISOString();
+    setCustomer((c) => (c ? { ...c, claim_invited_at: stampedInvitedAt } : c));
+    await logEvent(`pro:${proId}`, "claim_invite_sent", {
+      customer_id: customerId,
+      channels: { email: emailOk, sms: smsOk },
+    });
+    setToast(
+      emailOk && smsOk
+        ? "Claim invite sent by email and text"
+        : smsOk
+          ? "Claim invite texted"
+          : "Claim invite sent",
+    );
   }
+
 
   function focusComposer() {
     if (tab === "jobs" || tab === "invoices") setTab("activity");
