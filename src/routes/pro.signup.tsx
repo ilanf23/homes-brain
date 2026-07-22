@@ -225,6 +225,38 @@ function ProSignup() {
                 }}
               />
             </Field>
+            <Field label="Mobile number (optional)" hint="For text alerts. Standard rates may apply.">
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                autoComplete="tel"
+                inputMode="tel"
+              />
+            </Field>
+            <label className="flex items-start gap-2.5 text-xs text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                checked={promoSms}
+                onChange={(e) => setPromoSms(e.target.checked)}
+                disabled={!phone.trim()}
+                className="mt-0.5 h-4 w-4 rounded border-line accent-indigo"
+              />
+              <span>
+                Text me tips, product updates, and occasional offers. Message and data rates may
+                apply. Reply STOP to opt out. See{" "}
+                <Link to="/privacy" className="underline hover:text-ink">
+                  Privacy
+                </Link>{" "}
+                and{" "}
+                <Link to="/messaging-terms" className="underline hover:text-ink">
+                  Messaging Terms
+                </Link>
+                .
+              </span>
+            </label>
+
             {err && (
               <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
                 {err}
