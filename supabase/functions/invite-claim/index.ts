@@ -114,19 +114,16 @@ function equipmentLine(
 
 type EmailCopy = {
   subject: (business: string) => string;
-  addedAt: (business: string, address: string) => string;
-  record: string;
-  address: string;
-  work: string;
+  title: string;
+  intro: (business: string, address: string, eqPhrase: string | null) => string;
+  yourHome: string;
+  noteFrom: (business: string) => string;
+  service: string;
   equipment: string;
-  warranty: string;
-  warrantyThrough: (date: string) => string;
-  openHome: string;
-  claimRecord: string;
+  nextService: string;
+  cta: (business: string) => string;
   tagline: string;
   via: string;
-  title: (business: string) => string;
-  description: (business: string) => string;
   oneTap: string;
   reason: (business: string, address: string) => string;
   footer: ComplianceFooterCopy;
@@ -136,28 +133,22 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   en: {
     subject: (business) =>
       business
-        ? `${business} added a service record for your home`
-        : `You have a new service record`,
-    addedAt: (business, address) =>
-      `${business} added a new service record to your home at ${address}.`,
-    record: "Record",
-    address: "Address",
-    work: "Work done",
+        ? `${business} saved today's service record for your home`
+        : `Your service record is ready`,
+    title: "Your home remembers today's service.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Your pro"} created a permanent record after servicing ${eqPhrase || "your home"} at ${address}.`,
+    yourHome: "your home",
+    noteFrom: (business) => `A note from ${business || "your pro"}`,
+    service: "Service",
     equipment: "Equipment",
-    warranty: "Warranty",
-    warrantyThrough: (date) => `Warranty through ${date}`,
-    openHome: "Add record",
-    claimRecord: "Add record",
+    nextService: "Next service",
+    cta: (business) =>
+      business ? `See what ${business} saved` : `See your record`,
     tagline: "Every visit builds your home's living record. Free for life.",
     via: "via HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} added a service record for your home`
-        : `You have a new service record`,
-    description: (business) =>
-      `${business || "Your pro"} added a new record to your home. It's saved to your address for life. Free.`,
     oneTap:
-      "One tap opens your record and signs you in. This link only works from your inbox.",
+      "One tap opens the record. It's free, private, and yours for life.",
     reason: (business, address) =>
       `You're receiving this because ${business || "your pro"} services your home at ${address}. HomesBrain hosts the record on their behalf.`,
     footer: {
@@ -170,29 +161,23 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   es: {
     subject: (business) =>
       business
-        ? `${business} agregó un registro de servicio para tu hogar`
-        : `Tienes un nuevo registro de servicio`,
-    addedAt: (business, address) =>
-      `${business} agregó un nuevo registro de servicio para tu hogar en ${address}.`,
-    record: "Registro",
-    address: "Dirección",
-    work: "Trabajo realizado",
+        ? `${business} guardó el registro de servicio de hoy para tu hogar`
+        : `Tu registro de servicio está listo`,
+    title: "Tu hogar recuerda el servicio de hoy.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Tu profesional"} creó un registro permanente después de dar servicio a ${eqPhrase || "tu hogar"} en ${address}.`,
+    yourHome: "tu hogar",
+    noteFrom: (business) => `Una nota de ${business || "tu profesional"}`,
+    service: "Servicio",
     equipment: "Equipo",
-    warranty: "Garantía",
-    warrantyThrough: (date) => `Garantía hasta ${date}`,
-    openHome: "Agregar registro",
-    claimRecord: "Agregar registro",
+    nextService: "Próximo servicio",
+    cta: (business) =>
+      business ? `Ver lo que ${business} guardó` : `Ver tu registro`,
     tagline:
       "Cada visita construye el historial vivo de tu hogar. Gratis de por vida.",
     via: "a través de HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} agregó un registro de servicio para tu hogar`
-        : `Tienes un nuevo registro de servicio`,
-    description: (business) =>
-      `${business || "Tu profesional"} agregó un nuevo registro a tu hogar. Queda guardado en tu dirección de por vida. Gratis.`,
     oneTap:
-      "Un toque abre tu registro e inicia tu sesión. Este enlace solo funciona desde tu correo.",
+      "Un toque abre el registro. Es gratis, privado y tuyo de por vida.",
     reason: (business, address) =>
       `Recibes este correo porque ${business || "tu profesional"} presta servicio a tu hogar en ${address}. HomesBrain aloja el registro en su nombre.`,
     footer: {
@@ -205,29 +190,23 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   ru: {
     subject: (business) =>
       business
-        ? `${business} добавил запись об обслуживании вашего дома`
-        : `У вас новая запись об обслуживании`,
-    addedAt: (business, address) =>
-      `${business} добавил новую запись об обслуживании вашего дома по адресу ${address}.`,
-    record: "Запись",
-    address: "Адрес",
-    work: "Выполненные работы",
+        ? `${business} сохранил сегодняшнюю запись обслуживания вашего дома`
+        : `Ваша запись об обслуживании готова`,
+    title: "Ваш дом помнит сегодняшнее обслуживание.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Ваш специалист"} создал постоянную запись после обслуживания ${eqPhrase || "вашего дома"} по адресу ${address}.`,
+    yourHome: "вашего дома",
+    noteFrom: (business) => `Заметка от ${business || "вашего специалиста"}`,
+    service: "Услуга",
     equipment: "Оборудование",
-    warranty: "Гарантия",
-    warrantyThrough: (date) => `Гарантия до ${date}`,
-    openHome: "Добавить запись",
-    claimRecord: "Добавить запись",
+    nextService: "Следующее обслуживание",
+    cta: (business) =>
+      business ? `Посмотреть, что сохранил ${business}` : `Открыть запись`,
     tagline:
       "Каждый визит дополняет живую историю вашего дома. Бесплатно навсегда.",
     via: "через HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} добавил запись об обслуживании вашего дома`
-        : `У вас новая запись об обслуживании`,
-    description: (business) =>
-      `${business || "Ваш специалист"} добавил новую запись о вашем доме. Она навсегда сохранена за вашим адресом. Бесплатно.`,
     oneTap:
-      "Одно нажатие откроет запись и выполнит вход. Ссылка работает только из вашего почтового ящика.",
+      "Одно нажатие открывает запись. Бесплатно, приватно и навсегда ваше.",
     reason: (business, address) =>
       `Вы получили это письмо, потому что ${business || "ваш специалист"} обслуживает ваш дом по адресу ${address}. HomesBrain хранит запись от имени компании.`,
     footer: {
@@ -240,29 +219,23 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
   uk: {
     subject: (business) =>
       business
-        ? `${business} додав запис про обслуговування вашого дому`
-        : `У вас новий запис про обслуговування`,
-    addedAt: (business, address) =>
-      `${business} додав новий запис про обслуговування вашого дому за адресою ${address}.`,
-    record: "Запис",
-    address: "Адреса",
-    work: "Виконані роботи",
+        ? `${business} зберіг сьогоднішній запис обслуговування для вашого дому`
+        : `Ваш запис обслуговування готовий`,
+    title: "Ваш дім пам'ятає сьогоднішнє обслуговування.",
+    intro: (business, address, eqPhrase) =>
+      `${business || "Ваш фахівець"} створив постійний запис після обслуговування ${eqPhrase || "вашого дому"} за адресою ${address}.`,
+    yourHome: "вашого дому",
+    noteFrom: (business) => `Нотатка від ${business || "вашого фахівця"}`,
+    service: "Послуга",
     equipment: "Обладнання",
-    warranty: "Гарантія",
-    warrantyThrough: (date) => `Гарантія до ${date}`,
-    openHome: "Додати запис",
-    claimRecord: "Додати запис",
+    nextService: "Наступне обслуговування",
+    cta: (business) =>
+      business ? `Подивитись, що зберіг ${business}` : `Відкрити запис`,
     tagline:
       "Кожен візит доповнює живу історію вашого дому. Безкоштовно назавжди.",
     via: "через HomesBrain",
-    title: (business) =>
-      business
-        ? `${business} додав запис про обслуговування вашого дому`
-        : `У вас новий запис про обслуговування`,
-    description: (business) =>
-      `${business || "Ваш фахівець"} додав новий запис про ваш дім. Він назавжди зберігається за вашою адресою. Безкоштовно.`,
     oneTap:
-      "Одне натискання відкриє запис і виконає вхід. Посилання працює лише з вашої поштової скриньки.",
+      "Одне натискання відкриває запис. Безкоштовно, приватно й назавжди ваше.",
     reason: (business, address) =>
       `Ви отримали цей лист, тому що ${business || "ваш фахівець"} обслуговує ваш дім за адресою ${address}. HomesBrain зберігає запис від імені компанії.`,
     footer: {
