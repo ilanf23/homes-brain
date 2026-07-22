@@ -858,6 +858,8 @@ export type Database = {
           plan: string
           plan_since: string | null
           plan_status: string
+          promo_sms_consent: boolean
+          promo_sms_consent_at: string | null
           quickbooks_connected: boolean
           referral_code: string | null
           referred_by: string | null
@@ -891,6 +893,8 @@ export type Database = {
           plan?: string
           plan_since?: string | null
           plan_status?: string
+          promo_sms_consent?: boolean
+          promo_sms_consent_at?: string | null
           quickbooks_connected?: boolean
           referral_code?: string | null
           referred_by?: string | null
@@ -924,6 +928,8 @@ export type Database = {
           plan?: string
           plan_since?: string | null
           plan_status?: string
+          promo_sms_consent?: boolean
+          promo_sms_consent_at?: string | null
           quickbooks_connected?: boolean
           referral_code?: string | null
           referred_by?: string | null
