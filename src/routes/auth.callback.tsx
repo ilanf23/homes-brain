@@ -51,7 +51,10 @@ function AuthCallback() {
         trade?: string;
         service_area?: string;
         ref?: string | null;
+        phone?: string | null;
+        promo_sms_consent?: boolean;
       } | null = null;
+
       try {
         const raw = localStorage.getItem("hb_pending_pro_signup");
         if (raw) pending = JSON.parse(raw);
