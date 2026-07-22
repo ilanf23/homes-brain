@@ -235,6 +235,32 @@ function ClaimByToken() {
         p_first_name: resp.first_name ?? undefined,
       });
       if (ensureErr) console.error("pro_ensure failed", ensureErr);
+      // Apply optional phone + promo-SMS consent captured on /pro/signup.
+      try {
+        const raw = localStorage.getItem("hb_pending_pro_signup");
+        if (raw) {
+          const pending = JSON.parse(raw) as {
+            phone?: string | null;
+            promo_sms_consent?: boolean;
+          };
+          const patch: Record<string, unknown> = {};
+          if (pending.phone && pending.phone.trim()) patch.phone = pending.phone.trim();
+          if (pending.promo_sms_consent) {
+            patch.promo_sms_consent = true;
+            patch.promo_sms_consent_at = new Date().toISOString();
+          }
+          if (Object.keys(patch).length) {
+            await supabase
+              .from("pros")
+              .update(patch as never)
+              .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id ?? "");
+          }
+          localStorage.removeItem("hb_pending_pro_signup");
+        }
+      } catch {
+        // ignore
+      }
+
       // Attribute the referral once the pros row exists. set_referrer is a
       // no-op if this pro already has a referrer or the ref is self/unknown.
       if (ref) {

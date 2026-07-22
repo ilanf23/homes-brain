@@ -43,12 +43,42 @@ function ProSignup() {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState(search.email ?? "");
+  const [phone, setPhone] = useState("");
+  const [promoSms, setPromoSms] = useState(false);
 
   const canContinue = firstName.trim().length > 0 && isValidEmail(email.trim());
+
+  function stashPending(extra?: Record<string, unknown>) {
+    try {
+      const existing = (() => {
+        try {
+          const raw = localStorage.getItem("hb_pending_pro_signup");
+          return raw ? JSON.parse(raw) : {};
+        } catch {
+          return {};
+        }
+      })();
+      localStorage.setItem(
+        "hb_pending_pro_signup",
+        JSON.stringify({
+          ...existing,
+          phone: phone.trim() || null,
+          promo_sms_consent: !!promoSms,
+          ...(extra ?? {}),
+        }),
+      );
+    } catch {
+      // ignore storage failure
+    }
+  }
+
 
   async function sendMagicLink() {
     setSubmitting(true);
     setErr(null);
+    // Persist phone + promo-SMS consent so /claim/:token can apply them
+    // to the pros row once the magic link creates a session.
+    stashPending({ intent: "pro", owner_first_name: firstName.trim() || null });
     const { data, error } = await supabase.functions.invoke("pro-login", {
       body: {
         email: email.trim(),
@@ -80,25 +110,20 @@ function ProSignup() {
     setSubmitting(false);
   }
 
+
   async function continueWithGoogle() {
     setGoogleBusy(true);
     setErr(null);
     // Stash pro-signup intent + captured first name so /auth/callback can
     // create the pros row for a brand-new pro coming back from Google.
-    try {
-      localStorage.setItem(
-        "hb_pending_pro_signup",
-        JSON.stringify({
-          intent: "pro",
-          owner_first_name: firstName.trim() || null,
-          // OAuth returns to the same browser, so localStorage is a reliable
-          // carrier for the referral id on the Google path.
-          ref: search.ref ?? null,
-        }),
-      );
-    } catch {
-      // ignore storage failure; callback will fall back to homeowner default
-    }
+    stashPending({
+      intent: "pro",
+      owner_first_name: firstName.trim() || null,
+      // OAuth returns to the same browser, so localStorage is a reliable
+      // carrier for the referral id on the Google path.
+      ref: search.ref ?? null,
+    });
+
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/auth/callback`,
     });
@@ -200,6 +225,38 @@ function ProSignup() {
                 }}
               />
             </Field>
+            <Field label="Mobile number (optional)" hint="For text alerts. Standard rates may apply.">
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                autoComplete="tel"
+                inputMode="tel"
+              />
+            </Field>
+            <label className="flex items-start gap-2.5 text-xs text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                checked={promoSms}
+                onChange={(e) => setPromoSms(e.target.checked)}
+                disabled={!phone.trim()}
+                className="mt-0.5 h-4 w-4 rounded border-line accent-indigo"
+              />
+              <span>
+                Text me tips, product updates, and occasional offers. Message and data rates may
+                apply. Reply STOP to opt out. See{" "}
+                <Link to="/privacy" className="underline hover:text-ink">
+                  Privacy
+                </Link>{" "}
+                and{" "}
+                <Link to="/messaging-terms" className="underline hover:text-ink">
+                  Messaging Terms
+                </Link>
+                .
+              </span>
+            </label>
+
             {err && (
               <div role="alert" className="text-sm text-red bg-redbg rounded-xl px-3 py-2">
                 {err}
