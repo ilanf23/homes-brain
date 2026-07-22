@@ -492,7 +492,7 @@ Deno.serve(async (req) => {
     const { admin, pro } = auth;
 
     const body = await req.json();
-    const { customer_id, pro_id, origin, record_id, translations, subject_override } = body;
+    const { customer_id, pro_id, origin, record_id, translations } = body;
     if (typeof customer_id !== "string" || !customer_id) {
       console.error("invite-claim bad_request", {
         hasBody: !!body,
@@ -724,9 +724,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: `${fromDisplay} <invites@homesbrain.com>`,
         to: [customer.email],
-        subject: (typeof subject_override === "string" && subject_override.trim().length > 0 && subject_override.length <= 200)
-          ? subject_override.trim()
-          : email.subject,
+        subject: email.subject,
         html: email.html,
         text: email.text,
         headers: listUnsubscribeHeaders(unsubToken),
