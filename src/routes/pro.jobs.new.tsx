@@ -1774,56 +1774,73 @@ function NewJob() {
     return { address: addr, placeId: null, lat: coords?.lat ?? null, lng: coords?.lng ?? null };
   }
 
-  async function deliverRecord(customerId: string, recordId: string) {
-    try {
-      const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
-        body: {
-          customer_id: customerId,
-          origin: window.location.origin,
-          record_id: recordId,
-          locale: customerLocale,
-          translations:
-            translationState === "ready" && translatedRecord
-              ? {
-                  what_done: translatedRecord.whatDone,
-                  equipment_type: translatedRecord.equipmentType,
-                }
-              : null,
-        },
-      });
-      // On non-2xx, supabase-js sets `sendErr` and leaves `sendResp` null,
-      // discarding the JSON `{code}` in the error body. Read it off
-      // `sendErr.context` (a Response) so the pro sees the real reason
-      // instead of a generic "check your connection" fallback.
-      let parsedResp = sendResp as { ok?: boolean; code?: string } | null;
-      if (sendErr && !parsedResp) {
-        const ctx = (sendErr as { context?: Response } | null)?.context;
-        if (ctx && typeof ctx.clone === "function") {
-          try {
-            parsedResp = (await ctx.clone().json()) as { ok?: boolean; code?: string };
-          } catch {
-            /* body wasn't JSON: fall through to generic code */
+  async function deliverRecord(
+    customerId: string,
+    recordId: string,
+    opts: { email: string; phone: string; consented: boolean },
+  ) {
+    let emailOk = false;
+    let smsOk = false;
+    let claimUrl: string | null = null;
+    let localeUsed: Locale = customerLocale;
+    let translationFallback = false;
+    let code: string | undefined;
+
+    // 1) Email via invite-claim (only when we have an email on file).
+    if (opts.email) {
+      try {
+        const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
+          body: {
+            customer_id: customerId,
+            origin: window.location.origin,
+            record_id: recordId,
+            locale: customerLocale,
+            translations:
+              translationState === "ready" && translatedRecord
+                ? {
+                    what_done: translatedRecord.whatDone,
+                    equipment_type: translatedRecord.equipmentType,
+                  }
+                : null,
+          },
+        });
+        // On non-2xx, supabase-js sets `sendErr` and leaves `sendResp` null,
+        // discarding the JSON `{code}` in the error body. Read it off
+        // `sendErr.context` (a Response) so the pro sees the real reason.
+        let parsedResp = sendResp as
+          | { ok?: boolean; code?: string; locale_used?: unknown; translation_fallback?: unknown }
+          | null;
+        if (sendErr && !parsedResp) {
+          const ctx = (sendErr as { context?: Response } | null)?.context;
+          if (ctx && typeof ctx.clone === "function") {
+            try {
+              parsedResp = (await ctx.clone().json()) as typeof parsedResp;
+            } catch {
+              /* body wasn't JSON: fall through */
+            }
           }
         }
+        const ok = !sendErr && !!parsedResp && parsedResp.ok !== false;
+        if (ok) {
+          emailOk = true;
+          await supabase
+            .from("records")
+            .update({ sent_email_at: new Date().toISOString() })
+            .eq("id", recordId);
+          if (isLocale(parsedResp?.locale_used)) localeUsed = parsedResp.locale_used as Locale;
+          translationFallback = parsedResp?.translation_fallback === true;
+        } else {
+          code = parsedResp?.code || sendErr?.message || "send_failed";
+        }
+      } catch {
+        code = code ?? "send_failed";
       }
-      const ok = !sendErr && !!parsedResp && parsedResp.ok !== false;
-      if (!ok) {
-        return {
-          ok: false as const,
-          code: parsedResp?.code || sendErr?.message || "send_failed",
-        };
-      }
+    }
 
-      // Delivery already happened even if the bookkeeping update or QR mint
-      // fails, so neither follow-up is allowed to turn a sent email into a
-      // false failure state.
-      await supabase
-        .from("records")
-        .update({ sent_email_at: new Date().toISOString() })
-        .eq("id", recordId);
-      const localeUsed = isLocale((sendResp as { locale_used?: unknown }).locale_used)
-        ? (sendResp as { locale_used: Locale }).locale_used
-        : "en";
+    // 2) Mint the branded claim URL (needed for SMS body and for "show QR").
+    //    Runs whether or not the email step ran so phone-only customers still
+    //    have a link to send.
+    try {
       const { data: qr } = await supabase.functions.invoke("claim-qr", {
         body: {
           customer_id: customerId,
@@ -1833,23 +1850,47 @@ function NewJob() {
           locale: localeUsed,
         },
       });
-      const claimUrl =
+      if (
         !!qr &&
         (qr as { ok?: boolean; claim_url?: string }).ok === true &&
         typeof (qr as { claim_url?: string }).claim_url === "string"
-          ? (qr as { claim_url: string }).claim_url
-          : null;
-      return {
-        ok: true as const,
-        claimUrl,
-        localeUsed,
-        translationFallback:
-          (sendResp as { translation_fallback?: unknown }).translation_fallback === true,
-      };
+      ) {
+        claimUrl = (qr as { claim_url: string }).claim_url;
+      }
     } catch {
-      return { ok: false as const, code: "send_failed" };
+      /* claim URL is best-effort; email delivery may already have succeeded */
     }
+
+    // 3) SMS via send-sms when we have phone + transactional consent + a link.
+    //    Every body carries the pro's business name and a STOP disclosure per
+    //    A2P 10DLC requirements.
+    if (opts.phone && opts.consented && claimUrl) {
+      const businessName = pro?.business?.trim() || "Your service pro";
+      const body = `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
+      const res = await sendSms(opts.phone, body, "claim_invite");
+      if (res.ok) {
+        smsOk = true;
+        await supabase
+          .from("records")
+          .update({ sent_sms_at: new Date().toISOString() })
+          .eq("id", recordId);
+      } else if (!emailOk) {
+        code = code ?? res.code;
+      }
+    }
+
+    const ok = emailOk || smsOk;
+    return {
+      ok,
+      emailOk,
+      smsOk,
+      claimUrl,
+      localeUsed,
+      translationFallback,
+      code: ok ? undefined : (code ?? "send_failed"),
+    };
   }
+
 
   async function submit() {
     if (!proId) return;
