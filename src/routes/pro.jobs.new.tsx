@@ -2299,21 +2299,41 @@ function NewJob() {
       else setBillingError("The job was saved, but the invoice could not be created.");
     }
 
+    // Consent is captured on job step 1 for every new customer; for a dedupe
+    // adopt we re-query so we never fire SMS to a customer whose consent row
+    // is empty (would fail A2P 10DLC transactional gating).
+    let consented = false;
+    if (phoneAddr) {
+      const { data: consentRow } = await supabase
+        .from("customers")
+        .select("consent_at")
+        .eq("id", customerId)
+        .maybeSingle();
+      consented = !!consentRow?.consent_at;
+    }
+
     let delivered = false;
+    let deliveredByEmail = false;
+    let deliveredBySms = false;
     let localeUsed: Locale = "en";
     let fellBack = false;
-    if (emailAddr) {
-      const delivery = await deliverRecord(customerId, rec.id);
-      if (delivery.ok) {
-        delivered = true;
-        localeUsed = delivery.localeUsed;
-        fellBack = delivery.translationFallback;
-        setDeliveryLocale(localeUsed);
-        setTranslationFallback(fellBack);
-        if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
-      } else {
-        setSendErrorCode(delivery.code);
-      }
+    let deliveryClaimUrl: string | null = null;
+    if (emailAddr || (phoneAddr && consented)) {
+      const delivery = await deliverRecord(customerId, rec.id, {
+        email: emailAddr,
+        phone: phoneAddr,
+        consented,
+      });
+      delivered = delivery.ok;
+      deliveredByEmail = delivery.emailOk;
+      deliveredBySms = delivery.smsOk;
+      localeUsed = delivery.localeUsed;
+      fellBack = delivery.translationFallback;
+      deliveryClaimUrl = delivery.claimUrl;
+      setDeliveryLocale(localeUsed);
+      setTranslationFallback(fellBack);
+      if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
+      if (!delivered && delivery.code) setSendErrorCode(delivery.code);
     }
 
     if (delivered) {
@@ -2325,19 +2345,34 @@ function NewJob() {
         translation_fallback: fellBack,
         has_video: !!videoFinal.current,
         photo_count: photoPaths.current.length,
+        channels: {
+          email: deliveredByEmail,
+          sms: deliveredBySms,
+        },
       });
-      // Google review ask: only fires on a real delivery, so the Reviews page
-      // count reflects reality. No mock SMS - texting is not live yet.
+      // Google review ask fires on any real delivery (email or SMS) so the
+      // Reviews page count reflects reality.
       if (askReview) {
         await logEvent(`pro:${proId}`, "review_requested", {
           customer_id: customerId,
           locale: localeUsed,
         });
       }
+
+      // Optional invoice SMS: transactional "your invoice is ready" text sent
+      // only when we actually charged AND we have phone + consent + a claim
+      // URL to point them at. Homeowner pays through /home from that link.
+      if (billedAmount != null && phoneAddr && consented && deliveryClaimUrl) {
+        const businessName = pro?.business?.trim() || "Your service pro";
+        const invoiceBody = `${businessName}: your invoice is ready — ${deliveryClaimUrl}\nReply STOP to opt out.`;
+        void sendSms(phoneAddr, invoiceBody, "other");
+      }
     } else if (emailAddr) {
       setDeliveryState("send_failed");
-    } else if (phoneAddr) {
+    } else if (phoneAddr && !consented) {
       setDeliveryState("phone_only");
+    } else if (phoneAddr) {
+      setDeliveryState("send_failed");
     } else {
       setDeliveryState("no_contact");
     }
@@ -2349,16 +2384,18 @@ function NewJob() {
     setSubmitting(false);
     setStage("done");
     if (delivered) {
+      const target = deliveredByEmail && emailAddr ? emailAddr : phoneAddr;
       setToast(
         fellBack
-          ? `Sent to ${emailAddr} in English because translation was unavailable.`
-          : `Sent to ${emailAddr}`,
+          ? `Sent to ${target} in English because translation was unavailable.`
+          : `Sent to ${target}`,
       );
     } else {
       setToast("Job saved");
     }
     setTimeout(() => setToast(null), 3500);
   }
+
 
   async function retrySavedRecord(email: string, persistEmail: boolean) {
     if (!sentCustomerId || !sentRecordId || !proId) return;
