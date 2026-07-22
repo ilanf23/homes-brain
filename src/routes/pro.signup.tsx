@@ -116,20 +116,14 @@ function ProSignup() {
     setErr(null);
     // Stash pro-signup intent + captured first name so /auth/callback can
     // create the pros row for a brand-new pro coming back from Google.
-    try {
-      localStorage.setItem(
-        "hb_pending_pro_signup",
-        JSON.stringify({
-          intent: "pro",
-          owner_first_name: firstName.trim() || null,
-          // OAuth returns to the same browser, so localStorage is a reliable
-          // carrier for the referral id on the Google path.
-          ref: search.ref ?? null,
-        }),
-      );
-    } catch {
-      // ignore storage failure; callback will fall back to homeowner default
-    }
+    stashPending({
+      intent: "pro",
+      owner_first_name: firstName.trim() || null,
+      // OAuth returns to the same browser, so localStorage is a reliable
+      // carrier for the referral id on the Google path.
+      ref: search.ref ?? null,
+    });
+
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/auth/callback`,
     });
