@@ -1866,7 +1866,9 @@ function NewJob() {
     //    A2P 10DLC requirements.
     if (opts.phone && opts.consented && claimUrl) {
       const businessName = pro?.business?.trim() || "Your service pro";
-      const body = `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
+      const body = opts.hasInvoice
+        ? `${businessName} sent you a service record + invoice: ${claimUrl}\nReply STOP to opt out.`
+        : `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
       const res = await sendSms(opts.phone, body, "claim_invite");
       if (res.ok) {
         smsOk = true;
