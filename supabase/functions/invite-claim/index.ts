@@ -344,7 +344,7 @@ function renderNotePanel(label: string, body: string): string {
         <div style="font-family:${NOTE_FONT_STACK};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#473fb0;">
           <span style="color:#c2461f;">&bull;</span>&nbsp;${safeLabel}
         </div>
-        <p style="margin:8px 0 0;font-family:${NOTE_FONT_STACK};font-size:15px;line-height:1.6;color:#16160f;font-style:italic;">${safeBody}</p>
+        <p style="margin:8px 0 0;font-family:${NOTE_FONT_STACK};font-size:15px;line-height:1.6;color:#16160f;font-weight:400;">${safeBody}</p>
       </td>
     </tr>
   </table>`;
