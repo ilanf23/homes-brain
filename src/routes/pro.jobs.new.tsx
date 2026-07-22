@@ -33,6 +33,7 @@ import {
   tradeLabel,
 } from "@/lib/hb";
 import { createInvoice, formatMoney } from "@/lib/invoices";
+import { sendSms } from "@/lib/sms";
 
 import { forwardGeocodeCapped, reverseGeocode, type ResolvedAddress } from "@/lib/geo";
 import { AddressField } from "@/components/address-field";
