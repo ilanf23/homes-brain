@@ -185,7 +185,7 @@ const EMAIL_COPY: Record<SupportedLocale, EmailCopy> = {
         : `Tu registro de servicio está listo`,
     title: "Tu hogar recuerda el servicio de hoy.",
     intro: (business, address, eqPhrase) =>
-      `${business || "Tu profesional"} creó un registro permanente después de dar servicio a ${eqPhrase || "tu hogar"} en ${address}.`,
+      `${business || "Tu profesional"} guardó un registro permanente del servicio de ${eqPhrase || "hogar"} de hoy en ${address}.`,
     valueSentence: (hasEquipment, hasNext) => {
       if (hasEquipment && hasNext) {
         return "Tu historial de servicio, los detalles del equipo y la próxima visita recomendada quedan guardados en un solo lugar.";
