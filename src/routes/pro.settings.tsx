@@ -250,16 +250,20 @@ function ProSettings() {
   /* Optimistic toggle: flip first, revert on failure. Silent on success -
      the switch itself is the feedback. */
   async function setPref(
-    key: "notify_email" | "notify_sms" | "review_requests_on",
+    key: "notify_email" | "notify_sms" | "review_requests_on" | "promo_sms_consent",
     value: boolean,
   ) {
     if (!prefs) return;
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
     setPrefErr(null);
+    const patch: Record<string, unknown> = { [key]: value };
+    if (key === "promo_sms_consent") {
+      patch.promo_sms_consent_at = value ? new Date().toISOString() : null;
+    }
     const { data, error } = await supabase
       .from("pros")
-      .update({ [key]: value } as Partial<Record<typeof key, boolean>>)
+      .update(patch)
       .eq("id", proId!)
       .select("id");
     if (error || !data?.length) {
@@ -267,6 +271,7 @@ function ProSettings() {
       setPrefErr("Couldn't save that change. Try again.");
     }
   }
+
 
   const referralLink =
     typeof window === "undefined"
