@@ -490,7 +490,7 @@ Deno.serve(async (req) => {
     const { data: jobRows } = await admin
       .from("jobs")
       .select(
-        "id,created_at,what_done,equipment_id,localized_content,records(id,created_at)",
+        "id,created_at,what_done,equipment_id,next_service_date,localized_content,records(id,created_at)",
       )
       .eq("home_id", customer.home_id)
       .eq("pro_id", pro.id)
