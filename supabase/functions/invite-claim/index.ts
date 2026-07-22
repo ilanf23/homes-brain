@@ -492,7 +492,7 @@ Deno.serve(async (req) => {
     const { admin, pro } = auth;
 
     const body = await req.json();
-    const { customer_id, pro_id, origin, record_id, translations } = body;
+    const { customer_id, pro_id, origin, record_id, translations, subject_override } = body;
     if (typeof customer_id !== "string" || !customer_id) {
       console.error("invite-claim bad_request", {
         hasBody: !!body,
