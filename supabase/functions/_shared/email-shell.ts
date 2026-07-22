@@ -43,7 +43,12 @@ export function protectBrand(escaped: string): string {
   return escaped.replace(/HomesBrain/g, HB);
 }
 
-const HOUSE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14v-9.5"/><path d="M10 20v-5h4v5"/></svg>`;
+// Hosted PNG house mark on the verified production domain. Inline SVG is
+// stripped by Gmail Web, so a plain <img> with explicit width/height is the
+// only format that renders consistently across Gmail (web+mobile), Apple
+// Mail, and Outlook. Alt text keeps a graceful fallback when images are
+// blocked.
+const BRAND_MARK_URL = "https://homesbrain.com/email/brand-mark.png";
 
 export type EmailShellOptions = {
   lang?: string;
