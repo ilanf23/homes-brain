@@ -2,8 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
-import { formatDate, logEvent, mockSend } from "@/lib/hb";
+import { formatDate, logEvent } from "@/lib/hb";
 import { formatMoney, markInvoicePaid, type ProInvoice } from "@/lib/invoices";
+import { supabase } from "@/integrations/supabase/client";
+import { sendSms, smsErrorMessage } from "@/lib/sms";
 
 /* "Needs attention" queue: every row is a problem plus a one-click action.
    Sources arrive pre-filtered and pre-sorted from the dashboard:
@@ -77,21 +79,39 @@ export function ActionQueue({
     const c = row.job.customer;
     if (!c || (!c.phone && !c.email)) return;
     setBusy(row.key);
-    const body = `Hi ${c.name.split(" ")[0]}, it's ${proBusiness}. Your ${row.job.what_done.toLowerCase()} is due for service around ${formatDate(row.job.next_service_date)}. Reply here or book a time and we'll take care of it.`;
-    await mockSend({
-      channel: c.phone ? "sms" : "email",
-      to: c.phone ?? c.email ?? "",
-      body,
-      kind: "other",
-    });
+    let deliveredVia: "sms" | "email" | "both" | null = null;
+    let smsFail: string | null = null;
+    // Prefer SMS when we have a phone; also fire the email follow-up when we have one.
+    if (c.phone) {
+      const firstName = c.name.split(" ")[0] || "there";
+      const body = `Hi ${firstName}, it's ${proBusiness}. Your ${row.job.what_done.toLowerCase()} is due around ${formatDate(row.job.next_service_date)}. Reply to book a time. Reply STOP to opt out.`;
+      const res = await sendSms(c.phone, body, "other");
+      if (res.ok) deliveredVia = "sms";
+      else smsFail = smsErrorMessage(res.code);
+    }
+    if (c.email) {
+      const { data } = await supabase.functions.invoke("send-follow-up", {
+        body: { job_id: row.job.id, origin: window.location.origin },
+      });
+      if ((data as { ok?: boolean } | null)?.ok) {
+        deliveredVia = deliveredVia ? "both" : "email";
+      }
+    }
     await logEvent(`pro:${proId}`, "rebook_nudge_sent", {
       job_id: row.job.id,
       customer_id: c.id,
+      via: deliveredVia,
     });
-    setDone((prev) => new Set(prev).add(row.key));
     setBusy(null);
-    onToast(`Rebook nudge sent to ${c.name} (mock)`);
+    if (!deliveredVia) {
+      onToast(smsFail ?? "Nudge didn't go through. Try again.");
+      return;
+    }
+    setDone((prev) => new Set(prev).add(row.key));
+    const label = deliveredVia === "both" ? "text + email" : deliveredVia === "sms" ? "text" : "email";
+    onToast(`Rebook nudge sent to ${c.name} by ${label}.`);
   }
+
 
   async function markPaid(row: Row & { kind: "invoice" }) {
     setBusy(row.key);
@@ -110,20 +130,34 @@ export function ActionQueue({
     const c = row.home.customer;
     if (!c || (!c.phone && !c.email)) return;
     setBusy(row.key);
-    const body = `Hi ${c.name.split(" ")[0]}, it's ${proBusiness}. Your service record for ${row.home.address} is waiting for you on HomesBrain. Claim your home to keep its history forever.`;
-    await mockSend({
-      channel: c.phone ? "sms" : "email",
-      to: c.phone ?? c.email ?? "",
-      body,
-      kind: "record",
-    });
+    const firstName = c.name.split(" ")[0] || "there";
+    let deliveredVia: "sms" | "email" | null = null;
+    let failMsg: string | null = null;
+    if (c.phone) {
+      const body = `Hi ${firstName}, it's ${proBusiness}. Your service record for ${row.home.address} is waiting on HomesBrain. Claim your home to keep its history forever. Reply STOP to opt out.`;
+      const res = await sendSms(c.phone, body, "record");
+      if (res.ok) deliveredVia = "sms";
+      else failMsg = smsErrorMessage(res.code);
+    }
+    if (!deliveredVia && c.email) {
+      // No phone available (or SMS failed) - fall back to email invite.
+      const { data } = await supabase.functions.invoke("invite-claim", {
+        body: { home_id: row.home.homeId, origin: window.location.origin },
+      });
+      if ((data as { ok?: boolean } | null)?.ok) deliveredVia = "email";
+    }
     await logEvent(`pro:${proId}`, "claim_nudge_sent", {
       home_id: row.home.homeId,
       customer_id: c.id,
+      via: deliveredVia,
     });
-    setDone((prev) => new Set(prev).add(row.key));
     setBusy(null);
-    onToast(`Claim reminder sent to ${c.name} (mock)`);
+    if (!deliveredVia) {
+      onToast(failMsg ?? "Reminder didn't go through. Try again.");
+      return;
+    }
+    setDone((prev) => new Set(prev).add(row.key));
+    onToast(`Claim reminder sent to ${c.name} by ${deliveredVia === "sms" ? "text" : "email"}.`);
   }
 
   return (
