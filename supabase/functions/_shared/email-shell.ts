@@ -110,6 +110,13 @@ export function renderFinePrint(text: string): string {
   return `<p style="margin:18px 0 0;font-family:${FONT_STACK};font-size:12.5px;line-height:1.55;color:#8a877f;">${protectBrand(esc(text))}</p>`;
 }
 
+// Stronger secondary line under the CTA — darker and heavier than fine
+// print, but still visually behind the button. Used for the "free, private,
+// yours for life" reassurance.
+export function renderReassurance(text: string): string {
+  return `<p style="margin:18px 0 0;font-family:${FONT_STACK};font-size:14px;line-height:1.55;color:#3d3b34;font-weight:600;">${protectBrand(esc(text))}</p>`;
+}
+
 function renderFooter(opts: {
   reason?: string;
   unsubUrl?: string;
