@@ -43,8 +43,35 @@ function ProSignup() {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState(search.email ?? "");
+  const [phone, setPhone] = useState("");
+  const [promoSms, setPromoSms] = useState(false);
 
   const canContinue = firstName.trim().length > 0 && isValidEmail(email.trim());
+
+  function stashPending(extra?: Record<string, unknown>) {
+    try {
+      const existing = (() => {
+        try {
+          const raw = localStorage.getItem("hb_pending_pro_signup");
+          return raw ? JSON.parse(raw) : {};
+        } catch {
+          return {};
+        }
+      })();
+      localStorage.setItem(
+        "hb_pending_pro_signup",
+        JSON.stringify({
+          ...existing,
+          phone: phone.trim() || null,
+          promo_sms_consent: !!promoSms,
+          ...(extra ?? {}),
+        }),
+      );
+    } catch {
+      // ignore storage failure
+    }
+  }
+
 
   async function sendMagicLink() {
     setSubmitting(true);
