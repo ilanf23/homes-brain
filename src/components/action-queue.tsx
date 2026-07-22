@@ -2,8 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Btn, Card, Eyebrow, Pill } from "@/lib/ui";
-import { formatDate, logEvent, mockSend } from "@/lib/hb";
+import { formatDate, logEvent } from "@/lib/hb";
 import { formatMoney, markInvoicePaid, type ProInvoice } from "@/lib/invoices";
+import { supabase } from "@/integrations/supabase/client";
+import { sendSms, smsErrorMessage } from "@/lib/sms";
 
 /* "Needs attention" queue: every row is a problem plus a one-click action.
    Sources arrive pre-filtered and pre-sorted from the dashboard:
