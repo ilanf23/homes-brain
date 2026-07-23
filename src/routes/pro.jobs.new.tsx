@@ -3914,11 +3914,14 @@ function NewJob() {
                     })()}
                   </div>
 
-                  {/* Optional walkthrough video for the AI voice flow, which
-                      skips the work step and lands here. */}
-                  <div className="mt-5 border-t border-line pt-4">{videoCapture}</div>
-
-                  <div className="mt-4">{photoCapture}</div>
+                  {/* Optional walkthrough video and photos, side by side so the
+                      review page feels lighter on a phone screen. */}
+                  <div className="mt-5 border-t border-line pt-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {videoCapture}
+                      {photoCapture}
+                    </div>
+                  </div>
 
                   <div
                     className={`mt-5 border-t border-line pt-4 transition-colors duration-700 ${
