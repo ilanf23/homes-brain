@@ -2457,7 +2457,7 @@ function NewJob() {
     // confirmed on Review. When the pro confirms consent here, stamp it now so
     // future sends don't re-ask. QR-only mode skips channel delivery.
     const chosenChannel: "sms" | "email" = selectedChannel;
-    let consented = !!selectedCustomerConsentAt && !!selectedCustomerConsentRef;
+    let consented = consentStampedThisSubmit || (!!selectedCustomerConsentAt && !!selectedCustomerConsentRef);
     if (!qrOnly && chosenChannel === "sms" && !consented && smsConsentConfirmed) {
       const stampAt = new Date().toISOString();
       const stampRef = `log_job_review_${Date.now()}`;
