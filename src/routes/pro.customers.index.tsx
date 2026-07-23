@@ -204,6 +204,11 @@ function CustomersList() {
                           <div className="text-[17px] font-bold text-ink truncate">
                             {customer.name}
                           </div>
+                          <div className="mt-0.5 text-[13px] font-semibold text-ink tnum truncate">
+                            {customer.phone
+                              ? formatPhone(customer.phone)
+                              : (customer.email ?? "No contact on file")}
+                          </div>
                           <div className="mt-1 text-sm text-muted truncate">
                             {customer.homes?.address ?? "No address added"}
                             {extraHomes > 0
