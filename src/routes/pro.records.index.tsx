@@ -174,12 +174,25 @@ function RecordRow({
 }) {
   const claimed = Boolean(r.jobs?.homes?.claimed_at);
   const seen = Boolean(r.viewed_at);
-  const name = r.jobs?.customers?.name ?? "Customer";
+  const textedAt = r.sent_sms_at;
+  const emailedAt = r.sent_email_at;
   const status = claimed
     ? { dot: "bg-coral", label: "Claimed" }
     : seen
       ? { dot: "bg-indigo", label: "Seen" }
-      : { dot: "bg-line", label: "Sent" };
+      : textedAt
+        ? { dot: "bg-ink/60", label: "Texted" }
+        : emailedAt
+          ? { dot: "bg-ink/60", label: "Emailed" }
+          : { dot: "bg-red", label: "Not sent" };
+  const customer = r.jobs?.customers ?? null;
+  const name = customer?.name ?? "Customer";
+  const contact = customer?.phone
+    ? formatPhone(customer.phone)
+    : (customer?.email ?? null);
+  const sub = showName
+    ? [name, contact].filter(Boolean).join(" · ")
+    : contact;
 
   return (
     <Link
@@ -189,10 +202,14 @@ function RecordRow({
         pinned ? "hover:bg-white/50" : "hover:bg-soft"
       }`}
     >
-      <span className={`h-2 w-2 shrink-0 rounded-full ${status.dot}`} aria-hidden="true" />
+      <span
+        className={`h-2 w-2 shrink-0 rounded-full ${status.dot}`}
+        aria-hidden="true"
+        title={status.label}
+      />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[15px] font-semibold text-ink">{r.jobs?.what_done}</div>
-        {showName && <div className="truncate text-[13px] text-muted">{name}</div>}
+        {sub && <div className="truncate text-[13px] text-muted tnum">{sub}</div>}
       </div>
       <time className="shrink-0 text-[13px] text-muted tnum" dateTime={r.created_at}>
         {shortDate(r.created_at)}
