@@ -298,13 +298,15 @@ function RecordDetail() {
      only stamp sent_sms_at after Twilio confirms. Failure preserves the null
      timestamp so the record still reads "Not sent." */
   async function retrySms() {
-    if (!record || !job || !customer || smsBusy) return;
-    const phone = customer.phone?.trim();
+    if (!record || !job || smsBusy) return;
+    const cust = job.customers;
+    if (!cust) return;
+    const phone = cust.phone?.trim();
     if (!phone) {
       setToast("No mobile number on file. Open the customer to add one.");
       return;
     }
-    if (!customer.consent_at || !customer.consent_ref) {
+    if (!cust.consent_at || !cust.consent_ref) {
       setToast("No SMS consent on file. Open the customer to capture it.");
       return;
     }
