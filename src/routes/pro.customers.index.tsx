@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, Merge, Search } from "lucide-react";
 import { Btn, Card, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent } from "@/lib/hb";
+import { formatPhone, logEvent } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { findDuplicateGroups, mergeCustomers, type DuplicateGroup } from "@/lib/customer-merge";
 
