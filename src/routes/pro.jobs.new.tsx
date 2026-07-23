@@ -1976,7 +1976,7 @@ function NewJob() {
 
 
 
-  async function submit() {
+  async function submit(mode: "auto" | "qr" = "auto") {
     if (!proId) return;
     // The pro dictates in their own language; when they've picked a different
     // customer language on Review, translate-record already produced a
