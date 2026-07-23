@@ -104,7 +104,7 @@ function RecordDetail() {
       const { data } = await supabase
         .from("records")
         .select(
-          "id,created_at,sent_sms_at,sent_email_at,viewed_at,jobs!inner(id,home_id,what_done,created_at,next_service_date,pro_id,customers(id,name,phone,email),homes(address,claimed_at),equipment(id,type,make,model))",
+          "id,created_at,sent_sms_at,sent_email_at,viewed_at,jobs!inner(id,home_id,what_done,created_at,next_service_date,pro_id,customers(id,name,phone,email,consent_at,consent_ref),homes(address,claimed_at),equipment(id,type,make,model))",
         )
         .eq("id", recordId)
         .eq("jobs.pro_id", proId)
