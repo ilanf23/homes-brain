@@ -35,7 +35,14 @@ type RecordRow = {
     created_at: string;
     next_service_date: string | null;
     pro_id: string;
-    customers: { id: string; name: string; phone: string | null; email: string | null } | null;
+    customers: {
+      id: string;
+      name: string;
+      phone: string | null;
+      email: string | null;
+      consent_at: string | null;
+      consent_ref: string | null;
+    } | null;
     homes: { address: string; claimed_at: string | null } | null;
     equipment: EquipmentRow | null;
   } | null;
