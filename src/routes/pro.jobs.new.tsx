@@ -2252,6 +2252,7 @@ function NewJob() {
       if (stampSmsConsentOnInsert) {
         setSelectedCustomerConsentAt(newConsentAt);
         setSelectedCustomerConsentRef(newConsentRef);
+        consentStampedThisSubmit = true;
       }
       // If a later equipment/job write fails, the retry must reuse the customer
       // that already saved instead of inserting a duplicate.
