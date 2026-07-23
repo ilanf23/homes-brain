@@ -1976,7 +1976,7 @@ function NewJob() {
 
 
 
-  async function submit() {
+  async function submit(mode: "auto" | "qr" = "auto") {
     if (!proId) return;
     // The pro dictates in their own language; when they've picked a different
     // customer language on Review, translate-record already produced a
@@ -2019,7 +2019,7 @@ function NewJob() {
     // on file or freshly confirmed); email needs a valid address. QR-only
     // mode saves the job/record and mints a claim token without contacting
     // the customer, so it skips channel-specific gates.
-    const qrOnly = deliveryMode === "qr";
+    const qrOnly = mode === "qr";
     if (!qrOnly && selectedChannel === "sms") {
       if (!finalPhoneValid) {
         setStage("review");
@@ -2061,6 +2061,10 @@ function NewJob() {
     let toName = "";
     let emailAddr = "";
     let phoneAddr = "";
+    // Set true when THIS submit already wrote a transactional consent stamp
+    // (via the customer INSERT below). Prevents the delivery-time consent block
+    // from writing a second, redundant timestamp/ref for the same send.
+    let consentStampedThisSubmit = false;
 
     // Silent dedupe: same pro, same email or same phone as a customer already on
     // file means it is the same person. The pro just typed a different display
@@ -2248,6 +2252,7 @@ function NewJob() {
       if (stampSmsConsentOnInsert) {
         setSelectedCustomerConsentAt(newConsentAt);
         setSelectedCustomerConsentRef(newConsentRef);
+        consentStampedThisSubmit = true;
       }
       // If a later equipment/job write fails, the retry must reuse the customer
       // that already saved instead of inserting a duplicate.
@@ -2452,7 +2457,7 @@ function NewJob() {
     // confirmed on Review. When the pro confirms consent here, stamp it now so
     // future sends don't re-ask. QR-only mode skips channel delivery.
     const chosenChannel: "sms" | "email" = selectedChannel;
-    let consented = !!selectedCustomerConsentAt && !!selectedCustomerConsentRef;
+    let consented = consentStampedThisSubmit || (!!selectedCustomerConsentAt && !!selectedCustomerConsentRef);
     if (!qrOnly && chosenChannel === "sms" && !consented && smsConsentConfirmed) {
       const stampAt = new Date().toISOString();
       const stampRef = `log_job_review_${Date.now()}`;
@@ -4137,8 +4142,10 @@ function NewJob() {
                           !reviewRequiredComplete || submitting || translationState === "loading"
                         }
                         onClick={() => {
+                          // deliveryMode kept only for button loading visuals;
+                          // execution semantics come from submit's argument.
                           setDeliveryMode("auto");
-                          submit();
+                          submit("auto");
                         }}
                       >
                         {selectedChannel === "sms" ? "Text service record" : "Email service record"}
@@ -4157,7 +4164,7 @@ function NewJob() {
                           disabled={submitting || translationState === "loading" || missingReviewAddress}
                           onClick={() => {
                             setDeliveryMode("qr");
-                            submit();
+                            submit("qr");
                           }}
                         >
                           Show QR instead
