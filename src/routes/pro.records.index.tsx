@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
 import { Btn, Card } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { haversineMeters } from "@/lib/hb";
+import { formatPhone, haversineMeters } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 
 export const Route = createFileRoute("/pro/records/")({
@@ -15,9 +15,11 @@ type RecordRow = {
   id: string;
   created_at: string;
   viewed_at: string | null;
+  sent_sms_at: string | null;
+  sent_email_at: string | null;
   jobs: {
     what_done: string;
-    customers: { name: string } | null;
+    customers: { name: string; phone: string | null; email: string | null } | null;
     homes: { claimed_at: string | null; lat: number | null; lng: number | null } | null;
   } | null;
 };
@@ -50,7 +52,7 @@ function RecordsList() {
       const { data } = await supabase
         .from("records")
         .select(
-          "id,created_at,viewed_at,jobs!inner(pro_id,what_done,customers(name),homes(claimed_at,lat,lng))",
+          "id,created_at,viewed_at,sent_sms_at,sent_email_at,jobs!inner(pro_id,what_done,customers(name,phone,email),homes(claimed_at,lat,lng))",
         )
         .eq("jobs.pro_id", proId)
         .order("created_at", { ascending: false });
