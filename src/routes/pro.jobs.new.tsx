@@ -4142,8 +4142,10 @@ function NewJob() {
                           !reviewRequiredComplete || submitting || translationState === "loading"
                         }
                         onClick={() => {
+                          // deliveryMode kept only for button loading visuals;
+                          // execution semantics come from submit's argument.
                           setDeliveryMode("auto");
-                          submit();
+                          submit("auto");
                         }}
                       >
                         {selectedChannel === "sms" ? "Text service record" : "Email service record"}
