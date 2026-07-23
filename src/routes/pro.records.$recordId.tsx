@@ -316,7 +316,7 @@ function RecordDetail() {
     try {
       const { data: qr } = await supabase.functions.invoke("claim-qr", {
         body: {
-          customer_id: customer.id,
+          customer_id: cust.id,
           pro_id: proId,
           record_id: record.id,
           origin: window.location.origin,
