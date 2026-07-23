@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Pencil, QrCode, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowLeft, MessageSquare, Pencil, QrCode, Sparkles } from "lucide-react";
 import { Btn, Card, Field, Input, Pill, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPhone, logEvent } from "@/lib/hb";
+import { sendSms, smsErrorMessage } from "@/lib/sms";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { listJobMedia, signJobMedia, type JobMediaRow } from "@/lib/media";
