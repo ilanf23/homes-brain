@@ -393,8 +393,29 @@ function RecordDetail() {
   const name = customer?.name ?? "Customer";
   const claimed = Boolean(job.homes?.claimed_at);
   const seen = Boolean(record.viewed_at);
-  const sentTo = customer?.phone ? formatPhone(customer.phone) : (customer?.email ?? null);
+  const textedAt = record.sent_sms_at;
+  const emailedAt = record.sent_email_at;
   const equipment = eqLabel(job.equipment);
+  const phone = customer?.phone?.trim() || "";
+  const phoneDisplay = phone ? formatPhone(phone) : null;
+  const hasConsent = !!customer?.consent_at && !!customer?.consent_ref;
+  // Delivery status: what actually shipped, in priority order.
+  const deliveryPill = claimed
+    ? { accent: "coral" as const, label: "Claimed" }
+    : seen
+      ? { accent: "indigo" as const, label: "Seen" }
+      : textedAt
+        ? { accent: "ink" as const, label: "Texted" }
+        : emailedAt
+          ? { accent: "ink" as const, label: "Emailed" }
+          : { accent: "red" as const, label: "Not sent" };
+  const deliveryLine = textedAt && phoneDisplay
+    ? `Texted to ${phoneDisplay}`
+    : emailedAt && customer?.email
+      ? `Emailed to ${customer.email}`
+      : !textedAt && !emailedAt
+        ? "Not sent yet"
+        : null;
 
   return (
     <ProShell pro={pro} active="records">
@@ -415,13 +436,7 @@ function RecordDetail() {
               )}
             </div>
             <div className="shrink-0 mt-1.5">
-              {claimed ? (
-                <Pill accent="coral">Claimed</Pill>
-              ) : seen ? (
-                <Pill accent="indigo">Seen</Pill>
-              ) : (
-                <Pill accent="ink">Sent</Pill>
-              )}
+              <Pill accent={deliveryPill.accent}>{deliveryPill.label}</Pill>
             </div>
           </div>
 
@@ -448,9 +463,77 @@ function RecordDetail() {
               placeholder="No equipment labeled yet. Tap to add it."
               onClick={() => openSheet("equipment")}
             />
-            {sentTo && <div className="mt-2 px-0 text-sm text-muted">Sent to {sentTo}</div>}
+            {deliveryLine && (
+              <div className="mt-2 px-0 text-sm text-muted">{deliveryLine}</div>
+            )}
           </div>
         </Card>
+
+        {/* Delivery card: shows the text state and the right primary action.
+            Retry is only offered when phone + transactional consent exist. */}
+        {(() => {
+          const cantText = !phone || !hasConsent;
+          const missing = !phone
+            ? "No mobile number on file."
+            : !hasConsent
+              ? "No SMS consent on file."
+              : null;
+          return (
+            <Card
+              className={`anim-fade-up d-1 !p-5 ${
+                !textedAt && !emailedAt ? "!border-red/25 !bg-redbg" : ""
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {!textedAt && !emailedAt ? (
+                  <AlertTriangle size={16} className="text-red" aria-hidden="true" />
+                ) : (
+                  <MessageSquare size={16} className="text-ink" aria-hidden="true" />
+                )}
+                <div className="text-sm font-bold text-ink">
+                  {textedAt
+                    ? "Text delivered"
+                    : emailedAt
+                      ? "Email delivered"
+                      : "This record hasn't been sent"}
+                </div>
+              </div>
+              <div className="mt-1 text-sm text-muted">
+                {textedAt && phoneDisplay
+                  ? `Sent to ${phoneDisplay}. Send again if it didn't land.`
+                  : emailedAt && customer?.email
+                    ? `Emailed to ${customer.email}.${phone ? " You can text it too." : ""}`
+                    : phone && hasConsent
+                      ? `Retry the text to ${phoneDisplay ?? phone}.`
+                      : missing
+                        ? `${missing} Open the customer to fix that, then retry.`
+                        : "Add a mobile number and confirm SMS consent to send by text."}
+              </div>
+              {cantText && customer ? (
+                <Link
+                  to="/pro/customers/$customerId"
+                  params={{ customerId: customer.id }}
+                  className="anim-fade-up d-1 mt-4 block"
+                >
+                  <Btn variant="secondary" size="lg" className="w-full pointer-events-none">
+                    Open customer
+                  </Btn>
+                </Link>
+              ) : (
+                <Btn
+                  variant={textedAt ? "secondary" : "indigo"}
+                  size="lg"
+                  className="mt-4 w-full"
+                  loading={smsBusy}
+                  disabled={smsBusy}
+                  onClick={retrySms}
+                >
+                  {textedAt ? "Text again" : "Retry text"}
+                </Btn>
+              )}
+            </Card>
+          );
+        })()}
 
         {media.length > 0 && (
           <Card className="anim-fade-up d-1 !p-4">
