@@ -2638,6 +2638,14 @@ function NewJob() {
     setReviewEdit(null);
     setReviewName(null);
     setReviewEmail("");
+    setReviewPhone("");
+    setSelectedChannel("sms");
+    setSmsConsentConfirmed(false);
+    setSelectedCustomerConsentAt(null);
+    setSentChannel(null);
+    setFollowupEmailSent(false);
+    setSendingFollowupEmail(false);
+    userPickedChannelRef.current = false;
     setCustomerLocale("en");
     setTranslatedRecord(null);
     setTranslationState("idle");
