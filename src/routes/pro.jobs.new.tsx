@@ -2019,7 +2019,7 @@ function NewJob() {
     // on file or freshly confirmed); email needs a valid address. QR-only
     // mode saves the job/record and mints a claim token without contacting
     // the customer, so it skips channel-specific gates.
-    const qrOnly = deliveryMode === "qr";
+    const qrOnly = mode === "qr";
     if (!qrOnly && selectedChannel === "sms") {
       if (!finalPhoneValid) {
         setStage("review");
