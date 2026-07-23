@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Pencil, QrCode, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowLeft, MessageSquare, Pencil, QrCode, Sparkles } from "lucide-react";
 import { Btn, Card, Field, Input, Pill, Textarea, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPhone, logEvent } from "@/lib/hb";
+import { sendSms, smsErrorMessage } from "@/lib/sms";
 import { ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { ClaimQRModal } from "@/components/claim-qr-modal";
 import { listJobMedia, signJobMedia, type JobMediaRow } from "@/lib/media";
@@ -34,7 +35,14 @@ type RecordRow = {
     created_at: string;
     next_service_date: string | null;
     pro_id: string;
-    customers: { id: string; name: string; phone: string | null; email: string | null } | null;
+    customers: {
+      id: string;
+      name: string;
+      phone: string | null;
+      email: string | null;
+      consent_at: string | null;
+      consent_ref: string | null;
+    } | null;
     homes: { address: string; claimed_at: string | null } | null;
     equipment: EquipmentRow | null;
   } | null;
@@ -72,6 +80,7 @@ function RecordDetail() {
   const [loading, setLoading] = useState(true);
   const [qrOpen, setQrOpen] = useState(false);
   const [media, setMedia] = useState<JobMediaRow[]>([]);
+  const [smsBusy, setSmsBusy] = useState(false);
 
   const [sheet, setSheet] = useState<Sheet>(null);
   const [draftText, setDraftText] = useState("");
@@ -96,7 +105,7 @@ function RecordDetail() {
       const { data } = await supabase
         .from("records")
         .select(
-          "id,created_at,sent_sms_at,sent_email_at,viewed_at,jobs!inner(id,home_id,what_done,created_at,next_service_date,pro_id,customers(id,name,phone,email),homes(address,claimed_at),equipment(id,type,make,model))",
+          "id,created_at,sent_sms_at,sent_email_at,viewed_at,jobs!inner(id,home_id,what_done,created_at,next_service_date,pro_id,customers(id,name,phone,email,consent_at,consent_ref),homes(address,claimed_at),equipment(id,type,make,model))",
         )
         .eq("id", recordId)
         .eq("jobs.pro_id", proId)
@@ -283,6 +292,80 @@ function RecordDetail() {
     });
   }
 
+  /* Retry SMS delivery for this exact record. Ownership is already scoped by
+     the loader query (jobs.pro_id = current pro). We mint a fresh single-use
+     claim-qr token, compose the same compliant body used at first send, and
+     only stamp sent_sms_at after Twilio confirms. Failure preserves the null
+     timestamp so the record still reads "Not sent." */
+  async function retrySms() {
+    if (!record || !job || smsBusy) return;
+    const cust = job.customers;
+    if (!cust) return;
+    const phone = cust.phone?.trim();
+    if (!phone) {
+      setToast("No mobile number on file. Open the customer to add one.");
+      return;
+    }
+    if (!cust.consent_at || !cust.consent_ref) {
+      setToast("No SMS consent on file. Open the customer to capture it.");
+      return;
+    }
+    setSmsBusy(true);
+    let claimUrl: string | null = null;
+    let claimErr: string | null = null;
+    try {
+      const { data: qr } = await supabase.functions.invoke("claim-qr", {
+        body: {
+          customer_id: cust.id,
+          pro_id: proId,
+          record_id: record.id,
+          origin: window.location.origin,
+        },
+      });
+      const parsed = qr as { ok?: boolean; claim_url?: string; code?: string } | null;
+      if (parsed?.ok && typeof parsed.claim_url === "string") {
+        claimUrl = parsed.claim_url;
+      } else {
+        claimErr = parsed?.code || "claim_link_failed";
+      }
+    } catch {
+      claimErr = "claim_link_failed";
+    }
+    if (!claimUrl) {
+      setSmsBusy(false);
+      setToast(
+        claimErr === "no_record"
+          ? "This record isn't ready to share yet."
+          : "Couldn't create a secure link. Try again in a minute.",
+      );
+      await logEvent(`pro:${proId}`, "record_sms_retry_failed", {
+        record_id: record.id,
+        code: claimErr ?? "claim_link_failed",
+      });
+      return;
+    }
+
+    const businessName = pro?.business?.trim() || "Your service pro";
+    const body = `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
+    const res = await sendSms(phone, body, "claim_invite");
+    setSmsBusy(false);
+    if (!res.ok) {
+      setToast(smsErrorMessage(res.code));
+      await logEvent(`pro:${proId}`, "record_sms_retry_failed", {
+        record_id: record.id,
+        code: res.code || "send_failed",
+      });
+      return;
+    }
+    const sentAt = new Date().toISOString();
+    await supabase.from("records").update({ sent_sms_at: sentAt }).eq("id", record.id);
+    setRecord((r) => (r ? { ...r, sent_sms_at: sentAt } : r));
+    setToast(`Texted to ${formatPhone(phone)}.`);
+    await logEvent(`pro:${proId}`, "record_sms_retry_succeeded", {
+      record_id: record.id,
+    });
+  }
+
   if (!pro || loading) {
     return (
       <ProShell pro={pro} active="records">
@@ -310,8 +393,29 @@ function RecordDetail() {
   const name = customer?.name ?? "Customer";
   const claimed = Boolean(job.homes?.claimed_at);
   const seen = Boolean(record.viewed_at);
-  const sentTo = customer?.phone ? formatPhone(customer.phone) : (customer?.email ?? null);
+  const textedAt = record.sent_sms_at;
+  const emailedAt = record.sent_email_at;
   const equipment = eqLabel(job.equipment);
+  const phone = customer?.phone?.trim() || "";
+  const phoneDisplay = phone ? formatPhone(phone) : null;
+  const hasConsent = !!customer?.consent_at && !!customer?.consent_ref;
+  // Delivery status: what actually shipped, in priority order.
+  const deliveryPill = claimed
+    ? { accent: "coral" as const, label: "Claimed" }
+    : seen
+      ? { accent: "indigo" as const, label: "Seen" }
+      : textedAt
+        ? { accent: "ink" as const, label: "Texted" }
+        : emailedAt
+          ? { accent: "ink" as const, label: "Emailed" }
+          : { accent: "red" as const, label: "Not sent" };
+  const deliveryLine = textedAt && phoneDisplay
+    ? `Texted to ${phoneDisplay}`
+    : emailedAt && customer?.email
+      ? `Emailed to ${customer.email}`
+      : !textedAt && !emailedAt
+        ? "Not sent yet"
+        : null;
 
   return (
     <ProShell pro={pro} active="records">
@@ -332,13 +436,7 @@ function RecordDetail() {
               )}
             </div>
             <div className="shrink-0 mt-1.5">
-              {claimed ? (
-                <Pill accent="coral">Claimed</Pill>
-              ) : seen ? (
-                <Pill accent="indigo">Seen</Pill>
-              ) : (
-                <Pill accent="ink">Sent</Pill>
-              )}
+              <Pill accent={deliveryPill.accent}>{deliveryPill.label}</Pill>
             </div>
           </div>
 
@@ -365,9 +463,77 @@ function RecordDetail() {
               placeholder="No equipment labeled yet. Tap to add it."
               onClick={() => openSheet("equipment")}
             />
-            {sentTo && <div className="mt-2 px-0 text-sm text-muted">Sent to {sentTo}</div>}
+            {deliveryLine && (
+              <div className="mt-2 px-0 text-sm text-muted">{deliveryLine}</div>
+            )}
           </div>
         </Card>
+
+        {/* Delivery card: shows the text state and the right primary action.
+            Retry is only offered when phone + transactional consent exist. */}
+        {(() => {
+          const cantText = !phone || !hasConsent;
+          const missing = !phone
+            ? "No mobile number on file."
+            : !hasConsent
+              ? "No SMS consent on file."
+              : null;
+          return (
+            <Card
+              className={`anim-fade-up d-1 !p-5 ${
+                !textedAt && !emailedAt ? "!border-red/25 !bg-redbg" : ""
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {!textedAt && !emailedAt ? (
+                  <AlertTriangle size={16} className="text-red" aria-hidden="true" />
+                ) : (
+                  <MessageSquare size={16} className="text-ink" aria-hidden="true" />
+                )}
+                <div className="text-sm font-bold text-ink">
+                  {textedAt
+                    ? "Text delivered"
+                    : emailedAt
+                      ? "Email delivered"
+                      : "This record hasn't been sent"}
+                </div>
+              </div>
+              <div className="mt-1 text-sm text-muted">
+                {textedAt && phoneDisplay
+                  ? `Sent to ${phoneDisplay}. Send again if it didn't land.`
+                  : emailedAt && customer?.email
+                    ? `Emailed to ${customer.email}.${phone ? " You can text it too." : ""}`
+                    : phone && hasConsent
+                      ? `Retry the text to ${phoneDisplay ?? phone}.`
+                      : missing
+                        ? `${missing} Open the customer to fix that, then retry.`
+                        : "Add a mobile number and confirm SMS consent to send by text."}
+              </div>
+              {cantText && customer ? (
+                <Link
+                  to="/pro/customers/$customerId"
+                  params={{ customerId: customer.id }}
+                  className="anim-fade-up d-1 mt-4 block"
+                >
+                  <Btn variant="secondary" size="lg" className="w-full pointer-events-none">
+                    Open customer
+                  </Btn>
+                </Link>
+              ) : (
+                <Btn
+                  variant={textedAt ? "secondary" : "indigo"}
+                  size="lg"
+                  className="mt-4 w-full"
+                  loading={smsBusy}
+                  disabled={smsBusy}
+                  onClick={retrySms}
+                >
+                  {textedAt ? "Text again" : "Retry text"}
+                </Btn>
+              )}
+            </Card>
+          );
+        })()}
 
         {media.length > 0 && (
           <Card className="anim-fade-up d-1 !p-4">

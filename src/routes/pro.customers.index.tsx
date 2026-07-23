@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, Merge, Search } from "lucide-react";
 import { Btn, Card, Input, Pill, Toast } from "@/lib/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { logEvent } from "@/lib/hb";
+import { formatPhone, logEvent } from "@/lib/hb";
 import { ProPageHead, ProPageSkeleton, ProShell, useProGuard } from "@/components/pro-shell";
 import { findDuplicateGroups, mergeCustomers, type DuplicateGroup } from "@/lib/customer-merge";
 
@@ -203,6 +203,11 @@ function CustomersList() {
                         <div className="flex-1 min-w-0">
                           <div className="text-[17px] font-bold text-ink truncate">
                             {customer.name}
+                          </div>
+                          <div className="mt-0.5 text-[13px] font-semibold text-ink tnum truncate">
+                            {customer.phone
+                              ? formatPhone(customer.phone)
+                              : (customer.email ?? "No contact on file")}
                           </div>
                           <div className="mt-1 text-sm text-muted truncate">
                             {customer.homes?.address ?? "No address added"}

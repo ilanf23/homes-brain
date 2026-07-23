@@ -2075,7 +2075,7 @@ function NewJob() {
     let dedupeCustomer: CustomerOpt | undefined;
     if (!customerId) {
       const emailKey = finalEmail;
-      const phoneKey = normalizedPhone(newCustomer.phone);
+      const phoneKey = normalizedPhone(finalPhone || newCustomer.phone);
       dedupeCustomer = existing.find((c) => {
         const em = c.email?.trim().toLowerCase() ?? "";
         const ph = normalizedPhone(c.phone);
