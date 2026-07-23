@@ -249,7 +249,7 @@ function RecordRow({
           }`}
         >
           <span className="w-5 shrink-0" aria-hidden="true" />
-          <span className="min-w-0">{label}</span>
+          <span className="min-w-0 break-words">{label}</span>
         </span>
       )}
       {onEdit ? (
@@ -261,7 +261,7 @@ function RecordRow({
           className="pressable flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left"
         >
           <span
-            className={`min-w-0 flex-1 text-base font-semibold text-ink tnum ${
+            className={`min-w-0 flex-1 break-words text-base font-semibold text-ink tnum ${
               dim ? "opacity-50 line-through" : ""
             }`}
           >
@@ -272,7 +272,7 @@ function RecordRow({
       ) : (
         <span className="flex min-h-11 min-w-0 flex-1 items-center gap-2">
           <span
-            className={`min-w-0 flex-1 text-base font-semibold text-ink tnum ${
+            className={`min-w-0 flex-1 break-words text-base font-semibold text-ink tnum ${
               dim ? "opacity-50 line-through" : ""
             }`}
           >
@@ -2914,7 +2914,7 @@ function NewJob() {
                 </div>
               )}
               {videoUpload.status === "error" && (
-                <div className="text-lg text-red">{videoUpload.error}</div>
+                <div className="text-lg text-red break-words">{videoUpload.error}</div>
               )}
             </div>
             {videoUpload.status !== "uploading" && (
@@ -3425,8 +3425,12 @@ function NewJob() {
                             }`}
                           >
                             <div className="min-w-0 flex-1">
-                              <div className="font-semibold text-base text-ink">{label}</div>
-                              <div className="text-sm text-muted mt-0.5 tnum">{meta}</div>
+                              <div className="font-semibold text-base text-ink break-words">
+                                {label}
+                              </div>
+                              <div className="text-sm text-muted mt-0.5 tnum break-words">
+                                {meta}
+                              </div>
                             </div>
                             {picked && (
                               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo text-white">
@@ -3457,7 +3461,7 @@ function NewJob() {
                         and is always the tiebreaker. */}
                     {aiMatch && selectedEquipmentId === aiMatch.id && (
                       <div className="flex items-center justify-between gap-3 rounded-xl bg-indigobg px-3 py-2">
-                        <span className="text-base text-indigo-dark">
+                        <span className="min-w-0 break-words text-base text-indigo-dark">
                           Matched to <span className="font-semibold">{aiMatch.label}</span> from
                           your note.
                         </span>
@@ -3785,7 +3789,7 @@ function NewJob() {
                     )}
                     {closeMatch && reviewEdit !== "customer" && (
                       <div className="my-2 rounded-2xl border border-indigo/30 bg-indigobg/50 p-3 anim-fade-up">
-                        <div className="text-lg text-ink">
+                        <div className="text-lg break-words text-ink">
                           This sounded like <span className="font-semibold">{closeMatch.name}</span>
                           {closeMatch.homes?.address ? (
                             <span className="text-muted"> · {closeMatch.homes.address}</span>
