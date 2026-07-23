@@ -2961,15 +2961,14 @@ function NewJob() {
         <button
           type="button"
           onClick={() => photosRef.current?.click()}
-          className="pressable flex min-h-[104px] w-full flex-col justify-center rounded-xl border-2 border-dashed border-indigo/40 bg-paper px-4 py-4 text-center hover:border-indigo hover:bg-indigobg/40 transition-colors"
+          className="pressable flex min-h-[120px] w-full flex-col items-center justify-center gap-2 rounded-xl bg-indigo px-3 py-5 text-center text-white shadow-sm transition-transform active:scale-95"
+          aria-label="Add photos (optional)"
         >
-          <div className="flex items-center justify-center gap-2 text-indigo">
-            <ImageIcon size={22} />
-            <span className="text-lg font-semibold">Add photos (optional)</span>
-          </div>
-          <div className="mt-1 text-base text-muted">
-            Before and after shots. They go on their record.
-          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] opacity-80">
+            Optional
+          </span>
+          <ImageIcon size={28} />
+          <span className="text-sm font-semibold">Photos</span>
         </button>
       ) : (
         <div className="flex flex-wrap gap-2">
