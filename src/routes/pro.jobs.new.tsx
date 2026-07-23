@@ -4061,8 +4061,12 @@ function NewJob() {
                 {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
                 {deliveryState === "sent" && (
                   <>
-                    <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.recordSent")}</h2>
-                    <p className="mt-2 text-base text-muted">Sent to {sentTo.email}.</p>
+                    <h2 className="mt-4 text-[26px] tracking-tight">
+                      {sentChannel === "sms" ? "Text sent" : t("pro.recordSent")}
+                    </h2>
+                    <p className="mt-2 text-base text-muted">
+                      Sent to {sentChannel === "sms" ? (sentTo.phone || "the customer") : (sentTo.email || "the customer")}.
+                    </p>
                     {translationFallback && (
                       <div className="mx-auto mt-4 max-w-md rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-base text-ink">
                         Translation was unavailable, so this message and its linked pages were sent
@@ -4073,6 +4077,30 @@ function NewJob() {
                       <p className="mt-2 text-sm font-semibold text-indigo">
                         Sent in {LOCALES.find(({ code }) => code === deliveryLocale)?.label}.
                       </p>
+                    )}
+                    {/* Manual "send by email instead" after a successful SMS.
+                        Explicit tap — never automatic — so the customer never
+                        gets both without the pro deciding to. */}
+                    {sentChannel === "sms" && sentTo.email && !followupEmailSent && (
+                      <div className="mt-4">
+                        <Btn
+                          variant="secondary"
+                          size="sm"
+                          loading={sendingFollowupEmail}
+                          onClick={async () => {
+                            if (!sentTo.email) return;
+                            setSendingFollowupEmail(true);
+                            await retrySavedRecord(sentTo.email, false);
+                            setFollowupEmailSent(true);
+                            setSendingFollowupEmail(false);
+                          }}
+                        >
+                          Send by email too
+                        </Btn>
+                      </div>
+                    )}
+                    {sentChannel === "sms" && followupEmailSent && (
+                      <p className="mt-3 text-base text-indigo">Also emailed to {sentTo.email}.</p>
                     )}
                   </>
                 )}
