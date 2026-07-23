@@ -292,6 +292,78 @@ function RecordDetail() {
     });
   }
 
+  /* Retry SMS delivery for this exact record. Ownership is already scoped by
+     the loader query (jobs.pro_id = current pro). We mint a fresh single-use
+     claim-qr token, compose the same compliant body used at first send, and
+     only stamp sent_sms_at after Twilio confirms. Failure preserves the null
+     timestamp so the record still reads "Not sent." */
+  async function retrySms() {
+    if (!record || !job || !customer || smsBusy) return;
+    const phone = customer.phone?.trim();
+    if (!phone) {
+      setToast("No mobile number on file. Open the customer to add one.");
+      return;
+    }
+    if (!customer.consent_at || !customer.consent_ref) {
+      setToast("No SMS consent on file. Open the customer to capture it.");
+      return;
+    }
+    setSmsBusy(true);
+    let claimUrl: string | null = null;
+    let claimErr: string | null = null;
+    try {
+      const { data: qr } = await supabase.functions.invoke("claim-qr", {
+        body: {
+          customer_id: customer.id,
+          pro_id: proId,
+          record_id: record.id,
+          origin: window.location.origin,
+        },
+      });
+      const parsed = qr as { ok?: boolean; claim_url?: string; code?: string } | null;
+      if (parsed?.ok && typeof parsed.claim_url === "string") {
+        claimUrl = parsed.claim_url;
+      } else {
+        claimErr = parsed?.code || "claim_link_failed";
+      }
+    } catch {
+      claimErr = "claim_link_failed";
+    }
+    if (!claimUrl) {
+      setSmsBusy(false);
+      setToast(
+        claimErr === "no_record"
+          ? "This record isn't ready to share yet."
+          : "Couldn't create a secure link. Try again in a minute.",
+      );
+      await logEvent(`pro:${proId}`, "record_sms_retry_failed", {
+        record_id: record.id,
+        code: claimErr ?? "claim_link_failed",
+      });
+      return;
+    }
+
+    const businessName = pro?.business?.trim() || "Your service pro";
+    const body = `${businessName} sent you a service record: ${claimUrl}\nReply STOP to opt out.`;
+    const res = await sendSms(phone, body, "claim_invite");
+    setSmsBusy(false);
+    if (!res.ok) {
+      setToast(smsErrorMessage(res.code));
+      await logEvent(`pro:${proId}`, "record_sms_retry_failed", {
+        record_id: record.id,
+        code: res.code || "send_failed",
+      });
+      return;
+    }
+    const sentAt = new Date().toISOString();
+    await supabase.from("records").update({ sent_sms_at: sentAt }).eq("id", record.id);
+    setRecord((r) => (r ? { ...r, sent_sms_at: sentAt } : r));
+    setToast(`Texted to ${formatPhone(phone)}.`);
+    await logEvent(`pro:${proId}`, "record_sms_retry_succeeded", {
+      record_id: record.id,
+    });
+  }
+
   if (!pro || loading) {
     return (
       <ProShell pro={pro} active="records">
