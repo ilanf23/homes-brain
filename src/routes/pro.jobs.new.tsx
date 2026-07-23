@@ -2061,6 +2061,10 @@ function NewJob() {
     let toName = "";
     let emailAddr = "";
     let phoneAddr = "";
+    // Set true when THIS submit already wrote a transactional consent stamp
+    // (via the customer INSERT below). Prevents the delivery-time consent block
+    // from writing a second, redundant timestamp/ref for the same send.
+    let consentStampedThisSubmit = false;
 
     // Silent dedupe: same pro, same email or same phone as a customer already on
     // file means it is the same person. The pro just typed a different display
