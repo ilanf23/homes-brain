@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
       record_id: claimRecordId,
       home_id: customer.home_id,
       pro_id: pro.id,
-      email: customer.email,
+      email: customerEmail,
       locale,
       expires_at: expiresAt,
       // Returned in-band to the pro (not emailed to customer.email), so
