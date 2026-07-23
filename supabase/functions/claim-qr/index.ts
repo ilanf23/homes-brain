@@ -81,7 +81,10 @@ Deno.serve(async (req) => {
     if (!customer || customer.pro_id !== pro.id) {
       return json({ ok: false, code: "forbidden", stage: "customer" }, 403);
     }
-    if (!customer.email) return json({ ok: false, code: "no_email" });
+    // Phone-only customers are valid recipients. claim_tokens.email stays
+    // null; claim-exchange treats in_band tokens as verify_email regardless,
+    // so token possession alone never mints a session.
+    const customerEmail: string | null = customer.email ?? null;
     const preferredLocale = isSupportedLocale(requestedLocale)
       ? requestedLocale
       : isSupportedLocale(customer.preferred_locale)
