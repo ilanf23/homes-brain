@@ -4164,7 +4164,7 @@ function NewJob() {
                           disabled={submitting || translationState === "loading" || missingReviewAddress}
                           onClick={() => {
                             setDeliveryMode("qr");
-                            submit();
+                            submit("qr");
                           }}
                         >
                           Show QR instead
