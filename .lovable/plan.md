@@ -1,79 +1,90 @@
-# SMS re-enable audit
+# SMS Audit — HomesBrain (read-only, no changes)
 
-## 1. Callers of `send-sms` and email-only paths that should also SMS
+## 1) Truly live outbound SMS callers/triggers  (LIVE WIRED)
 
-**Nobody in the app currently invokes `send-sms`.** The function is live and correct (E.164 normalize → opt-out check → quiet hours 8a–9p ET → Twilio REST) but no code path calls it. Every "delivery" today goes through email edge functions or a `mockSend()` console log.
+All go through `src/lib/sms.ts::sendSms()` → `supabase.functions.invoke("send-sms")`.
 
-| Surface | File | Today | SMS path exists? | What flips SMS on |
-|---|---|---|---|---|
-| **Record delivery on job submit** | `src/routes/pro.jobs.new.tsx` → `deliverRecord()` (L1776) invokes `invite-claim` | Email only, if `emailAddr`. If phone-only → `deliveryState="phone_only"` with no send. `sent_sms_at` column is written `null` (L2205). | No — comment L650 says "SMS delivery is not live yet." | Add branch: if no email OR in addition to email, call `send-sms` with the branded claim URL. Requires `sms_consent_at` on the customer or a fresh consent capture on step 1. |
-| **Manual "Send claim invite" from customer detail** | `src/routes/pro.customers.$customerId.tsx` `sendClaimInvite()` L314 | Invokes `invite-claim` (email) | No | Same as above; wire an SMS fallback when customer has phone but no email. |
-| **Rebook nudge** | `src/routes/pro.customers.$customerId.tsx` `sendNudge()` L291 | `mockSend()` only — never leaves the browser | No real send at all | Replace `mockSend` with `send-sms` (phone) OR `send-follow-up` (email). |
-| **"What's next" pro-triggered follow-up** | `supabase/functions/send-follow-up/` — fully built email function, **no frontend caller** | Orphaned | Email only inside the function | Wire a UI trigger (pro.office / pro.dashboard) and add an SMS twin, or extend `send-follow-up` to also fire `send-sms`. |
-| **Homeowner claim / magic link** | `src/routes/login.tsx` → `homeowner-login`, `pro-login`, `password-reset` | Email magic link only | No | Out of scope for A2P LVM per Twilio guidance (OTP is a separate use case). Keep email; do **not** add SMS OTP without a dedicated campaign. |
-| **Invoice created on submit** | `src/routes/pro.jobs.new.tsx` L2246 `createInvoice()` | No notification at all | No | New send: SMS "You have an invoice from {biz}: {link}" (transactional). |
-| **Homeowner reminders (`next_service_date`)** | `src/routes/home.reminders.tsx` renders list; **no scheduler / no send job exists** | Nothing sent | No | Requires a cron edge fn + `send-sms` + `send-follow-up`. New build, not just a flip. |
-| **Invite another pro (homeowner)** | `src/components/invite-pros.tsx` L80 → `invite-pro` | Email only; captures `to_pro_phone` but ignores it (L60, 97 log channel:'sms' but never sends) | Phone field wired to schema only | Extend `invite-pro` (or add sibling send) to also `send-sms` when `to_pro_phone` present. |
-| **`sent_sms_at` bookkeeping** | `records.sent_sms_at` column exists (migrations 20260630, 20260711) and is displayed in pro.office / pro.customers / pro.records | Never written | — | Update to `now()` on successful `send-sms` return. |
+- **Record delivery on job submit** — `src/routes/pro.jobs.new.tsx:1867-1882` (inside the `send()` helper called by `submit()`). Fires when phone + transactional consent + minted `claimUrl` are present. Merges "record" and "record + invoice" into a single SMS. Stamps `records.sent_sms_at`. **P0 record-delivery SMS is LIVE.**
+- **Manual claim-invite SMS from customer detail** — `src/routes/pro.customers.$customerId.tsx:389` inside `sendClaimInvite()`. Mints claim URL via `claim-qr` then texts it. Gated on phone + `customer.consent_at`.
+- **Rebook nudge** (P1) — `src/components/action-queue.tsx:88` inside `nudge()` for `kind: "due"` rows on `/pro/office`. Prefers SMS; also fires email `send-follow-up` when both channels exist.
+- **Stale-home claim reminder** — `src/components/action-queue.tsx:138` inside `remind()` for `kind: "stale"` rows. SMS first, falls back to `invite-claim` email if no phone or SMS fails.
 
-## 2. Dormant / archived SMS code
+## 2) Outbound SMS infrastructure with no callers  (DORMANT / partial)
 
-- `supabase/functions/send-sms/index.ts` — production-ready, unused by any caller.
-- `supabase/functions/sms-inbound/index.ts` — Twilio inbound webhook, live, writes `sms_optouts` on STOP/START/HELP. Depends on inbound URL being set on the Messaging Service.
-- `src/routes/sms-opt-in.tsx` — public opt-in proof page for A2P.
-- `src/lib/hb.ts` `mockSend({channel:"sms"})` L344 — used in `pro.customers.$customerId.tsx` sendNudge and elsewhere; only logs to console. Every mockSend SMS call is a real-send candidate.
-- Comment L288 in `pro.jobs.new.tsx`: "No mock SMS - texting is not live yet." — remove after wiring.
-- `home.settings.tsx` (L318, L370) has an SMS notify toggle + hard opt-out toggle already wired to `sms_consent_at` / `sms_opt_out`.
-- `home.setup.tsx` (L79–166) captures SMS consent on setup; already writes `sms_consent_at`.
-- `home.signup.tsx` (L79–85) captures SMS consent at signup.
+- `supabase/functions/send-sms/index.ts` — full Twilio REST sender: E.164 normalization, `is_sms_opted_out` gate, quiet-hours (America/New_York 8–21), `messages` insert on every attempt, `MessagingServiceSid` send. Wired to callers above, but internally has no scheduler/cron caller.
+- `src/lib/sms.ts` — thin wrapper (`sendSms`, `smsErrorMessage`). Fully live; every caller listed in §1.
+- No scheduled/cron caller of `send-sms` exists anywhere (no pg_cron, no `/api/public/*` route, no worker). **Reminder scheduler is not wired.**
+- Review-ask SMS, "invite your other pros" SMS, seasonal/marketing blasts: **not present.**
 
-## 3. Consent model
+## 3) Inbound SMS / webhook / STOP-START-HELP  (LIVE WIRED, unverified)
 
-**Homeowner (portal users):**
-- `homeowners.sms_consent_at timestamptz` (migration 20260713225037) — timestamped opt-in captured at signup / setup / settings.
-- `homeowners.sms_opt_out boolean` — hard block set from settings.
-- `homeowners.notify_sms boolean` + `respect_quiet_hrs boolean` (migration 20260706200124) — per-notification preferences updated via `homeowner_update_profile`.
-- `homeowners.marketing_consent boolean` + `consent_at` — separate marketing gate.
+- `supabase/functions/sms-inbound/index.ts` — Twilio webhook. Parses `From`/`Body`; STOP/STOPALL/UNSUBSCRIBE/CANCEL/END/QUIT → upsert `sms_optouts` with `opted_out_at`, replies TwiML. START/UNSTOP/YES/JOIN → clears opt-out (`resubscribed_at`). HELP/INFO → static reply. Unknown keywords → silent.
+- `supabase/config.toml:89-93` — `[functions.sms-inbound] verify_jwt = false` (public webhook path).
+- No test evidence of the Twilio Messaging Service webhook actually pointing at the deployed URL (audit-only note; not verifiable in the repo).
 
-**Customer (pro-entered contacts, no portal yet):**
-- `customers.consent_at`, `customers.consent_ref` — the pro checks a consent box on job step 1 (`pro.jobs.new.tsx` L2033). This is the **transactional** consent for the record they just performed.
-- No `sms_consent_at` on customers today. A pro-captured phone with `consent_at` covers the transactional record notification under the "service update to the customer you just served" pattern; anything recurring/marketing needs an explicit SMS opt-in captured through the branded record on first claim.
+## 4) UI buttons / forms / settings that mention or attempt SMS
 
-**Opt-out plumbing:**
-- `sms_optouts` table (migration 20260713171450) written by `sms-inbound` on STOP.
-- `is_sms_opted_out(p_phone)` RPC used by `send-sms` before every send.
-- `email_optouts` + `email_unsub_tokens` mirror this on the email side.
+- `src/routes/pro.jobs.new.tsx` — "Send record" flow (implicit SMS delivery when phone + consent).
+- `src/routes/pro.customers.$customerId.tsx` — "Send claim invite" button drives §1 SMS path; also `sendNudge()` (see §5, still mock).
+- `src/components/action-queue.tsx` — "Send nudge" and "Send reminder" buttons on `/pro/office`.
+- `src/routes/pro.settings.tsx:494-505` — toggles: `notify_sms` (transactional "Service alerts by SMS", default ON) and `promo_sms_consent` (default OFF; stamps `promo_sms_consent_at`).
+- `src/routes/home.settings.tsx:325-391, 530-537` — homeowner toggles: `notify_sms` (bound to `sms_consent_at`), `respect_quiet_hrs`, `promo_sms_consent`. Also phone-capture w/ `sms_consent_at` stamping (line 212–214).
+- `src/routes/home.setup.tsx:79-166` — onboarding checklist toggles `notify_sms`/`respect_quiet_hrs`, stamps `sms_consent_at`.
+- `src/routes/home.signup.tsx:79` — sets `sms_consent_at` at signup when phone provided.
+- `src/routes/pro.signup.tsx:66` + `src/routes/auth.callback.tsx:81-95` + `src/routes/claim.$token.tsx:244-250` — stash and persist `promo_sms_consent` (+ timestamp) at pro signup / OAuth / magic-link completion. Phone field optional.
+- `src/routes/messaging-terms.tsx`, `src/routes/messaging-terms-auth.tsx`, `src/routes/sms-opt-in.tsx`, `src/routes/privacy.tsx` — legal/compliance surface (CONFIG/DOC-ONLY, no send behavior).
 
-**Quiet hours:** hardcoded 8a–9p America/New_York in `send-sms` regardless of `respect_quiet_hrs` prefs. Currently a floor, not a preference.
+## 5) Mock/console-only SMS paths  (MOCK — still present, will not touch Twilio)
 
-**Transactional vs promotional under the approved LVM-Mixed campaign:**
-- **Transactional (safe under existing customer/homeowner consent):** record delivery on job send, claim invite from customer detail, invoice notification, reminder for a `next_service_date` the pro entered, pro-triggered follow-up.
-- **Promotional / marketing (needs explicit SMS opt-in via `sms_consent_at`):** rebook nudge without a scheduled date, review requests, seasonal blasts, "invite your other pros" prompts.
+- `src/lib/hb.ts:344` — `mockSend()` inserts a row into `messages` and logs. **No real delivery.**
+- `src/routes/pro.due.tsx:69` — `sendNudge()` on `/pro/due` still uses `mockSend`. Toast literally says "(mock)". **NOT wired to real SMS**, even though `action-queue.tsx` on `/pro/office` is.
+- `src/routes/pro.customers.$customerId.tsx:302` — `sendNudge()` on the customer detail page uses `mockSend`. Toast says "(mock)". **NOT wired to real SMS.** (Only `sendClaimInvite()` on the same page is live.)
 
-## 4. Prioritized re-enable list
+**Gap:** two rebook-nudge entry points still print "(mock)" while a third is live. Same conceptual action, three implementations.
 
-**P0 — highest ROI, lowest risk, transactional, consent already exists (`customers.consent_at`):**
-1. **Record delivery SMS** in `pro.jobs.new.tsx deliverRecord()`. When phone present + no email OR pro chose SMS: `send-sms` with `${biz} sent your service record: ${claimUrl} Reply STOP to opt out.` Update `records.sent_sms_at`. Kills the "phone_only" dead-end.
-2. **Manual claim-invite fallback** in `pro.customers.$customerId.tsx sendClaimInvite()`. Same wire as #1 for phone-only customers.
-3. **Invoice-created notification.** Uses phone if present. Transactional.
+## 6) Database schema / RPCs / policies supporting SMS  (DATA-ONLY)
 
-**P1 — transactional, tiny new surface:**
-4. **Rebook nudge** in `pro.customers.$customerId.tsx sendNudge()`. Only when a `next_service_date` exists — that qualifies as transactional service reminder. Replace `mockSend` with real `send-sms`. Nudges without a scheduled date should stay email until SMS marketing opt-in is captured.
-5. **Wire `send-follow-up` into pro.office/pro.dashboard** and add SMS twin. Function exists, no UI trigger — cheap win.
-6. **Reminder scheduler (cron edge fn)** for `jobs.next_service_date` → `send-sms` + email 7d before. New build; not a flip. Guard by homeowner `notify_sms && !sms_opt_out`.
+- `sms_optouts` table + `is_sms_opted_out(p_phone)` RPC — `supabase/migrations/20260713171450_*.sql`. RLS enabled, granted to `service_role`.
+- `records.sent_sms_at timestamptz` — `supabase/migrations/20260630220235_*.sql:80`; used in KPI queries (`20260711192943_*.sql:76,79,161`).
+- `homeowners`: `notify_sms`, `sms_opt_out`, `respect_quiet_hrs`, `sms_consent_at`, `promo_sms_consent`, `promo_sms_consent_at`. Migrations: `20260706211957`, `20260710160000`, `20260713225037`, `20260722203719`.
+- `pros`: `notify_sms`, `promo_sms_consent`, `promo_sms_consent_at`. Migration `20260722204629`.
+- `customers.consent_at` / `consent_ref` (`20260630220235:46`) — gates manual claim-invite SMS.
+- RPC `homeowner_update_profile(..., p_notify_sms, p_sms_opt_out, p_respect_quiet_hrs, p_promo_sms_consent)` — `20260722203719_*.sql`. Latest overload handles promo-consent timestamp lifecycle.
+- `messages` table — used by both `send-sms` (logs every attempt) and `mockSend` (mock-only rows).
 
-**P2 — needs explicit SMS opt-in first:**
-7. **Homeowner "invite your other pros" SMS** (`invite-pro`) — capture SMS consent on the invite form before sending.
-8. **Review-ask SMS** to customer — needs `customers.sms_consent_at` captured on the branded record before first claim.
-9. **Marketing/seasonal blasts** — separate campaign classification; do not send under LVM-Mixed without legal review.
+## 7) Configuration / secrets / function config
 
-**Do NOT re-enable without a separate campaign / plan:**
-- SMS magic-link / OTP for `pro-login` / `homeowner-login` / `password-reset`. Requires a dedicated OTP use case with Twilio and separate consent copy.
+- Secrets present in Supabase project: `SMS_ENABLED`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID` (all four required for `send-sms` to actually hit Twilio; otherwise it returns `code: "disabled"` and only logs to `messages`).
+- `supabase/config.toml:92-93` — `sms-inbound` `verify_jwt = false`. No config override for `send-sms` (defaults to JWT-verified, called via service-role from browser through `supabase.functions.invoke`).
+- No public route under `src/routes/api/public/*` for SMS webhooks (Twilio → `sms-inbound` directly).
 
-## Cross-cutting items before flipping anything
+## 8) Tests / docs / scripts
 
-- Every real SMS body must include `Reply STOP to opt out` and the business identity (Twilio LVM-Mixed requirement).
-- Wire `sent_sms_at` updates so the pro-side UI reflects actual delivery.
-- Honor `homeowners.respect_quiet_hrs` — either use it to widen/narrow the hardcoded 8a–9p window or drop the pref if we standardize on the function-level window.
-- Add explicit consent capture on the branded record page ("Text me updates about my home") before enabling anything marked P2.
-- Verify Twilio Messaging Service inbound webhook is pointed at `sms-inbound` in production so STOP replies actually land in `sms_optouts`.
+- No test suite in repo (`CLAUDE.md`: "There is no test suite").
+- Docs: `docs/superpowers/plans/*` — no SMS-specific plan files.
+- `CLAUDE.md` explicitly warned SMS is mocked; that guidance is now stale for the live paths in §1.
+
+---
+
+## Count by status
+
+| Status | Count | Notes |
+|---|---|---|
+| LIVE WIRED (outbound) | **4 callers** | jobs.new, customer detail (invite), action-queue nudge, action-queue reminder |
+| LIVE WIRED (inbound) | **1 webhook** | `sms-inbound` (deployed unverified) |
+| DORMANT infra (no caller) | **1** | No scheduled/cron caller for `send-sms` |
+| MOCK (console/messages-only) | **2 callers** | `/pro/due` sendNudge, `/pro/customers/:id` sendNudge |
+| DATA-ONLY schema/RPC | 5+ tables/columns, 2 RPCs | See §6 |
+| CONFIG-ONLY | 4 secrets + 1 config.toml block + 4 legal routes | See §7 |
+
+## Most important gaps
+
+1. **`/pro/due` and `/pro/customers/:id` "Send rebook nudge" buttons are still mocked** while `/pro/office` does real SMS. Same action, inconsistent behavior — a pro tapping "nudge" on the Due page thinks it went out; nothing does.
+2. **No scheduler.** Reminder scheduler (cron) for due-service SMS is not present anywhere in the repo — no pg_cron migration, no public API route, no worker.
+3. **No signature verification on `sms-inbound`.** `verify_jwt = false` is required, but there is no Twilio `X-Twilio-Signature` validation inside the handler. Anyone who finds the URL can toggle any phone's opt-out state.
+4. **`is_sms_opted_out` gate but no `notify_sms` / `respect_quiet_hrs` / `promo_sms_consent` gate at send time.** `send-sms` only checks opt-out and ET quiet hours; it does not consult per-user prefs from `homeowners`/`pros`. Users can toggle "Text messages" off in settings and still receive transactional SMS.
+5. **No promo/marketing SMS caller exists** even though `promo_sms_consent` is captured in three places (pro signup, pro settings, home settings). The consent is being collected with nothing yet reading it.
+6. **P2 items acknowledged but absent from code**: review-ask text, "invite your other pros" text, seasonal blasts.
+7. `mockSend` remains imported in `pro.customers.$customerId.tsx` and `pro.due.tsx`, so an accidental use in a new flow will silently no-op instead of sending.
+
+**Confirmation on your explicit question:** the P0 record-delivery SMS path *is* wired live today (see §1, `pro.jobs.new.tsx:1867-1882`), including the invoice-merge case.
