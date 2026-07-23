@@ -83,6 +83,7 @@ type CustomerOpt = {
   email: string | null;
   preferred_locale: Locale;
   home_id: string;
+  consent_at: string | null;
   homes: {
     address: string;
     lat: number | null;
@@ -636,6 +637,10 @@ function NewJob() {
      the "did you mean...?" card does not nag unless the name changes. */
   const [dismissedSuggestionName, setDismissedSuggestionName] = useState("");
   const [reviewEmail, setReviewEmail] = useState("");
+  const [reviewPhone, setReviewPhone] = useState("");
+  const [selectedChannel, setSelectedChannel] = useState<"sms" | "email">("sms");
+  const [smsConsentConfirmed, setSmsConsentConfirmed] = useState(false);
+  const [selectedCustomerConsentAt, setSelectedCustomerConsentAt] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // Real single-use claim URL minted via claim-qr on a successful email send.
   // Only populated when the record actually reached the customer's inbox;
@@ -646,11 +651,15 @@ function NewJob() {
   const [sentCustomerId, setSentCustomerId] = useState<string | null>(null);
   const [sentRecordId, setSentRecordId] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
-  // Honest post-send state driving the done screen. "sent" only when the email
-  // actually went out; "phone_only" / "no_contact" surface the truth instead
-  // of the old "inbox and texts" lie. SMS delivery is not live yet.
-  type DeliveryState = "sent" | "send_failed" | "phone_only" | "no_contact" | "record_failed";
+  // Honest post-send state driving the done screen. "sent" only when the
+  // selected channel actually confirmed delivery. sentChannel tracks WHICH
+  // channel succeeded so completion copy stays truthful.
+  type DeliveryState = "sent" | "send_failed" | "no_contact" | "phone_only" | "record_failed";
   const [deliveryState, setDeliveryState] = useState<DeliveryState>("no_contact");
+  const [sentChannel, setSentChannel] = useState<"sms" | "email" | null>(null);
+  // Secondary manual "Send by email instead" after a successful SMS send.
+  const [followupEmailSent, setFollowupEmailSent] = useState(false);
+  const [sendingFollowupEmail, setSendingFollowupEmail] = useState(false);
   const [sentTo, setSentTo] = useState<{
     name: string;
     email: string | null;
@@ -692,7 +701,7 @@ function NewJob() {
     (async () => {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,preferred_locale,home_id,homes(address,lat,lng,geocoded_at)")
+        .select("id,name,phone,email,preferred_locale,home_id,consent_at,homes(address,lat,lng,geocoded_at)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       const rows = (c ?? []) as unknown as CustomerOpt[];
@@ -1197,19 +1206,55 @@ function NewJob() {
   const missingReviewAddress = !previewAddress.trim();
   const missingReviewEmail = !trimmedReviewEmail;
   const reviewEmailValid = !missingReviewEmail && !reviewEmailInvalid;
-  const reviewRequiredComplete =
-    !missingReviewAddress && !missingReviewEmail && !reviewEmailInvalid;
-  // Once the email is valid on the Review step, glide the Send button into
-  // view so the pro can't miss what to do next. Fires only on the transition
-  // to valid, and only while on Review, so we never yank focus later.
+  const trimmedReviewPhone = reviewPhone.trim();
+  const reviewPhoneDigits = trimmedReviewPhone.replace(/\D/g, "");
+  const reviewPhoneValid = reviewPhoneDigits.length === 10 || reviewPhoneDigits.length === 11;
+  const hasUsablePhone = reviewPhoneValid;
+  const hasUsableEmail = reviewEmailValid;
+  const smsConsentOnFile = !!selectedCustomerConsentAt;
+  const needsSmsConsentConfirm = selectedChannel === "sms" && !smsConsentOnFile;
+  const channelReady =
+    selectedChannel === "sms"
+      ? hasUsablePhone && (smsConsentOnFile || smsConsentConfirmed)
+      : hasUsableEmail;
+  const reviewRequiredComplete = !missingReviewAddress && channelReady;
+  // Once the channel is deliverable on Review, glide the Send button into
+  // view so the pro can't miss what to do next.
   const sendBtnRef = useRef<HTMLDivElement>(null);
-  const prevEmailValid = useRef(false);
+  const prevChannelReady = useRef(false);
   useEffect(() => {
-    if (stage === "review" && reviewEmailValid && !prevEmailValid.current) {
+    if (stage === "review" && channelReady && !prevChannelReady.current) {
       sendBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    prevEmailValid.current = reviewEmailValid;
-  }, [reviewEmailValid, stage]);
+    prevChannelReady.current = channelReady;
+  }, [channelReady, stage]);
+  // Auto-flip channel when the only usable contact changes. We only nudge the
+  // pro toward a workable channel; explicit clicks always stick.
+  const userPickedChannelRef = useRef(false);
+  useEffect(() => {
+    if (stage !== "review") return;
+    if (userPickedChannelRef.current) return;
+    if (selectedChannel === "sms" && !hasUsablePhone && hasUsableEmail) {
+      setSelectedChannel("email");
+    } else if (selectedChannel === "email" && !hasUsableEmail && hasUsablePhone) {
+      setSelectedChannel("sms");
+    }
+  }, [stage, selectedChannel, hasUsablePhone, hasUsableEmail]);
+  // Seed reviewPhone from the new-customer form when the pro reaches Review
+  // without picking an existing customer, so the phone field on Review starts
+  // with what they typed earlier.
+  const prevStageForSeed = useRef<Stage | null>(null);
+  useEffect(() => {
+    if (stage === "review" && prevStageForSeed.current !== "review") {
+      if (!reviewPhone && !selectedCustomerId && newCustomer.phone.trim()) {
+        setReviewPhone(newCustomer.phone.trim());
+      }
+      if (!reviewEmail && !selectedCustomerId && newCustomer.email.trim()) {
+        setReviewEmail(newCustomer.email.trim());
+      }
+    }
+    prevStageForSeed.current = stage;
+  }, [stage, reviewPhone, reviewEmail, selectedCustomerId, newCustomer.phone, newCustomer.email]);
   const effectiveCustomerLocale: Locale = translationState === "failed" ? "en" : customerLocale;
   const customerCopy = customerPreviewCopy(effectiveCustomerLocale);
   const previewWork = translatedRecord?.whatDone ?? whatDone;
@@ -1305,6 +1350,10 @@ function NewJob() {
     setReviewName(c.name);
     setQuery(c.name);
     if (!reviewEmail.trim() && c.email) setReviewEmail(c.email);
+    if (!reviewPhone.trim() && c.phone) setReviewPhone(c.phone);
+    setSelectedCustomerConsentAt(c.consent_at);
+    setSmsConsentConfirmed(false);
+    setSelectedChannel(c.phone ? "sms" : c.email ? "email" : "sms");
     setCustomerLocale(isLocale(c.preferred_locale) ? c.preferred_locale : "en");
     setLocAddress(!current || cameFromFile ? (c.homes?.address ?? "") : current);
     addressTouched.current = true;
@@ -1317,6 +1366,10 @@ function NewJob() {
     setSelectedCustomerId(c.id);
     setReviewName(c.name);
     setReviewEmail(c.email ?? "");
+    setReviewPhone(c.phone ?? "");
+    setSelectedCustomerConsentAt(c.consent_at);
+    setSmsConsentConfirmed(false);
+    setSelectedChannel(c.phone ? "sms" : c.email ? "email" : "sms");
     setCustomerLocale(isLocale(c.preferred_locale) ? c.preferred_locale : "en");
     const onFile = c.homes?.address ?? "";
     addressTouched.current = false;
@@ -1343,6 +1396,10 @@ function NewJob() {
     setSelectedCustomerId("");
     setReviewName(name);
     setReviewEmail("");
+    setReviewPhone("");
+    setSelectedCustomerConsentAt(null);
+    setSmsConsentConfirmed(false);
+    setSelectedChannel("sms");
     setCustomerLocale("en");
     addressTouched.current = false;
     setNewCustomer((n) => ({
@@ -1777,7 +1834,12 @@ function NewJob() {
   async function deliverRecord(
     customerId: string,
     recordId: string,
-    opts: { email: string; phone: string; consented: boolean; hasInvoice?: boolean },
+    opts: {
+      channel: "sms" | "email";
+      email: string;
+      phone: string;
+      hasInvoice?: boolean;
+    },
   ) {
     let emailOk = false;
     let smsOk = false;
@@ -1786,8 +1848,8 @@ function NewJob() {
     let translationFallback = false;
     let code: string | undefined;
 
-    // 1) Email via invite-claim (only when we have an email on file).
-    if (opts.email) {
+    // 1) Email path (only when channel is email).
+    if (opts.channel === "email" && opts.email) {
       try {
         const { data: sendResp, error: sendErr } = await supabase.functions.invoke("invite-claim", {
           body: {
@@ -1804,9 +1866,6 @@ function NewJob() {
                 : null,
           },
         });
-        // On non-2xx, supabase-js sets `sendErr` and leaves `sendResp` null,
-        // discarding the JSON `{code}` in the error body. Read it off
-        // `sendErr.context` (a Response) so the pro sees the real reason.
         let parsedResp = sendResp as
           | { ok?: boolean; code?: string; locale_used?: unknown; translation_fallback?: unknown }
           | null;
@@ -1816,7 +1875,7 @@ function NewJob() {
             try {
               parsedResp = (await ctx.clone().json()) as typeof parsedResp;
             } catch {
-              /* body wasn't JSON: fall through */
+              /* body wasn't JSON */
             }
           }
         }
@@ -1838,8 +1897,7 @@ function NewJob() {
     }
 
     // 2) Mint the branded claim URL (needed for SMS body and for "show QR").
-    //    Runs whether or not the email step ran so phone-only customers still
-    //    have a link to send.
+    //    Runs on both paths so the done screen always has a QR to show.
     try {
       const { data: qr } = await supabase.functions.invoke("claim-qr", {
         body: {
@@ -1858,13 +1916,12 @@ function NewJob() {
         claimUrl = (qr as { claim_url: string }).claim_url;
       }
     } catch {
-      /* claim URL is best-effort; email delivery may already have succeeded */
+      /* claim URL is best-effort */
     }
 
-    // 3) SMS via send-sms when we have phone + transactional consent + a link.
-    //    Every body carries the pro's business name and a STOP disclosure per
-    //    A2P 10DLC requirements.
-    if (opts.phone && opts.consented && claimUrl) {
+    // 3) SMS path (only when channel is sms). A2P 10DLC: every body carries
+    //    the pro's business name + a STOP disclosure.
+    if (opts.channel === "sms" && opts.phone && claimUrl) {
       const businessName = pro?.business?.trim() || "Your service pro";
       const body = opts.hasInvoice
         ? `${businessName} sent you a service record + invoice: ${claimUrl}\nReply STOP to opt out.`
@@ -1876,12 +1933,14 @@ function NewJob() {
           .from("records")
           .update({ sent_sms_at: new Date().toISOString() })
           .eq("id", recordId);
-      } else if (!emailOk) {
+      } else {
         code = code ?? res.code;
       }
+    } else if (opts.channel === "sms" && opts.phone && !claimUrl) {
+      code = code ?? "send_failed";
     }
 
-    const ok = emailOk || smsOk;
+    const ok = opts.channel === "email" ? emailOk : smsOk;
     return {
       ok,
       emailOk,
@@ -1892,6 +1951,7 @@ function NewJob() {
       code: ok ? undefined : (code ?? "send_failed"),
     };
   }
+
 
 
   async function submit() {
@@ -1908,6 +1968,10 @@ function NewJob() {
     const finalName = (reviewName ?? selected?.name ?? newCustomer.name).trim() || "Customer";
     const finalAddress = (selectedCustomerId ? locAddress : newCustomer.address).trim();
     const finalEmail = reviewEmail.trim().toLowerCase();
+    const finalPhone = reviewPhone.trim();
+    const finalPhoneDigits = finalPhone.replace(/\D/g, "");
+    const finalPhoneValid =
+      finalPhoneDigits.length === 10 || finalPhoneDigits.length === 11;
 
     if (!work) {
       setStage("review");
@@ -1929,22 +1993,37 @@ function NewJob() {
       setTimeout(() => setToast(null), 3500);
       return;
     }
-    // Allow phone-only submits now that SMS delivery is live: the customer
-    // must have either an email OR a phone we can text. Only validate email
-    // format if one was actually entered.
-    const havePhoneEarly = !!(selected?.phone?.trim() || newCustomer.phone.trim());
-    if (!finalEmail && !havePhoneEarly) {
-      setStage("review");
-      setToast("Add the customer's email or phone before sending.");
-      setTimeout(() => setToast(null), 3500);
-      return;
+    // Channel-scoped validation: SMS needs a phone we can text (and consent
+    // on file or freshly confirmed); email needs a valid address.
+    if (selectedChannel === "sms") {
+      if (!finalPhoneValid) {
+        setStage("review");
+        setToast("Add the customer's mobile number before texting.");
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
+      const consentOk = !!selectedCustomerConsentAt || smsConsentConfirmed;
+      if (!consentOk) {
+        setStage("review");
+        setToast("Confirm the customer OK'd texts before sending.");
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
+    } else {
+      if (!finalEmail) {
+        setStage("review");
+        setToast("Add the customer's email before sending.");
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
+      if (!isEmail(finalEmail)) {
+        setStage("review");
+        setToast("Check the customer's email address.");
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
     }
-    if (finalEmail && !isEmail(finalEmail)) {
-      setStage("review");
-      setToast("Check the customer's email address.");
-      setTimeout(() => setToast(null), 3500);
-      return;
-    }
+
 
 
     setSubmitting(true);
@@ -1982,7 +2061,12 @@ function NewJob() {
       toName = dedupeCustomer ? c.name : finalName;
       emailAddr = finalEmail;
       phoneAddr = c.phone?.trim() ?? "";
-      const customerUpdates: { name?: string; email?: string; preferred_locale?: Locale } = {};
+      const customerUpdates: {
+        name?: string;
+        email?: string;
+        phone?: string;
+        preferred_locale?: Locale;
+      } = {};
       // On dedupe we keep the name that is already on file (do not rename Ilan
       // to "Bob" just because the pro one-tapped a different label today).
       if (!dedupeCustomer && finalName !== c.name.trim()) customerUpdates.name = finalName;
@@ -1992,11 +2076,21 @@ function NewJob() {
       if (customerLocale !== (isLocale(c.preferred_locale) ? c.preferred_locale : "en")) {
         customerUpdates.preferred_locale = customerLocale;
       }
+      // Persist the phone the pro entered/edited on Review so the customer's
+      // number is always in sync with the one we're about to text.
+      if (finalPhone && finalPhone !== phoneAddr) {
+        phoneAddr = finalPhone;
+        customerUpdates.phone = finalPhone;
+      } else if (!phoneAddr && finalPhone) {
+        phoneAddr = finalPhone;
+        customerUpdates.phone = finalPhone;
+      }
       // On dedupe, fill in a phone we did not have on file so future SMS works.
       if (dedupeCustomer && !phoneAddr && newCustomer.phone.trim()) {
         phoneAddr = newCustomer.phone.trim();
-        (customerUpdates as { phone?: string }).phone = phoneAddr;
+        customerUpdates.phone = phoneAddr;
       }
+
       if (Object.keys(customerUpdates).length) {
         const { error: customerUpdateErr } = await supabase
           .from("customers")
@@ -2077,8 +2171,8 @@ function NewJob() {
           pro_id: proId,
           home_id: homeId,
           name: finalName,
-          phone: newCustomer.phone.trim() || null,
-          email: finalEmail,
+          phone: (finalPhone || newCustomer.phone.trim()) || null,
+          email: finalEmail || null,
           consent_at: new Date().toISOString(),
           consent_ref: `web_form_${Date.now()}`,
           preferred_locale: customerLocale,
@@ -2094,7 +2188,7 @@ function NewJob() {
       customerId = newC.id;
       toName = finalName;
       emailAddr = finalEmail;
-      phoneAddr = newCustomer.phone.trim();
+      phoneAddr = (finalPhone || newCustomer.phone.trim());
       // Mirror what the RPC stored (canonical address and coords), so the
       // local state matches the database without a refetch.
       const savedCustomer: CustomerOpt = {
@@ -2104,6 +2198,7 @@ function NewJob() {
         email: finalEmail,
         preferred_locale: customerLocale,
         home_id: homeId,
+        consent_at: new Date().toISOString(),
         homes: {
           address: identity.address,
           lat: identity.lat,
@@ -2309,11 +2404,27 @@ function NewJob() {
       } else setBillingError("The job was saved, but the invoice could not be created.");
     }
 
-    // Consent is captured on job step 1 for every new customer; for a dedupe
-    // adopt we re-query so we never fire SMS to a customer whose consent row
-    // is empty (would fail A2P 10DLC transactional gating).
-    let consented = false;
-    if (phoneAddr) {
+    // Route delivery through the channel the pro picked on Review. SMS requires
+    // transactional consent — either already on file for the customer or freshly
+    // confirmed on Review. When the pro confirms consent here, stamp it now so
+    // future sends don't re-ask.
+    const chosenChannel: "sms" | "email" = selectedChannel;
+    let consented = !!selectedCustomerConsentAt;
+    if (chosenChannel === "sms" && !consented && smsConsentConfirmed) {
+      const { error: consentErr } = await supabase
+        .from("customers")
+        .update({
+          consent_at: new Date().toISOString(),
+          consent_ref: `review_confirm_${Date.now()}`,
+        })
+        .eq("id", customerId);
+      if (!consentErr) {
+        consented = true;
+        setSelectedCustomerConsentAt(new Date().toISOString());
+      }
+    } else if (chosenChannel === "sms" && !consented) {
+      // Belt-and-suspenders re-check for a dedupe-adopted customer whose
+      // consent row we couldn't see in local state.
       const { data: consentRow } = await supabase
         .from("customers")
         .select("consent_at")
@@ -2327,12 +2438,15 @@ function NewJob() {
     let deliveredBySms = false;
     let localeUsed: Locale = "en";
     let fellBack = false;
-    let deliveryClaimUrl: string | null = null;
-    if (emailAddr || (phoneAddr && consented)) {
+    const canSend =
+      chosenChannel === "email"
+        ? !!emailAddr
+        : !!phoneAddr && consented;
+    if (canSend) {
       const delivery = await deliverRecord(customerId, rec.id, {
+        channel: chosenChannel,
         email: emailAddr,
         phone: phoneAddr,
-        consented,
         hasInvoice: invoiceCreated,
       });
       delivered = delivery.ok;
@@ -2340,7 +2454,6 @@ function NewJob() {
       deliveredBySms = delivery.smsOk;
       localeUsed = delivery.localeUsed;
       fellBack = delivery.translationFallback;
-      deliveryClaimUrl = delivery.claimUrl;
       setDeliveryLocale(localeUsed);
       setTranslationFallback(fellBack);
       if (delivery.claimUrl) setClaimUrl(delivery.claimUrl);
@@ -2349,6 +2462,7 @@ function NewJob() {
 
     if (delivered) {
       setDeliveryState("sent");
+      setSentChannel(chosenChannel);
       await logEvent(`pro:${proId}`, "record_sent", {
         record_id: rec.id,
         requested_locale: customerLocale,
@@ -2356,30 +2470,22 @@ function NewJob() {
         translation_fallback: fellBack,
         has_video: !!videoFinal.current,
         photo_count: photoPaths.current.length,
+        channel: chosenChannel,
         channels: {
           email: deliveredByEmail,
           sms: deliveredBySms,
         },
       });
-      // Google review ask fires on any real delivery (email or SMS) so the
-      // Reviews page count reflects reality.
       if (askReview) {
         await logEvent(`pro:${proId}`, "review_requested", {
           customer_id: customerId,
           locale: localeUsed,
         });
       }
-
-      // Invoice notification is merged into the record SMS above (single text
-      // with combined "service record + invoice" wording) so the homeowner
-      // never receives two back-to-back messages pointing at the same URL.
-
-    } else if (emailAddr) {
+    } else if (canSend) {
       setDeliveryState("send_failed");
-    } else if (phoneAddr && !consented) {
+    } else if (chosenChannel === "sms" && phoneAddr && !consented) {
       setDeliveryState("phone_only");
-    } else if (phoneAddr) {
-      setDeliveryState("send_failed");
     } else {
       setDeliveryState("no_contact");
     }
@@ -2391,7 +2497,7 @@ function NewJob() {
     setSubmitting(false);
     setStage("done");
     if (delivered) {
-      const target = deliveredByEmail && emailAddr ? emailAddr : phoneAddr;
+      const target = chosenChannel === "email" ? emailAddr : phoneAddr;
       setToast(
         fellBack
           ? `Sent to ${target} in English because translation was unavailable.`
@@ -2402,6 +2508,7 @@ function NewJob() {
     }
     setTimeout(() => setToast(null), 3500);
   }
+
 
 
   async function retrySavedRecord(email: string, persistEmail: boolean) {
@@ -2421,9 +2528,9 @@ function NewJob() {
     }
 
     const delivery = await deliverRecord(sentCustomerId, sentRecordId, {
+      channel: "email",
       email,
       phone: "",
-      consented: false,
     });
     if (!delivery.ok) {
       const failCode = delivery.code ?? "send_failed";
@@ -2494,7 +2601,7 @@ function NewJob() {
     if (proId) {
       const { data: c } = await supabase
         .from("customers")
-        .select("id,name,phone,email,preferred_locale,home_id,homes(address,lat,lng)")
+        .select("id,name,phone,email,preferred_locale,home_id,consent_at,homes(address,lat,lng)")
         .eq("pro_id", proId)
         .order("created_at", { ascending: false });
       setExisting((c ?? []) as unknown as CustomerOpt[]);
@@ -2531,6 +2638,14 @@ function NewJob() {
     setReviewEdit(null);
     setReviewName(null);
     setReviewEmail("");
+    setReviewPhone("");
+    setSelectedChannel("sms");
+    setSmsConsentConfirmed(false);
+    setSelectedCustomerConsentAt(null);
+    setSentChannel(null);
+    setFollowupEmailSent(false);
+    setSendingFollowupEmail(false);
+    userPickedChannelRef.current = false;
     setCustomerLocale("en");
     setTranslatedRecord(null);
     setTranslationState("idle");
@@ -3728,46 +3843,139 @@ function NewJob() {
                       aiFlash.has("email") ? "rounded-xl bg-indigobg" : ""
                     }`}
                   >
-                    <label className="block">
-                      <div className="mb-1.5 flex items-center gap-2 text-lg font-semibold text-ink">
-                        <span>{uiCopy.email}</span>
-                        {missingReviewEmail && (
-                          <span className="rounded-full bg-redbg px-2 py-0.5 text-[14px] font-bold uppercase tracking-wider text-red">
-                            Needed to send
-                          </span>
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <div className="text-lg font-semibold text-ink">Send to customer</div>
+                      {!channelReady && (
+                        <span className="rounded-full bg-redbg px-2 py-0.5 text-[14px] font-bold uppercase tracking-wider text-red">
+                          Needed to send
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Channel selector - text is default, larger tap target */}
+                    <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Delivery channel">
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={selectedChannel === "sms"}
+                        onClick={() => {
+                          userPickedChannelRef.current = true;
+                          setSelectedChannel("sms");
+                        }}
+                        className={`pressable rounded-2xl border px-4 py-3 text-left text-base font-semibold transition ${
+                          selectedChannel === "sms"
+                            ? "border-indigo bg-indigobg text-indigo-dark"
+                            : "border-line bg-white text-ink hover:bg-soft"
+                        }`}
+                      >
+                        <div className="text-[15px] font-bold">Text</div>
+                        <div className="mt-0.5 text-[13px] font-medium text-muted">Fastest. Arrives on their phone.</div>
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={selectedChannel === "email"}
+                        onClick={() => {
+                          userPickedChannelRef.current = true;
+                          setSelectedChannel("email");
+                        }}
+                        className={`pressable rounded-2xl border px-4 py-3 text-left text-base font-semibold transition ${
+                          selectedChannel === "email"
+                            ? "border-indigo bg-indigobg text-indigo-dark"
+                            : "border-line bg-white text-ink hover:bg-soft"
+                        }`}
+                      >
+                        <div className="text-[15px] font-bold">Email</div>
+                        <div className="mt-0.5 text-[13px] font-medium text-muted">Full record in their inbox.</div>
+                      </button>
+                    </div>
+
+                    {selectedChannel === "sms" ? (
+                      <div className="mt-4 space-y-3">
+                        <label className="block">
+                          <div className="mb-1.5 text-base font-semibold text-ink">Mobile number</div>
+                          <PhoneInput
+                            value={reviewPhone}
+                            onChange={setReviewPhone}
+                            placeholder="(555) 555-5555"
+                            aria-invalid={!reviewPhoneValid && trimmedReviewPhone.length > 0}
+                            className={
+                              trimmedReviewPhone.length > 0 && !reviewPhoneValid
+                                ? "border-red bg-redbg/30"
+                                : reviewPhoneValid
+                                  ? "border-indigo bg-indigobg/30"
+                                  : ""
+                            }
+                          />
+                          {!reviewPhoneValid && trimmedReviewPhone.length > 0 && (
+                            <div className="mt-1 text-base text-red">Enter a 10-digit US mobile number.</div>
+                          )}
+                        </label>
+
+                        {!smsConsentOnFile && (
+                          <label className="flex cursor-pointer items-start gap-2 rounded-2xl border border-line bg-soft p-3">
+                            <input
+                              type="checkbox"
+                              checked={smsConsentConfirmed}
+                              onChange={(e) => setSmsConsentConfirmed(e.target.checked)}
+                              className="mt-1 h-5 w-5 accent-indigo"
+                            />
+                            <span className="text-[15px] leading-snug text-ink">
+                              Customer OK'd receiving service texts about their home. Msg &amp; data rates may apply. Reply STOP to opt out.
+                            </span>
+                          </label>
+                        )}
+
+                        {reviewPhoneValid && (smsConsentOnFile || smsConsentConfirmed) && (
+                          <div className="rounded-2xl border border-line bg-white p-3">
+                            <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted">Preview</div>
+                            <div className="whitespace-pre-line text-[14px] leading-snug text-ink">
+                              {`${pro?.business?.trim() || "Your service pro"} sent you a service record${
+                                parseFloat(chargeAmount) > 0 ? " + invoice" : ""
+                              }: [secure link]\nReply STOP to opt out.`}
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <Input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        value={reviewEmail}
-                        onChange={(event) => setReviewEmail(event.target.value)}
-                        placeholder="customer@email.com"
-                        aria-invalid={missingReviewEmail || reviewEmailInvalid}
-                        className={
-                          missingReviewEmail || reviewEmailInvalid
-                            ? "border-red bg-redbg/30 focus:border-red focus:ring-red/10"
-                            : reviewEmailValid
-                              ? "border-indigo bg-indigobg/30"
-                              : ""
-                        }
-                      />
-                      <div className="mt-1 text-base text-muted">
-                        {reviewEmailInvalid
-                          ? uiCopy.emailInvalid
-                          : missingReviewEmail
-                            ? "Add the customer's email so we can send the record."
-                            : uiCopy.emailHelp}
+                    ) : (
+                      <div className="mt-4">
+                        <label className="block">
+                          <div className="mb-1.5 text-base font-semibold text-ink">Email address</div>
+                          <Input
+                            type="email"
+                            inputMode="email"
+                            autoComplete="email"
+                            value={reviewEmail}
+                            onChange={(event) => setReviewEmail(event.target.value)}
+                            placeholder="customer@email.com"
+                            aria-invalid={missingReviewEmail || reviewEmailInvalid}
+                            className={
+                              missingReviewEmail || reviewEmailInvalid
+                                ? "border-red bg-redbg/30 focus:border-red focus:ring-red/10"
+                                : reviewEmailValid
+                                  ? "border-indigo bg-indigobg/30"
+                                  : ""
+                            }
+                          />
+                          <div className="mt-1 text-base text-muted">
+                            {reviewEmailInvalid
+                              ? uiCopy.emailInvalid
+                              : missingReviewEmail
+                                ? "Add the customer's email so we can send the record."
+                                : uiCopy.emailHelp}
+                          </div>
+                        </label>
                       </div>
-                      {reviewEmailValid && (
-                        <div className="mt-2 flex items-center gap-1.5 text-base font-semibold text-indigo">
-                          <Check size={14} aria-hidden="true" />
-                          Ready to send. Tap {uiCopy.sendRecord} below.
-                        </div>
-                      )}
-                    </label>
+                    )}
+
+                    {channelReady && (
+                      <div className="mt-3 flex items-center gap-1.5 text-base font-semibold text-indigo">
+                        <Check size={14} aria-hidden="true" />
+                        Ready to send. Tap the button below.
+                      </div>
+                    )}
                   </div>
+
 
                   {/* Optional "bill this customer" amount. Leave blank to skip;
                       any positive number creates an open invoice tied to the job
@@ -3822,7 +4030,7 @@ function NewJob() {
                   <div
                     ref={sendBtnRef}
                     className={`mt-5 rounded-2xl border-t border-line pt-4 transition-all duration-500 ${
-                      reviewEmailValid ? "shadow-[0_0_0_2px_var(--indigo)] shadow-indigo/20" : ""
+                      channelReady ? "shadow-[0_0_0_2px_var(--indigo)] shadow-indigo/20" : ""
                     }`}
                   >
                     <div className="flex gap-2">
@@ -3839,7 +4047,7 @@ function NewJob() {
                         }
                         onClick={submit}
                       >
-                        {uiCopy.sendRecord}
+                        {selectedChannel === "sms" ? "Send text" : "Send email"}
                       </Btn>
                     </div>
                   </div>
@@ -3853,8 +4061,12 @@ function NewJob() {
                 {deliveryState === "sent" && <CheckBurst className="mx-auto" />}
                 {deliveryState === "sent" && (
                   <>
-                    <h2 className="mt-4 text-[26px] tracking-tight">{t("pro.recordSent")}</h2>
-                    <p className="mt-2 text-base text-muted">Sent to {sentTo.email}.</p>
+                    <h2 className="mt-4 text-[26px] tracking-tight">
+                      {sentChannel === "sms" ? "Text sent" : t("pro.recordSent")}
+                    </h2>
+                    <p className="mt-2 text-base text-muted">
+                      Sent to {sentChannel === "sms" ? (sentTo.phone || "the customer") : (sentTo.email || "the customer")}.
+                    </p>
                     {translationFallback && (
                       <div className="mx-auto mt-4 max-w-md rounded-xl border border-amber/25 bg-amberbg px-3 py-2.5 text-base text-ink">
                         Translation was unavailable, so this message and its linked pages were sent
@@ -3865,6 +4077,30 @@ function NewJob() {
                       <p className="mt-2 text-sm font-semibold text-indigo">
                         Sent in {LOCALES.find(({ code }) => code === deliveryLocale)?.label}.
                       </p>
+                    )}
+                    {/* Manual "send by email instead" after a successful SMS.
+                        Explicit tap — never automatic — so the customer never
+                        gets both without the pro deciding to. */}
+                    {sentChannel === "sms" && sentTo.email && !followupEmailSent && (
+                      <div className="mt-4">
+                        <Btn
+                          variant="secondary"
+                          size="sm"
+                          loading={sendingFollowupEmail}
+                          onClick={async () => {
+                            if (!sentTo.email) return;
+                            setSendingFollowupEmail(true);
+                            await retrySavedRecord(sentTo.email, false);
+                            setFollowupEmailSent(true);
+                            setSendingFollowupEmail(false);
+                          }}
+                        >
+                          Send by email too
+                        </Btn>
+                      </div>
+                    )}
+                    {sentChannel === "sms" && followupEmailSent && (
+                      <p className="mt-3 text-base text-indigo">Also emailed to {sentTo.email}.</p>
                     )}
                   </>
                 )}
