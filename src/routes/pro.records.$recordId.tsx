@@ -80,6 +80,7 @@ function RecordDetail() {
   const [loading, setLoading] = useState(true);
   const [qrOpen, setQrOpen] = useState(false);
   const [media, setMedia] = useState<JobMediaRow[]>([]);
+  const [smsBusy, setSmsBusy] = useState(false);
 
   const [sheet, setSheet] = useState<Sheet>(null);
   const [draftText, setDraftText] = useState("");
